@@ -146,7 +146,7 @@ class AgentBasedSimulation(BaseSimulation):
             "treatment_response_history": agent.state.get("treatment_response_history", []),
             "current_step": agent.state["current_step"],
             "injections_given": agent.state.get("injections_given", 0),
-            "current_actions": ["injection"] if "injection" in agent.state.get("current_actions", []),
+            "current_actions": ["injection"] if "injection" in agent.state.get("current_actions", []) else [],
             "weeks_since_last_injection": agent.state.get("weeks_since_last_injection", 0)
         }
         
