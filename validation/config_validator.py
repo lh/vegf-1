@@ -56,11 +56,54 @@ class ConfigValidator:
             
         # Validate phases
         phases = protocol.get('phases', {})
+        required_phases = {'loading', 'maintenance'}
+        if not all(phase in phases for phase in required_phases):
+            self.errors.append(ConfigurationError(
+                'protocol_definition',
+                f'Missing required phases: {required_phases - set(phases.keys())}'
+            ))
+            return False
+            
+        # Validate each phase
+        phase_requirements = {
+            'loading': {'duration_weeks', 'visit_interval_weeks', 'required_treatments'},
+            'maintenance': {'visit_interval_weeks', 'min_interval_weeks', 'max_interval_weeks', 'interval_adjustment_weeks'}
+        }
+        
         for phase_name, phase in phases.items():
-            if 'duration_weeks' not in phase and 'visit_interval_weeks' not in phase:
+            if phase_name in phase_requirements:
+                required = phase_requirements[phase_name]
+                if not all(param in phase for param in required):
+                    self.errors.append(ConfigurationError(
+                        'protocol_definition',
+                        f'Phase {phase_name} missing required parameters: {required - set(phase.keys())}'
+                    ))
+                    return False
+                    
+            # Validate visit types if present
+            if 'visit_type' in phase:
+                if not self._validate_visit_type(phase['visit_type']):
+                    return False
+                    
+        return True
+        
+    def _validate_visit_type(self, visit_type: Dict) -> bool:
+        """Validate visit type configuration"""
+        required_fields = {'name', 'required_actions'}
+        if not all(field in visit_type for field in required_fields):
+            self.errors.append(ConfigurationError(
+                'visit_type',
+                f'Missing required fields: {required_fields - set(visit_type.keys())}'
+            ))
+            return False
+            
+        # Validate action types
+        valid_actions = {'vision_test', 'oct_scan', 'injection', 'consultation'}
+        for action in visit_type.get('required_actions', []):
+            if action not in valid_actions:
                 self.errors.append(ConfigurationError(
-                    'protocol_definition',
-                    f'Phase {phase_name} missing required timing parameters'
+                    'visit_type',
+                    f'Invalid action type: {action}'
                 ))
                 return False
                 
