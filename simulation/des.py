@@ -71,16 +71,26 @@ class DiscreteEventSimulation(BaseSimulation):
             return
             
         state = self.patient_states[patient_id]
-        self.global_stats["total_visits"] += 1
-        state["visits"] += 1
         
-        # Request resources
+        # Only increment visits if resources are available
         if self._request_resources(event):
-            # Resources available - process visit
+            self.global_stats["total_visits"] += 1
+            state["visits"] += 1
+            state["last_visit_date"] = event.time
+            
+            # Process visit
             visit_data = self._process_visit(state, event)
             
             # Schedule resource release
-            self._schedule_resource_release(event.time, visit_data)
+            for resource in ["nurses", "oct_machines", "doctors"]:
+                if self.global_stats["resource_utilization"][resource] > 0:
+                    self.clock.schedule_event(Event(
+                        time=event.time + timedelta(minutes=30),
+                        event_type="resource_release",
+                        patient_id=None,
+                        data={"resource_type": resource},
+                        priority=1
+                    ))
             
             # Schedule treatment decision
             self.clock.schedule_event(Event(
@@ -91,7 +101,7 @@ class DiscreteEventSimulation(BaseSimulation):
                 priority=2
             ))
         else:
-            # Resources unavailable - reschedule visit
+            # Reschedule visit for next hour if resources unavailable
             self._reschedule_visit(event)
 
     def _process_visit(self, state: Dict, event: Event) -> Dict:
@@ -102,21 +112,27 @@ class DiscreteEventSimulation(BaseSimulation):
             "resources_used": []
         }
         
-        # Update state and stats
-        if "vision_test" in event.data.get("actions", []):
+        actions = event.data.get("actions", [])
+        
+        # Update state and stats based on actions performed
+        if "vision_test" in actions:
             state["current_vision"] += visit_data["vision_change"]
             if visit_data["vision_change"] > 0:
                 self.global_stats["vision_improvements"] += 1
             elif visit_data["vision_change"] < 0:
                 self.global_stats["vision_declines"] += 1
                 
-        if "oct_scan" in event.data.get("actions", []):
+        if "oct_scan" in actions:
             self.global_stats["total_oct_scans"] += 1
-            
-        if "injection" in event.data.get("actions", []):
+            visit_data["resources_used"].append("oct_machines")
+                
+        if "injection" in actions:
             self.global_stats["total_injections"] += 1
             state["injections"] += 1
-            
+            visit_data["resources_used"].append("doctors")
+        
+        visit_data["resources_used"].append("nurses")  # Always need a nurse
+        
         return visit_data
 
     def _handle_resource_release(self, event: Event):
@@ -136,7 +152,6 @@ class DiscreteEventSimulation(BaseSimulation):
             return
             
         state = self.patient_states[patient_id]
-        visit_data = event.data
         
         # Determine next visit interval
         if state["current_step"] == "injection_phase":
@@ -147,7 +162,7 @@ class DiscreteEventSimulation(BaseSimulation):
                 next_interval = 8  # Start maintenance phase
         else:
             # Adjust interval based on OCT findings
-            if visit_data["oct_findings"]["fluid_present"]:
+            if event.data["oct_findings"]["fluid_present"]:
                 next_interval = max(4, state["next_visit_interval"] - 2)
             else:
                 next_interval = min(12, state["next_visit_interval"] + 2)
@@ -155,7 +170,14 @@ class DiscreteEventSimulation(BaseSimulation):
         state["next_visit_interval"] = next_interval
         
         # Schedule next visit
-        self._schedule_next_visit(patient_id, next_interval)
+        next_visit = event.data.copy()
+        self.clock.schedule_event(Event(
+            time=event.time + timedelta(weeks=next_interval),
+            event_type="visit",
+            patient_id=patient_id,
+            data=event.data,
+            priority=1
+        ))
 
     def _request_resources(self, event: Event) -> bool:
         """Attempt to reserve needed resources for visit"""
