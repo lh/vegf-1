@@ -42,12 +42,30 @@ class VisitType:
 
 @dataclass
 class TreatmentDecision:
-    """Definition of a treatment decision"""
-    metric: str
-    comparator: str
-    value: Any
-    action: str
-    priority: int = 1
+    """Definition of a treatment decision with validation"""
+    metric: str  # The metric to evaluate (e.g., 'vision', 'oct_thickness')
+    comparator: str  # Comparison operator ('==', '>=', '<=', '>', '<')
+    value: Any  # Target value or reference (e.g., 'baseline', 15, 'stable')
+    action: str  # Action to take ('continue', 'extend', 'reduce', 'stop')
+    priority: int = 1  # Priority level for multiple decisions
+    
+    def evaluate(self, value: Any) -> bool:
+        """Evaluate decision against a value"""
+        if self.value == "baseline":
+            # Handle baseline comparisons differently
+            return True  # Placeholder - implement baseline logic
+        
+        if self.comparator == "==":
+            return value == self.value
+        elif self.comparator == ">=":
+            return value >= self.value
+        elif self.comparator == "<=":
+            return value <= self.value
+        elif self.comparator == ">":
+            return value > self.value
+        elif self.comparator == "<":
+            return value < self.value
+        return False
 
 @dataclass
 class ProtocolPhase:
