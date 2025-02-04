@@ -4,3 +4,9 @@
 2. **Condition System**: Simple key/value conditions with comparators for treatment decisions
 3. **Temporal Logic**: Using interval/week-based scheduling for injections and assessments
 4. **Agent-Based**: Protocol steps designed to work with both individual patient agents and population-level simulations
+5. **Event Priority System**: Using priority levels to ensure correct ordering of visit/decision events
+6. **State Management**: Keeping patient state separate from visit history for clean data analysis
+7. **Protocol Flexibility**: Supporting multiple protocols per agent with dynamic interval adjustments
+8. **Simulation Architecture**: Separate base, DES, and ABS implementations for comparison studies
+9. **Visit Types**: Standardized visit definitions in YAML for consistency across protocols
+10. **Decision Pipeline**: Structured nurse->doctor decision flow matching clinical practice
