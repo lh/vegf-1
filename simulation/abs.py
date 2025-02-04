@@ -141,9 +141,14 @@ class AgentBasedSimulation(BaseSimulation):
         if last_visit:
             weeks_since_injection = (self.clock.current_time - last_visit).days / 7.0
         
-        # Higher chance of fluid if longer since last injection
-        # Ensure current_interval is not None and convert to float for division
+        # Ensure current_interval has a valid value
+        if current_interval is None:
+            current_interval = 8  # Default to 8 weeks if None
+            
+        # Convert to float after ensuring it's not None
         current_interval = float(current_interval)
+        
+        # Higher chance of fluid if longer since last injection
         fluid_threshold = min(0.3 + (weeks_since_injection / current_interval) * 0.4, 0.8)
         
         # Fluid present if we're past 75% of the interval
