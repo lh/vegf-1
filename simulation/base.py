@@ -9,36 +9,31 @@ class SimulationEnvironment:
         self.current_time = start_date
         self.global_state: Dict[str, Any] = {}
 
-@dataclass(order=True)
+@dataclass
 class Event:
-    # Add a compare field that combines time and priority
-    # This needs to be first in the dataclass for proper ordering
-    sort_key: tuple = field(init=False, repr=False)
-    
-    # Keep existing fields
     time: datetime
     event_type: str
     patient_id: str 
     data: Dict[str, Any]
     priority: int = 1
 
-    def __post_init__(self):
-        # Create a tuple for comparison that puts earlier times and higher priorities first
-        self.sort_key = (self.time, self.priority)
-
 class SimulationClock:
     def __init__(self, start_date: datetime):
         self.current_time = start_date
         self.event_queue = PriorityQueue()
+        self._counter = 0  # Add a counter for tie-breaking
     
     def schedule_event(self, event: Event):
-        self.event_queue.put((event.time, event.priority, event))
+        # Create a comparable tuple with (time, priority, counter) as the sort key
+        # The counter ensures FIFO behavior for events with same time/priority
+        self._counter += 1
+        self.event_queue.put((event.time, event.priority, self._counter, event))
     
     def get_next_event(self) -> Optional[Event]:
         if self.event_queue.empty():
             return None
-        _, _, event = self.event_queue.get()
-        self.current_time = event.time
+        time, _, _, event = self.event_queue.get()
+        self.current_time = time
         return event
 
 class BaseSimulation(ABC):
