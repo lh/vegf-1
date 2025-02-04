@@ -134,14 +134,19 @@ class AgentBasedSimulation(BaseSimulation):
     def _simulate_oct_scan(self, agent: Patient) -> Dict:
         """Simulate an OCT scan result"""
         # Get current interval and time since last injection
-        current_interval = agent.state.get("current_interval", 8)
+        current_interval = agent.state.get("current_interval", 8)  # Default to 8 weeks if not set
         last_visit = agent.history[-1]["date"] if agent.history else None
         weeks_since_injection = 0
+        
         if last_visit:
-            weeks_since_injection = (self.clock.current_time - last_visit).days / 7
-
+            weeks_since_injection = (self.clock.current_time - last_visit).days / 7.0
+        
         # Higher chance of fluid if longer since last injection
+        # Ensure current_interval is not None and convert to float for division
+        current_interval = float(current_interval)
         fluid_threshold = min(0.3 + (weeks_since_injection / current_interval) * 0.4, 0.8)
+        
+        # Fluid present if we're past 75% of the interval
         fluid_present = weeks_since_injection > (current_interval * 0.75)
         
         # Thickness increases with time since injection
