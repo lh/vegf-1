@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
+import numpy as np
 from .base import BaseSimulation, Event, SimulationEnvironment
 from protocol_models import TreatmentProtocol
 
@@ -125,23 +126,34 @@ class AgentBasedSimulation(BaseSimulation):
             self._handle_doctor_treatment_decision(agent, visit_data)
             
     def _simulate_vision_test(self, agent: Patient) -> int:
-        """Simulate a vision test result with realistic variation"""
+        """Simulate vision test with log-normal distribution for changes"""
         if agent.state["baseline_vision"] is None:
-            # First visit - set baseline between 50-80 letters
-            return 65  # Fixed value for reproducibility
+            # First visit - set baseline with some variation
+            return int(np.random.normal(65, 3))  # Keep normal for initial vision
             
-        # Add small variations based on disease activity
         base_vision = agent.state["last_vision"]
-        if agent.state.get("disease_activity") == "recurring":
-            variation = -3  # Vision tends to decrease with active disease
-        else:
-            variation = 1  # Small improvement possible with stable disease
+        
+        # Different distributions for loading phase vs maintenance
+        if agent.state["current_step"] == "injection_phase" and agent.state.get("injections_given", 0) < 3:
+            # During loading phase: more likely to improve
+            # Shift and reflect log-normal to center improvements around +5 letters
+            change = 5 - np.random.lognormal(mean=0.5, sigma=0.5)
             
-        new_vision = base_vision + variation
-        return min(max(new_vision, 0), 100)  # Clamp between 0-100 letters
+        else:
+            # After loading phase: more likely to decline or stay stable
+            # Use log-normal for vision loss, centered just above 0
+            if agent.state.get("disease_activity") == "recurring":
+                # Higher chance of vision loss with active disease
+                change = -np.random.lognormal(mean=-0.5, sigma=0.7)  # Negative log-normal
+            else:
+                # Stable disease: mostly zero change with occasional losses
+                change = -np.random.lognormal(mean=-2.0, sigma=0.5)  # Mostly near zero
+                
+        new_vision = base_vision + change
+        return int(min(max(new_vision, 0), 100))  # Clamp between 0-100 letters
         
     def _simulate_oct_scan(self, agent: Patient) -> Dict:
-        """Simulate OCT with more realistic disease progression"""
+        """Simulate OCT with realistic biological variation"""
         current_interval = agent.state.get("current_interval", 8.0)
         last_visit = agent.history[-1]["date"] if agent.history else None
         weeks_since_injection = 0
@@ -149,38 +161,40 @@ class AgentBasedSimulation(BaseSimulation):
         if last_visit:
             weeks_since_injection = (self.clock.current_time - last_visit).days / 7.0
         
-        if current_interval is None:
-            current_interval = 8
-        current_interval = float(current_interval)
+        # Base thickness with log-normal variation
+        base_thickness = 250 + np.random.lognormal(mean=0, sigma=0.3)
         
-        # Base thickness varies with treatment effect
-        base_thickness = 250
-        treatment_effect = 50 * (1 - (weeks_since_injection / current_interval))
+        # Treatment effect varies by phase
+        if agent.state["current_step"] == "injection_phase" and agent.state.get("injections_given", 0) < 3:
+            # Stronger, more consistent effect during loading
+            treatment_effect = 50 * (1 - (weeks_since_injection / current_interval))
+            effect_variation = np.random.lognormal(mean=-1.5, sigma=0.3)  # Small variation
+        else:
+            # More variable effect during maintenance
+            treatment_effect = 40 * (1 - (weeks_since_injection / current_interval))
+            effect_variation = np.random.lognormal(mean=-1.0, sigma=0.5)  # Larger variation
         
-        # Disease progression factor - increases over time
-        progression_factor = len(agent.history) / 20.0  # Slowly increases with visits
+        treatment_effect *= (1 + effect_variation)
         
-        # Calculate thickness with multiple factors
+        # Disease progression increases over time with log-normal variation
+        time_factor = len(agent.history) / 20.0
+        progression = time_factor * np.random.lognormal(mean=0, sigma=0.4) * 10
+        
         thickness = (
             base_thickness 
-            - treatment_effect  # Treatment reduces thickness
-            + (progression_factor * 10)  # Disease slowly progresses
-            + (weeks_since_injection * 2)  # Thickness increases between treatments
+            - treatment_effect
+            + progression
+            + (weeks_since_injection * np.random.lognormal(mean=0, sigma=0.3))
         )
         
-        # Fluid risk calculation
-        fluid_risk = (
-            (weeks_since_injection / current_interval) * 0.4  # Time factor
-            + (progression_factor * 0.2)  # Disease progression
-            + (0.3 if thickness > 280 else 0)  # Thickness factor
-        )
-        
-        # Determine fluid presence
-        fluid_present = fluid_risk > 0.6
+        # Fluid risk calculation with asymmetric distribution
+        base_risk = (weeks_since_injection / current_interval) * 0.4
+        risk_variation = np.random.beta(2, 5)  # Beta distribution for [0,1] bounded variation
+        fluid_risk = min(base_risk + risk_variation * 0.3, 1.0)
         
         return {
             "thickness": round(thickness, 1),
-            "fluid_present": fluid_present
+            "fluid_present": fluid_risk > 0.6
         }
         
     def _handle_nurse_vision_check(self, agent: Patient, visit_data: Dict):
