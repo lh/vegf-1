@@ -90,6 +90,13 @@ class AgentBasedSimulation(BaseSimulation):
                 "dose": "0.5mg"
             }
             agent.state["injections_given"] = agent.state.get("injections_given", 0) + 1
+            agent.state["last_injection_date"] = event.time
+            agent.state["weeks_since_last_injection"] = 0
+
+        # Update weeks since last injection
+        if agent.state.get("last_injection_date"):
+            weeks_elapsed = (event.time - agent.state["last_injection_date"]).days / 7.0
+            agent.state["weeks_since_last_injection"] = weeks_elapsed
         
         # Record visit
         agent.record_visit(visit_data)
