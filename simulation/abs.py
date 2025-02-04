@@ -13,7 +13,7 @@ class Patient:
             "last_vision": None,
             "last_oct": None,
             "disease_activity": None,
-            "current_interval": None
+            "current_interval": 8.0  # Initialize with default interval
         }
         self.history: List[Dict] = []
         
@@ -201,8 +201,8 @@ class AgentBasedSimulation(BaseSimulation):
         """Handle doctor OCT review with more sophisticated analysis"""
         oct_data = visit_data.get("oct", {})
         
-        # Get current interval and ensure it's a float
-        current_interval = float(agent.state.get("current_interval", 8.0))
+        # Get current interval - use the value from state or default to 8.0
+        current_interval = agent.state["current_interval"]  # This will now always have a value
         
         # Get previous OCT data
         prev_oct = None
