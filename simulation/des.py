@@ -389,19 +389,19 @@ class DiscreteEventSimulation(BaseSimulation):
         if outcome == 'improve':
             # Improvement: log-normal distribution for positive changes
             # Mean around 7-8 letters, mostly between 5-15 letters
-            change = np.random.lognormal(mean=2.0, sigma=0.3)
+            change = np.random.lognormal(mean=1.8, sigma=0.3)  # Reduced from 2.0
         elif outcome == 'decline':
             # Decline: negative log-normal for rare but potentially significant losses
-            change = -np.random.lognormal(mean=1.5, sigma=0.4)
+            change = -np.random.lognormal(mean=1.8, sigma=0.4)  # Increased from 1.5
         else:
-            # Stable: small normal distribution changes
-            change = np.random.normal(0, 2)
+            # Stable: small normal distribution changes with slight negative bias
+            change = np.random.normal(-1, 2)  # Changed from (0, 2)
         
         # Apply minimal ceiling effect during loading
         current_vision = state["current_vision"]
         headroom = max(0, 85 - current_vision)
         if change > 0:
-            change = min(change, headroom * 0.8)  # Allow most of headroom during loading
+            change = min(change, headroom * 0.7)  # Reduced from 0.8
             
         return change
 
