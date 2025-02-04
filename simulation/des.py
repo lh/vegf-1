@@ -373,6 +373,38 @@ class DiscreteEventSimulation(BaseSimulation):
             data=event.data,
             priority=1
         ))
+    def _calculate_loading_phase_change(self, state: Dict) -> float:
+        """Calculate vision change during loading phase (first 3 injections)
+        
+        Real-world outcomes during loading:
+        - ~25% improve (>5 letters)
+        - ~70% stable (within 5 letters)
+        - ~5% decline (>5 letters)
+        """
+        import numpy as np
+        
+        # Determine outcome category using realistic probabilities
+        outcome = np.random.choice(['improve', 'stable', 'decline'], p=[0.25, 0.70, 0.05])
+        
+        if outcome == 'improve':
+            # Improvement: log-normal distribution for positive changes
+            # Mean around 7-8 letters, mostly between 5-15 letters
+            change = np.random.lognormal(mean=2.0, sigma=0.3)
+        elif outcome == 'decline':
+            # Decline: negative log-normal for rare but potentially significant losses
+            change = -np.random.lognormal(mean=1.5, sigma=0.4)
+        else:
+            # Stable: small normal distribution changes
+            change = np.random.normal(0, 2)
+        
+        # Apply minimal ceiling effect during loading
+        current_vision = state["current_vision"]
+        headroom = max(0, 85 - current_vision)
+        if change > 0:
+            change = min(change, headroom * 0.8)  # Allow most of headroom during loading
+            
+        return change
+
     def _calculate_vision_change(self, state: Dict) -> float:
         """Calculate vision change with memory and ceiling effects
         
@@ -381,6 +413,13 @@ class DiscreteEventSimulation(BaseSimulation):
         Clinically significant change is 5+ letters
         """
         import numpy as np
+        
+        # Check if we're in loading phase
+        if (state.get("current_step") == "injection_phase" and 
+            state.get("injections_given", 0) < 3 and 
+            "injection" in state.get("current_actions", [])):
+            
+            return self._calculate_loading_phase_change(state)
         
         # Get reference points
         current_vision = state["current_vision"]
