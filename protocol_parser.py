@@ -180,18 +180,39 @@ class ProtocolParser:
         if not self.validator.validate_protocol_definition(protocol_data):
             raise ValueError(f"Invalid protocol definition: {self.validator.errors}")
             
-        # Create phase objects
-        phases = {}
-        for phase_name, phase_data in protocol_data.get("phases", {}).items():
-            phases[phase_name] = self._create_protocol_phase(phase_data, phase_name)
+        # Validate phase definitions
+        if not self._validate_protocol_phases(protocol_data.get("phases", {})):
+            raise ValueError(f"Invalid phase definitions: {self.validator.errors}")
             
-        # Convert discontinuation criteria
-        discontinuation_criteria = [
-            self._create_treatment_decision(d)
-            for d in protocol_data.get("discontinuation_criteria", [])
-        ]
+        # Create phase objects with proper type mapping
+        phases = {}
+        phase_mapping = {
+            "loading": PhaseType.LOADING,
+            "maintenance": PhaseType.MAINTENANCE,
+            "extension": PhaseType.EXTENSION,
+            "discontinuation": PhaseType.DISCONTINUATION
+        }
         
-        return TreatmentProtocol(
+        for phase_name, phase_data in protocol_data.get("phases", {}).items():
+            if phase_name not in phase_mapping:
+                raise ValueError(f"Unknown phase type: {phase_name}")
+                
+            phase_type = phase_mapping[phase_name]
+            phases[phase_name] = self._create_protocol_phase(phase_data, phase_type)
+            
+        # Convert discontinuation criteria with validation
+        discontinuation_criteria = []
+        for criterion in protocol_data.get("discontinuation_criteria", []):
+            try:
+                decision = self._create_treatment_decision(criterion)
+                if decision.action not in ["stop", "consider_stop"]:
+                    raise ValueError(f"Invalid discontinuation action: {decision.action}")
+                discontinuation_criteria.append(decision)
+            except Exception as e:
+                raise ValueError(f"Invalid discontinuation criterion: {str(e)}")
+        
+        # Create protocol object
+        protocol = TreatmentProtocol(
             agent=agent,
             protocol_name=protocol_data["name"],
             version=protocol_data["version"],
@@ -200,6 +221,12 @@ class ProtocolParser:
             parameters=self._load_parameter_set(agent, protocol_type),
             discontinuation_criteria=discontinuation_criteria
         )
+        
+        # Validate complete protocol
+        if not protocol.validate():
+            raise ValueError("Protocol validation failed")
+            
+        return protocol
     
     def _validate_protocol_phases(self, phases: Dict[str, Dict]) -> bool:
         """Validate protocol phase definitions"""
