@@ -22,53 +22,58 @@ def run_test_simulation():
         logger.info("Initializing simulation...")
         sim = AgentBasedSimulation(start_date, {"treat_and_extend": protocol})
         
-        # Add a test patient
-        sim.add_patient("TEST001", "treat_and_extend")
-        
-        # Schedule initial visit
+        # Add test patients
         initial_visit = {
             "visit_type": "injection_visit",
             "actions": ["vision_test", "oct_scan", "injection"],
             "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
         }
-        
-        sim.clock.schedule_event(Event(
-            time=start_date,
-            event_type="visit",
-            patient_id="TEST001",
-            data={"visit_type": initial_visit},
-            priority=1
-        ))
-        
+
+        for i in range(1, 8):  # Create patients TEST001 through TEST007
+            patient_id = f"TEST{i:03d}"
+            sim.add_patient(patient_id, "treat_and_extend")
+            
+            # Schedule initial visit
+            sim.clock.schedule_event(Event(
+                time=start_date + timedelta(minutes=30*(i-1)),
+                event_type="visit",
+                patient_id=patient_id,
+                data={"visit_type": initial_visit},
+                priority=1
+            ))
+            
         # Run simulation
         logger.info("Starting simulation...")
         sim.run(end_date)
         
-        # Print patient history
-        patient = sim.agents["TEST001"]
-        print("\nPatient History:")
+        # Print patient histories and generate plots
+        print("\nPatient Histories:")
         print("--------------")
-        for visit in patient.history:
-            print(f"Visit on {visit['date']}: {visit['type']}")
-            print(f"Actions: {visit.get('actions', [])}")
-            if 'vision' in visit:
-                print(f"Vision: {visit['vision']}")
-            if 'oct' in visit:
-                print(f"OCT: {visit['oct']}")
-            print("---")
-        
-        # Print timeline visualization
-        print_patient_timeline("TEST001", patient.history, start_date, end_date)
+        patient_histories = {}
+        for patient_id, patient in sim.agents.items():
+            print(f"\nPatient {patient_id}:")
+            for visit in patient.history:
+                print(f"Visit on {visit['date']}: {visit['type']}")
+                print(f"Actions: {visit.get('actions', [])}")
+                if 'vision' in visit:
+                    print(f"Vision: {visit['vision']}")
+                if 'oct' in visit:
+                    print(f"OCT: {visit['oct']}")
+                print("---")
+            print_patient_timeline(patient_id, patient.history, start_date, end_date)
+            patient_histories[patient_id] = patient.history
             
-        # Print final patient state
-        print("\nFinal Patient State:")
+        # Print final patient states
+        print("\nFinal Patient States:")
         print("-----------------")
-        for key, value in patient.state.items():
-            print(f"{key}: {value}")
-        
-        # Generate acuity plot at the very end
+        for patient_id, patient in sim.agents.items():
+            print(f"\nPatient {patient_id}:")
+            for key, value in patient.state.items():
+                print(f"{key}: {value}")
+                
+        # Generate combined acuity plot at the very end
         print("\nGenerating Acuity Plot...")
-        plot_patient_acuity("TEST001", patient.history, start_date, end_date)
+        plot_multiple_patients(patient_histories, start_date, end_date)
             
     except Exception as e:
         logger.error(f"Error running simulation: {str(e)}")

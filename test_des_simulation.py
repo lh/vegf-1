@@ -22,33 +22,24 @@ def run_test_des_simulation():
         sim = DiscreteEventSimulation(start_date, {"treat_and_extend": protocol})
         
         # Add test patients
-        sim.add_patient("TEST001", "treat_and_extend")
-        sim.add_patient("TEST002", "treat_and_extend")  # Add a second patient to test resource constraints
-        
-        # Schedule initial visits
         initial_visit = {
             "visit_type": "injection_visit",
             "actions": ["vision_test", "oct_scan", "injection"],
             "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
         }
-        
-        # Schedule first patient
-        sim.clock.schedule_event(Event(
-            time=start_date,
-            event_type="visit",
-            patient_id="TEST001",
-            data=initial_visit,
-            priority=1
-        ))
-        
-        # Schedule second patient 30 minutes later
-        sim.clock.schedule_event(Event(
-            time=start_date + timedelta(minutes=30),
-            event_type="visit",
-            patient_id="TEST002",
-            data=initial_visit,
-            priority=1
-        ))
+
+        for i in range(1, 8):  # Create patients TEST001 through TEST007
+            patient_id = f"TEST{i:03d}"
+            sim.add_patient(patient_id, "treat_and_extend")
+            
+            # Schedule initial visit with 30 minute spacing
+            sim.clock.schedule_event(Event(
+                time=start_date + timedelta(minutes=30*(i-1)),
+                event_type="visit",
+                patient_id=patient_id,
+                data=initial_visit,
+                priority=1
+            ))
         
         # Run simulation
         logger.info("Starting simulation...")
