@@ -129,19 +129,19 @@ class ProtocolParser:
             
         return params
     
-    def _create_protocol_phase(self, phase_data: Dict[str, Any], phase_type: str) -> ProtocolPhase:
+    def _create_protocol_phase(self, phase_data: Dict[str, Any], phase_type: PhaseType) -> ProtocolPhase:
         """Create appropriate protocol phase object from YAML data"""
-        phase_types = {
-            "loading": (PhaseType.LOADING, LoadingPhase),
-            "maintenance": (PhaseType.MAINTENANCE, MaintenancePhase),
-            "extension": (PhaseType.EXTENSION, ExtensionPhase),
-            "discontinuation": (PhaseType.DISCONTINUATION, DiscontinuationPhase)
+        phase_classes = {
+            PhaseType.LOADING: LoadingPhase,
+            PhaseType.MAINTENANCE: MaintenancePhase,
+            PhaseType.EXTENSION: ExtensionPhase,
+            PhaseType.DISCONTINUATION: DiscontinuationPhase
         }
         
-        if phase_type not in phase_types:
+        if phase_type not in phase_classes:
             raise ValueError(f"Unknown phase type: {phase_type}")
             
-        phase_enum, phase_class = phase_types[phase_type]
+        phase_class = phase_classes[phase_type]
         
         # Create visit type if specified
         visit_type = None
@@ -198,7 +198,10 @@ class ProtocolParser:
                 raise ValueError(f"Unknown phase type: {phase_name}")
                 
             phase_type = phase_mapping[phase_name]
-            phases[phase_name] = self._create_protocol_phase(phase_data, phase_type)
+            try:
+                phases[phase_name] = self._create_protocol_phase(phase_data, phase_type)
+            except ValueError as e:
+                raise ValueError(f"Error creating {phase_name} phase: {str(e)}")
             
         # Convert discontinuation criteria with validation
         discontinuation_criteria = []
