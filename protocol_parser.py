@@ -221,7 +221,7 @@ class ProtocolParser:
             version=protocol_data["version"],
             description=protocol_data["description"],
             phases=phases,
-            parameters=self._load_parameter_set(agent, protocol_type),
+            parameters=self._load_parameter_set(agent, "standard"),  # Always use standard parameter set
             discontinuation_criteria=discontinuation_criteria
         )
         
