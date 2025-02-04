@@ -408,8 +408,13 @@ class AgentBasedSimulation(BaseSimulation):
             if state.get("current_step") == "injection_phase" and state.get("injections_given", 0) < 3:
                 # Loading phase - strong positive response expected
                 # Use positive log-normal distribution for loading phase improvements
-                base_effect = np.random.lognormal(mean=1.5, sigma=0.3)  # Consistently positive
-                improvement = base_effect * (1 - headroom_factor * 0.5)  # Less affected by ceiling
+                # Increase mean and reduce sigma for more consistent improvements
+                base_effect = np.random.lognormal(mean=2.0, sigma=0.2)  # More consistently positive
+                # Add small random bonus for first injection
+                if state.get("injections_given", 0) == 0:
+                    base_effect += np.random.lognormal(mean=1.0, sigma=0.1)  # Extra improvement for first injection
+                    
+                improvement = base_effect * (1 - headroom_factor * 0.3)  # Less affected by ceiling
                 
                 # Store response
                 state["last_treatment_response"] = improvement
