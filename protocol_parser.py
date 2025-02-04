@@ -87,7 +87,8 @@ class ProtocolParser:
             save_results=config["output"]["save_results"],
             database=config["output"]["database"],
             plots=config["output"]["plots"],
-            verbose=config["output"]["verbose"]
+            verbose=config["output"]["verbose"],
+            start_date=config["simulation"]["start_date"]
         )
     
     def get_full_configuration(self, config_name: str) -> Dict[str, Any]:
