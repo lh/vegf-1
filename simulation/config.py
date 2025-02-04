@@ -103,31 +103,6 @@ class SimulationConfig:
                 
         return params
     
-    def get_vision_params(self) -> Dict[str, Any]:
-        """Get vision-related parameters with validation"""
-        vision_params = self.parameters.get("vision", {})
-        if not vision_params:
-            raise ValueError("Vision parameters not found")
-            
-        required_params = {
-            "baseline_mean": (30, 85),  # Valid ETDRS letter range
-            "measurement_noise_sd": (0, 5),  # Reasonable measurement noise
-            "max_letters": (0, 100),  # ETDRS maximum
-            "min_letters": (0, 30),  # ETDRS minimum
-            "headroom_factor": (0, 1)  # Must be between 0 and 1
-        }
-        
-        for param, (min_val, max_val) in required_params.items():
-            if param not in vision_params:
-                raise ValueError(f"Missing required vision parameter: {param}")
-            value = vision_params[param]
-            if not isinstance(value, (int, float)):
-                raise ValueError(f"Vision parameter {param} must be numeric")
-            if not min_val <= value <= max_val:
-                raise ValueError(f"Vision parameter {param} must be between {min_val} and {max_val}")
-                
-        return vision_params
-
     def get_resource_params(self) -> Dict[str, Any]:
         """Get resource-related parameters"""
         return self.parameters.get("resources", {})

@@ -86,9 +86,9 @@ def test_invalid_configurations():
     }
     
     # Test invalid parameter structure
-    parser = ProtocolParser()
-    with pytest.raises(ValueError):
-        parser.validator.validate_parameter_set(invalid_params)
+    validator = ConfigValidator()
+    assert not validator.validate_parameter_set(invalid_params)
+    assert any("Invalid parameter format" in str(err) for err in validator.errors)
 
 def test_simulation_config_validation():
     """Test validation of complete simulation configuration"""
