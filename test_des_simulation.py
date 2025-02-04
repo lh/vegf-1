@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from simulation import DiscreteEventSimulation, Event
 from protocol_parser import load_protocol
 from visualization.timeline_viz import print_patient_timeline
+from visualization.acuity_viz import plot_patient_acuity, plot_multiple_patients
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -73,6 +74,14 @@ def run_test_des_simulation():
                 for visit in state.get('visit_history', [])
             ]
             print_patient_timeline(patient_id, visits, start_date, end_date)
+            
+        # Generate acuity plots
+        print("\nGenerating Acuity Plots...")
+        patient_histories = {
+            patient_id: state.get('visit_history', [])
+            for patient_id, state in sim.patient_states.items()
+        }
+        plot_multiple_patients(patient_histories, start_date, end_date)
 
         # Print patient states
         print("\nFinal Patient States:")
