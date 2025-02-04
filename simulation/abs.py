@@ -54,23 +54,24 @@ class AgentBasedSimulation(BaseSimulation):
         if not visit_type:
             return
             
+        # Create visit data with proper date field
         visit_data = {
             "date": event.time,
-            "type": visit_type,
-            "actions": [],
-            "decisions": []
+            "type": visit_type.get("visit_type", "unknown"),  # Get visit_type name or default to unknown
+            "actions": visit_type.get("actions", []),
+            "decisions": visit_type.get("decisions", [])
         }
         
         # Perform visit actions
-        if "vision_test" in visit_type["actions"]:
+        if "vision_test" in visit_type.get("actions", []):
             visit_data["actions"].append("vision_test")
             visit_data["vision"] = self._simulate_vision_test(agent)
             
-        if "oct_scan" in visit_type["actions"]:
+        if "oct_scan" in visit_type.get("actions", []):
             visit_data["actions"].append("oct_scan")
             visit_data["oct"] = self._simulate_oct_scan(agent)
             
-        if "injection" in visit_type["actions"]:
+        if "injection" in visit_type.get("actions", []):
             visit_data["actions"].append("injection")
             self._perform_injection(agent, event.data.get("injection_data", {}))
             
