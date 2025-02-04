@@ -177,8 +177,70 @@ class MaintenancePhase(ProtocolPhase):
         return state
 
 @dataclass
+class ExtensionPhase(ProtocolPhase):
+    """Extension phase specific implementation"""
+    def __post_init__(self):
+        self.phase_type = PhaseType.EXTENSION
+        if not self.visit_type:
+            self.visit_type = VisitType(
+                name="extension",
+                required_actions=[ActionType.VISION_TEST, ActionType.OCT_SCAN],
+                optional_actions=[ActionType.INJECTION],
+                decisions=[DecisionType.NURSE_CHECK, DecisionType.DOCTOR_REVIEW]
+            )
+
+    def process_visit(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """Process extension phase visit"""
+        current_interval = state.get("current_interval", self.visit_interval_weeks)
+        disease_active = state.get("disease_activity") == "active"
+        
+        # More conservative interval adjustments in extension phase
+        if disease_active:
+            # Return to maintenance phase on disease activity
+            state["phase_complete"] = True
+            state["next_phase"] = "maintenance"
+            new_interval = max(
+                self.min_interval_weeks,
+                current_interval - 2 * self.interval_adjustment_weeks  # Double reduction
+            )
+        else:
+            # Slower extension in this phase
+            new_interval = min(
+                self.max_interval_weeks,
+                current_interval + self.interval_adjustment_weeks // 2  # Half increase
+            )
+            
+        state["current_interval"] = new_interval
+        state["next_visit_weeks"] = new_interval
+        
+        return state
+
+@dataclass
+class DiscontinuationPhase(ProtocolPhase):
+    """Discontinuation phase specific implementation"""
+    def __post_init__(self):
+        self.phase_type = PhaseType.DISCONTINUATION
+        if not self.visit_type:
+            self.visit_type = VisitType(
+                name="discontinuation",
+                required_actions=[ActionType.VISION_TEST, ActionType.OCT_SCAN],
+                decisions=[DecisionType.NURSE_CHECK, DecisionType.DOCTOR_REVIEW]
+            )
+
+    def process_visit(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """Process discontinuation phase visit"""
+        # Always schedule follow-up at fixed interval
+        state["next_visit_weeks"] = self.visit_interval_weeks
+        
+        # Check if monitoring should continue
+        if self.is_complete(state):
+            state["protocol_complete"] = True
+            
+        return state
+
+@dataclass
 class TreatmentProtocol:
-    """Complete definition of a treatment protocol"""
+    """Complete definition of a treatment protocol with phase management"""
     agent: str
     protocol_name: str
     version: str
@@ -196,11 +258,21 @@ class TreatmentProtocol:
     
     def get_next_phase(self, current_phase: ProtocolPhase) -> Optional[ProtocolPhase]:
         """Get the next phase in the protocol sequence"""
-        phase_sequence = list(self.phases.values())
+        # Define standard phase sequence
+        phase_sequence = [
+            PhaseType.LOADING,
+            PhaseType.MAINTENANCE,
+            PhaseType.EXTENSION,
+            PhaseType.DISCONTINUATION
+        ]
+        
         try:
-            current_idx = phase_sequence.index(current_phase)
-            if current_idx + 1 < len(phase_sequence):
-                return phase_sequence[current_idx + 1]
+            current_idx = phase_sequence.index(current_phase.phase_type)
+            # Look for next phase in sequence
+            for next_type in phase_sequence[current_idx + 1:]:
+                for phase in self.phases.values():
+                    if phase.phase_type == next_type:
+                        return phase
         except ValueError:
             pass
         return None
@@ -219,3 +291,41 @@ class TreatmentProtocol:
         if value is None:
             return False
         return criterion.evaluate(value)
+        
+    def validate(self) -> bool:
+        """Validate protocol configuration"""
+        # Check required phases
+        if not any(p.phase_type == PhaseType.LOADING for p in self.phases.values()):
+            return False
+            
+        # Validate phase sequence
+        current = self.get_initial_phase()
+        while current:
+            if not current.visit_type.validate():
+                return False
+            current = self.get_next_phase(current)
+            
+        return True
+        
+    def process_phase_transition(self, current_phase: ProtocolPhase, 
+                               state: Dict[str, Any]) -> Optional[ProtocolPhase]:
+        """Handle transition between protocol phases"""
+        # Check if current phase is complete
+        if not current_phase.is_complete(state):
+            return None
+            
+        # Get next phase
+        next_phase = self.get_next_phase(current_phase)
+        if not next_phase:
+            return None
+            
+        # Validate transition
+        if not next_phase.can_enter(state):
+            return None
+            
+        # Initialize next phase state
+        state["phase_complete"] = False
+        state["treatments_in_phase"] = 0
+        state["weeks_in_phase"] = 0
+        
+        return next_phase
