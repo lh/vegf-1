@@ -9,17 +9,19 @@ class DiscreteEventSimulation(BaseSimulation):
     Pure DES implementation focusing on event flows and aggregate statistics
     rather than individual agent modeling.
     """
-    def __init__(self, start_date: datetime, protocols: Dict[str, TreatmentProtocol],
-                 environment: Optional[SimulationEnvironment] = None,
-                 random_seed: Optional[int] = None):
-        super().__init__(start_date, environment)
-        self.protocols = protocols
+    def __init__(self, config: SimulationConfig,
+                 environment: Optional[SimulationEnvironment] = None):
+        """Initialize DES with configuration"""
+        super().__init__(config.start_date, environment)
+        self.config = config
+        self.protocols = {config.protocol["name"]: config.protocol}
         self.patient_states: Dict[str, Dict] = {}
         
         # Initialize random seed
-        import numpy as np
-        if random_seed is not None:
-            np.random.seed(random_seed)
+        if config.random_seed is not None:
+            np.random.seed(config.random_seed)
+            
+        # Initialize statistics with resource limits from config
         self.global_stats = {
             "total_visits": 0,
             "total_injections": 0,
@@ -34,11 +36,9 @@ class DiscreteEventSimulation(BaseSimulation):
                 "oct_machines": 0
             }
         }
-        self.resource_capacity = {
-            "doctors": 2,
-            "nurses": 4,
-            "oct_machines": 2
-        }
+        
+        # Get resource capacity from config
+        self.resource_capacity = config.parameters["resources"]
         self.resource_queue = {
             "doctors": [],
             "nurses": [],

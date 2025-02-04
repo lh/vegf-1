@@ -46,13 +46,18 @@ class Patient:
             self.state["last_oct"] = visit_data["oct"]
 
 class AgentBasedSimulation(BaseSimulation):
-    def __init__(self, start_date: datetime, protocols: Dict[str, TreatmentProtocol],
-                 environment: Optional[SimulationEnvironment] = None,
-                 verbose: bool = False):
-        super().__init__(start_date, environment)
-        self.protocols = protocols
+    def __init__(self, config: SimulationConfig, 
+                 environment: Optional[SimulationEnvironment] = None):
+        """Initialize ABS with configuration"""
+        super().__init__(config.start_date, environment)
+        self.config = config
+        self.protocols = {config.protocol["name"]: config.protocol}
         self.agents: Dict[str, Patient] = {}
-        self.verbose = verbose
+        self.verbose = config.verbose
+        
+        # Set random seed if specified
+        if config.random_seed is not None:
+            np.random.seed(config.random_seed)
     
     def add_patient(self, patient_id: str, protocol_name: str):
         if protocol_name in self.protocols:
