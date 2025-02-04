@@ -142,7 +142,7 @@ class AgentBasedSimulation(BaseSimulation):
             self._handle_doctor_treatment_decision(agent, visit_data)
             
     def _simulate_vision_test(self, agent: Patient) -> int:
-        """Simulate vision test with proper injection effects"""
+        """Simulate vision test with proper injection effects and measurement noise"""
         # Baseline vision is now always initialized
             
         # Prepare state for vision calculation
@@ -172,7 +172,10 @@ class AgentBasedSimulation(BaseSimulation):
             "current_actions": []  # Reset current actions after processing
         })
         
-        new_vision = agent.state["last_vision"] + change
+        # Add measurement noise
+        measurement_noise = np.random.normal(0, 2)  # SD of 2 letters
+        
+        new_vision = agent.state["last_vision"] + change + measurement_noise
         return int(min(max(new_vision, 0), 85))  # Clamp between 0-85 letters
         
     def _simulate_oct_scan(self, agent: Patient) -> Dict:
