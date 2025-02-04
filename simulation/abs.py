@@ -207,11 +207,11 @@ class AgentBasedSimulation(BaseSimulation):
         if agent.state["current_step"] == "injection_phase" and agent.state.get("injections_given", 0) < 3:
             # Stronger, more consistent effect during loading
             treatment_effect = oct_params["treatment_effect_mean"] * (1 - (weeks_since_injection / current_interval))
-            effect_variation = np.random.normal(-1.0, oct_params["treatment_effect_sd"] / 10)
+            effect_variation = np.random.normal(0, oct_params["treatment_effect_sd"] * 0.1)  # 10% of base SD
         else:
             # More variable effect during maintenance
             treatment_effect = oct_params["treatment_effect_mean"] * 0.8 * (1 - (weeks_since_injection / current_interval))
-            effect_variation = np.random.normal(-1.0, oct_params["treatment_effect_sd"] / 5)
+            effect_variation = np.random.normal(0, oct_params["treatment_effect_sd"] * 0.2)  # 20% of base SD
         
         treatment_effect *= (1 + effect_variation)
         
@@ -295,7 +295,9 @@ class AgentBasedSimulation(BaseSimulation):
             risk_score += 1  # Higher risk with longer intervals
             
         # Determine disease activity based on risk score
-        if risk_score >= 3:
+        # Use configured risk thresholds
+        high_risk_threshold = oct_params.get("risk_thresholds", {}).get("high_risk", 3)
+        if risk_score >= high_risk_threshold:
             agent.state["disease_activity"] = "recurring"
         else:
             agent.state["disease_activity"] = "stable"
