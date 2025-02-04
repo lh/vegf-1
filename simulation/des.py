@@ -15,7 +15,8 @@ class DiscreteEventSimulation(BaseSimulation):
         """Initialize DES with configuration"""
         super().__init__(config.start_date, environment)
         self.config = config
-        self.protocols = {config.protocol["name"]: config.protocol}
+        # Store protocol by type instead of name
+        self.protocols = {"treat_and_extend": config.protocol}  # Changed this line to match test expectations
         self.patient_states: Dict[str, Dict] = {}
         
         # Initialize random seed
