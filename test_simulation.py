@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 from simulation import AgentBasedSimulation, Event
 from protocol_parser import load_protocol
+from visualization.timeline_viz import print_patient_timeline
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -55,6 +56,9 @@ def run_test_simulation():
                 print(f"OCT: {visit['oct']}")
             print("---")
         
+        # Print timeline visualization
+        print_patient_timeline("TEST001", patient.history, start_date, end_date)
+            
         # Print final patient state
         print("\nFinal Patient State:")
         print("-----------------")

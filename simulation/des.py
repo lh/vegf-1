@@ -52,7 +52,8 @@ class DiscreteEventSimulation(BaseSimulation):
             "current_vision": 65,
             "last_visit_date": None,
             "next_visit_interval": 4,
-            "treatment_start": self.clock.current_time
+            "treatment_start": self.clock.current_time,
+            "visit_history": []  # Add visit history tracking
         }
     
     def process_event(self, event: Event):
@@ -91,6 +92,14 @@ class DiscreteEventSimulation(BaseSimulation):
                         data={"resource_type": resource},
                         priority=1
                     ))
+            
+            # Add visit to history
+            visit_record = {
+                'date': event.time,
+                'actions': event.data.get('actions', []),
+                'type': event.data.get('visit_type', 'unknown')
+            }
+            state['visit_history'].append(visit_record)
             
             # Schedule treatment decision
             self.clock.schedule_event(Event(

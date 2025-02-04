@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from simulation import DiscreteEventSimulation, Event
 from protocol_parser import load_protocol
+from visualization.timeline_viz import print_patient_timeline
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -64,6 +65,15 @@ def run_test_des_simulation():
         for resource, usage in sim.global_stats["resource_utilization"].items():
             print(f"{resource}: {usage}")
             
+        # Print patient timelines
+        print("\nPatient Timelines:")
+        for patient_id, state in sim.patient_states.items():
+            visits = [
+                {'date': visit['date'], 'actions': visit['actions']} 
+                for visit in state.get('visit_history', [])
+            ]
+            print_patient_timeline(patient_id, visits, start_date, end_date)
+
         # Print patient states
         print("\nFinal Patient States:")
         print("-" * 20)
