@@ -75,14 +75,6 @@ def run_test_des_simulation():
             ]
             print_patient_timeline(patient_id, visits, start_date, end_date)
             
-        # Generate acuity plots
-        print("\nGenerating Acuity Plots...")
-        patient_histories = {
-            patient_id: state.get('visit_history', [])
-            for patient_id, state in sim.patient_states.items()
-        }
-        plot_multiple_patients(patient_histories, start_date, end_date)
-
         # Print patient states
         print("\nFinal Patient States:")
         print("-" * 20)
@@ -90,6 +82,14 @@ def run_test_des_simulation():
             print(f"\nPatient {patient_id}:")
             for key, value in state.items():
                 print(f"  {key}: {value}")
+                
+        # Generate acuity plots at the very end
+        print("\nGenerating Acuity Plot...")
+        patient_histories = {
+            patient_id: state.get('visit_history', [])
+            for patient_id, state in sim.patient_states.items()
+        }
+        plot_multiple_patients(patient_histories, start_date, end_date)
             
     except Exception as e:
         logger.error(f"Error running simulation: {str(e)}")
