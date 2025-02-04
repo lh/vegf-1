@@ -133,14 +133,8 @@ class AgentBasedSimulation(BaseSimulation):
             self._handle_doctor_treatment_decision(agent, visit_data)
             
     def _simulate_vision_test(self, agent: Patient) -> int:
-        """Calculate vision change with memory and ceiling effects
-        
-        Vision is measured in ETDRS letters (0-85 scale)
-        Typical starting vision might be 55-65 letters
-        Clinically significant change is 5+ letters
-        """
+        """Simulate vision test with proper injection effects"""
         if agent.state["baseline_vision"] is None:
-            # First visit - set baseline with some variation
             return int(np.random.normal(65, 3))
             
         # Prepare state for vision calculation
@@ -152,17 +146,22 @@ class AgentBasedSimulation(BaseSimulation):
             "treatment_response_history": agent.state.get("treatment_response_history", []),
             "current_step": agent.state["current_step"],
             "injections_given": agent.state.get("injections_given", 0),
-            "current_actions": agent.state.get("current_actions", []),
+            "current_actions": ["injection"] if "injection" in agent.state.get("current_actions", []),
             "weeks_since_last_injection": agent.state.get("weeks_since_last_injection", 0)
         }
         
+        # Add injection to current actions if this is an injection visit
+        if "injection" in agent.state.get("current_actions", []):
+            calc_state["current_actions"].append("injection")
+        
         change = self._calculate_vision_change(calc_state)
         
-        # Update agent state with calculation results
+        # Update agent state
         agent.state.update({
             "last_treatment_response": calc_state.get("last_treatment_response"),
             "treatment_response_history": calc_state.get("treatment_response_history", []),
-            "best_vision_achieved": calc_state.get("best_vision_achieved")
+            "best_vision_achieved": calc_state.get("best_vision_achieved"),
+            "current_actions": []  # Reset current actions after processing
         })
         
         new_vision = agent.state["last_vision"] + change
