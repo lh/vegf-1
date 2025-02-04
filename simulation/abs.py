@@ -84,6 +84,24 @@ class AgentBasedSimulation(BaseSimulation):
             return agent.state.get("disease_activity") == "active"
         return False
         
+    def _process_action(self, agent: Patient, action: ActionType, visit_data: Dict, time: datetime):
+        """Process a single action during a visit"""
+        if action == ActionType.VISION_TEST:
+            visit_data["vision"] = self._simulate_vision_test(agent)
+            
+        elif action == ActionType.OCT_SCAN:
+            visit_data["oct"] = self._simulate_oct_scan(agent)
+            
+        elif action == ActionType.INJECTION:
+            visit_data["injection"] = {
+                "agent": agent.protocol.agent,
+                "dose": "0.5mg"
+            }
+            agent.state["treatments_in_phase"] = agent.state.get("treatments_in_phase", 0) + 1
+            agent.state["last_injection_date"] = time
+            agent.state["weeks_since_last_injection"] = 0
+            agent.state["current_actions"].append("injection")
+            
     def _handle_agent_visit(self, agent: Patient, event: Event):
         """Handle a patient visit event using protocol objects"""
         if not event.phase:
@@ -104,36 +122,13 @@ class AgentBasedSimulation(BaseSimulation):
         # Process required actions
         for action in event.get_required_actions():
             visit_data["actions"].append(action.value)
-            
-            if action == ActionType.VISION_TEST:
-                visit_data["vision"] = self._simulate_vision_test(agent)
-                
-            elif action == ActionType.OCT_SCAN:
-                visit_data["oct"] = self._simulate_oct_scan(agent)
-                
-            elif action == ActionType.INJECTION:
-                visit_data["injection"] = {
-                    "agent": agent.protocol.agent,
-                    "dose": "0.5mg"
-                }
-                agent.state["treatments_in_phase"] = agent.state.get("treatments_in_phase", 0) + 1
-                agent.state["last_injection_date"] = event.time
-                agent.state["weeks_since_last_injection"] = 0
-                agent.state["current_actions"].append("injection")
+            self._process_action(agent, action, visit_data, event.time)
                 
         # Process optional actions if needed
         for action in event.get_optional_actions():
             if self._should_perform_optional_action(agent, action):
                 visit_data["actions"].append(action.value)
-                if action == ActionType.INJECTION:
-                    visit_data["injection"] = {
-                        "agent": agent.protocol.agent,
-                        "dose": "0.5mg"
-                    }
-                    agent.state["treatments_in_phase"] = agent.state.get("treatments_in_phase", 0) + 1
-                    agent.state["last_injection_date"] = event.time
-                    agent.state["weeks_since_last_injection"] = 0
-                    agent.state["current_actions"].append("injection")
+                self._process_action(agent, action, visit_data, event.time)
 
         # Update weeks since last injection
         if agent.state.get("last_injection_date"):
