@@ -201,8 +201,8 @@ class AgentBasedSimulation(BaseSimulation):
         """Handle doctor OCT review with more sophisticated analysis"""
         oct_data = visit_data.get("oct", {})
         
-        # Get current interval with default and ensure it's a number
-        current_interval = agent.state.get("current_interval", 8.0)
+        # Get current interval and ensure it's a float
+        current_interval = float(agent.state.get("current_interval", 8.0))
         
         # Get previous OCT data
         prev_oct = None
