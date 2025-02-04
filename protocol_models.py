@@ -163,7 +163,7 @@ class MaintenancePhase(ProtocolPhase):
         if disease_active:
             new_interval = max(
                 self.min_interval_weeks,
-                current_interval - self.interval_adjustment_weeks
+                current_interval - 2 * self.interval_adjustment_weeks  # Double reduction when active
             )
         else:
             new_interval = min(
@@ -201,7 +201,7 @@ class ExtensionPhase(ProtocolPhase):
             state["next_phase"] = "maintenance"
             new_interval = max(
                 self.min_interval_weeks,
-                current_interval - 2 * self.interval_adjustment_weeks  # Double reduction
+                current_interval - 3 * self.interval_adjustment_weeks  # Triple reduction for aggressive response
             )
         else:
             # Slower extension in this phase
