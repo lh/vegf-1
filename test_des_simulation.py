@@ -86,7 +86,8 @@ def run_test_des_simulation(verbose: bool = False):
         # Generate acuity plot (suppressed but code kept for future use)
         if False:  # Set to True to show plots
             plot_multiple_patients(patient_histories, start_date, end_date,
-                          title="Discrete Event Simulation: Visual Acuity Over Time")
+                                 title="Discrete Event Simulation: Visual Acuity Over Time",
+                                 show=False)  # Add show=False parameter
         
         return patient_histories
             

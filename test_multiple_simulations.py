@@ -103,7 +103,7 @@ def analyze_results(conn):
     plt.title('Number of Visits by Simulation Type')
     
     plt.tight_layout()
-    plt.savefig('simulation_comparison.png')
+    plt.show()  # This will be the only plot shown
     plt.close()
     
     # Print summary statistics
