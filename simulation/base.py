@@ -4,6 +4,11 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 from queue import PriorityQueue
 
+class SimulationEnvironment:
+    def __init__(self, start_date: datetime):
+        self.current_time = start_date
+        self.global_state: Dict[str, Any] = {}
+
 @dataclass
 class Event:
     time: datetime
@@ -28,9 +33,10 @@ class SimulationClock:
         return event
 
 class BaseSimulation(ABC):
-    def __init__(self, start_date: datetime):
+    def __init__(self, start_date: datetime, environment: Optional[SimulationEnvironment] = None):
         self.clock = SimulationClock(start_date)
         self.metrics: Dict[str, List[Any]] = {}
+        self.environment = environment or SimulationEnvironment(start_date)
     
     @abstractmethod
     def process_event(self, event: Event):

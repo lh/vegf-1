@@ -1,6 +1,6 @@
 from datetime import datetime
-from typing import Dict, List
-from .base import BaseSimulation, Event
+from typing import Dict, List, Optional
+from .base import BaseSimulation, Event, SimulationEnvironment
 from protocol_models import TreatmentProtocol
 
 class Patient:
@@ -11,8 +11,9 @@ class Patient:
         self.history: List[Dict] = []
 
 class AgentBasedSimulation(BaseSimulation):
-    def __init__(self, start_date: datetime, protocols: Dict[str, TreatmentProtocol]):
-        super().__init__(start_date)
+    def __init__(self, start_date: datetime, protocols: Dict[str, TreatmentProtocol],
+                 environment: Optional[SimulationEnvironment] = None):
+        super().__init__(start_date, environment)
         self.protocols = protocols
         self.agents: Dict[str, Patient] = {}
     
