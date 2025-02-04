@@ -1,0 +1,33 @@
+agent: Eylea
+protocols:
+  induction_maintenance:
+    steps:
+      - type: injection
+        dose: 0.5mg
+        interval: 4 weeks
+        repeat: 3
+        next: initial_assessment
+  
+  initial_assessment:
+    type: assessment
+    required_metrics: [vision, oct]
+    conditions:
+      - metric: vision
+        comparator: ">="
+        value: baseline
+        next: maintenance
+      - metric: retinal_thickness
+        comparator: improved
+        next: maintenance
+    default: stop
+
+  maintenance:
+    type: injection
+    dose: 0.5mg
+    interval: 8 weeks
+    reassess_interval: 12 weeks
+    exit_criteria:
+      - metric: vision
+        comparator: "<="
+        value: "baseline - 15"
+        action: consider_stop

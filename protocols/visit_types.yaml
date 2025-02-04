@@ -1,0 +1,12 @@
+visit_types:
+  basic_vision:
+    actions: [vision_test]
+    decisions: [nurse_vision_check]
+    
+  vision_oct:
+    actions: [vision_test, oct_scan]
+    decisions: [nurse_vision_check, doctor_oct_review]
+    
+  injection_visit:
+    actions: [vision_test, oct_scan, injection]
+    decisions: [nurse_vision_check, doctor_treatment_decision]
