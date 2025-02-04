@@ -10,3 +10,4 @@
 8. **Simulation Architecture**: Separate base, DES, and ABS implementations for comparison studies
 9. **Visit Types**: Standardized visit definitions in YAML for consistency across protocols
 10. **Decision Pipeline**: Structured nurse->doctor decision flow matching clinical practice
+11. **Vision Modeling**: Realistic vision change simulation with treatment memory and ceiling effects
