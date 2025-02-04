@@ -183,24 +183,30 @@ class AgentBasedSimulation(BaseSimulation):
         """
         Adjust treatment interval based on treat-and-extend protocol rules
         """
-        current_step = agent.protocol.steps.get(agent.state["current_step"])
-        if not current_step or current_step.step_type != "dynamic_interval":
+        # Find the current step in the protocol steps list
+        current_step = None
+        for step in agent.protocol.steps:
+            if step.get("step_type") == agent.state["current_step"]:
+                current_step = step
+                break
+                
+        if not current_step or current_step.get("step_type") != "dynamic_interval":
             return
+                
+        params = current_step.get("parameters", {})
+        current_interval = agent.state.get("current_interval", params.get("initial_interval", 8))
+        adjustment = params.get("adjustment_weeks", 2)
             
-        params = current_step.parameters
-        current_interval = agent.state.get("current_interval", params["initial_interval"])
-        adjustment = params["adjustment_weeks"]
-        
         if agent.state["disease_activity"] == "recurring":
             # Decrease interval if disease is recurring
-            new_interval = max(current_interval - adjustment, params["min_interval"])
+            new_interval = max(current_interval - adjustment, params.get("min_interval", 4))
         elif agent.state["disease_activity"] == "stable":
             # Increase interval if disease is stable
-            new_interval = min(current_interval + adjustment, params["max_interval"])
+            new_interval = min(current_interval + adjustment, params.get("max_interval", 12))
         else:
             # Keep same interval if disease activity status is unclear
             new_interval = current_interval
-            
+                
         agent.state["current_interval"] = new_interval
         
         # Schedule next visit based on new interval
