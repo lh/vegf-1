@@ -104,7 +104,7 @@ class AgentBasedSimulation(BaseSimulation):
         if "injection" in visit_type.get("actions", []):
             visit_data["actions"].append("injection")
             visit_data["injection"] = {
-                "agent": agent.protocol.agent,
+                "agent": agent.protocol["name"],
                 "dose": "0.5mg"
             }
             agent.state["injections_given"] = agent.state.get("injections_given", 0) + 1
