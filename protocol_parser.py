@@ -40,11 +40,17 @@ class ProtocolParser:
         with open(path) as f:
             params = yaml.safe_load(f)
         
-        # Merge with base parameters
+        # Deep copy base parameters to avoid modifying original
         merged = self.base_parameters.copy()
-        if "extends" in params:
-            del params["extends"]  # Remove extends key
-        merged.update(params.get("protocol_specific", {}))
+        
+        # Merge protocol specific parameters
+        protocol_params = params.get("protocol_specific", {})
+        for category, values in protocol_params.items():
+            if category in merged:
+                merged[category].update(values)
+            else:
+                merged[category] = values
+                
         return merged
     
     def load_simulation_config(self, config_name: str) -> SimulationConfig:
