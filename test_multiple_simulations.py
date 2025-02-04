@@ -2,7 +2,7 @@ import sqlite3
 from datetime import datetime, timedelta
 import pandas as pd
 import matplotlib.pyplot as plt
-plt.style.use('seaborn')  # Optional: use a nicer style
+plt.style.use('bmh')  # Use built-in style instead of seaborn
 from test_abs_simulation import run_test_simulation as run_abs
 from test_des_simulation import run_test_des_simulation as run_des
 from analysis.simulation_results import SimulationResults
