@@ -142,7 +142,7 @@ class AgentBasedSimulation(BaseSimulation):
         
     def _simulate_oct_scan(self, agent: Patient) -> Dict:
         """Simulate OCT with more realistic disease progression"""
-        current_interval = agent.state.get("current_interval", 8)
+        current_interval = agent.state.get("current_interval", 8.0)
         last_visit = agent.history[-1]["date"] if agent.history else None
         weeks_since_injection = 0
         
@@ -202,7 +202,7 @@ class AgentBasedSimulation(BaseSimulation):
         oct_data = visit_data.get("oct", {})
         
         # Get current interval with default and ensure it's a number
-        current_interval = float(agent.state.get("current_interval", 8))
+        current_interval = agent.state.get("current_interval", 8.0)
         
         # Get previous OCT data
         prev_oct = None
@@ -272,7 +272,7 @@ class AgentBasedSimulation(BaseSimulation):
             else:
                 # Move to assessment phase after 3 injections
                 agent.state["current_step"] = "dynamic_interval"
-                agent.state["current_interval"] = 8  # Start with 8 week interval
+                agent.state["current_interval"] = 8.0  # Start with 8 week interval
                 self._schedule_next_visit(agent)
         
         elif current_step == "dynamic_interval":
@@ -295,7 +295,7 @@ class AgentBasedSimulation(BaseSimulation):
             return
                 
         params = current_step.get("parameters", {})
-        current_interval = agent.state.get("current_interval", params.get("initial_interval", 8))
+        current_interval = agent.state.get("current_interval", params.get("initial_interval", 8.0))
         adjustment = params.get("adjustment_weeks", 2)
             
         if agent.state["disease_activity"] == "recurring":
@@ -344,7 +344,7 @@ class AgentBasedSimulation(BaseSimulation):
             "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
         }
         
-        interval_weeks = agent.state.get("current_interval", 8)
+        interval_weeks = agent.state.get("current_interval", 8.0)
         
         self.clock.schedule_event(Event(
             time=self.clock.current_time + timedelta(weeks=interval_weeks),
