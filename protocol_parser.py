@@ -222,10 +222,22 @@ class ProtocolParser:
         return merged
     
     def load_simulation_config(self, config_name: str) -> SimulationConfig:
-        """Load simulation configuration"""
+        """Load simulation configuration and create protocol objects"""
         path = self.base_path / "simulation_configs" / f"{config_name}.yaml"
         with open(path) as f:
             config = yaml.safe_load(f)
+            
+        # Load and create protocol object
+        protocol = self._load_protocol_definition(
+            config["protocol"]["agent"],
+            config["protocol"]["type"]
+        )
+        
+        # Load and merge parameters
+        parameters = self._load_parameter_set(
+            config["protocol"]["agent"],
+            config["protocol"]["parameter_set"]
+        )
         
         return SimulationConfig(
             name=config["name"],
@@ -241,19 +253,19 @@ class ProtocolParser:
             database=config["output"]["database"],
             plots=config["output"]["plots"],
             verbose=config["output"]["verbose"],
-            start_date=config["simulation"]["start_date"]
+            start_date=config["simulation"]["start_date"],
+            protocol=protocol,  # Now passing protocol object
+            parameters=parameters  # Now passing merged parameters
         )
     
     def get_full_configuration(self, config_name: str) -> Dict[str, Any]:
-        """Get complete configuration including protocol and parameters"""
+        """Get complete configuration with protocol objects"""
         config = self.load_simulation_config(config_name)
-        protocol = self._load_protocol_definition(config.protocol_agent, config.protocol_type)
-        parameters = self._load_parameter_set(config.protocol_agent, config.parameter_set)
         
         return {
             "config": config,
-            "protocol": protocol,
-            "parameters": parameters
+            "protocol": config.protocol,  # Already a TreatmentProtocol object
+            "parameters": config.parameters  # Already merged parameters
         }
 
 def load_protocol(config_name: str) -> Dict[str, Any]:
