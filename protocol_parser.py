@@ -1,5 +1,6 @@
 import yaml
 from pathlib import Path
+from protocol_models import TreatmentProtocol, ProtocolStep
 
 def load_protocol(agent: str, protocol_name: str) -> TreatmentProtocol:
     path = Path(f"protocols/{agent.lower()}.yaml")
