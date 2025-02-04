@@ -14,7 +14,14 @@ class Patient:
             "last_vision": None,
             "last_oct": None,
             "disease_activity": None,
-            "current_interval": 8.0  # Initialize with default interval
+            "current_interval": 8.0,  # Initialize with default interval
+            "injections_given": 0,
+            "best_vision_achieved": None,
+            "last_treatment_response": None,
+            "treatment_response_history": [],
+            "weeks_since_last_injection": 0,
+            "last_injection_date": None,
+            "current_actions": []
         }
         self.history: List[Dict] = []
         
@@ -92,6 +99,7 @@ class AgentBasedSimulation(BaseSimulation):
             agent.state["injections_given"] = agent.state.get("injections_given", 0) + 1
             agent.state["last_injection_date"] = event.time
             agent.state["weeks_since_last_injection"] = 0
+            agent.state["current_actions"].append("injection")  # Add to current actions
 
         # Update weeks since last injection
         if agent.state.get("last_injection_date"):
