@@ -1,7 +1,9 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Union, Type
 from datetime import datetime, timedelta
 from enum import Enum, auto
+from abc import ABC, abstractmethod
 
 class PhaseType(Enum):
     """Types of protocol phases"""
@@ -10,14 +12,33 @@ class PhaseType(Enum):
     EXTENSION = auto()
     DISCONTINUATION = auto()
 
+class ActionType(Enum):
+    """Types of clinical actions"""
+    VISION_TEST = "vision_test"
+    OCT_SCAN = "oct_scan" 
+    INJECTION = "injection"
+    CONSULTATION = "consultation"
+
+class DecisionType(Enum):
+    """Types of clinical decisions"""
+    NURSE_CHECK = "nurse_vision_check"
+    DOCTOR_REVIEW = "doctor_treatment_decision"
+    OCT_REVIEW = "doctor_oct_review"
+
 @dataclass
 class VisitType:
     """Definition of a visit type"""
     name: str
-    required_actions: List[str]
-    optional_actions: List[str] = field(default_factory=list)
-    decisions: List[str] = field(default_factory=list)
+    required_actions: List[ActionType]
+    optional_actions: List[ActionType] = field(default_factory=list)
+    decisions: List[DecisionType] = field(default_factory=list)
     duration_minutes: int = 30
+
+    def validate(self) -> bool:
+        """Validate visit type configuration"""
+        if not self.name or not self.required_actions:
+            return False
+        return True
 
 @dataclass
 class TreatmentDecision:
