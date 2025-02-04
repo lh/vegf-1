@@ -3,7 +3,7 @@ description: Basic test configuration for protocol validation
 
 protocol:
   agent: eylea
-  type: treat_and_extend
+  type: test_simulation
   parameter_set: standard
 
 simulation:
