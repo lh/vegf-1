@@ -126,31 +126,40 @@ class AgentBasedSimulation(BaseSimulation):
             self._handle_doctor_treatment_decision(agent, visit_data)
             
     def _simulate_vision_test(self, agent: Patient) -> int:
-        """Simulate vision test with log-normal distribution for changes"""
+        """Calculate vision change with memory and ceiling effects
+        
+        Vision is measured in ETDRS letters (0-85 scale)
+        Typical starting vision might be 55-65 letters
+        Clinically significant change is 5+ letters
+        """
         if agent.state["baseline_vision"] is None:
             # First visit - set baseline with some variation
-            return int(np.random.normal(65, 3))  # Keep normal for initial vision
+            return int(np.random.normal(65, 3))
             
-        base_vision = agent.state["last_vision"]
+        # Prepare state for vision calculation
+        calc_state = {
+            "current_vision": agent.state["last_vision"],
+            "best_vision_achieved": agent.state.get("best_vision_achieved", agent.state["last_vision"]),
+            "baseline_vision": agent.state["baseline_vision"],
+            "last_treatment_response": agent.state.get("last_treatment_response", 0),
+            "treatment_response_history": agent.state.get("treatment_response_history", []),
+            "current_step": agent.state["current_step"],
+            "injections_given": agent.state.get("injections_given", 0),
+            "current_actions": agent.state.get("current_actions", []),
+            "weeks_since_last_injection": agent.state.get("weeks_since_last_injection", 0)
+        }
         
-        # Different distributions for loading phase vs maintenance
-        if agent.state["current_step"] == "injection_phase" and agent.state.get("injections_given", 0) < 3:
-            # During loading phase: more likely to improve
-            # Shift and reflect log-normal to center improvements around +5 letters
-            change = 5 - np.random.lognormal(mean=0.5, sigma=0.5)
-            
-        else:
-            # After loading phase: more likely to decline or stay stable
-            # Use log-normal for vision loss, centered just above 0
-            if agent.state.get("disease_activity") == "recurring":
-                # Higher chance of vision loss with active disease
-                change = -np.random.lognormal(mean=-0.5, sigma=0.7)  # Negative log-normal
-            else:
-                # Stable disease: mostly zero change with occasional losses
-                change = -np.random.lognormal(mean=-2.0, sigma=0.5)  # Mostly near zero
-                
-        new_vision = base_vision + change
-        return int(min(max(new_vision, 0), 100))  # Clamp between 0-100 letters
+        change = self._calculate_vision_change(calc_state)
+        
+        # Update agent state with calculation results
+        agent.state.update({
+            "last_treatment_response": calc_state.get("last_treatment_response"),
+            "treatment_response_history": calc_state.get("treatment_response_history", []),
+            "best_vision_achieved": calc_state.get("best_vision_achieved")
+        })
+        
+        new_vision = agent.state["last_vision"] + change
+        return int(min(max(new_vision, 0), 85))  # Clamp between 0-85 letters
         
     def _simulate_oct_scan(self, agent: Patient) -> Dict:
         """Simulate OCT with realistic biological variation"""
@@ -371,3 +380,83 @@ class AgentBasedSimulation(BaseSimulation):
             data={"visit_type": next_visit},
             priority=1
         ))
+    def _calculate_vision_change(self, state: Dict) -> float:
+        """Calculate vision change with memory and ceiling effects
+        
+        Vision is measured in ETDRS letters (0-85 scale)
+        Typical starting vision might be 55-65 letters
+        Clinically significant change is 5+ letters
+        """
+        import numpy as np
+        
+        # Get reference points
+        current_vision = state["current_vision"]
+        best_vision = state.get("best_vision_achieved", current_vision)
+        baseline_vision = state.get("baseline_vision", current_vision)
+        last_response = state.get("last_treatment_response", 0)
+        response_history = state.get("treatment_response_history", [])
+        
+        # Calculate headroom (ceiling effect)
+        absolute_max = 85  # ETDRS letter score maximum
+        theoretical_max = min(absolute_max, best_vision + 5)  # Allow small improvements beyond previous best
+        headroom = max(0, theoretical_max - current_vision)
+        headroom_factor = np.exp(-0.2 * headroom)  # Steeper decay due to 85 letter ceiling
+        
+        if "injection" in state.get("current_actions", []):
+            # Treatment effect
+            
+            # Base effect influenced by previous response (treatment memory)
+            memory_factor = 0.7  # Weight for previous response
+            base_effect = 0
+            
+            if response_history:
+                # Average of recent responses with some random variation
+                base_effect = np.mean(response_history) * memory_factor
+                # Add regression to mean - very good responses tend to be followed by smaller ones
+                if base_effect > 5:  # If previous response was very good
+                    base_effect *= 0.8  # Reduce expected effect
+            
+            # Different behavior for loading phase vs maintenance
+            if state.get("current_step") == "injection_phase" and state.get("injections_given", 0) < 3:
+                # Stronger, more consistent improvement during loading
+                random_effect = np.random.lognormal(mean=1.2, sigma=0.3)  # Bigger improvements
+            else:
+                # More variable effect during maintenance
+                random_effect = np.random.lognormal(mean=0.5, sigma=0.4)
+            
+            # Combine effects with ceiling dampening
+            improvement = (base_effect + random_effect) * (1 - headroom_factor)
+            
+            # Store response for future reference
+            state["last_treatment_response"] = improvement
+            state["treatment_response_history"].append(improvement)
+            if len(state["treatment_response_history"]) > 3:  # Keep last 3 responses
+                state["treatment_response_history"].pop(0)
+                
+            # Update best vision achieved if applicable
+            if current_vision + improvement > best_vision:
+                state["best_vision_achieved"] = min(absolute_max, current_vision + improvement)
+                
+            return improvement
+            
+        else:
+            # Natural disease progression
+            weeks_since_injection = state.get("weeks_since_last_injection", 0)
+            
+            # Base deterioration rate increases with time
+            base_decline = -np.random.lognormal(mean=-2.0, sigma=0.5)
+            
+            # Worse deterioration if:
+            # 1. Longer time since injection
+            time_factor = 1 + (weeks_since_injection/12)
+            # 2. Higher current vision (more to lose)
+            vision_factor = 1 + max(0, (current_vision - baseline_vision)/20)
+            # 3. Previously good response (regression to mean)
+            response_factor = 1.0
+            if response_history:
+                mean_response = np.mean(response_history)
+                response_factor = 1 + max(0, mean_response/10)
+                
+            total_decline = base_decline * time_factor * vision_factor * response_factor
+            
+            return total_decline
