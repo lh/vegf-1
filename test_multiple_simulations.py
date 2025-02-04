@@ -11,9 +11,13 @@ def setup_database():
     conn = sqlite3.connect('simulations.db')
     c = conn.cursor()
     
-    # Create tables if they don't exist
+    # Drop existing tables to start fresh
+    c.execute('DROP TABLE IF EXISTS patient_outcomes')
+    c.execute('DROP TABLE IF EXISTS simulation_runs')
+    
+    # Create tables
     c.execute('''CREATE TABLE IF NOT EXISTS simulation_runs
-                 (run_id INTEGER PRIMARY KEY,
+                 (run_id INTEGER PRIMARY KEY AUTOINCREMENT,
                   sim_type TEXT,
                   start_date TEXT,
                   end_date TEXT,
@@ -31,17 +35,19 @@ def setup_database():
     conn.commit()
     return conn
 
-def store_results(conn, run_id: int, sim_type: str, start_date: datetime, 
+def store_results(conn, sim_type: str, start_date: datetime, 
                  end_date: datetime, patient_histories: dict):
     """Store simulation results in database"""
     c = conn.cursor()
     
-    # Store run info
+    # Store run info and get the auto-generated run_id
     c.execute('''INSERT INTO simulation_runs 
-                 (run_id, sim_type, start_date, end_date, run_date)
-                 VALUES (?, ?, ?, ?, ?)''',
-              (run_id, sim_type, start_date.isoformat(), 
+                 (sim_type, start_date, end_date, run_date)
+                 VALUES (?, ?, ?, ?)''',
+              (sim_type, start_date.isoformat(), 
                end_date.isoformat(), datetime.now().isoformat()))
+    
+    run_id = c.lastrowid  # Get the auto-generated run_id
     
     # Store patient outcomes
     for patient_id, history in patient_histories.items():
@@ -121,14 +127,14 @@ def run_multiple_simulations(num_runs: int = 5):
     for i in range(num_runs):
         print(f"Run {i+1}/{num_runs}")
         results = run_abs(verbose=False)
-        store_results(conn, i, 'ABS', start_date, end_date, results)
+        store_results(conn, 'ABS', start_date, end_date, results)
         
     # Run DES simulations
     print("\nRunning Discrete Event Simulations...")
     for i in range(num_runs):
         print(f"Run {i+1}/{num_runs}")
         results = run_des(verbose=False)
-        store_results(conn, i+num_runs, 'DES', start_date, end_date, results)
+        store_results(conn, 'DES', start_date, end_date, results)
     
     # Analyze results
     analyze_results(conn)
