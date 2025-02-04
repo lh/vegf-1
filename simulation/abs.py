@@ -470,25 +470,17 @@ class AgentBasedSimulation(BaseSimulation):
                 random_effect = np.random.lognormal(mean=0.5, sigma=0.4)
             
             improvement = (base_effect + random_effect) * (1 - headroom_factor)
+            
+            # Store response
+            state["last_treatment_response"] = improvement
+            state["treatment_response_history"].append(improvement)
+            if len(state["treatment_response_history"]) > 3:
+                state["treatment_response_history"].pop(0)
+            
+            if current_vision + improvement > best_vision:
+                state["best_vision_achieved"] = min(absolute_max, current_vision + improvement)
                 
-                if response_history:
-                    base_effect = np.mean(response_history) * memory_factor
-                    if base_effect > 5:
-                        base_effect *= 0.8
-                
-                random_effect = np.random.lognormal(mean=0.5, sigma=0.4)
-                improvement = (base_effect + random_effect) * (1 - headroom_factor)
-                
-                # Store response
-                state["last_treatment_response"] = improvement
-                state["treatment_response_history"].append(improvement)
-                if len(state["treatment_response_history"]) > 3:
-                    state["treatment_response_history"].pop(0)
-                
-                if current_vision + improvement > best_vision:
-                    state["best_vision_achieved"] = min(absolute_max, current_vision + improvement)
-                    
-                return improvement
+            return improvement
         else:
             # Natural disease progression
             weeks_since_injection = state.get("weeks_since_last_injection", 0)
