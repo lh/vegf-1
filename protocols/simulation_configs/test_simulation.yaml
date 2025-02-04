@@ -1,0 +1,19 @@
+name: Test Simulation
+description: Basic test configuration for protocol validation
+
+protocol:
+  agent: eylea
+  type: treat_and_extend
+  parameter_set: standard
+
+simulation:
+  type: agent_based
+  duration_days: 365
+  num_patients: 7
+  random_seed: 42
+
+output:
+  save_results: true
+  database: simulations.db
+  plots: true
+  verbose: false

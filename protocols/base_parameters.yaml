@@ -1,0 +1,35 @@
+# Base parameters for all protocols
+vision:
+  max_letters: 85
+  min_letters: 0
+  baseline_mean: 65
+  baseline_sd: 5
+  measurement_noise_sd: 2
+
+treatment_response:
+  loading_phase:
+    improve_probability: 0.25
+    stable_probability: 0.70
+    decline_probability: 0.05
+    improvement_mean: 7
+    improvement_sd: 3
+    decline_mean: -5
+    decline_sd: 2
+  
+  maintenance_phase:
+    memory_factor: 0.7
+    base_effect_ceiling: 5
+    random_effect_mean: 0.5
+    random_effect_sd: 0.4
+
+disease_progression:
+  base_decline_mean: -2.0
+  base_decline_sd: 0.5
+  time_factor_weeks: 12
+  vision_factor_threshold: 20
+
+resources:
+  doctors: 2
+  nurses: 4
+  oct_machines: 2
+  visit_duration_minutes: 30

@@ -1,0 +1,20 @@
+name: Standard Eylea Parameters
+description: Default parameters for Eylea protocols
+version: 1.0
+
+protocol_specific:
+  loading_phase:
+    vision_improvement_mean: 8
+    vision_improvement_sd: 3
+    treatment_response_factor: 1.2
+    
+  maintenance_phase:
+    vision_stability_threshold: 5
+    disease_recurrence_base_risk: 0.2
+    risk_increase_per_week: 0.05
+    
+  oct_parameters:
+    baseline_thickness_mean: 250
+    baseline_thickness_sd: 30
+    treatment_effect_mean: 50
+    treatment_effect_sd: 10
