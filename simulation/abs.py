@@ -142,16 +142,31 @@ class AgentBasedSimulation(BaseSimulation):
             ))
 
     def _handle_agent_decision(self, agent: Patient, event: Event):
-        """Handle a patient decision event"""
+        """Handle a patient decision event using protocol objects"""
         decision_type = event.data.get("decision_type")
         visit_data = event.data.get("visit_data", {})
         
-        if decision_type == "nurse_vision_check":
+        # Get decisions from protocol phase
+        if not event.phase:
+            event.phase = agent.current_phase
+            
+        decisions = event.get_decisions()
+        
+        # Process each decision type
+        if DecisionType.NURSE_CHECK in decisions:
             self._handle_nurse_vision_check(agent, visit_data)
-        elif decision_type == "doctor_oct_review":
+            
+        if DecisionType.OCT_REVIEW in decisions:
             self._handle_doctor_oct_review(agent, visit_data)
-        elif decision_type == "doctor_treatment_decision":
+            
+        if DecisionType.DOCTOR_REVIEW in decisions:
             self._handle_doctor_treatment_decision(agent, visit_data)
+            
+        # Check for phase transition
+        if agent.state.get("phase_complete"):
+            next_phase = agent.protocol.process_phase_transition(agent.current_phase, agent.state)
+            if next_phase:
+                agent.current_phase = next_phase
             
     def _simulate_vision_test(self, agent: Patient) -> int:
         """Simulate vision test with proper injection effects and measurement noise"""
