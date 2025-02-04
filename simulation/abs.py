@@ -53,7 +53,8 @@ class AgentBasedSimulation(BaseSimulation):
         """Initialize ABS with configuration"""
         super().__init__(config.start_date, environment)
         self.config = config
-        self.protocols = {config.protocol["name"]: config.protocol}
+        # Store protocol by type instead of name
+        self.protocols = {"treat_and_extend": config.protocol}  # Store by type
         self.agents: Dict[str, Patient] = {}
         self.verbose = config.verbose
         
