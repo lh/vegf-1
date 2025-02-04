@@ -1,0 +1,6 @@
+name: Invalid Parameter Set
+description: Used for testing invalid configurations
+version: 1.0
+
+protocol_specific:
+  vision: "invalid_type"  # Should be a dict
