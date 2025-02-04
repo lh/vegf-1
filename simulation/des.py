@@ -59,7 +59,13 @@ class DiscreteEventSimulation(BaseSimulation):
             "last_visit_date": None,
             "next_visit_interval": 4,
             "treatment_start": self.clock.current_time,
-            "visit_history": []  # Add visit history tracking
+            "visit_history": [],
+            # Add these new state variables
+            "best_vision_achieved": 65,
+            "last_treatment_response": None,
+            "treatment_response_history": [],
+            "weeks_since_last_injection": 0,
+            "last_injection_date": None
         }
     
     def process_event(self, event: Event):
@@ -122,6 +128,11 @@ class DiscreteEventSimulation(BaseSimulation):
 
     def _process_visit(self, state: Dict, event: Event) -> Dict:
         """Process the actual visit activities"""
+        # Update weeks since last injection
+        if state.get("last_injection_date"):
+            weeks_elapsed = (event.time - state["last_injection_date"]).days / 7.0
+            state["weeks_since_last_injection"] = weeks_elapsed
+        
         visit_data = {
             "vision_change": self._simulate_vision_change(state),
             "oct_findings": self._simulate_oct_findings(state),
@@ -132,7 +143,8 @@ class DiscreteEventSimulation(BaseSimulation):
         
         # Update state and stats based on actions performed
         if "vision_test" in actions:
-            state["current_vision"] += visit_data["vision_change"]
+            new_vision = state["current_vision"] + visit_data["vision_change"]
+            state["current_vision"] = min(max(new_vision, 0), 85)  # Clamp between 0-85
             if visit_data["vision_change"] > 0:
                 self.global_stats["vision_improvements"] += 1
             elif visit_data["vision_change"] < 0:
@@ -145,9 +157,11 @@ class DiscreteEventSimulation(BaseSimulation):
         if "injection" in actions:
             self.global_stats["total_injections"] += 1
             state["injections"] += 1
+            state["last_injection_date"] = event.time
+            state["weeks_since_last_injection"] = 0
             visit_data["resources_used"].append("doctors")
         
-        visit_data["resources_used"].append("nurses")  # Always need a nurse
+        visit_data["resources_used"].append("nurses")
         
         return visit_data
 
@@ -214,32 +228,72 @@ class DiscreteEventSimulation(BaseSimulation):
             
         return True
 
-    def _simulate_vision_change(self, state: Dict) -> int:
+    def _simulate_vision_change(self, state: Dict) -> float:
         """Calculate vision change with memory and ceiling effects"""
-        # Prepare state for vision calculation
-        calc_state = {
-            "current_vision": state["current_vision"],
-            "best_vision_achieved": state.get("best_vision_achieved", state["current_vision"]),
-            "baseline_vision": state.get("baseline_vision", state["current_vision"]),
-            "last_treatment_response": state.get("last_treatment_response", 0),
-            "treatment_response_history": state.get("treatment_response_history", []),
-            "current_step": state["current_step"],
-            "injections_given": state.get("injections", 0),
-            "current_actions": ["injection"] if state.get("injections", 0) > state.get("last_recorded_injection", -1) else [],
-            "weeks_since_last_injection": (state["next_visit_interval"] if "next_visit_interval" in state else 4)
-        }
+        import numpy as np
         
-        change = self._calculate_vision_change(calc_state)
+        # Get reference points
+        current_vision = state["current_vision"]
+        best_vision = state.get("best_vision_achieved", current_vision)
+        baseline_vision = state.get("baseline_vision", current_vision)
+        last_response = state.get("last_treatment_response", 0)
+        response_history = state.get("treatment_response_history", [])
         
-        # Update state with calculation results
-        state.update({
-            "last_treatment_response": calc_state.get("last_treatment_response"),
-            "treatment_response_history": calc_state.get("treatment_response_history", []),
-            "best_vision_achieved": calc_state.get("best_vision_achieved"),
-            "last_recorded_injection": state.get("injections", 0)
-        })
+        # Calculate headroom (ceiling effect)
+        absolute_max = 85  # ETDRS letter score maximum
+        theoretical_max = min(absolute_max, best_vision + 5)
+        headroom = max(0, theoretical_max - current_vision)
+        headroom_factor = np.exp(-0.2 * headroom)
         
-        return int(change)
+        # Check if this is an injection visit
+        is_injection = state.get("injections", 0) > state.get("last_recorded_injection", -1)
+        
+        if is_injection:
+            # Treatment effect
+            memory_factor = 0.7
+            base_effect = 0
+            
+            if response_history:
+                base_effect = np.mean(response_history) * memory_factor
+                if base_effect > 5:
+                    base_effect *= 0.8
+            
+            # Different behavior for loading phase vs maintenance
+            if state["current_step"] == "injection_phase" and state.get("injections", 0) < 3:
+                random_effect = np.random.lognormal(mean=1.2, sigma=0.3)
+            else:
+                random_effect = np.random.lognormal(mean=0.5, sigma=0.4)
+            
+            improvement = (base_effect + random_effect) * (1 - headroom_factor)
+            
+            # Update treatment history
+            state["last_treatment_response"] = improvement
+            state["treatment_response_history"].append(improvement)
+            if len(state["treatment_response_history"]) > 3:
+                state["treatment_response_history"].pop(0)
+            
+            # Update best vision if applicable
+            if current_vision + improvement > best_vision:
+                state["best_vision_achieved"] = min(absolute_max, current_vision + improvement)
+                
+            return improvement
+        else:
+            # Natural disease progression
+            weeks_since_injection = state.get("weeks_since_last_injection", 0)
+            
+            base_decline = -np.random.lognormal(mean=-2.0, sigma=0.5)
+            
+            time_factor = 1 + (weeks_since_injection/12)
+            vision_factor = 1 + max(0, (current_vision - baseline_vision)/20)
+            response_factor = 1.0
+            
+            if response_history:
+                mean_response = np.mean(response_history)
+                response_factor = 1 + max(0, mean_response/10)
+                
+            total_decline = base_decline * time_factor * vision_factor * response_factor
+            
+            return total_decline
 
     def _simulate_oct_findings(self, state: Dict) -> Dict:
         """Simulate OCT findings with realistic biological variation"""
