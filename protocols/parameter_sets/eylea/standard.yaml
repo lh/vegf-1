@@ -8,10 +8,16 @@ protocol_specific:
     vision_improvement_sd: 3
     treatment_response_factor: 1.2
     
-  maintenance_phase:
-    vision_stability_threshold: 5
-    disease_recurrence_base_risk: 0.2
-    risk_increase_per_week: 0.05
+   maintenance_phase:                                                                                   
+     vision_stability_threshol
+     disease_recurrence_base_risk: 0.2  
+     risk_increase_per_week: 0.05 
+     decline_probability: 0.15 
+     decline_effect_mean: -1.5 
+     decline_effect_sd: 0.3 
+     memory_factor: 0.7              
+     base_effect_ceiling: 5 
+     regression_factor: 0.8   
     
   oct_parameters:
     baseline_thickness_mean: 250
