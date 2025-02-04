@@ -2,6 +2,7 @@ import sqlite3
 from datetime import datetime, timedelta
 import pandas as pd
 import matplotlib.pyplot as plt
+plt.style.use('seaborn')  # Optional: use a nicer style
 from test_abs_simulation import run_test_simulation as run_abs
 from test_des_simulation import run_test_des_simulation as run_des
 from analysis.simulation_results import SimulationResults
@@ -115,7 +116,7 @@ def analyze_results(conn):
         print(f"Mean injections: {sim_data['num_injections'].mean():.1f}")
         print(f"Mean visits: {sim_data['num_visits'].mean():.1f}")
 
-def run_multiple_simulations(num_runs: int = 5):
+def run_multiple_simulations(num_runs: int = 5, suppress_plots: bool = True):
     """Run multiple simulations of each type and analyze results"""
     conn = setup_database()
     
@@ -126,19 +127,25 @@ def run_multiple_simulations(num_runs: int = 5):
     print("\nRunning Agent-Based Simulations...")
     for i in range(num_runs):
         print(f"Run {i+1}/{num_runs}")
+        # Set show=False for plot_multiple_patients calls in the simulation
+        plt.ioff()  # Turn off interactive mode
         results = run_abs(verbose=False)
+        plt.close('all')  # Close any open figures
         store_results(conn, 'ABS', start_date, end_date, results)
         
     # Run DES simulations
     print("\nRunning Discrete Event Simulations...")
     for i in range(num_runs):
         print(f"Run {i+1}/{num_runs}")
+        plt.ioff()  # Turn off interactive mode
         results = run_des(verbose=False)
+        plt.close('all')  # Close any open figures
         store_results(conn, 'DES', start_date, end_date, results)
     
     # Analyze results
+    plt.ion()  # Turn interactive mode back on for final plots
     analyze_results(conn)
     conn.close()
 
 if __name__ == "__main__":
-    run_multiple_simulations()
+    run_multiple_simulations(suppress_plots=True)
