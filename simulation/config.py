@@ -1,13 +1,14 @@
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime
 from protocol_parser import ProtocolParser
+from protocol_models import TreatmentProtocol
 
 @dataclass
 class SimulationConfig:
-    """Configuration for a simulation run"""
+    """Configuration for a simulation run with protocol objects"""
     parameters: Dict[str, Any]
-    protocol: Dict[str, Any]
+    protocol: TreatmentProtocol
     simulation_type: str
     num_patients: int
     duration_days: int
@@ -33,6 +34,7 @@ class SimulationConfig:
     
     @classmethod
     def from_yaml(cls, config_name: str) -> 'SimulationConfig':
+        """Create configuration from YAML with protocol objects"""
         parser = ProtocolParser()
         full_config = parser.get_full_configuration(config_name)
         
@@ -42,6 +44,11 @@ class SimulationConfig:
             '%Y-%m-%d'
         )
         
+        # Validate protocol is correct type
+        if not isinstance(full_config['protocol'], TreatmentProtocol):
+            raise ValueError("Protocol must be a TreatmentProtocol object")
+            
+        # Create config with validated protocol
         return cls(
             parameters=full_config['parameters'],
             protocol=full_config['protocol'],
