@@ -486,10 +486,14 @@ class AgentBasedSimulation(BaseSimulation):
 
             if state.get("current_step") == "injection_phase" and state.get("injections_given", 0) < 3:
                 # Loading phase - strong positive response expected
-                random_effect = np.random.lognormal(mean=1.2, sigma=0.3)
+                loading_params = self.config.get_loading_phase_params()
+                random_effect = np.random.lognormal(mean=loading_params["improvement_mean"],
+                                                  sigma=loading_params["improvement_sd"])
             else:
                 # Maintenance phase - more variable response
-                random_effect = np.random.lognormal(mean=0.5, sigma=0.4)
+                maintenance_params = self.config.get_maintenance_params()
+                random_effect = np.random.lognormal(mean=maintenance_params["random_effect_mean"],
+                                                  sigma=maintenance_params["random_effect_sd"])
             
             improvement = (base_effect + random_effect) * (1 - headroom_factor)
             
