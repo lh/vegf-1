@@ -406,17 +406,12 @@ class DiscreteEventSimulation(BaseSimulation):
         return change
 
     def _calculate_vision_change(self, state: Dict) -> float:
-        """Calculate vision change with memory and ceiling effects
-        
-        Vision is measured in ETDRS letters (0-85 scale)
-        Typical starting vision might be 55-65 letters
-        Clinically significant change is 5+ letters
-        """
+        """Calculate vision change with memory and ceiling effects"""
         import numpy as np
         
         # Check if we're in loading phase
         if (state.get("current_step") == "injection_phase" and 
-            state.get("injections_given", 0) < 3 and 
+            state.get("injections", 0) < 3 and 
             "injection" in state.get("current_actions", [])):
             
             return self._calculate_loading_phase_change(state)
@@ -430,61 +425,47 @@ class DiscreteEventSimulation(BaseSimulation):
         
         # Calculate headroom (ceiling effect)
         absolute_max = 85  # ETDRS letter score maximum
-        theoretical_max = min(absolute_max, best_vision + 5)  # Allow small improvements beyond previous best
+        theoretical_max = min(absolute_max, best_vision + 5)
         headroom = max(0, theoretical_max - current_vision)
-        headroom_factor = np.exp(-0.2 * headroom)  # Steeper decay due to 85 letter ceiling
+        headroom_factor = np.exp(-0.2 * headroom)
         
         if "injection" in state.get("current_actions", []):
             # Treatment effect
-            
-            # Base effect influenced by previous response (treatment memory)
-            memory_factor = 0.7  # Weight for previous response
+            memory_factor = 0.7
             base_effect = 0
             
             if response_history:
-                # Average of recent responses with some random variation
                 base_effect = np.mean(response_history) * memory_factor
-                # Add regression to mean - very good responses tend to be followed by smaller ones
-                if base_effect > 5:  # If previous response was very good
-                    base_effect *= 0.8  # Reduce expected effect
+                if base_effect > 5:
+                    base_effect *= 0.8
             
             # Different behavior for loading phase vs maintenance
-            if state.get("current_step") == "injection_phase" and state.get("injections_given", 0) < 3:
-                # Stronger, more consistent improvement during loading
-                random_effect = np.random.lognormal(mean=1.2, sigma=0.3)  # Bigger improvements
+            if state.get("current_step") == "injection_phase" and state.get("injections", 0) < 3:
+                random_effect = np.random.lognormal(mean=1.2, sigma=0.3)
             else:
-                # More variable effect during maintenance
                 random_effect = np.random.lognormal(mean=0.5, sigma=0.4)
             
-            # Combine effects with ceiling dampening
             improvement = (base_effect + random_effect) * (1 - headroom_factor)
             
-            # Store response for future reference
+            # Store response
             state["last_treatment_response"] = improvement
             state["treatment_response_history"].append(improvement)
-            if len(state["treatment_response_history"]) > 3:  # Keep last 3 responses
+            if len(state["treatment_response_history"]) > 3:
                 state["treatment_response_history"].pop(0)
-                
-            # Update best vision achieved if applicable
+            
             if current_vision + improvement > best_vision:
                 state["best_vision_achieved"] = min(absolute_max, current_vision + improvement)
                 
             return improvement
-            
         else:
             # Natural disease progression
             weeks_since_injection = state.get("weeks_since_last_injection", 0)
             
-            # Base deterioration rate increases with time
             base_decline = -np.random.lognormal(mean=-2.0, sigma=0.5)
-            
-            # Worse deterioration if:
-            # 1. Longer time since injection
             time_factor = 1 + (weeks_since_injection/12)
-            # 2. Higher current vision (more to lose)
             vision_factor = 1 + max(0, (current_vision - baseline_vision)/20)
-            # 3. Previously good response (regression to mean)
             response_factor = 1.0
+            
             if response_history:
                 mean_response = np.mean(response_history)
                 response_factor = 1 + max(0, mean_response/10)
