@@ -79,10 +79,10 @@ Convert mixed dictionary/object protocol implementation to a consistent object-o
    - ✓ Add protocol transition validation
    - ✓ Add parameter constraint checking
 
-3. Phase 3: Simulation Updates → (in progress)
+3. Phase 3: Simulation Updates
    - ✓ Update simulation/base.py with protocol events
-   - → Update Event class to handle protocol objects (next)
-   - Update simulation/abs.py
+   - ✓ Update Event class to handle protocol objects
+   - → Update simulation/abs.py (in progress)
    - Update simulation/des.py
    - Add simulation tests
 
