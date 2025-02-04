@@ -201,6 +201,43 @@ class ProtocolParser:
             discontinuation_criteria=discontinuation_criteria
         )
     
+    def _validate_protocol_phases(self, phases: Dict[str, Dict]) -> bool:
+        """Validate protocol phase definitions"""
+        required_phases = {"loading", "maintenance"}
+        phase_types = set(phases.keys())
+        
+        if not all(phase in phase_types for phase in required_phases):
+            self.validator.errors.append(
+                ConfigurationError("protocol_definition", 
+                                 f"Missing required phases: {required_phases - phase_types}")
+            )
+            return False
+            
+        # Validate each phase
+        for phase_name, phase_data in phases.items():
+            if not self._validate_phase_definition(phase_name, phase_data):
+                return False
+                
+        return True
+        
+    def _validate_phase_definition(self, phase_name: str, phase_data: Dict) -> bool:
+        """Validate individual phase definition"""
+        required_fields = {
+            "loading": {"duration_weeks", "visit_interval_weeks", "required_treatments"},
+            "maintenance": {"visit_interval_weeks", "min_interval_weeks", "max_interval_weeks"}
+        }
+        
+        if phase_name in required_fields:
+            missing_fields = required_fields[phase_name] - set(phase_data.keys())
+            if missing_fields:
+                self.validator.errors.append(
+                    ConfigurationError("protocol_definition",
+                                     f"Phase {phase_name} missing fields: {missing_fields}")
+                )
+                return False
+                
+        return True
+        
     def _load_parameter_set(self, agent: str, parameter_set: str) -> Dict[str, Any]:
         """Load and validate parameter set and merge with base parameters"""
         path = self.base_path / "parameter_sets" / agent / f"{parameter_set}.yaml"
@@ -213,9 +250,12 @@ class ProtocolParser:
         # Deep copy base parameters to avoid modifying original
         merged = self.base_parameters.copy()
         
-        # Merge protocol specific parameters
+        # Merge protocol specific parameters with validation
         protocol_params = params.get("protocol_specific", {})
         for category, values in protocol_params.items():
+            if not isinstance(values, dict):
+                raise ValueError(f"Invalid parameter format for {category}")
+                
             if category in merged:
                 if isinstance(merged[category], dict):
                     merged[category].update(values)
@@ -232,13 +272,19 @@ class ProtocolParser:
         with open(path) as f:
             config = yaml.safe_load(f)
             
-        # Load and create protocol object
+        if not self.validator.validate_simulation_config(config):
+            raise ValueError(f"Invalid simulation config: {self.validator.errors}")
+            
+        # Load and create protocol object with validation
         protocol = self._load_protocol_definition(
             config["protocol"]["agent"],
             config["protocol"]["type"]
         )
         
-        # Load and merge parameters
+        if not protocol.validate():
+            raise ValueError("Invalid protocol configuration")
+            
+        # Load and merge parameters with validation
         parameters = self._load_parameter_set(
             config["protocol"]["agent"],
             config["protocol"]["parameter_set"]
