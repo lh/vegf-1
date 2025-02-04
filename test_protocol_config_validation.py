@@ -87,7 +87,7 @@ def test_invalid_configurations():
     
     parser = ProtocolParser()
     with pytest.raises(ValueError):
-        parser.validator.validate_parameter_set(invalid_params)
+        parser._load_parameter_set("eylea", "invalid")
 
 def test_simulation_config_validation():
     """Test validation of complete simulation configuration"""

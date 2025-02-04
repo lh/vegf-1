@@ -16,6 +16,13 @@ class SimulationConfig:
     verbose: bool
     start_date: datetime
     
+    def get_vision_params(self) -> Dict[str, Any]:
+        """Get vision-related parameters"""
+        vision_params = self.parameters.get("vision", {})
+        if not vision_params:
+            raise ValueError("Vision parameters not found")
+        return vision_params
+    
     def get_loading_phase_params(self) -> Dict[str, Any]:
         """Get loading phase parameters"""
         params = self.parameters.get("treatment_response", {}).get("loading_phase", {})
