@@ -18,7 +18,10 @@ class SimulationConfig:
     
     def get_loading_phase_params(self) -> Dict[str, Any]:
         """Get loading phase parameters"""
-        return self.parameters.get("treatment_response", {}).get("loading_phase", {})
+        params = self.parameters.get("treatment_response", {}).get("loading_phase", {})
+        if not params:
+            raise ValueError("Loading phase parameters not found")
+        return params
     
     def get_maintenance_params(self) -> Dict[str, Any]:
         """Get maintenance phase parameters"""

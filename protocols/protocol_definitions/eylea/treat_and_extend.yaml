@@ -6,7 +6,7 @@ phases:
   loading:
     duration_weeks: 12
     visit_interval_weeks: 4
-    required_injections: 3
+    required_treatments: 3
     assessment_criteria:
       - metric: vision
         comparator: ">="
