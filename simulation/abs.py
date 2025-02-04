@@ -68,6 +68,11 @@ class AgentBasedSimulation(BaseSimulation):
             "actions": []  # Initialize empty actions list
         }
         
+        # Set initial protocol step if not set
+        if agent.state["current_step"] is None:
+            agent.state["current_step"] = "injection_phase"
+            agent.state["injections_given"] = 0
+        
         # Perform visit actions
         if "vision_test" in visit_type.get("actions", []):
             visit_data["actions"].append("vision_test")
@@ -83,7 +88,8 @@ class AgentBasedSimulation(BaseSimulation):
                 "agent": agent.protocol.agent,
                 "dose": "0.5mg"
             }
-            
+            agent.state["injections_given"] = agent.state.get("injections_given", 0) + 1
+        
         # Record visit
         agent.record_visit(visit_data)
         
@@ -146,7 +152,31 @@ class AgentBasedSimulation(BaseSimulation):
     def _handle_doctor_treatment_decision(self, agent: Patient, visit_data: Dict):
         """Handle doctor treatment decision"""
         current_step = agent.state["current_step"]
-        if current_step and "dynamic_interval" in current_step:
+        
+        # Handle initial loading phase
+        if current_step == "injection_phase":
+            if agent.state["injections_given"] < 3:
+                # Schedule next loading dose in 4 weeks
+                next_visit = {
+                    "visit_type": "injection_visit",
+                    "actions": ["vision_test", "oct_scan", "injection"],
+                    "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
+                }
+                
+                self.clock.schedule_event(Event(
+                    time=self.clock.current_time + timedelta(weeks=4),
+                    event_type="visit",
+                    patient_id=agent.patient_id,
+                    data={"visit_type": next_visit},
+                    priority=1
+                ))
+            else:
+                # Move to assessment phase after 3 injections
+                agent.state["current_step"] = "dynamic_interval"
+                agent.state["current_interval"] = 8  # Start with 8 week interval
+                self._schedule_next_visit(agent)
+        
+        elif current_step == "dynamic_interval":
             self._adjust_treatment_interval(agent)
             
     def _adjust_treatment_interval(self, agent: Patient):
@@ -182,6 +212,23 @@ class AgentBasedSimulation(BaseSimulation):
         
         self.clock.schedule_event(Event(
             time=self.clock.current_time + timedelta(weeks=new_interval),
+            event_type="visit",
+            patient_id=agent.patient_id,
+            data={"visit_type": next_visit},
+            priority=1
+        ))
+    def _schedule_next_visit(self, agent: Patient):
+        """Schedule next visit based on current interval"""
+        next_visit = {
+            "visit_type": "injection_visit",
+            "actions": ["vision_test", "oct_scan", "injection"],
+            "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
+        }
+        
+        interval_weeks = agent.state.get("current_interval", 8)
+        
+        self.clock.schedule_event(Event(
+            time=self.clock.current_time + timedelta(weeks=interval_weeks),
             event_type="visit",
             patient_id=agent.patient_id,
             data={"visit_type": next_visit},
