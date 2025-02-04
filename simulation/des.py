@@ -166,7 +166,9 @@ class DiscreteEventSimulation(BaseSimulation):
         
         # Update state and stats based on actions performed
         if "vision_test" in actions:
-            new_vision = state["current_vision"] + vision_change
+            # Add measurement noise to vision test
+            measurement_noise = np.random.normal(0, 2)  # SD of 2 letters
+            new_vision = state["current_vision"] + vision_change + measurement_noise
             state["current_vision"] = min(max(new_vision, 0), 85)  # Clamp between 0-85
             if vision_change > 0:
                 self.global_stats["vision_improvements"] += 1
