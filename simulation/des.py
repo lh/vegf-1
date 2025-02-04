@@ -453,22 +453,25 @@ class DiscreteEventSimulation(BaseSimulation):
         
         if "injection" in state.get("current_actions", []):
             # Treatment effect with stronger regression to mean
-            memory_factor = 0.6  # Reduced from 0.7
+            maintenance_params = self.config.get_maintenance_params()
+            memory_factor = maintenance_params["memory_factor"]
             base_effect = 0
             
             if response_history:
                 base_effect = np.mean(response_history) * memory_factor
-                if base_effect > 3:  # Reduced from 5
-                    base_effect *= 0.7  # Reduced from 0.8
+                if base_effect > maintenance_params["base_effect_ceiling"]:
+                    base_effect *= maintenance_params["regression_factor"]
             
-            # More modest improvements in maintenance phase
-            random_effect = np.random.lognormal(mean=0.3, sigma=0.4)  # Reduced from 0.5
+            maintenance_params = self.config.get_maintenance_params()
+            random_effect = np.random.lognormal(mean=maintenance_params["random_effect_mean"],
+                                              sigma=maintenance_params["random_effect_sd"])
             
             improvement = (base_effect + random_effect) * (1 - headroom_factor)
             
-            # Add small random chance of decline even with treatment
-            if np.random.random() < 0.15:  # 15% chance of decline
-                improvement = -np.random.lognormal(mean=-1.5, sigma=0.3)
+            # Add configurable chance of decline even with treatment
+            if np.random.random() < maintenance_params["decline_probability"]:
+                improvement = -np.random.lognormal(mean=maintenance_params["decline_effect_mean"],
+                                                 sigma=maintenance_params["decline_effect_sd"])
             
             # Update treatment history
             state["last_treatment_response"] = improvement

@@ -475,13 +475,14 @@ class AgentBasedSimulation(BaseSimulation):
             # Treatment effect
             # Treatment effect
             # Treatment effect
-            memory_factor = 0.7
+            maintenance_params = self.config.get_maintenance_params()
+            memory_factor = maintenance_params["memory_factor"]
             base_effect = 0
             
             if response_history:
                 base_effect = np.mean(response_history) * memory_factor
-                if base_effect > 5:
-                    base_effect *= 0.8
+                if base_effect > maintenance_params["base_effect_ceiling"]:
+                    base_effect *= maintenance_params["regression_factor"]
 
             if state.get("current_step") == "injection_phase" and state.get("injections_given", 0) < 3:
                 # Loading phase - strong positive response expected

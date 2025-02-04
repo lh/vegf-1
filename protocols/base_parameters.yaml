@@ -21,6 +21,10 @@ treatment_response:
     base_effect_ceiling: 5
     random_effect_mean: 0.5
     random_effect_sd: 0.4
+    regression_factor: 0.8
+    decline_probability: 0.15
+    decline_effect_mean: -1.5
+    decline_effect_sd: 0.3
 
 disease_progression:
   base_decline_mean: -2.0
