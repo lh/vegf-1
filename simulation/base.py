@@ -26,6 +26,8 @@ class Event:
     data: Dict[str, Any]
     priority: int = 1
     protocol_event: Optional[ProtocolEvent] = None
+    phase: Optional[ProtocolPhase] = None
+    protocol: Optional[TreatmentProtocol] = None
 
     @classmethod
     def create_protocol_event(cls, 
@@ -34,8 +36,10 @@ class Event:
                             phase_type: PhaseType,
                             action: str,
                             data: Dict[str, Any] = None,
-                            priority: int = 1) -> 'Event':
-        """Create a protocol-specific event"""
+                            priority: int = 1,
+                            phase: Optional[ProtocolPhase] = None,
+                            protocol: Optional[TreatmentProtocol] = None) -> 'Event':
+        """Create a protocol-specific event with phase and protocol context"""
         protocol_event = ProtocolEvent(
             phase_type=phase_type,
             action=action,
@@ -47,8 +51,37 @@ class Event:
             patient_id=patient_id,
             data=data or {},
             priority=priority,
-            protocol_event=protocol_event
+            protocol_event=protocol_event,
+            phase=phase,
+            protocol=protocol
         )
+
+    def get_visit_type(self) -> Optional[VisitType]:
+        """Get visit type from phase if available"""
+        if self.phase:
+            return self.phase.visit_type
+        return None
+
+    def get_required_actions(self) -> List[ActionType]:
+        """Get required actions from visit type"""
+        visit_type = self.get_visit_type()
+        if visit_type:
+            return visit_type.required_actions
+        return []
+
+    def get_optional_actions(self) -> List[ActionType]:
+        """Get optional actions from visit type"""
+        visit_type = self.get_visit_type()
+        if visit_type:
+            return visit_type.optional_actions
+        return []
+
+    def get_decisions(self) -> List[DecisionType]:
+        """Get decisions from visit type"""
+        visit_type = self.get_visit_type()
+        if visit_type:
+            return visit_type.decisions
+        return []
 
 class SimulationClock:
     def __init__(self, start_date: datetime):
