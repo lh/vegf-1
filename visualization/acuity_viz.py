@@ -86,7 +86,8 @@ def plot_patient_acuity(patient_id: str, history: List[Dict],
 
 def plot_multiple_patients(patient_data: Dict[str, List[Dict]], 
                          start_date: datetime, end_date: datetime,
-                         show: bool = True, save_path: Optional[str] = None):
+                         show: bool = True, save_path: Optional[str] = None,
+                         title: str = "Visual Acuity Over Time - Multiple Patients"):
     """Create a comparative plot of multiple patients' visual acuity
     
     Args:
@@ -131,7 +132,7 @@ def plot_multiple_patients(patient_data: Dict[str, List[Dict]],
             plt.plot(other_visit_dates, vision_at_visit, 'o', color=color,
                     markersize=6, markerfacecolor='none')
     
-    plt.title('Visual Acuity Over Time - Multiple Patients')
+    plt.title(title)
     plt.xlabel('Date')
     plt.ylabel('Visual Acuity (ETDRS letters)')
     

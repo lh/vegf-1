@@ -76,7 +76,8 @@ def run_test_simulation(verbose: bool = False):
                     print(f"{key}: {value}")
                     
         # Generate combined acuity plot
-        plot_multiple_patients(patient_histories, start_date, end_date)
+        plot_multiple_patients(patient_histories, start_date, end_date, 
+                      title="Agent-Based Simulation: Visual Acuity Over Time")
         
         return patient_histories
             
