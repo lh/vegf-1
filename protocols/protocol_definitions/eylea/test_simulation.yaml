@@ -1,0 +1,32 @@
+name: Test Simulation Protocol
+description: Protocol configuration for testing
+version: "1.0"
+
+phases:
+  loading:
+    duration_weeks: 12
+    visit_interval_weeks: 4
+    required_treatments: 3
+    assessment_criteria:
+      - metric: vision
+        comparator: ">="
+        value: "baseline"
+      - metric: retinal_thickness
+        comparator: "improved"
+        value: null
+
+  maintenance:
+    visit_interval_weeks: 8
+    min_interval_weeks: 4
+    max_interval_weeks: 12
+    interval_adjustment_weeks: 2
+    assessment_criteria:
+      - metric: disease_activity
+        comparator: "=="
+        value: "stable"
+
+discontinuation_criteria:
+  - metric: vision
+    comparator: "<="
+    value: "baseline - 15"
+    action: "consider_stop"

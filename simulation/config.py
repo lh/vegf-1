@@ -41,6 +41,35 @@ class SimulationConfig:
                 
         return vision_params
     
+    def get_maintenance_params(self) -> Dict[str, Any]:
+        """Get maintenance phase parameters with validation"""
+        params = self.parameters.get("treatment_response", {}).get("maintenance_phase", {})
+        if not params:
+            raise ValueError("Maintenance phase parameters not found")
+            
+        required_params = {
+            "memory_factor": (0, 1),  # Must be between 0 and 1
+            "base_effect_ceiling": (0, 15),  # Maximum reasonable improvement
+            "regression_factor": (0, 1),  # Must be between 0 and 1
+            "random_effect_mean": (-2, 2),  # Reasonable range for log-normal mean
+            "random_effect_sd": (0, 1),  # Reasonable range for log-normal SD
+            "decline_probability": (0, 1),  # Must be probability
+            "decline_effect_mean": (-5, 0),  # Reasonable vision loss range
+            "decline_effect_sd": (0, 2)  # Reasonable variation in loss
+        }
+        
+        # Validate required parameters
+        for param, (min_val, max_val) in required_params.items():
+            if param not in params:
+                raise ValueError(f"Missing required maintenance phase parameter: {param}")
+            value = params[param]
+            if not isinstance(value, (int, float)):
+                raise ValueError(f"Maintenance phase parameter {param} must be numeric")
+            if not min_val <= value <= max_val:
+                raise ValueError(f"Maintenance phase parameter {param} must be between {min_val} and {max_val}")
+                
+        return params
+
     def get_loading_phase_params(self) -> Dict[str, Any]:
         """Get loading phase parameters with validation"""
         params = self.parameters.get("treatment_response", {}).get("loading_phase", {})
