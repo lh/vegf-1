@@ -151,7 +151,7 @@ class AgentBasedSimulation(BaseSimulation):
             
     def _simulate_vision_test(self, agent: Patient) -> int:
         """Simulate vision test with proper injection effects and measurement noise"""
-        params = self.config.parameters["vision"]
+        vision_params = self.config.get_vision_params()
         
         # Prepare state for vision calculation
         calc_state = {

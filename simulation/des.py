@@ -400,13 +400,14 @@ class DiscreteEventSimulation(BaseSimulation):
         ))
     def _calculate_loading_phase_change(self, state: Dict) -> float:
         """Calculate vision change during loading phase using parameters"""
-        params = self.config.parameters["treatment_response"]["loading_phase"]
+        loading_params = self.config.get_loading_phase_params()
+        vision_params = self.config.get_vision_params()
         
-        # Use configured probabilities
+        # Use configured probabilities for outcomes
         outcome = np.random.choice(['improve', 'stable', 'decline'], 
-                                 p=[params["improve_probability"],
-                                    params["stable_probability"],
-                                    params["decline_probability"]])
+                                 p=[loading_params["improve_probability"],
+                                    loading_params["stable_probability"],
+                                    loading_params["decline_probability"]])
         
         if outcome == 'improve':
             change = np.random.normal(params["improvement_mean"], 
