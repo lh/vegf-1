@@ -1,0 +1,22 @@
+name: macular-simulation
+python_version: ">=3.8"
+
+dependencies:
+  # Core dependencies
+  - pyyaml>=6.0        # For protocol parsing
+  - numpy>=1.21.0      # For numerical operations
+  - pandas>=1.3.0      # For data handling and analysis
+  - typing-extensions>=4.0.0  # For advanced type hints
+
+  # Testing
+  - pytest>=7.0.0      # Testing framework
+  - pytest-cov>=3.0.0  # Test coverage
+
+  # Development
+  - black>=22.0.0      # Code formatting
+  - mypy>=0.950        # Static type checking
+  - pylint>=2.12.0     # Code linting
+  - pydantic>=1.9.0    # Data validation
+
+  # Optional visualization
+  - matplotlib>=3.5.0  # For plotting results
