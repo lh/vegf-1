@@ -16,6 +16,7 @@ class Event:
     patient_id: str 
     data: Dict[str, Any]
     priority: int = 1
+    protocol_event: Optional['ProtocolEvent'] = None
 
 class SimulationClock:
     def __init__(self, start_date: datetime):
