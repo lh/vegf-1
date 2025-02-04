@@ -19,6 +19,11 @@ class SimulationConfig:
     plots: bool
     verbose: bool
     start_date: str
+    description: str
+
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 class ProtocolParser:
     def __init__(self, base_path: str = "protocols"):
@@ -77,6 +82,7 @@ class ProtocolParser:
         
         return SimulationConfig(
             name=config["name"],
+            description=config["description"],
             protocol_agent=config["protocol"]["agent"],
             protocol_type=config["protocol"]["type"],
             parameter_set=config["protocol"]["parameter_set"],
