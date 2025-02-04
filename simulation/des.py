@@ -323,8 +323,6 @@ class DiscreteEventSimulation(BaseSimulation):
 
     def _simulate_oct_findings(self, state: Dict) -> Dict:
         """Simulate OCT findings with realistic biological variation"""
-        import numpy as np
-        
         # Base risk increases with interval length
         interval = state["next_visit_interval"]
         base_risk = 0.2 + (interval - 4) * 0.05
@@ -407,8 +405,6 @@ class DiscreteEventSimulation(BaseSimulation):
         - ~70% stable (within 5 letters)
         - ~5% decline (>5 letters)
         """
-        import numpy as np
-        
         # Determine outcome category using realistic probabilities
         outcome = np.random.choice(['improve', 'stable', 'decline'], p=[0.25, 0.70, 0.05])
         
@@ -433,8 +429,6 @@ class DiscreteEventSimulation(BaseSimulation):
 
     def _calculate_vision_change(self, state: Dict) -> float:
         """Calculate vision change with memory and ceiling effects"""
-        import numpy as np
-        
         # Check if we're in loading phase
         if (state.get("current_step") == "injection_phase" and 
             state.get("injections", 0) < 3 and 
