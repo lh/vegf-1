@@ -424,52 +424,51 @@ class DiscreteEventSimulation(BaseSimulation):
         response_history = state.get("treatment_response_history", [])
         
         # Calculate headroom (ceiling effect)
-        absolute_max = 85  # ETDRS letter score maximum
-        theoretical_max = min(absolute_max, best_vision + 5)
+        absolute_max = 85
+        theoretical_max = min(absolute_max, best_vision + 3)  # Reduced from +5
         headroom = max(0, theoretical_max - current_vision)
-        headroom_factor = np.exp(-0.2 * headroom)
+        headroom_factor = np.exp(-0.3 * headroom)  # Increased from -0.2
         
         if "injection" in state.get("current_actions", []):
-            # Treatment effect
-            memory_factor = 0.7
+            # Treatment effect with stronger regression to mean
+            memory_factor = 0.6  # Reduced from 0.7
             base_effect = 0
             
             if response_history:
                 base_effect = np.mean(response_history) * memory_factor
-                if base_effect > 5:
-                    base_effect *= 0.8
+                if base_effect > 3:  # Reduced from 5
+                    base_effect *= 0.7  # Reduced from 0.8
             
-            # Different behavior for loading phase vs maintenance
-            if state.get("current_step") == "injection_phase" and state.get("injections", 0) < 3:
-                random_effect = np.random.lognormal(mean=1.2, sigma=0.3)
-            else:
-                random_effect = np.random.lognormal(mean=0.5, sigma=0.4)
+            # More modest improvements in maintenance phase
+            random_effect = np.random.lognormal(mean=0.3, sigma=0.4)  # Reduced from 0.5
             
             improvement = (base_effect + random_effect) * (1 - headroom_factor)
             
-            # Store response
+            # Add small random chance of decline even with treatment
+            if np.random.random() < 0.15:  # 15% chance of decline
+                improvement = -np.random.lognormal(mean=-1.5, sigma=0.3)
+            
+            # Update treatment history
             state["last_treatment_response"] = improvement
             state["treatment_response_history"].append(improvement)
             if len(state["treatment_response_history"]) > 3:
                 state["treatment_response_history"].pop(0)
             
-            if current_vision + improvement > best_vision:
-                state["best_vision_achieved"] = min(absolute_max, current_vision + improvement)
-                
             return improvement
         else:
-            # Natural disease progression
+            # Stronger natural disease progression
             weeks_since_injection = state.get("weeks_since_last_injection", 0)
             
-            base_decline = -np.random.lognormal(mean=-2.0, sigma=0.5)
-            time_factor = 1 + (weeks_since_injection/12)
-            vision_factor = 1 + max(0, (current_vision - baseline_vision)/20)
-            response_factor = 1.0
+            # Stronger base decline
+            base_decline = -np.random.lognormal(mean=-1.5, sigma=0.5)  # Increased from -2.0
             
-            if response_history:
-                mean_response = np.mean(response_history)
-                response_factor = 1 + max(0, mean_response/10)
-                
-            total_decline = base_decline * time_factor * vision_factor * response_factor
+            # More aggressive time factor
+            time_factor = 1 + (weeks_since_injection/8)  # Changed from /12
+            
+            # Stronger vision factor
+            vision_factor = 1 + max(0, (current_vision - baseline_vision)/15)  # Changed from /20
+            
+            # Calculate total decline
+            total_decline = base_decline * time_factor * vision_factor
             
             return total_decline
