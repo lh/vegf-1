@@ -10,13 +10,13 @@ vision:
 
 treatment_response:
   loading_phase:
+    vision_improvement_mean: 8
+    vision_improvement_sd: 3
     improve_probability: 0.25
     stable_probability: 0.70
     decline_probability: 0.05
-    improvement_mean: 7
-    improvement_sd: 3
-    decline_mean: -5
-    decline_sd: 2
+    decline_mean: -3
+    decline_sd: 1
     
   maintenance_phase:
     memory_factor: 0.7
