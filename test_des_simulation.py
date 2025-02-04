@@ -8,17 +8,19 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def run_test_des_simulation():
+def run_test_des_simulation(verbose: bool = False):
     try:
         # Load the Eylea treat-and-extend protocol
-        logger.info("Loading protocol...")
+        if verbose:
+            logger.info("Loading protocol...")
         protocol = load_protocol("eylea", "treat_and_extend")
         
         # Initialize simulation
         start_date = datetime(2023, 1, 1)
         end_date = start_date + timedelta(days=365)  # Run for one year
         
-        logger.info("Initializing DES simulation...")
+        if verbose:
+            logger.info("Initializing DES simulation...")
         sim = DiscreteEventSimulation(start_date, {"treat_and_extend": protocol})
         
         # Add test patients
@@ -42,49 +44,53 @@ def run_test_des_simulation():
             ))
         
         # Run simulation
-        logger.info("Starting simulation...")
+        if verbose:
+            logger.info("Starting simulation...")
         sim.run(end_date)
         
-        # Print simulation statistics
-        print("\nSimulation Statistics:")
-        print("-" * 20)
-        for stat, value in sim.global_stats.items():
-            if stat != "resource_utilization":
-                print(f"{stat}: {value}")
-                
-        print("\nResource Utilization:")
-        print("-" * 20)
-        for resource, usage in sim.global_stats["resource_utilization"].items():
-            print(f"{resource}: {usage}")
-            
-        # Print patient timelines
-        print("\nPatient Timelines:")
+        # Collect results
+        patient_histories = {}
         for patient_id, state in sim.patient_states.items():
-            visits = [
-                {'date': visit['date'], 'actions': visit['actions']} 
-                for visit in state.get('visit_history', [])
-            ]
-            print_patient_timeline(patient_id, visits, start_date, end_date)
+            patient_histories[patient_id] = state.get('visit_history', [])
             
-        # Print patient states
-        print("\nFinal Patient States:")
-        print("-" * 20)
-        for patient_id, state in sim.patient_states.items():
-            print(f"\nPatient {patient_id}:")
-            for key, value in state.items():
-                print(f"  {key}: {value}")
+        if verbose:
+            # Print simulation statistics
+            print("\nSimulation Statistics:")
+            print("-" * 20)
+            for stat, value in sim.global_stats.items():
+                if stat != "resource_utilization":
+                    print(f"{stat}: {value}")
+                    
+            print("\nResource Utilization:")
+            print("-" * 20)
+            for resource, usage in sim.global_stats["resource_utilization"].items():
+                print(f"{resource}: {usage}")
                 
-        # Generate acuity plots at the very end
-        print("\nGenerating Acuity Plot...")
-        patient_histories = {
-            patient_id: state.get('visit_history', [])
-            for patient_id, state in sim.patient_states.items()
-        }
+            # Print patient timelines
+            print("\nPatient Timelines:")
+            for patient_id, history in patient_histories.items():
+                visits = [
+                    {'date': visit['date'], 'actions': visit['actions']} 
+                    for visit in history
+                ]
+                print_patient_timeline(patient_id, visits, start_date, end_date)
+            
+            # Print patient states
+            print("\nFinal Patient States:")
+            print("-" * 20)
+            for patient_id, state in sim.patient_states.items():
+                print(f"\nPatient {patient_id}:")
+                for key, value in state.items():
+                    print(f"  {key}: {value}")
+        
+        # Generate acuity plot
         plot_multiple_patients(patient_histories, start_date, end_date)
+        
+        return patient_histories
             
     except Exception as e:
         logger.error(f"Error running simulation: {str(e)}")
         raise
 
 if __name__ == "__main__":
-    run_test_des_simulation()
+    run_test_des_simulation(verbose=False)
