@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+from typing import Optional
+from simulation.config import SimulationConfig
 from simulation import DiscreteEventSimulation, Event
 from protocol_parser import load_protocol
 from visualization.timeline_viz import print_patient_timeline
