@@ -288,10 +288,15 @@ class AgentBasedSimulation(BaseSimulation):
                 
         agent.state["current_interval"] = new_interval
                 
+        # Store initial interval for logging
+        initial_interval = agent.state.get("current_interval")
+        
+        # Update to new interval
+        agent.state["current_interval"] = new_interval
+        
         # Add logging for interval changes
-        new_interval = agent.state.get("current_interval")
-        if old_interval != new_interval:
-            print(f"\nInterval adjusted: {old_interval} -> {new_interval} weeks")
+        if initial_interval != new_interval:
+            print(f"\nInterval adjusted: {initial_interval} -> {new_interval} weeks")
             print(f"Reason: Disease activity is {agent.state.get('disease_activity')}")
                 
         # Schedule next visit based on new interval
