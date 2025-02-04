@@ -159,7 +159,7 @@ class ProtocolParser:
         ]
         
         return phase_class(
-            phase_type=phase_enum,
+            phase_type=phase_type,  # Use the passed-in phase_type directly
             duration_weeks=phase_data.get("duration_weeks"),
             visit_interval_weeks=phase_data["visit_interval_weeks"],
             required_treatments=phase_data.get("required_treatments"),
