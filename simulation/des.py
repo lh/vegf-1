@@ -413,8 +413,8 @@ class DiscreteEventSimulation(BaseSimulation):
                                     loading_params["decline_probability"]])
         
         if outcome == 'improve':
-            change = np.random.normal(loading_params["improvement_mean"], 
-                                    loading_params["improvement_sd"])
+            change = np.random.normal(loading_params["vision_improvement_mean"],
+                                    loading_params["vision_improvement_sd"])
         elif outcome == 'decline':
             change = np.random.normal(loading_params["decline_mean"],
                                     loading_params["decline_sd"])
