@@ -399,26 +399,23 @@ class DiscreteEventSimulation(BaseSimulation):
             priority=1
         ))
     def _calculate_loading_phase_change(self, state: Dict) -> float:
-        """Calculate vision change during loading phase (first 3 injections)
+        """Calculate vision change during loading phase using parameters"""
+        params = self.config.parameters["treatment_response"]["loading_phase"]
         
-        Real-world outcomes during loading:
-        - ~25% improve (>5 letters)
-        - ~70% stable (within 5 letters)
-        - ~5% decline (>5 letters)
-        """
-        # Determine outcome category using realistic probabilities
-        outcome = np.random.choice(['improve', 'stable', 'decline'], p=[0.25, 0.70, 0.05])
+        # Use configured probabilities
+        outcome = np.random.choice(['improve', 'stable', 'decline'], 
+                                 p=[params["improve_probability"],
+                                    params["stable_probability"],
+                                    params["decline_probability"]])
         
         if outcome == 'improve':
-            # Improvement: log-normal distribution for positive changes
-            # Mean around 7-8 letters, mostly between 5-15 letters
-            change = np.random.lognormal(mean=1.8, sigma=0.3)  # Reduced from 2.0
+            change = np.random.normal(params["improvement_mean"], 
+                                    params["improvement_sd"])
         elif outcome == 'decline':
-            # Decline: negative log-normal for rare but potentially significant losses
-            change = -np.random.lognormal(mean=1.8, sigma=0.4)  # Increased from 1.5
+            change = np.random.normal(params["decline_mean"],
+                                    params["decline_sd"])
         else:
-            # Stable: small normal distribution changes with slight negative bias
-            change = np.random.normal(-1, 2)  # Changed from (0, 2)
+            change = np.random.normal(0, 2)  # Small variation for stable
         
         # Apply minimal ceiling effect during loading
         current_vision = state["current_vision"]
