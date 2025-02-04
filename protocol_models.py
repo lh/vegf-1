@@ -68,8 +68,8 @@ class TreatmentDecision:
         return False
 
 @dataclass
-class ProtocolPhase:
-    """Base class for protocol phases"""
+class ProtocolPhase(ABC):
+    """Abstract base class for protocol phases"""
     phase_type: PhaseType
     duration_weeks: Optional[int]
     visit_interval_weeks: int
@@ -81,8 +81,13 @@ class ProtocolPhase:
     exit_criteria: List[TreatmentDecision] = field(default_factory=list)
     visit_type: VisitType = field(default_factory=lambda: VisitType(
         name="standard",
-        required_actions=["vision_test", "oct_scan"]
+        required_actions=[ActionType.VISION_TEST, ActionType.OCT_SCAN]
     ))
+
+    @abstractmethod
+    def process_visit(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """Process a visit in this phase and return updated state"""
+        pass
 
     def is_complete(self, state: Dict[str, Any]) -> bool:
         """Check if phase completion criteria are met"""
@@ -98,23 +103,17 @@ class ProtocolPhase:
             value = state.get(criterion.metric)
             if value is None:
                 continue
-            if not self._compare_values(value, criterion.comparator, criterion.value):
+            if not criterion.evaluate(value):
                 return False
         return True
 
-    def _compare_values(self, actual: Any, comparator: str, expected: Any) -> bool:
-        """Compare values using specified comparator"""
-        if comparator == "==":
-            return actual == expected
-        elif comparator == ">=":
-            return actual >= expected
-        elif comparator == "<=":
-            return actual <= expected
-        elif comparator == ">":
-            return actual > expected
-        elif comparator == "<":
-            return actual < expected
-        return False
+    def can_enter(self, state: Dict[str, Any]) -> bool:
+        """Check if phase entry criteria are met"""
+        return self.evaluate_criteria(state, self.entry_criteria)
+
+    def should_exit(self, state: Dict[str, Any]) -> bool:
+        """Check if phase exit criteria are met"""
+        return self.evaluate_criteria(state, self.exit_criteria)
 
 @dataclass
 class LoadingPhase(ProtocolPhase):
@@ -124,9 +123,23 @@ class LoadingPhase(ProtocolPhase):
         if not self.visit_type:
             self.visit_type = VisitType(
                 name="loading",
-                required_actions=["vision_test", "oct_scan", "injection"],
-                decisions=["nurse_vision_check", "doctor_treatment_decision"]
+                required_actions=[ActionType.VISION_TEST, ActionType.OCT_SCAN, ActionType.INJECTION],
+                decisions=[DecisionType.NURSE_CHECK, DecisionType.DOCTOR_REVIEW]
             )
+
+    def process_visit(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """Process loading phase visit"""
+        treatments = state.get("treatments_in_phase", 0)
+        state["treatments_in_phase"] = treatments + 1
+        
+        # Always schedule next loading dose at fixed interval
+        state["next_visit_weeks"] = self.visit_interval_weeks
+        
+        # Check if loading phase complete
+        if self.is_complete(state):
+            state["phase_complete"] = True
+            
+        return state
 
 @dataclass
 class MaintenancePhase(ProtocolPhase):
@@ -136,10 +149,32 @@ class MaintenancePhase(ProtocolPhase):
         if not self.visit_type:
             self.visit_type = VisitType(
                 name="maintenance",
-                required_actions=["vision_test", "oct_scan"],
-                optional_actions=["injection"],
-                decisions=["nurse_vision_check", "doctor_treatment_decision"]
+                required_actions=[ActionType.VISION_TEST, ActionType.OCT_SCAN],
+                optional_actions=[ActionType.INJECTION],
+                decisions=[DecisionType.NURSE_CHECK, DecisionType.DOCTOR_REVIEW]
             )
+
+    def process_visit(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """Process maintenance phase visit"""
+        current_interval = state.get("current_interval", self.visit_interval_weeks)
+        disease_active = state.get("disease_activity") == "active"
+        
+        # Adjust interval based on disease activity
+        if disease_active:
+            new_interval = max(
+                self.min_interval_weeks,
+                current_interval - self.interval_adjustment_weeks
+            )
+        else:
+            new_interval = min(
+                self.max_interval_weeks,
+                current_interval + self.interval_adjustment_weeks
+            )
+            
+        state["current_interval"] = new_interval
+        state["next_visit_weeks"] = new_interval
+        
+        return state
 
 @dataclass
 class TreatmentProtocol:
