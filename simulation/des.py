@@ -9,10 +9,16 @@ class DiscreteEventSimulation(BaseSimulation):
     rather than individual agent modeling.
     """
     def __init__(self, start_date: datetime, protocols: Dict[str, TreatmentProtocol],
-                 environment: Optional[SimulationEnvironment] = None):
+                 environment: Optional[SimulationEnvironment] = None,
+                 random_seed: Optional[int] = None):
         super().__init__(start_date, environment)
         self.protocols = protocols
         self.patient_states: Dict[str, Dict] = {}
+        
+        # Initialize random seed
+        import numpy as np
+        if random_seed is not None:
+            np.random.seed(random_seed)
         self.global_stats = {
             "total_visits": 0,
             "total_injections": 0,
@@ -208,25 +214,61 @@ class DiscreteEventSimulation(BaseSimulation):
         return True
 
     def _simulate_vision_change(self, state: Dict) -> int:
-        """Simulate vision change based on treatment phase"""
+        """Simulate vision change with realistic biological variation"""
+        import numpy as np
+        
         if state["current_step"] == "injection_phase":
-            # More likely to improve during loading phase
-            return 2 if state["injections"] < 3 else 0
+            if state["injections"] < 3:
+                # Loading phase: improvement likely
+                # Shift and reflect log-normal for improvements
+                change = 5 - np.random.lognormal(mean=0.5, sigma=0.5)
+            else:
+                # Just finished loading: smaller improvements
+                change = 2 - np.random.lognormal(mean=0.8, sigma=0.3)
         else:
-            # Maintenance phase - smaller changes
-            return -1 if state["next_visit_interval"] > 8 else 1
+            # Maintenance phase
+            interval = state["next_visit_interval"]
+            if interval > 8:
+                # Higher chance of decline with longer intervals
+                change = -np.random.lognormal(mean=-0.5, sigma=0.7)
+            else:
+                # More stable with shorter intervals
+                change = -np.random.lognormal(mean=-2.0, sigma=0.5)
+        
+        return int(change)
 
     def _simulate_oct_findings(self, state: Dict) -> Dict:
-        """Simulate OCT findings based on treatment phase and interval"""
-        fluid_risk = 0.2  # Base risk
+        """Simulate OCT findings with realistic biological variation"""
+        import numpy as np
         
-        if state["current_step"] != "injection_phase":
-            # Increased risk with longer intervals
-            fluid_risk += (state["next_visit_interval"] - 4) * 0.1
-            
+        # Base risk increases with interval length
+        interval = state["next_visit_interval"]
+        base_risk = 0.2 + (interval - 4) * 0.05
+        
+        # Add random component from beta distribution
+        risk_variation = np.random.beta(2, 5)
+        fluid_risk = min(base_risk + risk_variation * 0.3, 1.0)
+        
+        # Thickness changes based on treatment phase
+        if state["current_step"] == "injection_phase":
+            if state["injections"] < 3:
+                # Strong improvement during loading
+                thickness_change = -np.random.lognormal(mean=1.5, sigma=0.3)
+            else:
+                # Moderate improvement after loading
+                thickness_change = -np.random.lognormal(mean=1.0, sigma=0.4)
+        else:
+            # Maintenance phase - changes depend on interval
+            if fluid_risk > 0.5:
+                # Disease activity - thickness increases
+                thickness_change = np.random.lognormal(mean=1.0, sigma=0.5)
+            else:
+                # Stable - small variations
+                thickness_change = np.random.normal(0, 5)
+        
         return {
-            "fluid_present": fluid_risk > 0.5,
-            "thickness_change": 10 if fluid_risk > 0.5 else -5
+            "fluid_present": np.random.random() < fluid_risk,
+            "thickness_change": thickness_change
         }
 
     def _schedule_resource_release(self, visit_time: datetime, visit_data: Dict):
