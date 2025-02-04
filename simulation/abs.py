@@ -188,7 +188,11 @@ class AgentBasedSimulation(BaseSimulation):
         measurement_noise = np.random.normal(0, vision_params["measurement_noise_sd"])
         
         new_vision = agent.state["last_vision"] + change + measurement_noise
-        return int(min(max(new_vision, vision_params["min_letters"], vision_params["max_letters"])))
+        # First clamp to min letters
+        new_vision = max(new_vision, vision_params["min_letters"])
+        # Then clamp to max letters
+        new_vision = min(new_vision, vision_params["max_letters"])
+        return int(new_vision)
         
     def _simulate_oct_scan(self, agent: Patient) -> Dict:
         """Simulate OCT with realistic biological variation"""
