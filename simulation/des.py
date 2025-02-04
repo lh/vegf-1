@@ -146,7 +146,7 @@ class DiscreteEventSimulation(BaseSimulation):
             self._handle_visit(queued_event)
 
     def _handle_treatment_decision(self, event: Event):
-        """Handle treatment decision events"""
+        """Handle treatment decision events with proper loading phase"""
         patient_id = event.patient_id
         if patient_id not in self.patient_states:
             return
@@ -155,29 +155,66 @@ class DiscreteEventSimulation(BaseSimulation):
         
         # Determine next visit interval
         if state["current_step"] == "injection_phase":
-            if state["injections"] < 3:
+            if state["injections"] < 3:  # Loading phase
                 next_interval = 4  # 4 weeks between loading doses
+                # Schedule next loading dose visit
+                next_visit = {
+                    "visit_type": "injection_visit",
+                    "actions": ["vision_test", "oct_scan", "injection"],
+                    "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
+                }
+                
+                self.clock.schedule_event(Event(
+                    time=event.time + timedelta(weeks=next_interval),
+                    event_type="visit",
+                    patient_id=patient_id,
+                    data=next_visit,
+                    priority=1
+                ))
             else:
+                # Move to maintenance phase after 3 injections
                 state["current_step"] = "maintenance"
-                next_interval = 8  # Start maintenance phase
+                next_interval = 8  # Start maintenance phase with 8-week interval
+                state["next_visit_interval"] = next_interval
+                
+                # Schedule first maintenance visit
+                next_visit = {
+                    "visit_type": "injection_visit",
+                    "actions": ["vision_test", "oct_scan", "injection"],
+                    "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
+                }
+                
+                self.clock.schedule_event(Event(
+                    time=event.time + timedelta(weeks=next_interval),
+                    event_type="visit",
+                    patient_id=patient_id,
+                    data=next_visit,
+                    priority=1
+                ))
         else:
-            # Adjust interval based on OCT findings
+            # Maintenance phase - adjust interval based on OCT findings
+            current_interval = state["next_visit_interval"]
             if event.data["oct_findings"]["fluid_present"]:
-                next_interval = max(4, state["next_visit_interval"] - 2)
+                next_interval = max(4, current_interval - 2)
             else:
-                next_interval = min(12, state["next_visit_interval"] + 2)
-        
-        state["next_visit_interval"] = next_interval
-        
-        # Schedule next visit
-        next_visit = event.data.copy()
-        self.clock.schedule_event(Event(
-            time=event.time + timedelta(weeks=next_interval),
-            event_type="visit",
-            patient_id=patient_id,
-            data=event.data,
-            priority=1
-        ))
+                next_interval = min(12, current_interval + 2)
+                
+            state["next_visit_interval"] = next_interval
+            
+            # Schedule next maintenance visit
+            next_visit = {
+                "visit_type": "injection_visit",
+                "actions": ["vision_test", "oct_scan", "injection"],
+                "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
+            }
+            
+            self.clock.schedule_event(Event(
+                time=event.time + timedelta(weeks=next_interval),
+                event_type="visit",
+                patient_id=patient_id,
+                data=next_visit,
+                priority=1
+            ))
 
     def _request_resources(self, event: Event) -> bool:
         """Attempt to reserve needed resources for visit"""
