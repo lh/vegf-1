@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from .base import BaseSimulation, Event, SimulationEnvironment
 from protocol_models import TreatmentProtocol
@@ -145,3 +145,42 @@ class AgentBasedSimulation(BaseSimulation):
         current_step = agent.state["current_step"]
         if current_step and "dynamic_interval" in current_step:
             self._adjust_treatment_interval(agent)
+            
+    def _adjust_treatment_interval(self, agent: Patient):
+        """
+        Adjust treatment interval based on treat-and-extend protocol rules
+        """
+        current_step = agent.protocol.steps.get(agent.state["current_step"])
+        if not current_step or current_step.step_type != "dynamic_interval":
+            return
+            
+        params = current_step.parameters
+        current_interval = agent.state.get("current_interval", params["initial_interval"])
+        adjustment = params["adjustment_weeks"]
+        
+        if agent.state["disease_activity"] == "recurring":
+            # Decrease interval if disease is recurring
+            new_interval = max(current_interval - adjustment, params["min_interval"])
+        elif agent.state["disease_activity"] == "stable":
+            # Increase interval if disease is stable
+            new_interval = min(current_interval + adjustment, params["max_interval"])
+        else:
+            # Keep same interval if disease activity status is unclear
+            new_interval = current_interval
+            
+        agent.state["current_interval"] = new_interval
+        
+        # Schedule next visit based on new interval
+        next_visit = {
+            "visit_type": "injection_visit",
+            "actions": ["vision_test", "oct_scan", "injection"],
+            "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
+        }
+        
+        self.clock.schedule_event(Event(
+            time=self.clock.current_time + timedelta(weeks=new_interval),
+            event_type="visit",
+            patient_id=agent.patient_id,
+            data={"visit_type": next_visit},
+            priority=1
+        ))
