@@ -452,26 +452,17 @@ class AgentBasedSimulation(BaseSimulation):
         
         if "injection" in state.get("current_actions", []):
             # Treatment effect
+            # Treatment effect
             if state.get("current_step") == "injection_phase" and state.get("injections_given", 0) < 3:
                 # Loading phase - strong positive response expected
                 # Use positive log-normal distribution for loading phase improvements
                 # Increase mean and reduce sigma for more consistent improvements
-                base_effect = np.random.lognormal(mean=2.0, sigma=0.2)  # More consistently positive
-                # Add small random bonus for first injection
-                if state.get("injections_given", 0) == 0:
-                    base_effect += np.random.lognormal(mean=1.0, sigma=0.1)  # Extra improvement for first injection
-                    
-                improvement = base_effect * (1 - headroom_factor * 0.3)  # Less affected by ceiling
-                
-                # Store response
-                state["last_treatment_response"] = improvement
-                state["treatment_response_history"] = [improvement]  # Reset history during loading
-                
-                # Update best vision if applicable
-                if current_vision + improvement > best_vision:
-                    state["best_vision_achieved"] = min(absolute_max, current_vision + improvement)
-                    
-                return improvement
+                random_effect = np.random.lognormal(mean=1.2, sigma=0.3)
+            else:
+                # More variable effect during maintenance
+                random_effect = np.random.lognormal(mean=0.5, sigma=0.4)
+            
+            improvement = (base_effect + random_effect) * (1 - headroom_factor)
                 
             else:
                 # Maintenance phase - more variable response
@@ -497,14 +488,9 @@ class AgentBasedSimulation(BaseSimulation):
                     
                 return improvement
         else:
-            # Natural disease progression - minimal during loading phase
+            # Natural disease progression
             weeks_since_injection = state.get("weeks_since_last_injection", 0)
             
-            if state.get("current_step") == "injection_phase" and state.get("injections_given", 0) < 3:
-                # Very minimal decline during loading phase
-                return -np.random.lognormal(mean=-3.0, sigma=0.3)  # Very small negative changes
-            
-            # Normal decline during maintenance
             base_decline = -np.random.lognormal(mean=-2.0, sigma=0.5)
             time_factor = 1 + (weeks_since_injection/12)
             vision_factor = 1 + max(0, (current_vision - baseline_vision)/20)
