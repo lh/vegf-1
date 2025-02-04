@@ -254,7 +254,8 @@ class AgentBasedSimulation(BaseSimulation):
         
         # Handle initial loading phase
         if current_step == "injection_phase":
-            if agent.state["injections_given"] < 3:
+            if agent.state["injections_given"] < 3:  # Still in loading phase
+                print(f"\nLoading Phase - Injection {agent.state['injections_given']} of 3")
                 # Schedule next loading dose in 4 weeks
                 next_visit = {
                     "visit_type": "injection_visit",
@@ -263,17 +264,20 @@ class AgentBasedSimulation(BaseSimulation):
                 }
                 
                 self.clock.schedule_event(Event(
-                    time=self.clock.current_time + timedelta(weeks=4),
+                    time=self.clock.current_time + timedelta(weeks=4),  # Fixed 4-week interval during loading
                     event_type="visit",
                     patient_id=agent.patient_id,
                     data={"visit_type": next_visit},
                     priority=1
                 ))
+                print(f"Next loading dose scheduled for {self.clock.current_time + timedelta(weeks=4)}")
             else:
-                # Move to assessment phase after 3 injections
+                # Move to dynamic interval phase after completing loading
+                print("\nCompleted loading phase - moving to dynamic interval phase")
                 agent.state["current_step"] = "dynamic_interval"
                 agent.state["current_interval"] = 8.0  # Start with 8 week interval
                 self._schedule_next_visit(agent)
+                print(f"First maintenance visit scheduled at 8-week interval")
         
         elif current_step == "dynamic_interval":
             self._adjust_treatment_interval(agent)
