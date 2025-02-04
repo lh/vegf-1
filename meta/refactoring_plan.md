@@ -67,10 +67,24 @@ Convert mixed dictionary/object protocol implementation to a consistent object-o
    - ✓ Implement new protocol_models.py
    - ✓ Add protocol class hierarchy
    - ✓ Add phase implementations
-   - → Update protocol_parser.py (in progress)
-   - Add tests for new models
-   - Define protocol-specific event types
-   - Add protocol state validation
+   - ✓ Update protocol_parser.py
+   - ✓ Define protocol-specific event types
+   - ✓ Add protocol state validation
+   - → Add tests for new models (in progress)
+
+2. Phase 2: Configuration & Validation
+   - ✓ Update config_validator.py
+   - ✓ Update simulation/config.py
+   - → Add configuration tests (in progress)
+   - Add protocol transition validation
+   - Add parameter constraint checking
+
+3. Phase 3: Simulation Updates
+   - ✓ Update simulation/base.py with protocol events
+   - Update Event class to handle protocol objects
+   - Update simulation/abs.py
+   - Update simulation/des.py
+   - Add simulation tests
 
 2. Phase 2: Configuration & Validation
    - Update config_validator.py
