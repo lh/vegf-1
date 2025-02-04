@@ -161,9 +161,10 @@ def run_test_abs_simulation(verbose: bool = False):
                 for key, value in patient.state.items():
                     print(f"{key}: {value}")
                     
-        # Generate combined acuity plot
-        plot_multiple_patients(patient_histories, start_date, end_date,
-                             title="Agent-Based Simulation: Visual Acuity Over Time")
+        # Generate combined acuity plot (suppressed but code kept for future use)
+        if False:  # Set to True to show plots
+            plot_multiple_patients(patient_histories, start_date, end_date,
+                                 title="Agent-Based Simulation: Visual Acuity Over Time")
         
         return patient_histories
             
