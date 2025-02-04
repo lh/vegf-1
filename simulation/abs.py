@@ -7,8 +7,27 @@ class Patient:
     def __init__(self, patient_id: str, protocol: TreatmentProtocol):
         self.patient_id = patient_id
         self.protocol = protocol
-        self.state: Dict = {}
+        self.state: Dict = {
+            "current_step": None,
+            "baseline_vision": None,
+            "last_vision": None,
+            "last_oct": None,
+            "disease_activity": None,
+            "current_interval": None
+        }
         self.history: List[Dict] = []
+        
+    def record_visit(self, visit_data: Dict):
+        """Record visit data and update patient state"""
+        self.history.append(visit_data)
+        
+        if "vision_test" in visit_data.get("actions", []):
+            if self.state["baseline_vision"] is None:
+                self.state["baseline_vision"] = visit_data["vision"]
+            self.state["last_vision"] = visit_data["vision"]
+            
+        if "oct_scan" in visit_data.get("actions", []):
+            self.state["last_oct"] = visit_data["oct"]
 
 class AgentBasedSimulation(BaseSimulation):
     def __init__(self, start_date: datetime, protocols: Dict[str, TreatmentProtocol],
@@ -30,9 +49,99 @@ class AgentBasedSimulation(BaseSimulation):
                 self._handle_agent_decision(agent, event)
     
     def _handle_agent_visit(self, agent: Patient, event: Event):
-        # Implementation to come
-        pass
+        """Handle a patient visit event"""
+        visit_type = event.data.get("visit_type")
+        if not visit_type:
+            return
+            
+        visit_data = {
+            "date": event.time,
+            "type": visit_type,
+            "actions": [],
+            "decisions": []
+        }
+        
+        # Perform visit actions
+        if "vision_test" in visit_type["actions"]:
+            visit_data["actions"].append("vision_test")
+            visit_data["vision"] = self._simulate_vision_test(agent)
+            
+        if "oct_scan" in visit_type["actions"]:
+            visit_data["actions"].append("oct_scan")
+            visit_data["oct"] = self._simulate_oct_scan(agent)
+            
+        if "injection" in visit_type["actions"]:
+            visit_data["actions"].append("injection")
+            self._perform_injection(agent, event.data.get("injection_data", {}))
+            
+        # Record visit
+        agent.record_visit(visit_data)
+        
+        # Schedule decisions
+        for decision in visit_type.get("decisions", []):
+            self.clock.schedule_event(Event(
+                time=event.time,
+                event_type="decision",
+                patient_id=agent.patient_id,
+                data={"decision_type": decision, "visit_data": visit_data},
+                priority=2  # Decisions happen after visits
+            ))
 
     def _handle_agent_decision(self, agent: Patient, event: Event):
-        # Implementation to come
-        pass
+        """Handle a patient decision event"""
+        decision_type = event.data.get("decision_type")
+        visit_data = event.data.get("visit_data", {})
+        
+        if decision_type == "nurse_vision_check":
+            self._handle_nurse_vision_check(agent, visit_data)
+        elif decision_type == "doctor_oct_review":
+            self._handle_doctor_oct_review(agent, visit_data)
+        elif decision_type == "doctor_treatment_decision":
+            self._handle_doctor_treatment_decision(agent, visit_data)
+            
+    def _simulate_vision_test(self, agent: Patient) -> int:
+        """Simulate a vision test result"""
+        # Placeholder - implement actual vision simulation logic
+        return agent.state.get("last_vision", 70)  # Default to 70 ETDRS letters
+        
+    def _simulate_oct_scan(self, agent: Patient) -> Dict:
+        """Simulate an OCT scan result"""
+        # Placeholder - implement actual OCT simulation logic
+        return {"thickness": 300, "fluid_present": True}
+        
+    def _perform_injection(self, agent: Patient, injection_data: Dict):
+        """Simulate giving an injection"""
+        # Record injection in patient history
+        agent.history.append({
+            "type": "injection",
+            "agent": agent.protocol.agent,
+            "dose": injection_data.get("dose", "0.5mg")
+        })
+        
+    def _handle_nurse_vision_check(self, agent: Patient, visit_data: Dict):
+        """Handle nurse vision check decision"""
+        if agent.state["baseline_vision"] is not None:
+            vision_drop = agent.state["baseline_vision"] - visit_data.get("vision", 0)
+            if vision_drop >= 15:
+                # Schedule doctor review
+                self.clock.schedule_event(Event(
+                    time=visit_data["date"],
+                    event_type="decision",
+                    patient_id=agent.patient_id,
+                    data={"decision_type": "doctor_treatment_decision", "visit_data": visit_data},
+                    priority=3
+                ))
+                
+    def _handle_doctor_oct_review(self, agent: Patient, visit_data: Dict):
+        """Handle doctor OCT review decision"""
+        oct_data = visit_data.get("oct", {})
+        if oct_data.get("fluid_present"):
+            agent.state["disease_activity"] = "active"
+        else:
+            agent.state["disease_activity"] = "stable"
+            
+    def _handle_doctor_treatment_decision(self, agent: Patient, visit_data: Dict):
+        """Handle doctor treatment decision"""
+        current_step = agent.state["current_step"]
+        if current_step and "dynamic_interval" in current_step:
+            self._adjust_treatment_interval(agent)
