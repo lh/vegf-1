@@ -27,12 +27,13 @@ class Patient:
             
         self.history.append(visit_data)
         
-        if "vision_test" in visit_data.get("actions", []):
+        # Update state based on visit data
+        if "vision" in visit_data:
             if self.state["baseline_vision"] is None:
                 self.state["baseline_vision"] = visit_data["vision"]
             self.state["last_vision"] = visit_data["vision"]
             
-        if "oct_scan" in visit_data.get("actions", []):
+        if "oct" in visit_data:
             self.state["last_oct"] = visit_data["oct"]
 
 class AgentBasedSimulation(BaseSimulation):
@@ -63,9 +64,8 @@ class AgentBasedSimulation(BaseSimulation):
         # Create visit data with proper date field
         visit_data = {
             "date": event.time,
-            "type": visit_type.get("visit_type", "unknown"),  # Get visit_type name or default to unknown
-            "actions": visit_type.get("actions", []),
-            "decisions": visit_type.get("decisions", [])
+            "type": visit_type.get("visit_type", "unknown"),
+            "actions": []  # Initialize empty actions list
         }
         
         # Perform visit actions
@@ -79,7 +79,10 @@ class AgentBasedSimulation(BaseSimulation):
             
         if "injection" in visit_type.get("actions", []):
             visit_data["actions"].append("injection")
-            self._perform_injection(agent, event.data.get("injection_data", {}))
+            visit_data["injection"] = {
+                "agent": agent.protocol.agent,
+                "dose": "0.5mg"
+            }
             
         # Record visit
         agent.record_visit(visit_data)
@@ -108,24 +111,15 @@ class AgentBasedSimulation(BaseSimulation):
             
     def _simulate_vision_test(self, agent: Patient) -> int:
         """Simulate a vision test result"""
-        # Placeholder - implement actual vision simulation logic
-        return agent.state.get("last_vision", 70)  # Default to 70 ETDRS letters
+        if agent.state["baseline_vision"] is None:
+            # First visit - set baseline between 50-80 letters
+            return 65  # Fixed value for reproducibility, could be random
+        return agent.state["last_vision"]  # Return last recorded vision
         
     def _simulate_oct_scan(self, agent: Patient) -> Dict:
         """Simulate an OCT scan result"""
         # Placeholder - implement actual OCT simulation logic
         return {"thickness": 300, "fluid_present": True}
-        
-    def _perform_injection(self, agent: Patient, injection_data: Dict):
-        """Simulate giving an injection"""
-        # Record injection in patient history with consistent structure
-        agent.history.append({
-            "date": self.clock.current_time,
-            "type": "injection",
-            "agent": agent.protocol.agent,
-            "dose": injection_data.get("dose", "0.5mg"),
-            "actions": ["injection"]
-        })
         
     def _handle_nurse_vision_check(self, agent: Patient, visit_data: Dict):
         """Handle nurse vision check decision"""
