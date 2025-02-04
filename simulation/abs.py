@@ -125,15 +125,23 @@ class AgentBasedSimulation(BaseSimulation):
             self._handle_doctor_treatment_decision(agent, visit_data)
             
     def _simulate_vision_test(self, agent: Patient) -> int:
-        """Simulate a vision test result"""
+        """Simulate a vision test result with realistic variation"""
         if agent.state["baseline_vision"] is None:
             # First visit - set baseline between 50-80 letters
-            return 65  # Fixed value for reproducibility, could be random
-        return agent.state["last_vision"]  # Return last recorded vision
+            return 65  # Fixed value for reproducibility
+            
+        # Add small variations based on disease activity
+        base_vision = agent.state["last_vision"]
+        if agent.state.get("disease_activity") == "recurring":
+            variation = -3  # Vision tends to decrease with active disease
+        else:
+            variation = 1  # Small improvement possible with stable disease
+            
+        new_vision = base_vision + variation
+        return min(max(new_vision, 0), 100)  # Clamp between 0-100 letters
         
     def _simulate_oct_scan(self, agent: Patient) -> Dict:
-        """Simulate an OCT scan result with more realistic variation"""
-        # Get current interval and time since last injection
+        """Simulate OCT with more realistic disease progression"""
         current_interval = agent.state.get("current_interval", 8)
         last_visit = agent.history[-1]["date"] if agent.history else None
         weeks_since_injection = 0
@@ -141,41 +149,33 @@ class AgentBasedSimulation(BaseSimulation):
         if last_visit:
             weeks_since_injection = (self.clock.current_time - last_visit).days / 7.0
         
-        # Ensure current_interval has a valid value
         if current_interval is None:
             current_interval = 8
-            
         current_interval = float(current_interval)
         
-        # Base thickness varies with time since injection
-        base_thickness = 250  # Normal retinal thickness
-        recovery_factor = max(0, 1 - (weeks_since_injection / (current_interval * 0.75)))
-        thickness_reduction = 50 * recovery_factor  # Maximum 50μm reduction from treatment
+        # Base thickness varies with treatment effect
+        base_thickness = 250
+        treatment_effect = 50 * (1 - (weeks_since_injection / current_interval))
         
-        # Add some variation based on disease state
-        if agent.state.get("disease_activity") == "recurring":
-            thickness_variation = 30  # More variation if disease is active
-        else:
-            thickness_variation = 10  # Less variation if stable
-            
-        thickness = base_thickness - thickness_reduction + thickness_variation
+        # Disease progression factor - increases over time
+        progression_factor = len(agent.history) / 20.0  # Slowly increases with visits
         
-        # Determine fluid presence based on multiple factors
-        fluid_risk = 0.0
+        # Calculate thickness with multiple factors
+        thickness = (
+            base_thickness 
+            - treatment_effect  # Treatment reduces thickness
+            + (progression_factor * 10)  # Disease slowly progresses
+            + (weeks_since_injection * 2)  # Thickness increases between treatments
+        )
         
-        # Time factor: risk increases with time since injection
-        time_factor = weeks_since_injection / current_interval
-        fluid_risk += time_factor * 0.4
+        # Fluid risk calculation
+        fluid_risk = (
+            (weeks_since_injection / current_interval) * 0.4  # Time factor
+            + (progression_factor * 0.2)  # Disease progression
+            + (0.3 if thickness > 280 else 0)  # Thickness factor
+        )
         
-        # History factor: previous fluid increases risk
-        if agent.state.get("disease_activity") == "recurring":
-            fluid_risk += 0.3
-        
-        # Thickness factor: higher thickness increases risk
-        if thickness > 280:
-            fluid_risk += 0.3
-            
-        # Determine fluid presence with some randomness
+        # Determine fluid presence
         fluid_present = fluid_risk > 0.6
         
         return {
@@ -228,8 +228,9 @@ class AgentBasedSimulation(BaseSimulation):
             agent.state["disease_activity"] = "stable"
             
     def _handle_doctor_treatment_decision(self, agent: Patient, visit_data: Dict):
-        """Handle doctor treatment decision"""
+        """Handle doctor treatment decision with logging"""
         current_step = agent.state["current_step"]
+        old_interval = agent.state.get("current_interval")
         
         # Handle initial loading phase
         if current_step == "injection_phase":
@@ -286,7 +287,13 @@ class AgentBasedSimulation(BaseSimulation):
             new_interval = current_interval
                 
         agent.state["current_interval"] = new_interval
-        
+                
+        # Add logging for interval changes
+        new_interval = agent.state.get("current_interval")
+        if old_interval != new_interval:
+            print(f"\nInterval adjusted: {old_interval} -> {new_interval} weeks")
+            print(f"Reason: Disease activity is {agent.state.get('disease_activity')}")
+                
         # Schedule next visit based on new interval
         next_visit = {
             "visit_type": "injection_visit",
