@@ -47,10 +47,12 @@ class Patient:
 
 class AgentBasedSimulation(BaseSimulation):
     def __init__(self, start_date: datetime, protocols: Dict[str, TreatmentProtocol],
-                 environment: Optional[SimulationEnvironment] = None):
+                 environment: Optional[SimulationEnvironment] = None,
+                 verbose: bool = False):
         super().__init__(start_date, environment)
         self.protocols = protocols
         self.agents: Dict[str, Patient] = {}
+        self.verbose = verbose
     
     def add_patient(self, patient_id: str, protocol_name: str):
         if protocol_name in self.protocols:
@@ -282,10 +284,11 @@ class AgentBasedSimulation(BaseSimulation):
         else:
             agent.state["disease_activity"] = "stable"
             
-        # Log the assessment
-        print(f"\nOCT Review at {visit_data['date']}")
-        print(f"Risk Score: {risk_score}")
-        print(f"Disease Activity: {agent.state['disease_activity']}")
+        # Log the assessment only if verbose mode is enabled
+        if self.verbose:
+            print(f"\nOCT Review at {visit_data['date']}")
+            print(f"Risk Score: {risk_score}")
+            print(f"Disease Activity: {agent.state['disease_activity']}")
             
     def _handle_doctor_treatment_decision(self, agent: Patient, visit_data: Dict):
         """Handle doctor treatment decision with logging"""
@@ -354,8 +357,8 @@ class AgentBasedSimulation(BaseSimulation):
                 
         agent.state["current_interval"] = new_interval
         
-        # Enhanced logging of changes
-        if initial_interval != agent.state["current_interval"]:
+        # Enhanced logging of changes only if verbose mode is enabled
+        if initial_interval != agent.state["current_interval"] and self.verbose:
             print(f"\nVisit Date: {self.clock.current_time}")
             print(f"Disease Activity: {initial_activity}")
             print(f"OCT Thickness: {agent.state['last_oct']['thickness']}")
