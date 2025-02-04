@@ -200,7 +200,7 @@ class AgentBasedSimulation(BaseSimulation):
     def _handle_doctor_oct_review(self, agent: Patient, visit_data: Dict):
         """Handle doctor OCT review with more sophisticated analysis"""
         oct_data = visit_data.get("oct", {})
-        current_interval = agent.state.get("current_interval", 8)
+        current_interval = agent.state.get("current_interval", 8)  # Default to 8 weeks
         
         # Get previous OCT data
         prev_oct = None
@@ -231,6 +231,7 @@ class AgentBasedSimulation(BaseSimulation):
             risk_score += 1
             
         # Consider interval length in risk assessment
+        # Now current_interval will always have a value
         if current_interval >= 10:
             risk_score += 1  # Higher risk with longer intervals
             
