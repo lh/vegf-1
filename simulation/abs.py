@@ -453,21 +453,23 @@ class AgentBasedSimulation(BaseSimulation):
         if "injection" in state.get("current_actions", []):
             # Treatment effect
             # Treatment effect
+            # Treatment effect
+            memory_factor = 0.7
+            base_effect = 0
+            
+            if response_history:
+                base_effect = np.mean(response_history) * memory_factor
+                if base_effect > 5:
+                    base_effect *= 0.8
+
             if state.get("current_step") == "injection_phase" and state.get("injections_given", 0) < 3:
                 # Loading phase - strong positive response expected
-                # Use positive log-normal distribution for loading phase improvements
-                # Increase mean and reduce sigma for more consistent improvements
                 random_effect = np.random.lognormal(mean=1.2, sigma=0.3)
             else:
-                # More variable effect during maintenance
+                # Maintenance phase - more variable response
                 random_effect = np.random.lognormal(mean=0.5, sigma=0.4)
             
             improvement = (base_effect + random_effect) * (1 - headroom_factor)
-                
-            else:
-                # Maintenance phase - more variable response
-                memory_factor = 0.7
-                base_effect = 0
                 
                 if response_history:
                     base_effect = np.mean(response_history) * memory_factor
