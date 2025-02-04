@@ -132,9 +132,9 @@ class AgentBasedSimulation(BaseSimulation):
         return agent.state["last_vision"]  # Return last recorded vision
         
     def _simulate_oct_scan(self, agent: Patient) -> Dict:
-        """Simulate an OCT scan result"""
+        """Simulate an OCT scan result with more realistic variation"""
         # Get current interval and time since last injection
-        current_interval = agent.state.get("current_interval", 8)  # Default to 8 weeks if not set
+        current_interval = agent.state.get("current_interval", 8)
         last_visit = agent.history[-1]["date"] if agent.history else None
         weeks_since_injection = 0
         
@@ -143,23 +143,43 @@ class AgentBasedSimulation(BaseSimulation):
         
         # Ensure current_interval has a valid value
         if current_interval is None:
-            current_interval = 8  # Default to 8 weeks if None
+            current_interval = 8
             
-        # Convert to float after ensuring it's not None
         current_interval = float(current_interval)
         
-        # Higher chance of fluid if longer since last injection
-        fluid_threshold = min(0.3 + (weeks_since_injection / current_interval) * 0.4, 0.8)
+        # Base thickness varies with time since injection
+        base_thickness = 250  # Normal retinal thickness
+        recovery_factor = max(0, 1 - (weeks_since_injection / (current_interval * 0.75)))
+        thickness_reduction = 50 * recovery_factor  # Maximum 50μm reduction from treatment
         
-        # Fluid present if we're past 75% of the interval
-        fluid_present = weeks_since_injection > (current_interval * 0.75)
+        # Add some variation based on disease state
+        if agent.state.get("disease_activity") == "recurring":
+            thickness_variation = 30  # More variation if disease is active
+        else:
+            thickness_variation = 10  # Less variation if stable
+            
+        thickness = base_thickness - thickness_reduction + thickness_variation
         
-        # Thickness increases with time since injection
-        base_thickness = 250
-        thickness_increase = min(weeks_since_injection * 5, 100)
+        # Determine fluid presence based on multiple factors
+        fluid_risk = 0.0
+        
+        # Time factor: risk increases with time since injection
+        time_factor = weeks_since_injection / current_interval
+        fluid_risk += time_factor * 0.4
+        
+        # History factor: previous fluid increases risk
+        if agent.state.get("disease_activity") == "recurring":
+            fluid_risk += 0.3
+        
+        # Thickness factor: higher thickness increases risk
+        if thickness > 280:
+            fluid_risk += 0.3
+            
+        # Determine fluid presence with some randomness
+        fluid_present = fluid_risk > 0.6
         
         return {
-            "thickness": base_thickness + thickness_increase,
+            "thickness": round(thickness, 1),
             "fluid_present": fluid_present
         }
         
@@ -178,7 +198,7 @@ class AgentBasedSimulation(BaseSimulation):
                 ))
                 
     def _handle_doctor_oct_review(self, agent: Patient, visit_data: Dict):
-        """Handle doctor OCT review decision"""
+        """Handle doctor OCT review decision with more sophisticated analysis"""
         oct_data = visit_data.get("oct", {})
         
         # Get previous OCT data
@@ -188,10 +208,22 @@ class AgentBasedSimulation(BaseSimulation):
                 prev_oct = visit["oct"]
                 break
         
+        # Determine disease activity based on multiple factors
+        disease_recurring = False
+        
+        # Check for fluid
         if oct_data.get("fluid_present"):
+            disease_recurring = True
+        
+        # Check thickness change
+        if prev_oct:
+            thickness_change = oct_data["thickness"] - prev_oct["thickness"]
+            if thickness_change > 20:  # Significant increase in thickness
+                disease_recurring = True
+        
+        # Update disease activity state
+        if disease_recurring:
             agent.state["disease_activity"] = "recurring"
-        elif prev_oct and oct_data["thickness"] < prev_oct["thickness"]:
-            agent.state["disease_activity"] = "stable"
         else:
             agent.state["disease_activity"] = "stable"
             
