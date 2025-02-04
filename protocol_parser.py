@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Type
 import yaml
 from dataclasses import dataclass
 from validation.config_validator import ConfigValidator, ConfigurationError
@@ -29,6 +29,65 @@ class SimulationConfig:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+def _create_visit_type(visit_data: Dict) -> VisitType:
+    """Create VisitType object from dictionary data"""
+    return VisitType(
+        name=visit_data["name"],
+        required_actions=[ActionType(action) for action in visit_data.get("required_actions", [])],
+        optional_actions=[ActionType(action) for action in visit_data.get("optional_actions", [])],
+        decisions=[DecisionType(decision) for decision in visit_data.get("decisions", [])],
+        duration_minutes=visit_data.get("duration_minutes", 30)
+    )
+
+def _create_treatment_decision(decision_data: Dict) -> TreatmentDecision:
+    """Create TreatmentDecision object from dictionary data"""
+    return TreatmentDecision(
+        metric=decision_data["metric"],
+        comparator=decision_data["comparator"],
+        value=decision_data["value"],
+        action=decision_data.get("action", "continue"),
+        priority=decision_data.get("priority", 1)
+    )
+
+def _create_protocol_phase(phase_data: Dict, phase_type: PhaseType) -> ProtocolPhase:
+    """Create appropriate ProtocolPhase object based on phase type"""
+    phase_classes: Dict[PhaseType, Type[ProtocolPhase]] = {
+        PhaseType.LOADING: LoadingPhase,
+        PhaseType.MAINTENANCE: MaintenancePhase,
+        PhaseType.EXTENSION: ExtensionPhase,
+        PhaseType.DISCONTINUATION: DiscontinuationPhase
+    }
+    
+    phase_class = phase_classes[phase_type]
+    
+    # Convert visit type if present
+    visit_type = None
+    if "visit_type" in phase_data:
+        visit_type = _create_visit_type(phase_data["visit_type"])
+        
+    # Convert criteria lists if present
+    entry_criteria = [
+        _create_treatment_decision(d) 
+        for d in phase_data.get("entry_criteria", [])
+    ]
+    exit_criteria = [
+        _create_treatment_decision(d) 
+        for d in phase_data.get("exit_criteria", [])
+    ]
+    
+    return phase_class(
+        phase_type=phase_type,
+        duration_weeks=phase_data.get("duration_weeks"),
+        visit_interval_weeks=phase_data["visit_interval_weeks"],
+        required_treatments=phase_data.get("required_treatments"),
+        min_interval_weeks=phase_data.get("min_interval_weeks"),
+        max_interval_weeks=phase_data.get("max_interval_weeks"),
+        interval_adjustment_weeks=phase_data.get("interval_adjustment_weeks"),
+        entry_criteria=entry_criteria,
+        exit_criteria=exit_criteria,
+        visit_type=visit_type
+    )
 
 class ProtocolParser:
     """Parser for protocol configurations that creates protocol objects"""
