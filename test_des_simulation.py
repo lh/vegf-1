@@ -8,20 +8,21 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def run_test_des_simulation(verbose: bool = False):
+def run_test_des_simulation(config: Optional[SimulationConfig] = None, verbose: bool = False):
     try:
         # Load the Eylea treat-and-extend protocol
         if verbose:
             logger.info("Loading protocol...")
-        protocol = load_protocol("eylea", "treat_and_extend")
-        
+        if config is None:
+            config = SimulationConfig.from_yaml("test_simulation")
+            
         # Initialize simulation
         start_date = datetime(2023, 1, 1)
-        end_date = start_date + timedelta(days=365)  # Run for one year
+        end_date = start_date + timedelta(days=config.duration_days)
         
         if verbose:
             logger.info("Initializing DES simulation...")
-        sim = DiscreteEventSimulation(start_date, {"treat_and_extend": protocol})
+        sim = DiscreteEventSimulation(config, start_date)
         
         # Add test patients
         initial_visit = {
