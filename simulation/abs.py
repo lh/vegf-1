@@ -387,12 +387,7 @@ class AgentBasedSimulation(BaseSimulation):
             priority=1
         ))
     def _calculate_vision_change(self, state: Dict) -> float:
-        """Calculate vision change with memory and ceiling effects
-        
-        Vision is measured in ETDRS letters (0-85 scale)
-        Typical starting vision might be 55-65 letters
-        Clinically significant change is 5+ letters
-        """
+        """Calculate vision change with memory and ceiling effects"""
         import numpy as np
         
         # Get reference points
@@ -404,61 +399,65 @@ class AgentBasedSimulation(BaseSimulation):
         
         # Calculate headroom (ceiling effect)
         absolute_max = 85  # ETDRS letter score maximum
-        theoretical_max = min(absolute_max, best_vision + 5)  # Allow small improvements beyond previous best
+        theoretical_max = min(absolute_max, best_vision + 5)
         headroom = max(0, theoretical_max - current_vision)
-        headroom_factor = np.exp(-0.2 * headroom)  # Steeper decay due to 85 letter ceiling
+        headroom_factor = np.exp(-0.2 * headroom)
         
         if "injection" in state.get("current_actions", []):
             # Treatment effect
-            
-            # Base effect influenced by previous response (treatment memory)
-            memory_factor = 0.7  # Weight for previous response
-            base_effect = 0
-            
-            if response_history:
-                # Average of recent responses with some random variation
-                base_effect = np.mean(response_history) * memory_factor
-                # Add regression to mean - very good responses tend to be followed by smaller ones
-                if base_effect > 5:  # If previous response was very good
-                    base_effect *= 0.8  # Reduce expected effect
-            
-            # Different behavior for loading phase vs maintenance
             if state.get("current_step") == "injection_phase" and state.get("injections_given", 0) < 3:
-                # Stronger, more consistent improvement during loading
-                random_effect = np.random.lognormal(mean=1.2, sigma=0.3)  # Bigger improvements
+                # Loading phase - strong positive response expected
+                # Use positive log-normal distribution for loading phase improvements
+                base_effect = np.random.lognormal(mean=1.5, sigma=0.3)  # Consistently positive
+                improvement = base_effect * (1 - headroom_factor * 0.5)  # Less affected by ceiling
+                
+                # Store response
+                state["last_treatment_response"] = improvement
+                state["treatment_response_history"] = [improvement]  # Reset history during loading
+                
+                # Update best vision if applicable
+                if current_vision + improvement > best_vision:
+                    state["best_vision_achieved"] = min(absolute_max, current_vision + improvement)
+                    
+                return improvement
+                
             else:
-                # More variable effect during maintenance
+                # Maintenance phase - more variable response
+                memory_factor = 0.7
+                base_effect = 0
+                
+                if response_history:
+                    base_effect = np.mean(response_history) * memory_factor
+                    if base_effect > 5:
+                        base_effect *= 0.8
+                
                 random_effect = np.random.lognormal(mean=0.5, sigma=0.4)
-            
-            # Combine effects with ceiling dampening
-            improvement = (base_effect + random_effect) * (1 - headroom_factor)
-            
-            # Store response for future reference
-            state["last_treatment_response"] = improvement
-            state["treatment_response_history"].append(improvement)
-            if len(state["treatment_response_history"]) > 3:  # Keep last 3 responses
-                state["treatment_response_history"].pop(0)
+                improvement = (base_effect + random_effect) * (1 - headroom_factor)
                 
-            # Update best vision achieved if applicable
-            if current_vision + improvement > best_vision:
-                state["best_vision_achieved"] = min(absolute_max, current_vision + improvement)
+                # Store response
+                state["last_treatment_response"] = improvement
+                state["treatment_response_history"].append(improvement)
+                if len(state["treatment_response_history"]) > 3:
+                    state["treatment_response_history"].pop(0)
                 
-            return improvement
-            
+                if current_vision + improvement > best_vision:
+                    state["best_vision_achieved"] = min(absolute_max, current_vision + improvement)
+                    
+                return improvement
         else:
-            # Natural disease progression
+            # Natural disease progression - minimal during loading phase
             weeks_since_injection = state.get("weeks_since_last_injection", 0)
             
-            # Base deterioration rate increases with time
-            base_decline = -np.random.lognormal(mean=-2.0, sigma=0.5)
+            if state.get("current_step") == "injection_phase" and state.get("injections_given", 0) < 3:
+                # Very minimal decline during loading phase
+                return -np.random.lognormal(mean=-3.0, sigma=0.3)  # Very small negative changes
             
-            # Worse deterioration if:
-            # 1. Longer time since injection
+            # Normal decline during maintenance
+            base_decline = -np.random.lognormal(mean=-2.0, sigma=0.5)
             time_factor = 1 + (weeks_since_injection/12)
-            # 2. Higher current vision (more to lose)
             vision_factor = 1 + max(0, (current_vision - baseline_vision)/20)
-            # 3. Previously good response (regression to mean)
             response_factor = 1.0
+            
             if response_history:
                 mean_response = np.mean(response_history)
                 response_factor = 1 + max(0, mean_response/10)
