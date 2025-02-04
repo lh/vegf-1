@@ -9,22 +9,25 @@ class Patient:
     def __init__(self, patient_id: str, protocol: TreatmentProtocol, config: SimulationConfig):
         self.patient_id = patient_id
         self.protocol = protocol
+        self.current_phase = protocol.get_initial_phase()
         vision_params = config.get_vision_params()
         initial_vision = vision_params["baseline_mean"]
+        
         self.state: Dict = {
-            "current_step": "injection_phase",  # Start in injection phase
             "baseline_vision": initial_vision,
             "last_vision": initial_vision,
             "last_oct": None,
             "disease_activity": None,
-            "current_interval": 8.0,  # Initialize with default interval
-            "injections": 0,  # Use injections instead of injections_given
-            "best_vision_achieved": initial_vision,  # Initialize best vision
+            "current_interval": self.current_phase.visit_interval_weeks,
+            "treatments_in_phase": 0,
+            "weeks_in_phase": 0,
+            "best_vision_achieved": initial_vision,
             "last_treatment_response": None,
             "treatment_response_history": [],
             "weeks_since_last_injection": 0,
             "last_injection_date": None,
-            "current_actions": []
+            "current_actions": [],
+            "phase_complete": False
         }
         self.history: List[Dict] = []
         
