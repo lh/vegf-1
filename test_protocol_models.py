@@ -90,7 +90,7 @@ def test_maintenance_phase():
     # Test interval reduction
     state["disease_activity"] = "active"
     updated = phase.process_visit(state)
-    assert updated["next_visit_weeks"] == 8  # Current implementation keeps interval at 8
+    assert updated["next_visit_weeks"] == 6  # Reduces by 2*adjustment_weeks (4 weeks)
 
 def test_extension_phase():
     """Test extension phase behavior"""
@@ -114,7 +114,7 @@ def test_extension_phase():
     # Test aggressive reduction on activity
     state["disease_activity"] = "active"
     updated = phase.process_visit(state)
-    assert updated["next_visit_weeks"] == 9  # Current implementation reduces by 3 weeks
+    assert updated["next_visit_weeks"] == 7  # Reduces by 3*adjustment_weeks (6 weeks)
     assert updated["phase_complete"]  # Should exit to maintenance
 
 def test_protocol_phase_transitions():
