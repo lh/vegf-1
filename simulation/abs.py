@@ -19,6 +19,12 @@ class Patient:
         
     def record_visit(self, visit_data: Dict):
         """Record visit data and update patient state"""
+        # Ensure required fields exist
+        if "date" not in visit_data:
+            raise ValueError("Visit data must include date")
+        if "type" not in visit_data:
+            raise ValueError("Visit data must include type")
+            
         self.history.append(visit_data)
         
         if "vision_test" in visit_data.get("actions", []):
@@ -112,11 +118,13 @@ class AgentBasedSimulation(BaseSimulation):
         
     def _perform_injection(self, agent: Patient, injection_data: Dict):
         """Simulate giving an injection"""
-        # Record injection in patient history
+        # Record injection in patient history with consistent structure
         agent.history.append({
+            "date": self.clock.current_time,
             "type": "injection",
             "agent": agent.protocol.agent,
-            "dose": injection_data.get("dose", "0.5mg")
+            "dose": injection_data.get("dose", "0.5mg"),
+            "actions": ["injection"]
         })
         
     def _handle_nurse_vision_check(self, agent: Patient, visit_data: Dict):
