@@ -93,9 +93,9 @@ class DiscreteEventSimulation(BaseSimulation):
                         priority=1
                     ))
             
-            # Add visit to history
+            # Add visit to history with proper format
             visit_record = {
-                'date': event.time,
+                'date': event.time.replace(second=0, microsecond=0),  # Clean up time
                 'actions': event.data.get('actions', []),
                 'type': event.data.get('visit_type', 'unknown')
             }
@@ -147,7 +147,8 @@ class DiscreteEventSimulation(BaseSimulation):
     def _handle_resource_release(self, event: Event):
         """Handle resource release events"""
         resource_type = event.data["resource_type"]
-        self.global_stats["resource_utilization"][resource_type] -= 1
+        if self.global_stats["resource_utilization"][resource_type] > 0:
+            self.global_stats["resource_utilization"][resource_type] -= 1
         
         # Process queued events if any
         if self.resource_queue[resource_type]:
@@ -166,40 +167,11 @@ class DiscreteEventSimulation(BaseSimulation):
         if state["current_step"] == "injection_phase":
             if state["injections"] < 3:  # Loading phase
                 next_interval = 4  # 4 weeks between loading doses
-                # Schedule next loading dose visit
-                next_visit = {
-                    "visit_type": "injection_visit",
-                    "actions": ["vision_test", "oct_scan", "injection"],
-                    "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
-                }
-                
-                self.clock.schedule_event(Event(
-                    time=event.time + timedelta(weeks=next_interval),
-                    event_type="visit",
-                    patient_id=patient_id,
-                    data=next_visit,
-                    priority=1
-                ))
             else:
                 # Move to maintenance phase after 3 injections
                 state["current_step"] = "maintenance"
-                next_interval = 8  # Start maintenance phase with 8-week interval
-                state["next_visit_interval"] = next_interval
-                
-                # Schedule first maintenance visit
-                next_visit = {
-                    "visit_type": "injection_visit",
-                    "actions": ["vision_test", "oct_scan", "injection"],
-                    "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
-                }
-                
-                self.clock.schedule_event(Event(
-                    time=event.time + timedelta(weeks=next_interval),
-                    event_type="visit",
-                    patient_id=patient_id,
-                    data=next_visit,
-                    priority=1
-                ))
+                state["next_visit_interval"] = 8  # Start with 8 weeks
+                next_interval = 8
         else:
             # Maintenance phase - adjust interval based on OCT findings
             current_interval = state["next_visit_interval"]
@@ -210,20 +182,8 @@ class DiscreteEventSimulation(BaseSimulation):
                 
             state["next_visit_interval"] = next_interval
             
-            # Schedule next maintenance visit
-            next_visit = {
-                "visit_type": "injection_visit",
-                "actions": ["vision_test", "oct_scan", "injection"],
-                "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
-            }
-            
-            self.clock.schedule_event(Event(
-                time=event.time + timedelta(weeks=next_interval),
-                event_type="visit",
-                patient_id=patient_id,
-                data=next_visit,
-                priority=1
-            ))
+        # Schedule next visit
+        self._schedule_next_visit(patient_id, next_interval)
 
     def _request_resources(self, event: Event) -> bool:
         """Attempt to reserve needed resources for visit"""
@@ -282,14 +242,22 @@ class DiscreteEventSimulation(BaseSimulation):
 
     def _schedule_next_visit(self, patient_id: str, weeks: int):
         """Schedule the next visit for a patient"""
+        state = self.patient_states[patient_id]
+        last_visit = state["last_visit_date"]
+        
         next_visit = {
             "visit_type": "injection_visit",
             "actions": ["vision_test", "oct_scan", "injection"],
             "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
         }
         
+        # Calculate next visit time based on last visit, not current time
+        next_time = last_visit + timedelta(weeks=weeks)
+        # Keep the same time of day as original appointment
+        next_time = next_time.replace(hour=last_visit.hour, minute=last_visit.minute)
+        
         self.clock.schedule_event(Event(
-            time=self.clock.current_time + timedelta(weeks=weeks),
+            time=next_time,
             event_type="visit",
             patient_id=patient_id,
             data=next_visit,
