@@ -133,8 +133,31 @@ class DiscreteEventSimulation(BaseSimulation):
             weeks_elapsed = (event.time - state["last_injection_date"]).days / 7.0
             state["weeks_since_last_injection"] = weeks_elapsed
         
+        # Prepare state for vision calculation
+        calc_state = {
+            "current_vision": state["current_vision"],
+            "best_vision_achieved": state.get("best_vision_achieved", state["current_vision"]),
+            "baseline_vision": state["baseline_vision"],
+            "last_treatment_response": state.get("last_treatment_response", 0),
+            "treatment_response_history": state.get("treatment_response_history", []),
+            "current_step": state["current_step"],
+            "injections": state.get("injections", 0),
+            "current_actions": event.data.get("actions", []),
+            "weeks_since_last_injection": state.get("weeks_since_last_injection", 0)
+        }
+        
+        # Calculate vision change using same method as ABS
+        vision_change = self._calculate_vision_change(calc_state)
+        
+        # Update state with results
+        state.update({
+            "last_treatment_response": calc_state.get("last_treatment_response"),
+            "treatment_response_history": calc_state.get("treatment_response_history", []),
+            "best_vision_achieved": calc_state.get("best_vision_achieved")
+        })
+        
         visit_data = {
-            "vision_change": self._simulate_vision_change(state),
+            "vision_change": vision_change,
             "oct_findings": self._simulate_oct_findings(state),
             "resources_used": []
         }
@@ -143,17 +166,17 @@ class DiscreteEventSimulation(BaseSimulation):
         
         # Update state and stats based on actions performed
         if "vision_test" in actions:
-            new_vision = state["current_vision"] + visit_data["vision_change"]
+            new_vision = state["current_vision"] + vision_change
             state["current_vision"] = min(max(new_vision, 0), 85)  # Clamp between 0-85
-            if visit_data["vision_change"] > 0:
+            if vision_change > 0:
                 self.global_stats["vision_improvements"] += 1
-            elif visit_data["vision_change"] < 0:
+            elif vision_change < 0:
                 self.global_stats["vision_declines"] += 1
-                
+        
         if "oct_scan" in actions:
             self.global_stats["total_oct_scans"] += 1
             visit_data["resources_used"].append("oct_machines")
-                
+        
         if "injection" in actions:
             self.global_stats["total_injections"] += 1
             state["injections"] += 1
