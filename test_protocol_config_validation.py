@@ -46,14 +46,14 @@ def test_parameter_validation():
     assert "resources" in params
     
     # Test vision parameters
-    vision_params = config.get_vision_params()
+    vision_params = config.parameters["vision"]
     assert "baseline_mean" in vision_params
     assert "measurement_noise_sd" in vision_params
     assert "max_letters" in vision_params
     assert "min_letters" in vision_params
     
     # Test treatment response parameters
-    loading_params = config.get_loading_phase_params()
+    loading_params = config.parameters["treatment_response"]["loading_phase"]
     assert "vision_improvement_mean" in loading_params
     assert "vision_improvement_sd" in loading_params
     

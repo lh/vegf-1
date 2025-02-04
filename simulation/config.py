@@ -103,6 +103,13 @@ class SimulationConfig:
                 
         return params
     
+    def get_vision_params(self) -> Dict[str, Any]:
+        """Get vision-related parameters"""
+        vision_params = self.parameters.get("vision", {})
+        if not vision_params:
+            raise ValueError("Vision parameters not found")
+        return vision_params
+
     def get_resource_params(self) -> Dict[str, Any]:
         """Get resource-related parameters"""
         return self.parameters.get("resources", {})
