@@ -17,17 +17,61 @@ class SimulationConfig:
     start_date: datetime
     
     def get_vision_params(self) -> Dict[str, Any]:
-        """Get vision-related parameters"""
+        """Get vision-related parameters with validation"""
         vision_params = self.parameters.get("vision", {})
         if not vision_params:
             raise ValueError("Vision parameters not found")
+            
+        required_params = {
+            "baseline_mean": (30, 85),  # Valid ETDRS letter range
+            "measurement_noise_sd": (0, 5),  # Reasonable measurement noise
+            "max_letters": (0, 100),  # ETDRS maximum
+            "min_letters": (0, 30),  # ETDRS minimum
+            "headroom_factor": (0, 1)  # Must be between 0 and 1
+        }
+        
+        for param, (min_val, max_val) in required_params.items():
+            if param not in vision_params:
+                raise ValueError(f"Missing required vision parameter: {param}")
+            value = vision_params[param]
+            if not isinstance(value, (int, float)):
+                raise ValueError(f"Vision parameter {param} must be numeric")
+            if not min_val <= value <= max_val:
+                raise ValueError(f"Vision parameter {param} must be between {min_val} and {max_val}")
+                
         return vision_params
     
     def get_loading_phase_params(self) -> Dict[str, Any]:
-        """Get loading phase parameters"""
+        """Get loading phase parameters with validation"""
         params = self.parameters.get("treatment_response", {}).get("loading_phase", {})
         if not params:
             raise ValueError("Loading phase parameters not found")
+            
+        required_params = {
+            "vision_improvement_mean": (0, 15),  # Reasonable letter improvement
+            "vision_improvement_sd": (0, 5),  # Reasonable variation
+            "improve_probability": (0, 1),  # Must be probability
+            "stable_probability": (0, 1),
+            "decline_probability": (0, 1)
+        }
+        
+        # Validate required parameters
+        for param, (min_val, max_val) in required_params.items():
+            if param not in params:
+                raise ValueError(f"Missing required loading phase parameter: {param}")
+            value = params[param]
+            if not isinstance(value, (int, float)):
+                raise ValueError(f"Loading phase parameter {param} must be numeric")
+            if not min_val <= value <= max_val:
+                raise ValueError(f"Loading phase parameter {param} must be between {min_val} and {max_val}")
+                
+        # Validate probabilities sum to 1
+        prob_sum = (params["improve_probability"] + 
+                   params["stable_probability"] + 
+                   params["decline_probability"])
+        if not 0.99 <= prob_sum <= 1.01:  # Allow for small floating point errors
+            raise ValueError("Loading phase probabilities must sum to 1.0")
+                
         return params
     
     def get_maintenance_params(self) -> Dict[str, Any]:
