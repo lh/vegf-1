@@ -307,20 +307,45 @@ class TreatmentProtocol:
             
         return True
         
+    def validate_phase_transition(self, current_phase: ProtocolPhase, 
+                                next_phase: ProtocolPhase,
+                                state: Dict[str, Any]) -> bool:
+        """Validate if transition between phases is allowed"""
+        # Check phase sequence
+        phase_sequence = [
+            PhaseType.LOADING,
+            PhaseType.MAINTENANCE,
+            PhaseType.EXTENSION,
+            PhaseType.DISCONTINUATION
+        ]
+        try:
+            current_idx = phase_sequence.index(current_phase.phase_type)
+            next_idx = phase_sequence.index(next_phase.phase_type)
+            if next_idx <= current_idx:
+                return False  # Can't go backwards in sequence
+        except ValueError:
+            return False
+            
+        # Check completion criteria
+        if not current_phase.is_complete(state):
+            return False
+            
+        # Check entry criteria for next phase
+        if not next_phase.can_enter(state):
+            return False
+            
+        return True
+
     def process_phase_transition(self, current_phase: ProtocolPhase, 
                                state: Dict[str, Any]) -> Optional[ProtocolPhase]:
         """Handle transition between protocol phases"""
-        # Check if current phase is complete
-        if not current_phase.is_complete(state):
-            return None
-            
         # Get next phase
         next_phase = self.get_next_phase(current_phase)
         if not next_phase:
             return None
             
         # Validate transition
-        if not next_phase.can_enter(state):
+        if not self.validate_phase_transition(current_phase, next_phase, state):
             return None
             
         # Initialize next phase state
