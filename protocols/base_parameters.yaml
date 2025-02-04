@@ -5,6 +5,8 @@ vision:
   baseline_mean: 65
   baseline_sd: 5
   measurement_noise_sd: 2
+  headroom_factor: 0.2
+  improvement_ceiling: 5
 
 treatment_response:
   loading_phase:
@@ -15,7 +17,7 @@ treatment_response:
     improvement_sd: 3
     decline_mean: -5
     decline_sd: 2
-  
+    
   maintenance_phase:
     memory_factor: 0.7
     base_effect_ceiling: 5
@@ -25,6 +27,26 @@ treatment_response:
     decline_probability: 0.15
     decline_effect_mean: -1.5
     decline_effect_sd: 0.3
+
+oct_parameters:
+  baseline_thickness_mean: 250
+  baseline_thickness_sd: 30
+  treatment_effect_mean: 50
+  treatment_effect_sd: 10
+  progression_factor: 20.0
+  progression_mean: 0.0
+  progression_sd: 0.4
+  thickness_thresholds:
+    high_risk: 280
+    medium_risk: 260
+  change_thresholds:
+    high_risk: 20
+    medium_risk: 10
+  fluid_risk:
+    base_risk: 0.2
+    interval_factor: 0.05
+    beta_shape_a: 2
+    beta_shape_b: 5
 
 disease_progression:
   base_decline_mean: -2.0

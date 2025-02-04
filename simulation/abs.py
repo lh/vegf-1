@@ -200,23 +200,28 @@ class AgentBasedSimulation(BaseSimulation):
         
         # Get OCT parameters
         oct_params = self.config.parameters.get("protocol_specific", {}).get("oct_parameters", {})
-        base_thickness = oct_params.get("baseline_thickness_mean", 250) + np.random.lognormal(mean=0, sigma=0.3)
-        
+        oct_params = self.config.parameters["oct_parameters"]
+        base_thickness = oct_params["baseline_thickness_mean"] + np.random.normal(0, oct_params["baseline_thickness_sd"])
+            
         # Treatment effect varies by phase
         if agent.state["current_step"] == "injection_phase" and agent.state.get("injections_given", 0) < 3:
             # Stronger, more consistent effect during loading
-            treatment_effect = oct_params.get("treatment_effect_mean", 50) * (1 - (weeks_since_injection / current_interval))
-            effect_variation = np.random.lognormal(mean=-1.5, sigma=0.3)  # Small variation
+            treatment_effect = oct_params["treatment_effect_mean"] * (1 - (weeks_since_injection / current_interval))
+            effect_variation = np.random.normal(-1.0, oct_params["treatment_effect_sd"] / 10)
         else:
             # More variable effect during maintenance
-            treatment_effect = 40 * (1 - (weeks_since_injection / current_interval))
-            effect_variation = np.random.lognormal(mean=-1.0, sigma=0.5)  # Larger variation
+            treatment_effect = oct_params["treatment_effect_mean"] * 0.8 * (1 - (weeks_since_injection / current_interval))
+            effect_variation = np.random.normal(-1.0, oct_params["treatment_effect_sd"] / 5)
         
         treatment_effect *= (1 + effect_variation)
         
         # Disease progression increases over time with log-normal variation
-        time_factor = len(agent.history) / 20.0
-        progression = time_factor * np.random.lognormal(mean=0, sigma=0.4) * 10
+        oct_params = self.config.parameters["oct_parameters"]
+        time_factor = len(agent.history) / oct_params["progression_factor"]
+        progression = time_factor * np.random.normal(
+            oct_params["progression_mean"], 
+            oct_params["progression_sd"]
+        ) * oct_params["treatment_effect_mean"] / 5
         
         thickness = (
             base_thickness 
@@ -273,15 +278,16 @@ class AgentBasedSimulation(BaseSimulation):
         # Thickness changes
         if prev_oct:
             thickness_change = oct_data["thickness"] - prev_oct["thickness"]
-            if thickness_change > 20:
+            oct_params = self.config.parameters["oct_parameters"]
+            if thickness_change > oct_params["change_thresholds"]["high_risk"]:
                 risk_score += 2
-            elif thickness_change > 10:
+            elif thickness_change > oct_params["change_thresholds"]["medium_risk"]:
                 risk_score += 1
                 
         # Absolute thickness threshold
-        if oct_data["thickness"] > 280:
+        if oct_data["thickness"] > oct_params["thickness_thresholds"]["high_risk"]:
             risk_score += 2
-        elif oct_data["thickness"] > 260:
+        elif oct_data["thickness"] > oct_params["thickness_thresholds"]["medium_risk"]:
             risk_score += 1
             
         # Consider interval length in risk assessment
@@ -469,7 +475,8 @@ class AgentBasedSimulation(BaseSimulation):
         absolute_max = vision_params["max_letters"]
         theoretical_max = min(absolute_max, best_vision + vision_params.get("improvement_ceiling", 5))
         headroom = max(0, theoretical_max - current_vision)
-        headroom_factor = np.exp(-0.2 * headroom)
+        vision_params = self.config.get_vision_params()
+        headroom_factor = np.exp(-vision_params["headroom_factor"] * headroom)
         
         if "injection" in state.get("current_actions", []):
             # Treatment effect
