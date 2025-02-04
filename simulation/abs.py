@@ -77,6 +77,13 @@ class AgentBasedSimulation(BaseSimulation):
             elif event.event_type == "decision":
                 self._handle_agent_decision(agent, event)
     
+    def _should_perform_optional_action(self, agent: Patient, action: ActionType) -> bool:
+        """Determine if an optional action should be performed"""
+        if action == ActionType.INJECTION:
+            # Perform injection if disease is active
+            return agent.state.get("disease_activity") == "active"
+        return False
+        
     def _handle_agent_visit(self, agent: Patient, event: Event):
         """Handle a patient visit event using protocol objects"""
         if not event.phase:
@@ -113,6 +120,20 @@ class AgentBasedSimulation(BaseSimulation):
                 agent.state["last_injection_date"] = event.time
                 agent.state["weeks_since_last_injection"] = 0
                 agent.state["current_actions"].append("injection")
+                
+        # Process optional actions if needed
+        for action in event.get_optional_actions():
+            if self._should_perform_optional_action(agent, action):
+                visit_data["actions"].append(action.value)
+                if action == ActionType.INJECTION:
+                    visit_data["injection"] = {
+                        "agent": agent.protocol.agent,
+                        "dose": "0.5mg"
+                    }
+                    agent.state["treatments_in_phase"] = agent.state.get("treatments_in_phase", 0) + 1
+                    agent.state["last_injection_date"] = event.time
+                    agent.state["weeks_since_last_injection"] = 0
+                    agent.state["current_actions"].append("injection")
 
         # Update weeks since last injection
         if agent.state.get("last_injection_date"):
