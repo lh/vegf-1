@@ -1,7 +1,7 @@
 # Next Steps
 
 1. Implement base simulation engine classes
-2. Add YAML validation schema
+2. Add YAML validation sch
 3. Create reference implementation of Eylea protocols
 4. Add unit test framework
 5. Implement basic visit/decision workflow
