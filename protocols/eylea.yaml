@@ -2,32 +2,67 @@ agent: Eylea
 protocols:
   induction_maintenance:
     steps:
-      - type: injection
-        dose: 0.5mg
-        interval: 4 weeks
-        repeat: 3
-        next: initial_assessment
-  
-  initial_assessment:
-    type: assessment
-    required_metrics: [vision, oct]
-    conditions:
-      - metric: vision
-        comparator: ">="
-        value: baseline
-        next: maintenance
-      - metric: retinal_thickness
-        comparator: improved
-        next: maintenance
-    default: stop
+      - step_type: injection_phase
+        parameters:
+          dose: 0.5mg
+          interval_weeks: 4
+          max_repeats: 3
+        next_step: initial_assessment
+        conditions: []
+        exit_criteria: []
 
-  maintenance:
-    type: injection
-    dose: 0.5mg
-    interval: 8 weeks
-    reassess_interval: 12 weeks
-    exit_criteria:
-      - metric: vision
-        comparator: "<="
-        value: "baseline - 15"
-        action: consider_stop
+      - step_type: assessment
+        parameters:
+          required_metrics: [vision, oct]
+        conditions:
+          - metric: vision
+            comparator: ">="
+            value: baseline
+            next_step: maintenance
+          - metric: retinal_thickness
+            comparator: improved
+            next_step: maintenance
+        default_action: stop_treatment
+
+      - step_type: maintenance_phase
+        parameters:
+          dose: 0.5mg
+          interval_weeks: 8
+        reassess_interval: 12
+        exit_criteria:
+          - metric: vision
+            comparator: "<="
+            value: "baseline - 15"
+            action: consider_stop
+
+  treat_and_extend:
+    steps:
+      - step_type: injection_phase
+        parameters:
+          dose: 0.5mg
+          interval_weeks: 4
+          max_repeats: 3
+        next_step: initial_assessment
+        conditions: []
+        exit_criteria: []
+
+      - step_type: dynamic_interval
+        parameters:
+          initial_interval: 8
+          min_interval: 4
+          max_interval: 12
+          adjustment_weeks: 2
+        conditions:
+          - metric: disease_activity
+            comparator: "=="
+            value: recurring
+            action: decrease_interval
+          - metric: disease_activity
+            comparator: "=="
+            value: stable
+            action: increase_interval
+        exit_criteria:
+          - metric: vision
+            comparator: "<="
+            value: "baseline - 15"
+            action: consider_stop
