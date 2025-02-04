@@ -1,7 +1,8 @@
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 import yaml
 from dataclasses import dataclass
+from validation.config_validator import ConfigValidator, ConfigurationError
 
 @dataclass
 class SimulationConfig:
@@ -21,24 +22,38 @@ class SimulationConfig:
 class ProtocolParser:
     def __init__(self, base_path: str = "protocols"):
         self.base_path = Path(base_path)
+        self.validator = ConfigValidator()
         self.base_parameters = self._load_base_parameters()
     
     def _load_base_parameters(self) -> Dict:
-        """Load base parameters file"""
+        """Load and validate base parameters file"""
         with open(self.base_path / "base_parameters.yaml") as f:
-            return yaml.safe_load(f)
+            params = yaml.safe_load(f)
+            
+        if not self.validator.validate_base_parameters(params):
+            raise ValueError(f"Invalid base parameters: {self.validator.errors}")
+            
+        return params
     
     def _load_protocol_definition(self, agent: str, protocol_type: str) -> Dict:
-        """Load protocol definition"""
+        """Load and validate protocol definition"""
         path = self.base_path / "protocol_definitions" / agent / f"{protocol_type}.yaml"
         with open(path) as f:
-            return yaml.safe_load(f)
+            protocol = yaml.safe_load(f)
+            
+        if not self.validator.validate_protocol_definition(protocol):
+            raise ValueError(f"Invalid protocol definition: {self.validator.errors}")
+            
+        return protocol
     
     def _load_parameter_set(self, agent: str, parameter_set: str) -> Dict:
-        """Load parameter set and merge with base parameters"""
+        """Load and validate parameter set and merge with base parameters"""
         path = self.base_path / "parameter_sets" / agent / f"{parameter_set}.yaml"
         with open(path) as f:
             params = yaml.safe_load(f)
+            
+        if not self.validator.validate_parameter_set(params):
+            raise ValueError(f"Invalid parameter set: {self.validator.errors}")
         
         # Deep copy base parameters to avoid modifying original
         merged = self.base_parameters.copy()
