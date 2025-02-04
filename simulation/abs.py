@@ -95,12 +95,21 @@ class AgentBasedSimulation(BaseSimulation):
         
         # Schedule decisions
         for decision in visit_type.get("decisions", []):
+            if decision == "doctor_treatment_decision":
+                # Add OCT review before treatment decision
+                self.clock.schedule_event(Event(
+                    time=event.time,
+                    event_type="decision",
+                    patient_id=agent.patient_id,
+                    data={"decision_type": "doctor_oct_review", "visit_data": visit_data},
+                    priority=2
+                ))
             self.clock.schedule_event(Event(
                 time=event.time,
                 event_type="decision",
                 patient_id=agent.patient_id,
                 data={"decision_type": decision, "visit_data": visit_data},
-                priority=2  # Decisions happen after visits
+                priority=3 if decision == "doctor_treatment_decision" else 2
             ))
 
     def _handle_agent_decision(self, agent: Patient, event: Event):
@@ -124,8 +133,25 @@ class AgentBasedSimulation(BaseSimulation):
         
     def _simulate_oct_scan(self, agent: Patient) -> Dict:
         """Simulate an OCT scan result"""
-        # Placeholder - implement actual OCT simulation logic
-        return {"thickness": 300, "fluid_present": True}
+        # Get current interval and time since last injection
+        current_interval = agent.state.get("current_interval", 8)
+        last_visit = agent.history[-1]["date"] if agent.history else None
+        weeks_since_injection = 0
+        if last_visit:
+            weeks_since_injection = (self.clock.current_time - last_visit).days / 7
+
+        # Higher chance of fluid if longer since last injection
+        fluid_threshold = min(0.3 + (weeks_since_injection / current_interval) * 0.4, 0.8)
+        fluid_present = weeks_since_injection > (current_interval * 0.75)
+        
+        # Thickness increases with time since injection
+        base_thickness = 250
+        thickness_increase = min(weeks_since_injection * 5, 100)
+        
+        return {
+            "thickness": base_thickness + thickness_increase,
+            "fluid_present": fluid_present
+        }
         
     def _handle_nurse_vision_check(self, agent: Patient, visit_data: Dict):
         """Handle nurse vision check decision"""
@@ -144,8 +170,18 @@ class AgentBasedSimulation(BaseSimulation):
     def _handle_doctor_oct_review(self, agent: Patient, visit_data: Dict):
         """Handle doctor OCT review decision"""
         oct_data = visit_data.get("oct", {})
+        
+        # Get previous OCT data
+        prev_oct = None
+        for visit in reversed(agent.history[:-1]):  # Skip current visit
+            if "oct" in visit:
+                prev_oct = visit["oct"]
+                break
+        
         if oct_data.get("fluid_present"):
-            agent.state["disease_activity"] = "active"
+            agent.state["disease_activity"] = "recurring"
+        elif prev_oct and oct_data["thickness"] < prev_oct["thickness"]:
+            agent.state["disease_activity"] = "stable"
         else:
             agent.state["disease_activity"] = "stable"
             
