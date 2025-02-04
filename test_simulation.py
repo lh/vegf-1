@@ -59,6 +59,9 @@ def run_test_simulation():
         
         # Print timeline visualization
         print_patient_timeline("TEST001", patient.history, start_date, end_date)
+        
+        # Generate acuity plot
+        plot_patient_acuity("TEST001", patient.history, start_date, end_date)
             
         # Print final patient state
         print("\nFinal Patient State:")
