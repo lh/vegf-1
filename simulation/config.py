@@ -103,14 +103,6 @@ class SimulationConfig:
                 
         return params
     
-    def get_maintenance_params(self) -> Dict[str, Any]:
-        """Get maintenance phase parameters"""
-        return self.parameters.get("treatment_response", {}).get("maintenance_phase", {})
-    
-    def get_vision_params(self) -> Dict[str, Any]:
-        """Get vision-related parameters"""
-        return self.parameters.get("vision", {})
-    
     def get_resource_params(self) -> Dict[str, Any]:
         """Get resource-related parameters"""
         return self.parameters.get("resources", {})
