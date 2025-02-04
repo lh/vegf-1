@@ -198,34 +198,52 @@ class AgentBasedSimulation(BaseSimulation):
                 ))
                 
     def _handle_doctor_oct_review(self, agent: Patient, visit_data: Dict):
-        """Handle doctor OCT review decision with more sophisticated analysis"""
+        """Handle doctor OCT review with more sophisticated analysis"""
         oct_data = visit_data.get("oct", {})
+        current_interval = agent.state.get("current_interval", 8)
         
         # Get previous OCT data
         prev_oct = None
-        for visit in reversed(agent.history[:-1]):  # Skip current visit
+        for visit in reversed(agent.history[:-1]):
             if "oct" in visit:
                 prev_oct = visit["oct"]
                 break
         
-        # Determine disease activity based on multiple factors
-        disease_recurring = False
+        # Calculate risk score for disease recurrence
+        risk_score = 0
         
-        # Check for fluid
+        # Fluid presence is highest risk factor
         if oct_data.get("fluid_present"):
-            disease_recurring = True
-        
-        # Check thickness change
+            risk_score += 3
+            
+        # Thickness changes
         if prev_oct:
             thickness_change = oct_data["thickness"] - prev_oct["thickness"]
-            if thickness_change > 20:  # Significant increase in thickness
-                disease_recurring = True
-        
-        # Update disease activity state
-        if disease_recurring:
+            if thickness_change > 20:
+                risk_score += 2
+            elif thickness_change > 10:
+                risk_score += 1
+                
+        # Absolute thickness threshold
+        if oct_data["thickness"] > 280:
+            risk_score += 2
+        elif oct_data["thickness"] > 260:
+            risk_score += 1
+            
+        # Consider interval length in risk assessment
+        if current_interval >= 10:
+            risk_score += 1  # Higher risk with longer intervals
+            
+        # Determine disease activity based on risk score
+        if risk_score >= 3:
             agent.state["disease_activity"] = "recurring"
         else:
             agent.state["disease_activity"] = "stable"
+            
+        # Log the assessment
+        print(f"\nOCT Review at {visit_data['date']}")
+        print(f"Risk Score: {risk_score}")
+        print(f"Disease Activity: {agent.state['disease_activity']}")
             
     def _handle_doctor_treatment_decision(self, agent: Patient, visit_data: Dict):
         """Handle doctor treatment decision with logging"""
@@ -259,9 +277,11 @@ class AgentBasedSimulation(BaseSimulation):
             self._adjust_treatment_interval(agent)
             
     def _adjust_treatment_interval(self, agent: Patient):
-        """
-        Adjust treatment interval based on treat-and-extend protocol rules
-        """
+        """Adjust treatment interval based on treat-and-extend protocol rules"""
+        # Store initial values for logging
+        initial_interval = agent.state.get("current_interval")
+        initial_activity = agent.state.get("disease_activity")
+        
         # Find the current step in the protocol steps list
         current_step = None
         for step in agent.protocol.steps:
@@ -287,17 +307,18 @@ class AgentBasedSimulation(BaseSimulation):
             new_interval = current_interval
                 
         agent.state["current_interval"] = new_interval
-                
-        # Store initial interval for logging
-        initial_interval = agent.state.get("current_interval")
         
-        # Update to new interval
-        agent.state["current_interval"] = new_interval
-        
-        # Add logging for interval changes
-        if initial_interval != new_interval:
-            print(f"\nInterval adjusted: {initial_interval} -> {new_interval} weeks")
-            print(f"Reason: Disease activity is {agent.state.get('disease_activity')}")
+        # Enhanced logging of changes
+        if initial_interval != agent.state["current_interval"]:
+            print(f"\nVisit Date: {self.clock.current_time}")
+            print(f"Disease Activity: {initial_activity}")
+            print(f"OCT Thickness: {agent.state['last_oct']['thickness']}")
+            print(f"Fluid Present: {agent.state['last_oct']['fluid_present']}")
+            print(f"Interval Change: {initial_interval} -> {agent.state['current_interval']} weeks")
+            if agent.state["current_interval"] > initial_interval:
+                print("Action: Extending interval due to stable disease")
+            else:
+                print("Action: Shortening interval due to disease activity")
                 
         # Schedule next visit based on new interval
         next_visit = {
