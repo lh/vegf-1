@@ -3,6 +3,7 @@ from typing import Dict, List, Optional
 import numpy as np
 from .base import BaseSimulation, Event, SimulationEnvironment
 from protocol_models import TreatmentProtocol
+from .config import SimulationConfig
 
 class DiscreteEventSimulation(BaseSimulation):
     """
