@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from simulation import AgentBasedSimulation, Event
 from protocol_parser import load_protocol
 from visualization.timeline_viz import print_patient_timeline
-from visualization.acuity_viz import plot_patient_acuity
+from visualization.acuity_viz import plot_patient_acuity, plot_multiple_patients
 import logging
 
 logging.basicConfig(level=logging.INFO)
