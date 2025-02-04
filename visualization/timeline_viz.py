@@ -15,11 +15,16 @@ def create_timeline(history: List[Dict], start_date: datetime, end_date: datetim
     week_count = 0
     
     # Convert history to dict keyed by date for easier lookup
-    visit_map = {visit['date']: visit for visit in history}
+    # Round dates to nearest day to avoid time comparison issues
+    visit_map = {}
+    for visit in history:
+        visit_date = visit['date'].replace(hour=0, minute=0, second=0, microsecond=0)
+        visit_map[visit_date.date()] = visit
     
     while current_date <= end_date:
-        if current_date in visit_map:
-            visit = visit_map[current_date]
+        current_day = current_date.date()
+        if current_day in visit_map:
+            visit = visit_map[current_day]
             if 'injection' in visit.get('actions', []):
                 timeline += "x"
             else:
