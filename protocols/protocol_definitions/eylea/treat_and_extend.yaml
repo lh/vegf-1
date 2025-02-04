@@ -16,6 +16,9 @@ phases:
         value: null
 
   maintenance:
+    duration_weeks: null
+    visit_interval_weeks: 8
+    required_injections: null
     initial_interval_weeks: 8
     min_interval_weeks: 4
     max_interval_weeks: 16
