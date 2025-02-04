@@ -6,10 +6,11 @@ from protocol_models import TreatmentProtocol
 from .config import SimulationConfig
 
 class Patient:
-    def __init__(self, patient_id: str, protocol: TreatmentProtocol):
+    def __init__(self, patient_id: str, protocol: TreatmentProtocol, config: SimulationConfig):
         self.patient_id = patient_id
         self.protocol = protocol
-        initial_vision = 65  # Starting vision
+        vision_params = config.get_vision_params()
+        initial_vision = vision_params["baseline_mean"]
         self.state: Dict = {
             "current_step": "injection_phase",  # Start in injection phase
             "baseline_vision": initial_vision,
@@ -197,13 +198,14 @@ class AgentBasedSimulation(BaseSimulation):
         if last_visit:
             weeks_since_injection = (self.clock.current_time - last_visit).days / 7.0
         
-        # Base thickness with log-normal variation
-        base_thickness = 250 + np.random.lognormal(mean=0, sigma=0.3)
+        # Get OCT parameters
+        oct_params = self.config.parameters.get("protocol_specific", {}).get("oct_parameters", {})
+        base_thickness = oct_params.get("baseline_thickness_mean", 250) + np.random.lognormal(mean=0, sigma=0.3)
         
         # Treatment effect varies by phase
         if agent.state["current_step"] == "injection_phase" and agent.state.get("injections_given", 0) < 3:
             # Stronger, more consistent effect during loading
-            treatment_effect = 50 * (1 - (weeks_since_injection / current_interval))
+            treatment_effect = oct_params.get("treatment_effect_mean", 50) * (1 - (weeks_since_injection / current_interval))
             effect_variation = np.random.lognormal(mean=-1.5, sigma=0.3)  # Small variation
         else:
             # More variable effect during maintenance
@@ -463,8 +465,9 @@ class AgentBasedSimulation(BaseSimulation):
         response_history = state.get("treatment_response_history", [])
         
         # Calculate headroom (ceiling effect)
-        absolute_max = 85  # ETDRS letter score maximum
-        theoretical_max = min(absolute_max, best_vision + 5)
+        vision_params = self.config.get_vision_params()
+        absolute_max = vision_params["max_letters"]
+        theoretical_max = min(absolute_max, best_vision + vision_params.get("improvement_ceiling", 5))
         headroom = max(0, theoretical_max - current_vision)
         headroom_factor = np.exp(-0.2 * headroom)
         

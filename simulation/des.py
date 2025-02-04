@@ -51,13 +51,15 @@ class DiscreteEventSimulation(BaseSimulation):
         if protocol_name not in self.protocols:
             raise ValueError(f"Unknown protocol: {protocol_name}")
             
+        vision_params = self.config.get_vision_params()
+        initial_vision = vision_params["baseline_mean"]
         self.patient_states[patient_id] = {
             "protocol": protocol_name,
             "current_step": "injection_phase",
             "visits": 0,
             "injections": 0,
-            "baseline_vision": 65,
-            "current_vision": 65,
+            "baseline_vision": initial_vision,
+            "current_vision": initial_vision,
             "last_visit_date": None,
             "next_visit_interval": 4,
             "treatment_start": self.clock.current_time,
@@ -443,8 +445,9 @@ class DiscreteEventSimulation(BaseSimulation):
         response_history = state.get("treatment_response_history", [])
         
         # Calculate headroom (ceiling effect)
-        absolute_max = 85
-        theoretical_max = min(absolute_max, best_vision + 3)  # Reduced from +5
+        vision_params = self.config.get_vision_params()
+        absolute_max = vision_params["max_letters"]
+        theoretical_max = min(absolute_max, best_vision + vision_params.get("improvement_ceiling", 3))
         headroom = max(0, theoretical_max - current_vision)
         headroom_factor = np.exp(-0.3 * headroom)  # Increased from -0.2
         
