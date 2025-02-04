@@ -232,7 +232,11 @@ class AgentBasedSimulation(BaseSimulation):
         
         # Fluid risk calculation with asymmetric distribution
         base_risk = (weeks_since_injection / current_interval) * 0.4
-        risk_variation = np.random.beta(2, 5)  # Beta distribution for [0,1] bounded variation
+        # Use configured beta distribution parameters
+        risk_variation = np.random.beta(
+            oct_params["fluid_risk"]["beta_shape_a"],
+            oct_params["fluid_risk"]["beta_shape_b"]
+        )
         fluid_risk = min(base_risk + risk_variation * 0.3, 1.0)
         
         return {

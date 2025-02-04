@@ -449,7 +449,8 @@ class DiscreteEventSimulation(BaseSimulation):
         absolute_max = vision_params["max_letters"]
         theoretical_max = min(absolute_max, best_vision + vision_params.get("improvement_ceiling", 3))
         headroom = max(0, theoretical_max - current_vision)
-        headroom_factor = np.exp(-0.3 * headroom)  # Increased from -0.2
+        # Calculate headroom using configured factor
+        headroom_factor = np.exp(-vision_params["headroom_factor"] * headroom)
         
         if "injection" in state.get("current_actions", []):
             # Treatment effect with stronger regression to mean
