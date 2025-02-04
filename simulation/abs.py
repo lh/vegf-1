@@ -63,7 +63,7 @@ class AgentBasedSimulation(BaseSimulation):
     
     def add_patient(self, patient_id: str, protocol_name: str):
         if protocol_name in self.protocols:
-            self.agents[patient_id] = Patient(patient_id, self.protocols[protocol_name])
+            self.agents[patient_id] = Patient(patient_id, self.protocols[protocol_name], self.config)
     
     def process_event(self, event: Event):
         if event.patient_id in self.agents:
