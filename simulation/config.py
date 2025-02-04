@@ -38,7 +38,7 @@ class SimulationConfig:
         
         # Parse start_date string to datetime
         start_date = datetime.strptime(
-            full_config['config'].simulation.get('start_date', '2023-01-01'),
+            full_config['config'].start_date,
             '%Y-%m-%d'
         )
         
