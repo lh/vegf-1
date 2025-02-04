@@ -46,14 +46,14 @@ def test_parameter_validation():
     assert "resources" in params
     
     # Test vision parameters
-    vision_params = config.parameters["vision"]
+    vision_params = config.get_vision_params()
     assert "baseline_mean" in vision_params
     assert "measurement_noise_sd" in vision_params
     assert "max_letters" in vision_params
     assert "min_letters" in vision_params
     
     # Test treatment response parameters
-    loading_params = config.parameters["treatment_response"]["loading_phase"]
+    loading_params = config.get_loading_phase_params()
     assert "vision_improvement_mean" in loading_params
     assert "vision_improvement_sd" in loading_params
     
@@ -85,10 +85,9 @@ def test_invalid_configurations():
         }
     }
     
-    # Test invalid parameter structure
-    validator = ConfigValidator()
-    assert not validator.validate_parameter_set(invalid_params)
-    assert any("Invalid parameter format" in str(err) for err in validator.errors)
+    parser = ProtocolParser()
+    with pytest.raises(ValueError, match="Invalid parameter format"):
+        parser._load_parameter_set("eylea", "invalid")
 
 def test_simulation_config_validation():
     """Test validation of complete simulation configuration"""
