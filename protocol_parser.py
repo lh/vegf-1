@@ -18,6 +18,7 @@ class SimulationConfig:
     database: str
     plots: bool
     verbose: bool
+    start_date: str
 
 class ProtocolParser:
     def __init__(self, base_path: str = "protocols"):

@@ -11,6 +11,7 @@ simulation:
   duration_days: 365
   num_patients: 7
   random_seed: 42
+  start_date: "2023-01-01"
 
 output:
   save_results: true

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Dict, Any
+from datetime import datetime
 from protocol_parser import ProtocolParser
 
 @dataclass
@@ -12,6 +13,7 @@ class SimulationConfig:
     duration_days: int
     random_seed: int
     verbose: bool
+    start_date: datetime
     
     def get_loading_phase_params(self) -> Dict[str, Any]:
         """Get loading phase parameters"""
@@ -34,6 +36,12 @@ class SimulationConfig:
         parser = ProtocolParser()
         full_config = parser.get_full_configuration(config_name)
         
+        # Parse start_date string to datetime
+        start_date = datetime.strptime(
+            full_config['config'].simulation.get('start_date', '2023-01-01'),
+            '%Y-%m-%d'
+        )
+        
         return cls(
             parameters=full_config['parameters'],
             protocol=full_config['protocol'],
@@ -41,5 +49,6 @@ class SimulationConfig:
             num_patients=full_config['config'].num_patients,
             duration_days=full_config['config'].duration_days,
             random_seed=full_config['config'].random_seed,
-            verbose=full_config['config'].verbose
+            verbose=full_config['config'].verbose,
+            start_date=start_date
         )
