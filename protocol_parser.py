@@ -25,6 +25,8 @@ class SimulationConfig:
     verbose: bool
     start_date: str
     description: str
+    protocol: Optional[TreatmentProtocol] = None
+    parameters: Optional[Dict[str, Any]] = None
 
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
@@ -199,7 +201,7 @@ class ProtocolParser:
             discontinuation_criteria=discontinuation_criteria
         )
     
-    def _load_parameter_set(self, agent: str, parameter_set: str) -> Dict:
+    def _load_parameter_set(self, agent: str, parameter_set: str) -> Dict[str, Any]:
         """Load and validate parameter set and merge with base parameters"""
         path = self.base_path / "parameter_sets" / agent / f"{parameter_set}.yaml"
         with open(path) as f:
@@ -215,7 +217,10 @@ class ProtocolParser:
         protocol_params = params.get("protocol_specific", {})
         for category, values in protocol_params.items():
             if category in merged:
-                merged[category].update(values)
+                if isinstance(merged[category], dict):
+                    merged[category].update(values)
+                else:
+                    merged[category] = values
             else:
                 merged[category] = values
                 
