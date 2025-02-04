@@ -8,15 +8,16 @@ class Patient:
     def __init__(self, patient_id: str, protocol: TreatmentProtocol):
         self.patient_id = patient_id
         self.protocol = protocol
+        initial_vision = 65  # Starting vision
         self.state: Dict = {
-            "current_step": None,
-            "baseline_vision": None,
-            "last_vision": None,
+            "current_step": "injection_phase",  # Start in injection phase
+            "baseline_vision": initial_vision,
+            "last_vision": initial_vision,
             "last_oct": None,
             "disease_activity": None,
             "current_interval": 8.0,  # Initialize with default interval
-            "injections_given": 0,
-            "best_vision_achieved": None,
+            "injections": 0,  # Use injections instead of injections_given
+            "best_vision_achieved": initial_vision,  # Initialize best vision
             "last_treatment_response": None,
             "treatment_response_history": [],
             "weeks_since_last_injection": 0,
@@ -142,8 +143,7 @@ class AgentBasedSimulation(BaseSimulation):
             
     def _simulate_vision_test(self, agent: Patient) -> int:
         """Simulate vision test with proper injection effects"""
-        if agent.state["baseline_vision"] is None:
-            return int(np.random.normal(65, 3))
+        # Baseline vision is now always initialized
             
         # Prepare state for vision calculation
         calc_state = {
