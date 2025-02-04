@@ -78,42 +78,41 @@ class AgentBasedSimulation(BaseSimulation):
                 self._handle_agent_decision(agent, event)
     
     def _handle_agent_visit(self, agent: Patient, event: Event):
-        """Handle a patient visit event"""
-        visit_type = event.data.get("visit_type")
+        """Handle a patient visit event using protocol objects"""
+        if not event.phase:
+            event.phase = agent.current_phase
+            
+        visit_type = event.get_visit_type()
         if not visit_type:
             return
             
         # Create visit data with proper date field
         visit_data = {
             "date": event.time,
-            "type": visit_type.get("visit_type", "unknown"),
-            "actions": []  # Initialize empty actions list
+            "type": visit_type.name,
+            "actions": [],  # Initialize empty actions list
+            "phase": event.phase.phase_type.name if event.phase else None
         }
         
-        # Set initial protocol step if not set
-        if agent.state["current_step"] is None:
-            agent.state["current_step"] = "injection_phase"
-            agent.state["injections_given"] = 0
-        
-        # Perform visit actions
-        if "vision_test" in visit_type.get("actions", []):
-            visit_data["actions"].append("vision_test")
-            visit_data["vision"] = self._simulate_vision_test(agent)
+        # Process required actions
+        for action in event.get_required_actions():
+            visit_data["actions"].append(action.value)
             
-        if "oct_scan" in visit_type.get("actions", []):
-            visit_data["actions"].append("oct_scan")
-            visit_data["oct"] = self._simulate_oct_scan(agent)
-            
-        if "injection" in visit_type.get("actions", []):
-            visit_data["actions"].append("injection")
-            visit_data["injection"] = {
-                "agent": agent.protocol["name"],
-                "dose": "0.5mg"
-            }
-            agent.state["injections_given"] = agent.state.get("injections_given", 0) + 1
-            agent.state["last_injection_date"] = event.time
-            agent.state["weeks_since_last_injection"] = 0
-            agent.state["current_actions"].append("injection")  # Add to current actions
+            if action == ActionType.VISION_TEST:
+                visit_data["vision"] = self._simulate_vision_test(agent)
+                
+            elif action == ActionType.OCT_SCAN:
+                visit_data["oct"] = self._simulate_oct_scan(agent)
+                
+            elif action == ActionType.INJECTION:
+                visit_data["injection"] = {
+                    "agent": agent.protocol.agent,
+                    "dose": "0.5mg"
+                }
+                agent.state["treatments_in_phase"] = agent.state.get("treatments_in_phase", 0) + 1
+                agent.state["last_injection_date"] = event.time
+                agent.state["weeks_since_last_injection"] = 0
+                agent.state["current_actions"].append("injection")
 
         # Update weeks since last injection
         if agent.state.get("last_injection_date"):
