@@ -154,6 +154,7 @@ class AgentBasedSimulation(BaseSimulation):
         vision_params = self.config.get_vision_params()
         
         # Prepare state for vision calculation
+        vision_params = self.config.get_vision_params()
         calc_state = {
             "current_vision": agent.state["last_vision"],
             "best_vision_achieved": agent.state.get("best_vision_achieved", agent.state["last_vision"]),
@@ -164,7 +165,7 @@ class AgentBasedSimulation(BaseSimulation):
             "injections_given": agent.state.get("injections_given", 0),
             "current_actions": ["injection"] if "injection" in agent.state.get("current_actions", []) else [],
             "weeks_since_last_injection": agent.state.get("weeks_since_last_injection", 0),
-            "params": params  # Pass parameters to vision calculation
+            "params": vision_params  # Pass parameters to vision calculation
         }
         
         # Add injection to current actions if this is an injection visit
@@ -182,10 +183,10 @@ class AgentBasedSimulation(BaseSimulation):
         })
         
         # Add measurement noise from parameters
-        measurement_noise = np.random.normal(0, params["measurement_noise_sd"])
+        measurement_noise = np.random.normal(0, vision_params["measurement_noise_sd"])
         
         new_vision = agent.state["last_vision"] + change + measurement_noise
-        return int(min(max(new_vision, params["min_letters"], params["max_letters"])))
+        return int(min(max(new_vision, vision_params["min_letters"], vision_params["max_letters"])))
         
     def _simulate_oct_scan(self, agent: Patient) -> Dict:
         """Simulate OCT with realistic biological variation"""
