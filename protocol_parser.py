@@ -1,8 +1,13 @@
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import yaml
 from dataclasses import dataclass
 from validation.config_validator import ConfigValidator, ConfigurationError
+from protocol_models import (
+    TreatmentProtocol, ProtocolPhase, LoadingPhase, MaintenancePhase,
+    ExtensionPhase, DiscontinuationPhase, VisitType, TreatmentDecision,
+    ActionType, DecisionType, PhaseType
+)
 
 @dataclass
 class SimulationConfig:
@@ -26,10 +31,32 @@ class SimulationConfig:
             setattr(self, key, value)
 
 class ProtocolParser:
+    """Parser for protocol configurations that creates protocol objects"""
+    
     def __init__(self, base_path: str = "protocols"):
         self.base_path = Path(base_path)
         self.validator = ConfigValidator()
         self.base_parameters = self._load_base_parameters()
+        
+    def _create_visit_type(self, visit_data: Dict) -> VisitType:
+        """Create VisitType object from dictionary data"""
+        return VisitType(
+            name=visit_data["name"],
+            required_actions=[ActionType(action) for action in visit_data.get("required_actions", [])],
+            optional_actions=[ActionType(action) for action in visit_data.get("optional_actions", [])],
+            decisions=[DecisionType(decision) for decision in visit_data.get("decisions", [])],
+            duration_minutes=visit_data.get("duration_minutes", 30)
+        )
+        
+    def _create_treatment_decision(self, decision_data: Dict) -> TreatmentDecision:
+        """Create TreatmentDecision object from dictionary data"""
+        return TreatmentDecision(
+            metric=decision_data["metric"],
+            comparator=decision_data["comparator"],
+            value=decision_data["value"],
+            action=decision_data.get("action", "continue"),
+            priority=decision_data.get("priority", 1)
+        )
     
     def _load_base_parameters(self) -> Dict:
         """Load and validate base parameters file"""
