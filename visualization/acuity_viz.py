@@ -17,10 +17,11 @@ def plot_patient_acuity(patient_id: str, history: List[Dict],
         show: Whether to display the plot
         save_path: Optional path to save the plot
     """
-    # Extract dates and vision values
+    # Extract dates and vision values, and also non-injection visits
     dates = []
     vision_values = []
     injection_dates = []
+    other_visit_dates = []
     
     for visit in history:
         if 'date' in visit:
@@ -33,6 +34,8 @@ def plot_patient_acuity(patient_id: str, history: List[Dict],
                 
             if 'injection' in visit.get('actions', []):
                 injection_dates.append(visit['date'])
+            else:
+                other_visit_dates.append(visit['date'])
     
     # Create the plot
     plt.figure(figsize=(12, 6))
@@ -46,6 +49,12 @@ def plot_patient_acuity(patient_id: str, history: List[Dict],
         plt.plot(injection_dates, vision_at_injection, 'rx', markersize=10, 
                 label='Injection', markeredgewidth=2)
     
+    # Add other visit markers
+    if other_visit_dates:
+        vision_at_visit = [vision_values[dates.index(d)] for d in other_visit_dates]
+        plt.plot(other_visit_dates, vision_at_visit, 'ko', markersize=8,
+                label='Visit (no injection)', markerfacecolor='none')
+    
     # Customize the plot
     plt.title(f'Visual Acuity Over Time - Patient {patient_id}')
     plt.xlabel('Date')
@@ -58,11 +67,8 @@ def plot_patient_acuity(patient_id: str, history: List[Dict],
     # Add grid
     plt.grid(True, linestyle='--', alpha=0.7)
     
-    # Set y-axis range with some padding
-    if vision_values:
-        min_vision = min(v for v in vision_values if v is not None)
-        max_vision = max(v for v in vision_values if v is not None)
-        plt.ylim(max(0, min_vision - 5), min(100, max_vision + 5))
+    # Set y-axis range explicitly to 0-85
+    plt.ylim(0, 85)
     
     plt.legend()
     
@@ -97,6 +103,7 @@ def plot_multiple_patients(patient_data: Dict[str, List[Dict]],
         dates = []
         vision_values = []
         injection_dates = []
+        other_visit_dates = []
         
         for visit in history:
             if 'date' in visit and 'vision' in visit:
@@ -105,6 +112,8 @@ def plot_multiple_patients(patient_data: Dict[str, List[Dict]],
                 
                 if 'injection' in visit.get('actions', []):
                     injection_dates.append(visit['date'])
+                else:
+                    other_visit_dates.append(visit['date'])
         
         # Plot vision values with different color for each patient
         line = plt.plot(dates, vision_values, '-', label=f'Patient {patient_id}')
@@ -115,10 +124,19 @@ def plot_multiple_patients(patient_data: Dict[str, List[Dict]],
             vision_at_injection = [vision_values[dates.index(d)] for d in injection_dates]
             plt.plot(injection_dates, vision_at_injection, 'x', color=color,
                     markersize=8, markeredgewidth=2)
+        
+        # Add other visit markers
+        if other_visit_dates:
+            vision_at_visit = [vision_values[dates.index(d)] for d in other_visit_dates]
+            plt.plot(other_visit_dates, vision_at_visit, 'o', color=color,
+                    markersize=6, markerfacecolor='none')
     
     plt.title('Visual Acuity Over Time - Multiple Patients')
     plt.xlabel('Date')
     plt.ylabel('Visual Acuity (ETDRS letters)')
+    
+    # Set y-axis range explicitly to 0-85
+    plt.ylim(0, 85)
     
     plt.gca().xaxis.set_major_formatter(DateFormatter('%Y-%m-%d'))
     plt.gcf().autofmt_xdate()
