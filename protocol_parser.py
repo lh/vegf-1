@@ -127,16 +127,77 @@ class ProtocolParser:
             
         return params
     
-    def _load_protocol_definition(self, agent: str, protocol_type: str) -> Dict:
-        """Load and validate protocol definition"""
+    def _create_protocol_phase(self, phase_data: Dict[str, Any], phase_type: str) -> ProtocolPhase:
+        """Create appropriate protocol phase object from YAML data"""
+        phase_types = {
+            "loading": (PhaseType.LOADING, LoadingPhase),
+            "maintenance": (PhaseType.MAINTENANCE, MaintenancePhase),
+            "extension": (PhaseType.EXTENSION, ExtensionPhase),
+            "discontinuation": (PhaseType.DISCONTINUATION, DiscontinuationPhase)
+        }
+        
+        if phase_type not in phase_types:
+            raise ValueError(f"Unknown phase type: {phase_type}")
+            
+        phase_enum, phase_class = phase_types[phase_type]
+        
+        # Create visit type if specified
+        visit_type = None
+        if "visit_type" in phase_data:
+            visit_type = self._create_visit_type(phase_data["visit_type"])
+            
+        # Convert criteria to TreatmentDecision objects
+        entry_criteria = [
+            self._create_treatment_decision(d) 
+            for d in phase_data.get("entry_criteria", [])
+        ]
+        exit_criteria = [
+            self._create_treatment_decision(d) 
+            for d in phase_data.get("exit_criteria", [])
+        ]
+        
+        return phase_class(
+            phase_type=phase_enum,
+            duration_weeks=phase_data.get("duration_weeks"),
+            visit_interval_weeks=phase_data["visit_interval_weeks"],
+            required_treatments=phase_data.get("required_treatments"),
+            min_interval_weeks=phase_data.get("min_interval_weeks"),
+            max_interval_weeks=phase_data.get("max_interval_weeks"),
+            interval_adjustment_weeks=phase_data.get("interval_adjustment_weeks"),
+            entry_criteria=entry_criteria,
+            exit_criteria=exit_criteria,
+            visit_type=visit_type
+        )
+
+    def _load_protocol_definition(self, agent: str, protocol_type: str) -> TreatmentProtocol:
+        """Load and create protocol object from YAML definition"""
         path = self.base_path / "protocol_definitions" / agent / f"{protocol_type}.yaml"
         with open(path) as f:
-            protocol = yaml.safe_load(f)
+            protocol_data = yaml.safe_load(f)
             
-        if not self.validator.validate_protocol_definition(protocol):
+        if not self.validator.validate_protocol_definition(protocol_data):
             raise ValueError(f"Invalid protocol definition: {self.validator.errors}")
             
-        return protocol
+        # Create phase objects
+        phases = {}
+        for phase_name, phase_data in protocol_data.get("phases", {}).items():
+            phases[phase_name] = self._create_protocol_phase(phase_data, phase_name)
+            
+        # Convert discontinuation criteria
+        discontinuation_criteria = [
+            self._create_treatment_decision(d)
+            for d in protocol_data.get("discontinuation_criteria", [])
+        ]
+        
+        return TreatmentProtocol(
+            agent=agent,
+            protocol_name=protocol_data["name"],
+            version=protocol_data["version"],
+            description=protocol_data["description"],
+            phases=phases,
+            parameters=self._load_parameter_set(agent, protocol_type),
+            discontinuation_criteria=discontinuation_criteria
+        )
     
     def _load_parameter_set(self, agent: str, parameter_set: str) -> Dict:
         """Load and validate parameter set and merge with base parameters"""
