@@ -99,11 +99,12 @@ class DiscreteEventSimulation(BaseSimulation):
                         priority=1
                     ))
             
-            # Add visit to history with proper format
+            # Add visit to history with proper format including vision data
             visit_record = {
                 'date': event.time.replace(second=0, microsecond=0),  # Clean up time
                 'actions': event.data.get('actions', []),
-                'type': event.data.get('visit_type', 'unknown')
+                'type': event.data.get('visit_type', 'unknown'),
+                'vision': state['current_vision']  # Add current vision to record
             }
             state['visit_history'].append(visit_record)
             
