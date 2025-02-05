@@ -5,7 +5,10 @@ from simulation.base import (
     SimulationEnvironment, SimulationClock, BaseSimulation,
     Event, ProtocolEvent
 )
-from protocol_models import PhaseType, TreatmentProtocol, ProtocolPhase
+from protocol_models import (
+    PhaseType, TreatmentProtocol, ProtocolPhase, VisitType,
+    ActionType, DecisionType
+)
 
 @pytest.fixture
 def start_date():
