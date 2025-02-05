@@ -222,12 +222,13 @@ class SimulationResults:
                     
                 weeks = (visit['date'] - history[0]['date']).days / 7
                 
-                if event_type == 'vision_improvement' and visit['vision'] - baseline > 5:
+                change = visit['vision'] - baseline
+                if event_type == 'vision_improvement' and change > 5:
                     results["survival_times"].append(weeks)
                     results["censored"].append(0)  # Event occurred
                     event_occurred = True
                     break
-                elif event_type == 'vision_loss' and visit['vision'] - baseline < -5:
+                elif event_type == 'vision_loss' and change < -5:
                     results["survival_times"].append(weeks)
                     results["censored"].append(0)
                     event_occurred = True
