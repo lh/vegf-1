@@ -223,33 +223,33 @@ class DiscreteEventSimulation(BaseSimulation):
             self._handle_visit(queued_event)
 
     def _handle_treatment_decision(self, event: Event):
-        """Handle treatment decision events with proper loading phase"""
+        """Handle treatment decision events using protocol objects"""
         patient_id = event.patient_id
         if patient_id not in self.patient_states:
             return
             
         state = self.patient_states[patient_id]
-        
-        # Determine next visit interval
-        if state["current_step"] == "injection_phase":
-            if state["injections"] < 3:  # Loading phase
-                next_interval = 4  # 4 weeks between loading doses
-            else:
-                # Move to maintenance phase after 3 injections
-                state["current_step"] = "maintenance"
-                state["next_visit_interval"] = 8  # Start with 8 weeks
-                next_interval = 8
-        else:
-            # Maintenance phase - adjust interval based on OCT findings
-            current_interval = state["next_visit_interval"]
-            if event.data["oct_findings"]["fluid_present"]:
-                next_interval = max(4, current_interval - 2)
-            else:
-                next_interval = min(12, current_interval + 2)
-                
-            state["next_visit_interval"] = next_interval
+        protocol = self.get_protocol(state["protocol"])
+        if not protocol:
+            return
             
-        # Schedule next visit
+        # Get current phase
+        current_phase = protocol.phases.get(state.get("current_phase", "loading"))
+        if not current_phase:
+            return
+            
+        # Process visit with current phase
+        updated_state = current_phase.process_visit(state)
+        state.update(updated_state)
+        
+        # Check for phase transition
+        if state.get("phase_complete"):
+            next_phase = protocol.process_phase_transition(current_phase, state)
+            if next_phase:
+                state["current_phase"] = next_phase.phase_type.name.lower()
+                
+        # Schedule next visit based on protocol
+        next_interval = state.get("next_visit_weeks", current_phase.visit_interval_weeks)
         self._schedule_next_visit(patient_id, next_interval)
 
     def _request_resources(self, event: Event) -> bool:
