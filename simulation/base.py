@@ -93,16 +93,23 @@ class SimulationClock:
         self._counter = 0  # Add a counter for tie-breaking
     
     def schedule_event(self, event: Event):
-        # Create a comparable tuple with (time, priority, counter) as the sort key
-        # The counter ensures FIFO behavior for events with same time/priority
+        """Schedule an event with proper ordering by time and priority"""
         self._counter += 1
-        self.event_queue.put((event.time, event.priority, self._counter, event))
+        # Use counter as final tiebreaker for stable ordering
+        self.event_queue.put((
+            event.time,  # Primary sort by time
+            event.priority,  # Secondary sort by priority
+            self._counter,  # Tertiary sort by insertion order
+            event
+        ))
     
     def get_next_event(self) -> Optional[Event]:
+        """Get next event and update clock time"""
         if self.event_queue.empty():
             return None
-        time, _, _, event = self.event_queue.get()
-        self.current_time = time
+        # Preserve current time until event is actually processed
+        _, _, _, event = self.event_queue.get()
+        self.current_time = event.time
         return event
 
 class BaseSimulation(ABC):
@@ -121,7 +128,11 @@ class BaseSimulation(ABC):
         """Run simulation until specified datetime"""
         while True:
             event = self.clock.get_next_event()
-            if event is None or event.time > until:
+            if event is None:
+                break
+            if event.time > until:
+                # Put the event back in the queue if it's beyond our end time
+                self.clock.schedule_event(event)
                 break
             self.process_event(event)
             
