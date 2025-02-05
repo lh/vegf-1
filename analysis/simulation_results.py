@@ -204,7 +204,9 @@ class SimulationResults:
             "censored_rate": 0,
             "hazard_ratio": None,
             "survival_times": [],
-            "censored": []
+            "censored": [],
+            "event_type": None,  # Record which criterion triggered the event
+            "event_details": []  # Track all events for debugging
         }
         
         for history in self.patient_histories.values():
@@ -226,11 +228,23 @@ class SimulationResults:
                 if event_type == 'vision_improvement' and change > 5:
                     results["survival_times"].append(weeks)
                     results["censored"].append(0)  # Event occurred
+                    results["event_type"] = "improvement"
+                    results["event_details"].append({
+                        "type": "improvement",
+                        "week": weeks,
+                        "change": change
+                    })
                     event_occurred = True
                     break
                 elif event_type == 'vision_loss' and change < -5:
                     results["survival_times"].append(weeks)
                     results["censored"].append(0)
+                    results["event_type"] = "vision_loss"
+                    results["event_details"].append({
+                        "type": "vision_loss",
+                        "week": weeks,
+                        "change": change
+                    })
                     event_occurred = True
                     break
                     
