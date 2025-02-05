@@ -242,7 +242,8 @@ class SimulationResults:
         if results["survival_times"]:
             event_times = [t for t, c in zip(results["survival_times"], results["censored"]) if c == 0]
             if event_times:
-                results["median_time"] = np.median(event_times)
+                # Handle single events and multiple events differently
+                results["median_time"] = event_times[0] if len(event_times) == 1 else np.median(event_times)
             if len(results["censored"]) > 0:
                 results["event_rate"] = 1 - (sum(results["censored"]) / len(results["censored"]))
                 results["censored_rate"] = sum(results["censored"]) / len(results["censored"])
