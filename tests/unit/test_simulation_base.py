@@ -19,6 +19,23 @@ def environment(start_date):
 def clock(start_date):
     return SimulationClock(start_date)
 
+@pytest.fixture
+def mock_visit_type():
+    return VisitType(
+        name="test_visit",
+        required_actions=[ActionType.VISION_TEST],
+        optional_actions=[ActionType.INJECTION],
+        decisions=[DecisionType.NURSE_CHECK],
+        duration_minutes=30
+    )
+
+@pytest.fixture
+def mock_phase(mock_visit_type):
+    mock = Mock(spec=ProtocolPhase)
+    mock.phase_type = PhaseType.LOADING
+    mock.visit_type = mock_visit_type
+    return mock
+
 class TestSimulationEnvironment:
     def test_init(self, start_date):
         env = SimulationEnvironment(start_date)
@@ -112,8 +129,9 @@ class TestEvent:
         assert event.get_visit_type() == mock_visit_type
 
 class MockSimulation(BaseSimulation):
-    def process_event(self, event):
-        pass
+    def process_event(self, event: Event):
+        """Mock implementation of process_event"""
+        self.last_processed_event = event
 
 class TestBaseSimulation:
     def test_init(self, start_date):

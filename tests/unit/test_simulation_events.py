@@ -21,13 +21,33 @@ def basic_event(start_date):
     )
 
 @pytest.fixture
-def protocol_event(start_date):
+def mock_visit_type():
+    return VisitType(
+        name="test_visit",
+        required_actions=[ActionType.VISION_TEST, ActionType.OCT_SCAN],
+        optional_actions=[ActionType.INJECTION],
+        decisions=[DecisionType.NURSE_CHECK],
+        duration_minutes=30
+    )
+
+@pytest.fixture
+def mock_phase(mock_visit_type):
+    mock = Mock(spec=ProtocolPhase)
+    mock.phase_type = PhaseType.LOADING
+    mock.visit_type = mock_visit_type
+    return mock
+
+@pytest.fixture
+def protocol_event(start_date, mock_phase):
+    mock_protocol = Mock(spec=TreatmentProtocol)
     return Event.create_protocol_event(
         time=start_date,
         patient_id="TEST001",
         phase_type=PhaseType.LOADING,
         action="test_action",
-        data={"test": "value"}
+        data={"test": "value"},
+        phase=mock_phase,
+        protocol=mock_protocol
     )
 
 class TestEventCreation:
