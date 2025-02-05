@@ -84,10 +84,10 @@ Convert mixed dictionary/object protocol implementation to a consistent object-o
    - ✓ Update Event class to handle protocol objects
    - ✓ Update simulation/abs.py
    - ✓ Update simulation/des.py
-   - → Add simulation tests (in progress)
+   - ✓ Add simulation tests
 
 4. Phase 4: Test Framework
-   - → Add integration tests for simulations (next)
+   - Add integration tests for simulations
    - Update test_protocol_configs.py
    - Add comparative test framework
    - Verify full workflow
