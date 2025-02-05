@@ -236,7 +236,7 @@ class SimulationResults:
                     })
                     event_occurred = True
                     break
-                elif event_type == 'vision_loss' and change < -5:
+                elif event_type == 'vision_loss' and change <= -5:
                     results["survival_times"].append(weeks)
                     results["censored"].append(0)
                     results["event_type"] = "vision_loss"
