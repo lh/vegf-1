@@ -15,8 +15,7 @@ class DiscreteEventSimulation(BaseSimulation):
         """Initialize DES with configuration"""
         super().__init__(config.start_date, environment)
         self.config = config
-        # Store protocol by type instead of name
-        self.protocols = {"treat_and_extend": config.protocol}  # Changed this line to match test expectations
+        self.register_protocol("treat_and_extend", config.protocol)
         self.patient_states: Dict[str, Dict] = {}
         
         # Initialize random seed
@@ -40,7 +39,8 @@ class DiscreteEventSimulation(BaseSimulation):
         }
         
         # Get resource capacity from config
-        self.resource_capacity = config.parameters["resources"]
+        resource_params = config.get_resource_params()
+        self.resource_capacity = resource_params
         self.resource_queue = {
             "doctors": [],
             "nurses": [],
