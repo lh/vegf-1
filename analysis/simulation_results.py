@@ -240,10 +240,12 @@ class SimulationResults:
                 results["censored"].append(1)
         
         if results["survival_times"]:
-            results["median_time"] = np.median([t for t, c in zip(
-                results["survival_times"], results["censored"]) if c == 0])
-            results["event_rate"] = 1 - (sum(results["censored"]) / len(results["censored"]))
-            results["censored_rate"] = sum(results["censored"]) / len(results["censored"])
+            event_times = [t for t, c in zip(results["survival_times"], results["censored"]) if c == 0]
+            if event_times:
+                results["median_time"] = np.median(event_times)
+            if len(results["censored"]) > 0:
+                results["event_rate"] = 1 - (sum(results["censored"]) / len(results["censored"]))
+                results["censored_rate"] = sum(results["censored"]) / len(results["censored"])
             
         return results
 
@@ -371,8 +373,9 @@ class SimulationResults:
             y_pred = model.predict(X)
             mse = np.sum((y - y_pred) ** 2) / (n - p - 1)
             var_b = mse * np.linalg.inv(np.dot(np.array(X).T, np.array(X))).diagonal()
+            var_b = np.maximum(var_b, 0)  # Ensure non-negative values
             sd_b = np.sqrt(var_b)
-            t = model.coef_ / sd_b
+            t = model.coef_ / np.maximum(sd_b, np.finfo(float).eps)  # Avoid division by zero
             
             for name, t_val, sd in zip(predictor_names, t, sd_b):
                 results["p_values"][name] = 2 * (1 - stats.t.cdf(np.abs(t_val), n - p - 1))
