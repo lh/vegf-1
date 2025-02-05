@@ -56,15 +56,16 @@ class TestSimulationClock:
         assert clock._counter == 0
 
     def test_event_scheduling(self, clock):
+        start_time = clock.current_time
         event1 = Event(
-            time=clock.current_time + timedelta(days=1),
+            time=start_time + timedelta(days=1),
             event_type="test",
             patient_id="TEST001",
             data={},
             priority=1
         )
         event2 = Event(
-            time=clock.current_time + timedelta(days=2),
+            time=start_time + timedelta(days=2),
             event_type="test",
             patient_id="TEST001",
             data={},
@@ -76,10 +77,10 @@ class TestSimulationClock:
         
         # Events should come out in chronological order
         next_event = clock.get_next_event()
-        assert next_event.time == clock.current_time + timedelta(days=1)
+        assert next_event.time == start_time + timedelta(days=1)
         
         next_event = clock.get_next_event()
-        assert next_event.time == clock.current_time + timedelta(days=2)
+        assert next_event.time == start_time + timedelta(days=2)
 
     def test_priority_ordering(self, clock):
         # Create events with same time but different priorities
@@ -159,17 +160,17 @@ class TestBaseSimulation:
 
     def test_run_until(self, start_date):
         sim = MockSimulation(start_date)
-        end_date = start_date + timedelta(days=7)
+        end_date = start_date + timedelta(weeks=12)  # Use longer timeframe
         
         # Schedule some test events
         event1 = Event(
-            time=start_date + timedelta(days=1),
+            time=start_date + timedelta(weeks=4),  # First event at 4 weeks
             event_type="test",
             patient_id="TEST001",
             data={}
         )
         event2 = Event(
-            time=start_date + timedelta(days=10),  # Beyond end date
+            time=start_date + timedelta(weeks=16),  # Second event beyond end date
             event_type="test",
             patient_id="TEST001",
             data={}
@@ -182,4 +183,7 @@ class TestBaseSimulation:
         sim.run(end_date)
         
         # Only first event should have been processed
-        assert sim.clock.current_time == start_date + timedelta(days=1)
+        assert sim.clock.current_time == start_date + timedelta(weeks=4)
+        # Verify second event was rescheduled
+        next_event = sim.clock.get_next_event()
+        assert next_event.time == start_date + timedelta(weeks=16)

@@ -104,12 +104,11 @@ class SimulationClock:
         ))
     
     def get_next_event(self) -> Optional[Event]:
-        """Get next event and update clock time"""
+        """Get next event without updating clock time"""
         if self.event_queue.empty():
             return None
-        # Preserve current time until event is actually processed
+        # Get the next event but don't update time until it's processed
         _, _, _, event = self.event_queue.get()
-        self.current_time = event.time
         return event
 
 class BaseSimulation(ABC):
@@ -134,6 +133,8 @@ class BaseSimulation(ABC):
                 # Put the event back in the queue if it's beyond our end time
                 self.clock.schedule_event(event)
                 break
+            # Update clock time when processing the event
+            self.clock.current_time = event.time
             self.process_event(event)
             
     def register_protocol(self, protocol_type: str, protocol: TreatmentProtocol):
