@@ -98,14 +98,17 @@ class TestSimulationClock:
         assert clock.get_next_event() is None
 
 class TestEvent:
-    def test_create_protocol_event(self, start_date):
+    def test_create_protocol_event(self, start_date, mock_phase):
+        mock_protocol = Mock(spec=TreatmentProtocol)
         event = Event.create_protocol_event(
             time=start_date,
             patient_id="TEST001",
             phase_type=PhaseType.LOADING,
             action="test_action",
             data={"test": "value"},
-            priority=1
+            priority=1,
+            phase=mock_phase,
+            protocol=mock_protocol
         )
         
         assert event.time == start_date
@@ -113,6 +116,9 @@ class TestEvent:
         assert event.event_type == "protocol_test_action"
         assert event.protocol_event.phase_type == PhaseType.LOADING
         assert event.protocol_event.action == "test_action"
+        assert event.protocol_event.parameters == {"test": "value"}
+        assert event.phase == mock_phase
+        assert event.protocol == mock_protocol
         assert event.protocol_event.parameters == {"test": "value"}
 
     def test_get_visit_type(self, start_date):

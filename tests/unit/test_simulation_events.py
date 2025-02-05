@@ -68,14 +68,17 @@ class TestEventCreation:
         assert event.phase is None
         assert event.protocol is None
 
-    def test_protocol_event_creation(self, start_date):
+    def test_protocol_event_creation(self, start_date, mock_phase):
+        mock_protocol = Mock(spec=TreatmentProtocol)
         event = Event.create_protocol_event(
             time=start_date,
             patient_id="TEST001",
             phase_type=PhaseType.LOADING,
             action="test_action",
             data={"test": "value"},
-            priority=2
+            priority=2,
+            phase=mock_phase,
+            protocol=mock_protocol
         )
         
         assert event.time == start_date
@@ -86,6 +89,8 @@ class TestEventCreation:
         assert isinstance(event.protocol_event, ProtocolEvent)
         assert event.protocol_event.phase_type == PhaseType.LOADING
         assert event.protocol_event.action == "test_action"
+        assert event.phase == mock_phase
+        assert event.protocol == mock_protocol
 
 class TestEventActions:
     def test_get_visit_type_no_phase(self, basic_event):
@@ -170,7 +175,13 @@ class TestEventComparison:
         # Test chronological ordering
         assert event1.time < event2.time
         
-        # Test priority ordering for same time
-        events = [event3, event1]
-        events.sort(key=lambda e: (e.time, e.priority))
-        assert events[0] == event1  # Higher priority (lower number) should come first
+        # Create a SimulationClock to test actual event ordering
+        clock = SimulationClock(start_date)
+        clock.schedule_event(event3)
+        clock.schedule_event(event1)
+        
+        # Higher priority (lower number) should come first
+        next_event = clock.get_next_event()
+        assert next_event.priority == 1
+        next_event = clock.get_next_event()
+        assert next_event.priority == 2
