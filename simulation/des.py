@@ -83,18 +83,30 @@ class DiscreteEventSimulation(BaseSimulation):
             self._handle_treatment_decision(event)
     
     def _handle_visit(self, event: Event):
-        """Handle patient visit events"""
+        """Handle patient visit events using protocol objects"""
         patient_id = event.patient_id
         if patient_id not in self.patient_states:
             return
             
         state = self.patient_states[patient_id]
-        
+        protocol = self.get_protocol(state["protocol"])
+        if not protocol:
+            return
+            
         # Only increment visits if resources are available
         if self._request_resources(event):
             self.global_stats["total_visits"] += 1
             state["visits"] += 1
             state["last_visit_date"] = event.time
+            
+            # Get current phase
+            current_phase = protocol.phases.get(state.get("current_phase", "loading"))
+            if not current_phase:
+                return
+                
+            # Create protocol event
+            event.phase = current_phase
+            event.protocol = protocol
             
             # Process visit
             visit_data = self._process_visit(state, event)
@@ -110,23 +122,27 @@ class DiscreteEventSimulation(BaseSimulation):
                         priority=1
                     ))
             
-            # Add visit to history with proper format including vision data
+            # Add visit to history with proper format
             visit_record = {
-                'date': event.time.replace(second=0, microsecond=0),  # Clean up time
-                'actions': event.data.get('actions', []),
-                'type': event.data.get('visit_type', 'unknown'),
-                'vision': state['current_vision']  # Add current vision to record
+                'date': event.time.replace(second=0, microsecond=0),
+                'actions': [action.value for action in event.get_required_actions()],
+                'type': event.get_visit_type().name if event.get_visit_type() else "unknown",
+                'vision': state['current_vision'],
+                'phase': current_phase.phase_type.name
             }
             state['visit_history'].append(visit_record)
             
-            # Schedule treatment decision
-            self.clock.schedule_event(Event(
-                time=event.time + timedelta(minutes=30),
-                event_type="treatment_decision",
-                patient_id=patient_id,
-                data=visit_data,
-                priority=2
-            ))
+            # Schedule decisions based on visit type
+            for decision in event.get_decisions():
+                self.clock.schedule_event(Event(
+                    time=event.time + timedelta(minutes=30),
+                    event_type="treatment_decision",
+                    patient_id=patient_id,
+                    data={"decision_type": decision.value, "visit_data": visit_data},
+                    priority=2,
+                    phase=current_phase,
+                    protocol=protocol
+                ))
         else:
             # Reschedule visit for next hour if resources unavailable
             self._reschedule_visit(event)
