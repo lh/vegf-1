@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock
 from datetime import datetime, timedelta
-from simulation.base import Event, ProtocolEvent
+from simulation.base import Event, ProtocolEvent, SimulationClock
 from protocol_models import (
     PhaseType, ActionType, DecisionType, VisitType,
     ProtocolPhase, TreatmentProtocol
