@@ -138,6 +138,11 @@ class LoadingPhase(ProtocolPhase):
             
         return state
 
+    def is_complete(self, state: Dict[str, Any]) -> bool:
+        """Check if loading phase complete (3 injections given)"""
+        required = self.required_treatments if self.required_treatments else 3
+        return state.get("treatments_in_phase", 0) >= required
+
 @dataclass
 class MaintenancePhase(ProtocolPhase):
     """Maintenance phase specific implementation"""
@@ -172,6 +177,10 @@ class MaintenancePhase(ProtocolPhase):
         state["next_visit_weeks"] = new_interval
         
         return state
+
+    def is_complete(self, state: Dict[str, Any]) -> bool:
+        """Maintenance phase continues until exit criteria are met"""
+        return self.evaluate_criteria(state, self.exit_criteria)
 
 @dataclass
 class ExtensionPhase(ProtocolPhase):
@@ -212,6 +221,10 @@ class ExtensionPhase(ProtocolPhase):
         
         return state
 
+    def is_complete(self, state: Dict[str, Any]) -> bool:
+        """Extension phase completes when returning to maintenance"""
+        return state.get("phase_complete", False)
+
 @dataclass
 class DiscontinuationPhase(ProtocolPhase):
     """Discontinuation phase specific implementation"""
@@ -234,6 +247,10 @@ class DiscontinuationPhase(ProtocolPhase):
             state["protocol_complete"] = True
             
         return state
+
+    def is_complete(self, state: Dict[str, Any]) -> bool:
+        """Discontinuation phase completes when protocol discontinuation criteria met"""
+        return self.evaluate_criteria(state, self.exit_criteria)
 
 @dataclass
 class TreatmentProtocol:
