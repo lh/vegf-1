@@ -89,13 +89,10 @@ class ProtocolPhase(ABC):
         """Process a visit in this phase and return updated state"""
         pass
 
+    @abstractmethod
     def is_complete(self, state: Dict[str, Any]) -> bool:
         """Check if phase completion criteria are met"""
-        if self.duration_weeks and state.get("weeks_in_phase", 0) >= self.duration_weeks:
-            return True
-        if self.required_treatments and state.get("treatments_in_phase", 0) >= self.required_treatments:
-            return True
-        return False
+        pass
 
     def evaluate_criteria(self, state: Dict[str, Any], criteria: List[TreatmentDecision]) -> bool:
         """Evaluate a list of criteria against current state"""
