@@ -11,3 +11,6 @@
 9. **Visit Types**: Standardized visit definitions in YAML for consistency across protocols
 10. **Decision Pipeline**: Structured nurse->doctor decision flow matching clinical practice
 11. **Vision Modeling**: Realistic vision change simulation with treatment memory and ceiling effects
+12. **DES Event Scheduling**: End date must be set before adding patients to ensure proper event validation
+13. **Resource Management**: Adequate resource capacity needed to prevent infinite rescheduling loops
+14. **Event Processing**: Strict event processing order with proper resource allocation/release tracking

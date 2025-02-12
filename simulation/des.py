@@ -35,11 +35,21 @@ class DiscreteEventSimulation(BaseSimulation):
                 "doctors": 0,
                 "nurses": 0,
                 "oct_machines": 0
+            },
+            "queue_stats": {
+                "max_queue_length": 10,  # Maximum number of events in any queue
+                "queue_full_events": 0
             }
         }
         
-        # Get resource capacity from config
+        # Set default resource capacity if not specified in config
         resource_params = config.get_resource_params()
+        if not resource_params:
+            resource_params = {
+                "doctors": 10,  # Significantly increased capacity
+                "nurses": 15,   # Significantly increased capacity
+                "oct_machines": 10  # Significantly increased capacity
+            }
         self.resource_capacity = resource_params
         self.resource_queue = {
             "doctors": [],
@@ -61,7 +71,7 @@ class DiscreteEventSimulation(BaseSimulation):
             "injections": 0,
             "baseline_vision": initial_vision,
             "current_vision": initial_vision,
-            "last_visit_date": None,
+            "last_visit_date": self.clock.current_time,  # Set initial visit date
             "next_visit_interval": 4,
             "treatment_start": self.clock.current_time,
             "visit_history": [],
@@ -72,6 +82,21 @@ class DiscreteEventSimulation(BaseSimulation):
             "weeks_since_last_injection": 0,
             "last_injection_date": None
         }
+        
+        # Schedule initial visit
+        initial_visit = {
+            "visit_type": "injection_visit",
+            "actions": ["vision_test", "oct_scan", "injection"],
+            "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
+        }
+        
+        self.clock.schedule_event(Event(
+            time=self.clock.current_time,
+            event_type="visit",
+            patient_id=patient_id,
+            data=initial_visit,
+            priority=1
+        ))
     
     def process_event(self, event: Event):
         """Process different event types in the simulation"""
@@ -111,16 +136,14 @@ class DiscreteEventSimulation(BaseSimulation):
             # Process visit
             visit_data = self._process_visit(state, event)
             
-            # Schedule resource release
-            for resource in ["nurses", "oct_machines", "doctors"]:
-                if self.global_stats["resource_utilization"][resource] > 0:
-                    self.clock.schedule_event(Event(
-                        time=event.time + timedelta(minutes=30),
-                        event_type="resource_release",
-                        patient_id=None,
-                        data={"resource_type": resource},
-                        priority=1
-                    ))
+            # Schedule single resource release event for all resources
+            self.clock.schedule_event(Event(
+                time=event.time + timedelta(minutes=30),
+                event_type="resource_release",
+                patient_id=event.patient_id,
+                data={"resources": visit_data["resources_used"]},
+                priority=1
+            ))
             
             # Add visit to history with proper format
             visit_record = {
@@ -168,7 +191,7 @@ class DiscreteEventSimulation(BaseSimulation):
         }
         
         # Calculate vision change using same method as ABS
-        vision_change = self._calculate_vision_change(calc_state)
+        vision_change = self._simulate_vision_change(calc_state)
         
         # Update state with results
         state.update({
@@ -213,14 +236,24 @@ class DiscreteEventSimulation(BaseSimulation):
 
     def _handle_resource_release(self, event: Event):
         """Handle resource release events"""
-        resource_type = event.data["resource_type"]
-        if self.global_stats["resource_utilization"][resource_type] > 0:
-            self.global_stats["resource_utilization"][resource_type] -= 1
+        # Release all resources used by this patient
+        for resource in event.data["resources"]:
+            if self.global_stats["resource_utilization"][resource] > 0:
+                self.global_stats["resource_utilization"][resource] -= 1
         
-        # Process queued events if any
-        if self.resource_queue[resource_type]:
-            queued_event = self.resource_queue[resource_type].pop(0)
-            self._handle_visit(queued_event)
+        # Try to process all queued events that can now be handled
+        processed = set()  # Track processed events to avoid duplicates
+        for resource_type in ["doctors", "nurses", "oct_machines"]:
+            if self.resource_queue[resource_type]:
+                for queued_event in list(self.resource_queue[resource_type]):  # Create copy to modify during iteration
+                    if queued_event not in processed:
+                        if self._request_resources(queued_event):
+                            # Successfully allocated resources, remove from all queues
+                            for r in ["doctors", "nurses", "oct_machines"]:
+                                if queued_event in self.resource_queue[r]:
+                                    self.resource_queue[r].remove(queued_event)
+                            processed.add(queued_event)
+                            self._handle_visit(queued_event)
 
     def _handle_treatment_decision(self, event: Event):
         """Handle treatment decision events using protocol objects"""
@@ -248,9 +281,16 @@ class DiscreteEventSimulation(BaseSimulation):
             if next_phase:
                 state["current_phase"] = next_phase.phase_type.name.lower()
                 
-        # Schedule next visit based on protocol
+        # Schedule next visit based on protocol with safety checks
         next_interval = state.get("next_visit_weeks", current_phase.visit_interval_weeks)
-        self._schedule_next_visit(patient_id, next_interval)
+        if next_interval <= 0:
+            next_interval = 4
+        elif next_interval > 52:
+            next_interval = 52
+            
+        # Only schedule next visit if we haven't reached the end date
+        if event.time + timedelta(weeks=next_interval) <= self.config.start_date + timedelta(days=self.config.duration_days):
+            self._schedule_next_visit(patient_id, next_interval)
 
     def _request_resources(self, event: Event) -> bool:
         """Attempt to reserve needed resources for visit"""
@@ -260,18 +300,32 @@ class DiscreteEventSimulation(BaseSimulation):
             "doctors": 1 if "injection" in event.data.get("actions", []) else 0
         }
         
-        # Check resource availability
-        for resource, needed in needed_resources.items():
-            if (self.global_stats["resource_utilization"][resource] + 
-                needed > self.resource_capacity[resource]):
-                # Add to resource queue
-                self.resource_queue[resource].append(event)
-                return False
+        # Check current utilization
+        current_utilization = {
+            resource: self.global_stats["resource_utilization"][resource]
+            for resource in needed_resources
+        }
         
-        # Reserve resources
+        # Check if we have enough capacity
         for resource, needed in needed_resources.items():
-            self.global_stats["resource_utilization"][resource] += needed
-            
+            if needed > 0:
+                available = self.resource_capacity[resource] - current_utilization[resource]
+                if available < needed:
+                    # Not enough resources, add to queue if space
+                    if len(self.resource_queue[resource]) < self.global_stats["queue_stats"]["max_queue_length"]:
+                        if event not in self.resource_queue[resource]:
+                            self.resource_queue[resource].append(event)
+                    else:
+                        self.global_stats["queue_stats"]["queue_full_events"] += 1
+                        self._reschedule_visit(event)
+                    return False
+        
+        # If we get here, we have enough of all resources
+        # Reserve them
+        for resource, needed in needed_resources.items():
+            if needed > 0:
+                self.global_stats["resource_utilization"][resource] += needed
+        
         return True
 
     def _simulate_vision_change(self, state: Dict) -> float:
@@ -375,14 +429,14 @@ class DiscreteEventSimulation(BaseSimulation):
 
     def _schedule_resource_release(self, visit_time: datetime, visit_data: Dict):
         """Schedule resource release events"""
-        for resource in visit_data["resources_used"]:
-            self.clock.schedule_event(Event(
-                time=visit_time + timedelta(minutes=30),
-                event_type="resource_release",
-                patient_id=None,
-                data={"resource_type": resource},
-                priority=1
-            ))
+        # Schedule a single release event for all resources
+        self.clock.schedule_event(Event(
+            time=visit_time + timedelta(minutes=30),
+            event_type="resource_release",
+            patient_id=None,
+            data={"resources": visit_data["resources_used"]},
+            priority=1
+        ))
 
     def _schedule_next_visit(self, patient_id: str, weeks: int):
         """Schedule the next visit for a patient"""
@@ -410,108 +464,24 @@ class DiscreteEventSimulation(BaseSimulation):
 
     def _reschedule_visit(self, event: Event):
         """Reschedule a visit due to resource constraints"""
-        self.clock.schedule_event(Event(
-            time=event.time + timedelta(hours=1),
-            event_type="visit",
-            patient_id=event.patient_id,
-            data=event.data,
-            priority=1
-        ))
-    def _calculate_loading_phase_change(self, state: Dict) -> float:
-        """Calculate vision change during loading phase using parameters"""
-        loading_params = self.config.get_loading_phase_params()
-        vision_params = self.config.get_vision_params()
+        # Calculate the intended end date of the simulation
+        intended_end_date = self.config.start_date + timedelta(days=self.config.duration_days)
         
-        # Use configured probabilities for outcomes
-        outcome = np.random.choice(['improve', 'stable', 'decline'], 
-                                 p=[loading_params["improve_probability"],
-                                    loading_params["stable_probability"],
-                                    loading_params["decline_probability"]])
+        # If the original event time is already past the intended duration, don't reschedule
+        if event.time >= intended_end_date:
+            return
+            
+        # Reschedule for next day instead of next hour to reduce event density
+        next_time = event.time + timedelta(days=1)
+        # Keep same time of day
+        next_time = next_time.replace(hour=event.time.hour, minute=event.time.minute)
         
-        if outcome == 'improve':
-            change = np.random.normal(loading_params["vision_improvement_mean"],
-                                    loading_params["vision_improvement_sd"])
-        elif outcome == 'decline':
-            change = np.random.normal(loading_params["decline_mean"],
-                                    loading_params["decline_sd"])
-        else:
-            change = np.random.normal(0, 2)  # Small variation for stable
-        
-        # Apply minimal ceiling effect during loading
-        current_vision = state["current_vision"]
-        headroom = max(0, 85 - current_vision)
-        if change > 0:
-            change = min(change, headroom * 0.7)  # Reduced from 0.8
-            
-        return change
-
-    def _calculate_vision_change(self, state: Dict) -> float:
-        """Calculate vision change with memory and ceiling effects"""
-        # Check if we're in loading phase
-        if (state.get("current_step") == "injection_phase" and 
-            state.get("injections", 0) < 3 and 
-            "injection" in state.get("current_actions", [])):
-            
-            return self._calculate_loading_phase_change(state)
-        
-        # Get reference points
-        current_vision = state["current_vision"]
-        best_vision = state.get("best_vision_achieved", current_vision)
-        baseline_vision = state.get("baseline_vision", current_vision)
-        last_response = state.get("last_treatment_response", 0)
-        response_history = state.get("treatment_response_history", [])
-        
-        # Calculate headroom (ceiling effect)
-        vision_params = self.config.get_vision_params()
-        absolute_max = vision_params["max_letters"]
-        theoretical_max = min(absolute_max, best_vision + vision_params.get("improvement_ceiling", 3))
-        headroom = max(0, theoretical_max - current_vision)
-        # Calculate headroom using configured factor
-        headroom_factor = np.exp(-vision_params["headroom_factor"] * headroom)
-        
-        if "injection" in state.get("current_actions", []):
-            # Treatment effect with stronger regression to mean
-            maintenance_params = self.config.get_maintenance_params()
-            memory_factor = maintenance_params["memory_factor"]
-            base_effect = 0
-            
-            if response_history:
-                base_effect = np.mean(response_history) * memory_factor
-                if base_effect > maintenance_params["base_effect_ceiling"]:
-                    base_effect *= maintenance_params["regression_factor"]
-            
-            maintenance_params = self.config.get_maintenance_params()
-            random_effect = np.random.lognormal(mean=maintenance_params["random_effect_mean"],
-                                              sigma=maintenance_params["random_effect_sd"])
-            
-            improvement = (base_effect + random_effect) * (1 - headroom_factor)
-            
-            # Add configurable chance of decline even with treatment
-            if np.random.random() < maintenance_params["decline_probability"]:
-                improvement = -np.random.lognormal(mean=maintenance_params["decline_effect_mean"],
-                                                 sigma=maintenance_params["decline_effect_sd"])
-            
-            # Update treatment history
-            state["last_treatment_response"] = improvement
-            state["treatment_response_history"].append(improvement)
-            if len(state["treatment_response_history"]) > 3:
-                state["treatment_response_history"].pop(0)
-            
-            return improvement
-        else:
-            # Stronger natural disease progression
-            weeks_since_injection = state.get("weeks_since_last_injection", 0)
-            
-            # Stronger base decline
-            base_decline = -np.random.lognormal(mean=-1.5, sigma=0.5)  # Increased from -2.0
-            
-            # More aggressive time factor
-            time_factor = 1 + (weeks_since_injection/8)  # Changed from /12
-            
-            # Stronger vision factor
-            vision_factor = 1 + max(0, (current_vision - baseline_vision)/15)  # Changed from /20
-            
-            # Calculate total decline
-            total_decline = base_decline * time_factor * vision_factor
-            
-            return total_decline
+        # Only reschedule if we haven't reached the end date
+        if next_time <= intended_end_date:
+            self.clock.schedule_event(Event(
+                time=next_time,
+                event_type="visit",
+                patient_id=event.patient_id,
+                data=event.data,
+                priority=1
+            ))
