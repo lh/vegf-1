@@ -8,10 +8,20 @@ protocol:
 
 simulation:
   type: agent_based
-  duration_days: 365
-  num_patients: 7
+  duration_days: 1095  # 3 years
+  num_patients: 200
   random_seed: 42
   start_date: "2023-01-01"
+  
+  # DES-specific settings
+  scheduling:
+    daily_capacity: 20  # Number of patients that can be seen per day
+    days_per_week: 5    # Monday through Friday
+  
+  # Patient generation settings
+  patient_generation:
+    rate_per_week: 3    # Average number of new patients per week
+    random_seed: 42     # For reproducible patient arrival times
 
 output:
   save_results: true

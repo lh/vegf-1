@@ -25,14 +25,14 @@ def run_test_des_simulation(config: Optional[SimulationConfig] = None, verbose: 
         if verbose:
             logger.info("Initializing DES simulation...")
         
-        # Initialize simulation and set end date before adding patients
+        # Initialize simulation
         sim = DiscreteEventSimulation(config, start_date)
-        sim.clock.end_date = end_date  # Set end date first
         
-        # Add test patients after end date is set
-        for i in range(1, 8):  # Create patients TEST001 through TEST007
-            patient_id = f"TEST{i:03d}"
-            sim.add_patient(patient_id, "test_simulation")  # Use the protocol type from YAML
+        # Set end date and initialize patient generation
+        sim.clock.end_date = end_date
+        if verbose:
+            logger.info("Patient generation configured for 3 patients per week on average")
+        sim._schedule_patient_arrivals()  # Schedule patients after end date is set
         
         # Run simulation
         if verbose:
@@ -57,22 +57,15 @@ def run_test_des_simulation(config: Optional[SimulationConfig] = None, verbose: 
                 else:
                     print(f"{stat}: {value}")
                 
-            # Print patient timelines
-            print("\nPatient Timelines:")
-            for patient_id, history in patient_histories.items():
-                visits = [
-                    {'date': visit['date'], 'actions': visit['actions']} 
-                    for visit in history
-                ]
-                print_patient_timeline(patient_id, visits, start_date, end_date)
-            
-            # Print patient states
-            print("\nFinal Patient States:")
+            # Print summary statistics
+            print("\nPatient Summary:")
             print("-" * 20)
-            for patient_id, state in sim.patient_states.items():
-                print(f"\nPatient {patient_id}:")
-                for key, value in state.items():
-                    print(f"  {key}: {value}")
+            total_patients = len(patient_histories)
+            total_visits = sum(len(history) for history in patient_histories.values())
+            avg_visits = total_visits / total_patients
+            print(f"Total Patients: {total_patients}")
+            print(f"Total Visits: {total_visits}")
+            print(f"Average Visits per Patient: {avg_visits:.1f}")
         
         # Generate acuity plots if enabled in config
         if config.get_output_params().get("plots", False):

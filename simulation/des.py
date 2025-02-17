@@ -1,9 +1,57 @@
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 import numpy as np
 from .base import BaseSimulation, Event, SimulationEnvironment
 from protocol_models import TreatmentProtocol
 from .config import SimulationConfig
+
+class PatientGenerator:
+    """Generates patient arrival times using a Poisson process"""
+    def __init__(self, rate_per_week: float, start_date: datetime, end_date: datetime, random_seed: Optional[int] = None):
+        """
+        Args:
+            rate_per_week: Average number of new patients per week
+            start_date: Start date for patient generation
+            end_date: End date for patient generation
+            random_seed: Optional random seed for reproducibility
+        """
+        self.rate_per_week = rate_per_week
+        self.start_date = start_date
+        self.end_date = end_date
+        self.total_weeks = (end_date - start_date).days / 7
+        
+        # Initialize random state
+        if random_seed is not None:
+            self.rng = np.random.RandomState(random_seed)
+        else:
+            self.rng = np.random
+            
+    def generate_arrival_times(self) -> List[Tuple[datetime, int]]:
+        """Generate arrival times for all patients using a Poisson process
+        
+        Returns:
+            List of (arrival_time, patient_number) tuples
+        """
+        # Calculate expected total patients
+        expected_patients = int(self.rate_per_week * self.total_weeks)
+        
+        # Generate inter-arrival times from exponential distribution
+        mean_interarrival_days = 7 / self.rate_per_week  # Convert weekly rate to daily
+        interarrival_times = self.rng.exponential(mean_interarrival_days, size=expected_patients)
+        
+        # Convert to arrival times
+        arrival_times = []
+        current_time = self.start_date
+        patient_num = 1
+        
+        for interval in interarrival_times:
+            current_time += timedelta(days=interval)
+            if current_time >= self.end_date:
+                break
+            arrival_times.append((current_time, patient_num))
+            patient_num += 1
+            
+        return arrival_times
 
 class DiscreteEventSimulation(BaseSimulation):
     """
@@ -44,6 +92,43 @@ class DiscreteEventSimulation(BaseSimulation):
         
         # Track daily appointments
         self.daily_slots = {}  # date -> number of appointments
+        
+        # Initialize patient generator
+        patient_gen_params = des_params["patient_generation"]
+        self.patient_generator = PatientGenerator(
+            rate_per_week=patient_gen_params["rate_per_week"],
+            start_date=config.start_date,
+            end_date=config.start_date + timedelta(days=config.duration_days),
+            random_seed=patient_gen_params["random_seed"] or config.random_seed
+        )
+    
+    def _schedule_patient_arrivals(self):
+        """Schedule patient arrival events based on generator"""
+        arrival_times = self.patient_generator.generate_arrival_times()
+        for arrival_time, patient_num in arrival_times:
+            patient_id = f"TEST{patient_num:03d}"
+            self.clock.schedule_event(Event(
+                time=arrival_time,
+                event_type="add_patient",
+                patient_id=patient_id,
+                data={"protocol_name": "test_simulation"},
+                priority=1
+            ))
+    
+    def process_event(self, event: Event):
+        """Process different event types in the simulation"""
+        if event.event_type == "visit":
+            self._handle_visit(event)
+        elif event.event_type == "treatment_decision":
+            self._handle_treatment_decision(event)
+        elif event.event_type == "add_patient":
+            self._handle_add_patient(event)
+    
+    def _handle_add_patient(self, event: Event):
+        """Handle patient arrival events"""
+        patient_id = event.patient_id
+        protocol_name = event.data["protocol_name"]
+        self.add_patient(patient_id, protocol_name)
     
     def add_patient(self, patient_id: str, protocol_name: str):
         """Initialize a new patient in the simulation"""
@@ -85,13 +170,6 @@ class DiscreteEventSimulation(BaseSimulation):
             data=initial_visit,
             priority=1
         ))
-    
-    def process_event(self, event: Event):
-        """Process different event types in the simulation"""
-        if event.event_type == "visit":
-            self._handle_visit(event)
-        elif event.event_type == "treatment_decision":
-            self._handle_treatment_decision(event)
     
     def _handle_visit(self, event: Event):
         """Handle patient visit events using protocol objects"""
@@ -243,7 +321,7 @@ class DiscreteEventSimulation(BaseSimulation):
             next_interval = 52
             
         # Only schedule next visit if we haven't reached the end date
-        if event.time + timedelta(weeks=next_interval) <= self.config.start_date + timedelta(days=self.config.duration_days):
+        if event.time + timedelta(weeks=next_interval) <= self.clock.end_date:
             self._schedule_next_visit(patient_id, next_interval)
 
     def _request_resources(self, event: Event) -> bool:
@@ -393,11 +471,8 @@ class DiscreteEventSimulation(BaseSimulation):
 
     def _reschedule_visit(self, event: Event, next_clinic_day: bool = False):
         """Reschedule a visit to the next available day"""
-        # Calculate the intended end date of the simulation
-        intended_end_date = self.config.start_date + timedelta(days=self.config.duration_days)
-        
-        # If the original event time is already past the intended duration, don't reschedule
-        if event.time >= intended_end_date:
+        # If the original event time is already past the end date, don't reschedule
+        if event.time >= self.clock.end_date:
             return
             
         # Calculate next available day
@@ -424,7 +499,7 @@ class DiscreteEventSimulation(BaseSimulation):
             
         # If next day is full, try the following days
         while (self.daily_slots[next_date] >= self.global_stats["scheduling"]["daily_capacity"] and 
-               next_time <= intended_end_date):
+               next_time <= self.clock.end_date):
             next_time += timedelta(days=1)
             while next_time.weekday() >= self.global_stats["scheduling"]["days_per_week"]:
                 next_time += timedelta(days=1)
@@ -433,7 +508,7 @@ class DiscreteEventSimulation(BaseSimulation):
                 self.daily_slots[next_date] = 0
                 
         # Only reschedule if we haven't reached the end date and found a day with capacity
-        if next_time <= intended_end_date:
+        if next_time <= self.clock.end_date:
             self.global_stats["scheduling"]["rescheduled_visits"] += 1
             self.clock.schedule_event(Event(
                 time=next_time,
