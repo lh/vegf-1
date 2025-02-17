@@ -1,26 +1,68 @@
-# Next Steps
+# DES Simulation Refactoring Status
 
-1. ✓ Implement base simulation engine classes
-2. ✓ Add YAML validation schema
-3. ✓ Create reference implementation of Eylea protocols
-4. ✓ Add unit test framework
-5. ✓ Implement basic visit/decision workflow
-6. ✓ Create visualization tools for protocol timelines
-7. ✓ Add population-level visualization capabilities
-8. ✓ Implement comparison tools for different protocols
-9. → Add statistical analysis tools for treatment outcomes
-10. ✓ Add proper error handling and logging system
-11. ✓ Create documentation for protocol configuration
-12. Implement edge case handling (missed visits, etc)
-13. ✓ Add validation for protocol configurations
-14. Create example notebooks/tutorials
-15. Add CI/CD pipeline
-16. Add performance benchmarking suite
-17. Create protocol comparison visualization tools
-18. Add sensitivity analysis framework
-19. Implement protocol optimization tools
-20. Add real-world data validation framework
-21. ✓ Fix DES stability issues (event scheduling, resource management)
+## Completed Changes
 
-Progress: 12/21 completed (57%)
-Next priority: Apply DES fixes to main simulation and Statistical analysis tools for treatment outcomes
+The refactoring of the Discrete Event Simulation (DES) to handle clinic capacity on a daily basis has been completed. The following changes have been implemented:
+
+1. Updated SimulationConfig:
+   - Changed DES parameters to focus on daily capacity
+   - Added days_per_week parameter
+   - Removed minute-based scheduling parameters
+
+2. Updated DES implementation (simulation/des.py):
+   - Removed minute-based resource tracking
+   - Added daily slot tracking
+   - Updated visit handling to work with daily capacity
+   - Implemented clinic day awareness (Mon-Fri by default)
+   - Changed rescheduling logic to work with days instead of minutes
+   - Removed schedule_resource_release method
+   - Removed resource utilization tracking
+   - Updated visit data structure to use actions_performed
+
+3. Updated test infrastructure:
+   - Modified test configuration to use daily_capacity and days_per_week
+   - Updated test output to show scheduling statistics
+   - Removed obsolete resource utilization reporting
+
+## Testing Results
+
+The DES simulation refactoring has been successfully verified:
+
+1. Daily Capacity Management:
+   - Correctly using configured daily_capacity (20 patients/day)
+   - Properly respecting days_per_week (5 days, Mon-Fri)
+   - All 7 test patients receiving scheduled visits
+   - Minimal rescheduling needed (14 rescheduled visits total)
+
+2. Visit Scheduling:
+   - All visits occur on weekdays (Mon-Fri)
+   - Proper week-based intervals (4 weeks loading, 12 weeks maintenance)
+   - No queue_full_events observed
+   - Visits distributed efficiently across available clinic days
+
+3. Patient Outcomes:
+   - All patients completed expected visits (12 visits each)
+   - Vision improvements tracked and recorded
+   - Phase transitions (loading to maintenance) working correctly
+   - Visit histories properly maintained
+
+## Next Steps
+
+1. Consider Additional Optimizations:
+   - Review rescheduling algorithm for further improvements
+   - Analyze visit distribution patterns
+   - Consider adding capacity utilization metrics
+
+2. Documentation:
+   - Update design documentation with new scheduling approach
+   - Document configuration parameters and their effects
+
+## Key Concepts
+
+The refactoring has moved from a minute-by-minute resource management model to a more realistic daily capacity model that:
+- Tracks available slots per day
+- Respects clinic working days (e.g. Mon-Fri)
+- Schedules follow-up visits in weeks
+- Better reflects how real clinics operate
+
+This should eliminate the unrealistic queue_full_events and provide a more accurate simulation of clinic operations.

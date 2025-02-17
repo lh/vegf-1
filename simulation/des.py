@@ -15,14 +15,18 @@ class DiscreteEventSimulation(BaseSimulation):
         """Initialize DES with configuration"""
         super().__init__(config.start_date, environment)
         self.config = config
-        self.register_protocol("treat_and_extend", config.protocol)
+        # Register protocol using its type from config
+        protocol_type = "test_simulation"  # Use the type from YAML config
+        self.register_protocol(protocol_type, config.protocol)
         self.patient_states: Dict[str, Dict] = {}
         
         # Initialize random seed
         if config.random_seed is not None:
             np.random.seed(config.random_seed)
             
-        # Initialize statistics with resource limits from config
+        # Initialize statistics
+        des_params = config.get_des_params()
+        
         self.global_stats = {
             "total_visits": 0,
             "total_injections": 0,
@@ -31,31 +35,15 @@ class DiscreteEventSimulation(BaseSimulation):
             "vision_declines": 0,
             "protocol_completions": 0,
             "protocol_discontinuations": 0,
-            "resource_utilization": {
-                "doctors": 0,
-                "nurses": 0,
-                "oct_machines": 0
-            },
-            "queue_stats": {
-                "max_queue_length": 10,  # Maximum number of events in any queue
-                "queue_full_events": 0
+            "scheduling": {
+                "daily_capacity": des_params["daily_capacity"],
+                "days_per_week": des_params["days_per_week"],
+                "rescheduled_visits": 0
             }
         }
         
-        # Set default resource capacity if not specified in config
-        resource_params = config.get_resource_params()
-        if not resource_params:
-            resource_params = {
-                "doctors": 10,  # Significantly increased capacity
-                "nurses": 15,   # Significantly increased capacity
-                "oct_machines": 10  # Significantly increased capacity
-            }
-        self.resource_capacity = resource_params
-        self.resource_queue = {
-            "doctors": [],
-            "nurses": [],
-            "oct_machines": []
-        }
+        # Track daily appointments
+        self.daily_slots = {}  # date -> number of appointments
     
     def add_patient(self, patient_id: str, protocol_name: str):
         """Initialize a new patient in the simulation"""
@@ -102,8 +90,6 @@ class DiscreteEventSimulation(BaseSimulation):
         """Process different event types in the simulation"""
         if event.event_type == "visit":
             self._handle_visit(event)
-        elif event.event_type == "resource_release":
-            self._handle_resource_release(event)
         elif event.event_type == "treatment_decision":
             self._handle_treatment_decision(event)
     
@@ -136,15 +122,6 @@ class DiscreteEventSimulation(BaseSimulation):
             # Process visit
             visit_data = self._process_visit(state, event)
             
-            # Schedule single resource release event for all resources
-            self.clock.schedule_event(Event(
-                time=event.time + timedelta(minutes=30),
-                event_type="resource_release",
-                patient_id=event.patient_id,
-                data={"resources": visit_data["resources_used"]},
-                priority=1
-            ))
-            
             # Add visit to history with proper format
             visit_record = {
                 'date': event.time.replace(second=0, microsecond=0),
@@ -155,19 +132,18 @@ class DiscreteEventSimulation(BaseSimulation):
             }
             state['visit_history'].append(visit_record)
             
-            # Schedule decisions based on visit type
-            for decision in event.get_decisions():
-                self.clock.schedule_event(Event(
-                    time=event.time + timedelta(minutes=30),
-                    event_type="treatment_decision",
-                    patient_id=patient_id,
-                    data={"decision_type": decision.value, "visit_data": visit_data},
-                    priority=2,
-                    phase=current_phase,
-                    protocol=protocol
-                ))
+            # Schedule treatment decision for same day
+            self.clock.schedule_event(Event(
+                time=event.time,
+                event_type="treatment_decision",
+                patient_id=patient_id,
+                data={"decision_type": "doctor_treatment_decision", "visit_data": visit_data},
+                priority=2,
+                phase=current_phase,
+                protocol=protocol
+            ))
         else:
-            # Reschedule visit for next hour if resources unavailable
+            # Reschedule visit for next available day if no capacity today
             self._reschedule_visit(event)
 
     def _process_visit(self, state: Dict, event: Event) -> Dict:
@@ -203,7 +179,7 @@ class DiscreteEventSimulation(BaseSimulation):
         visit_data = {
             "vision_change": vision_change,
             "oct_findings": self._simulate_oct_findings(state),
-            "resources_used": []
+            "actions_performed": []
         }
         
         actions = event.data.get("actions", [])
@@ -218,42 +194,20 @@ class DiscreteEventSimulation(BaseSimulation):
                 self.global_stats["vision_improvements"] += 1
             elif vision_change < 0:
                 self.global_stats["vision_declines"] += 1
+            visit_data["actions_performed"].append("vision_test")
         
         if "oct_scan" in actions:
             self.global_stats["total_oct_scans"] += 1
-            visit_data["resources_used"].append("oct_machines")
+            visit_data["actions_performed"].append("oct_scan")
         
         if "injection" in actions:
             self.global_stats["total_injections"] += 1
             state["injections"] += 1
             state["last_injection_date"] = event.time
             state["weeks_since_last_injection"] = 0
-            visit_data["resources_used"].append("doctors")
-        
-        visit_data["resources_used"].append("nurses")
+            visit_data["actions_performed"].append("injection")
         
         return visit_data
-
-    def _handle_resource_release(self, event: Event):
-        """Handle resource release events"""
-        # Release all resources used by this patient
-        for resource in event.data["resources"]:
-            if self.global_stats["resource_utilization"][resource] > 0:
-                self.global_stats["resource_utilization"][resource] -= 1
-        
-        # Try to process all queued events that can now be handled
-        processed = set()  # Track processed events to avoid duplicates
-        for resource_type in ["doctors", "nurses", "oct_machines"]:
-            if self.resource_queue[resource_type]:
-                for queued_event in list(self.resource_queue[resource_type]):  # Create copy to modify during iteration
-                    if queued_event not in processed:
-                        if self._request_resources(queued_event):
-                            # Successfully allocated resources, remove from all queues
-                            for r in ["doctors", "nurses", "oct_machines"]:
-                                if queued_event in self.resource_queue[r]:
-                                    self.resource_queue[r].remove(queued_event)
-                            processed.add(queued_event)
-                            self._handle_visit(queued_event)
 
     def _handle_treatment_decision(self, event: Event):
         """Handle treatment decision events using protocol objects"""
@@ -293,39 +247,25 @@ class DiscreteEventSimulation(BaseSimulation):
             self._schedule_next_visit(patient_id, next_interval)
 
     def _request_resources(self, event: Event) -> bool:
-        """Attempt to reserve needed resources for visit"""
-        needed_resources = {
-            "nurses": 1,
-            "oct_machines": 1 if "oct_scan" in event.data.get("actions", []) else 0,
-            "doctors": 1 if "injection" in event.data.get("actions", []) else 0
-        }
+        """Check if there's capacity for this visit on this day"""
+        visit_date = event.time.date()
         
-        # Check current utilization
-        current_utilization = {
-            resource: self.global_stats["resource_utilization"][resource]
-            for resource in needed_resources
-        }
-        
-        # Check if we have enough capacity
-        for resource, needed in needed_resources.items():
-            if needed > 0:
-                available = self.resource_capacity[resource] - current_utilization[resource]
-                if available < needed:
-                    # Not enough resources, add to queue if space
-                    if len(self.resource_queue[resource]) < self.global_stats["queue_stats"]["max_queue_length"]:
-                        if event not in self.resource_queue[resource]:
-                            self.resource_queue[resource].append(event)
-                    else:
-                        self.global_stats["queue_stats"]["queue_full_events"] += 1
-                        self._reschedule_visit(event)
-                    return False
-        
-        # If we get here, we have enough of all resources
-        # Reserve them
-        for resource, needed in needed_resources.items():
-            if needed > 0:
-                self.global_stats["resource_utilization"][resource] += needed
-        
+        # Initialize slots for this date if not exists
+        if visit_date not in self.daily_slots:
+            self.daily_slots[visit_date] = 0
+            
+        # Check if this is a clinic day (Mon-Fri by default)
+        if event.time.weekday() >= self.global_stats["scheduling"]["days_per_week"]:
+            self._reschedule_visit(event, next_clinic_day=True)
+            return False
+            
+        # Check daily capacity
+        if self.daily_slots[visit_date] >= self.global_stats["scheduling"]["daily_capacity"]:
+            self._reschedule_visit(event, next_clinic_day=False)
+            return False
+            
+        # If we get here, we have capacity
+        self.daily_slots[visit_date] += 1
         return True
 
     def _simulate_vision_change(self, state: Dict) -> float:
@@ -427,17 +367,6 @@ class DiscreteEventSimulation(BaseSimulation):
             "thickness_change": thickness_change
         }
 
-    def _schedule_resource_release(self, visit_time: datetime, visit_data: Dict):
-        """Schedule resource release events"""
-        # Schedule a single release event for all resources
-        self.clock.schedule_event(Event(
-            time=visit_time + timedelta(minutes=30),
-            event_type="resource_release",
-            patient_id=None,
-            data={"resources": visit_data["resources_used"]},
-            priority=1
-        ))
-
     def _schedule_next_visit(self, patient_id: str, weeks: int):
         """Schedule the next visit for a patient"""
         state = self.patient_states[patient_id]
@@ -462,8 +391,8 @@ class DiscreteEventSimulation(BaseSimulation):
             priority=1
         ))
 
-    def _reschedule_visit(self, event: Event):
-        """Reschedule a visit due to resource constraints"""
+    def _reschedule_visit(self, event: Event, next_clinic_day: bool = False):
+        """Reschedule a visit to the next available day"""
         # Calculate the intended end date of the simulation
         intended_end_date = self.config.start_date + timedelta(days=self.config.duration_days)
         
@@ -471,13 +400,41 @@ class DiscreteEventSimulation(BaseSimulation):
         if event.time >= intended_end_date:
             return
             
-        # Reschedule for next day instead of next hour to reduce event density
-        next_time = event.time + timedelta(days=1)
-        # Keep same time of day
-        next_time = next_time.replace(hour=event.time.hour, minute=event.time.minute)
-        
-        # Only reschedule if we haven't reached the end date
+        # Calculate next available day
+        next_time = event.time
+        if next_clinic_day:
+            # Find next clinic day (e.g., if today is Friday, go to Monday)
+            days_to_add = (self.global_stats["scheduling"]["days_per_week"] - 
+                          next_time.weekday())
+            if days_to_add <= 0:
+                days_to_add += self.global_stats["scheduling"]["days_per_week"]
+            next_time += timedelta(days=days_to_add)
+        else:
+            # Just go to next day
+            next_time += timedelta(days=1)
+            
+        # Ensure we're on a clinic day
+        while next_time.weekday() >= self.global_stats["scheduling"]["days_per_week"]:
+            next_time += timedelta(days=1)
+            
+        # Check if the next day has available capacity
+        next_date = next_time.date()
+        if next_date not in self.daily_slots:
+            self.daily_slots[next_date] = 0
+            
+        # If next day is full, try the following days
+        while (self.daily_slots[next_date] >= self.global_stats["scheduling"]["daily_capacity"] and 
+               next_time <= intended_end_date):
+            next_time += timedelta(days=1)
+            while next_time.weekday() >= self.global_stats["scheduling"]["days_per_week"]:
+                next_time += timedelta(days=1)
+            next_date = next_time.date()
+            if next_date not in self.daily_slots:
+                self.daily_slots[next_date] = 0
+                
+        # Only reschedule if we haven't reached the end date and found a day with capacity
         if next_time <= intended_end_date:
+            self.global_stats["scheduling"]["rescheduled_visits"] += 1
             self.clock.schedule_event(Event(
                 time=next_time,
                 event_type="visit",

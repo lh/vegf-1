@@ -15,6 +15,7 @@ class SimulationConfig:
     random_seed: int
     verbose: bool
     start_date: datetime
+    resources: Optional[Dict[str, Any]] = None
     
     def get_vision_params(self) -> Dict[str, Any]:
         """Get vision-related parameters with validation"""
@@ -112,7 +113,30 @@ class SimulationConfig:
 
     def get_resource_params(self) -> Dict[str, Any]:
         """Get resource-related parameters"""
-        return self.parameters.get("resources", {})
+        # Get from simulation.resources.capacity if it exists
+        sim_resources = getattr(self, 'resources', {})
+        if sim_resources and isinstance(sim_resources, dict):
+            capacity = sim_resources.get("capacity", {})
+            if capacity:
+                return {
+                    "doctors": capacity.get("doctors", 5),
+                    "nurses": capacity.get("nurses", 5),
+                    "oct_machines": capacity.get("oct_machines", 5)
+                }
+        # Fallback to default values
+        return {
+            "doctors": 5,
+            "nurses": 5,
+            "oct_machines": 5
+        }
+    
+    def get_des_params(self) -> Dict[str, Any]:
+        """Get DES-specific parameters"""
+        scheduling = self.parameters.get("simulation", {}).get("scheduling", {})
+        return {
+            "daily_capacity": scheduling.get("daily_capacity", 20),  # Default to 20 patients per day
+            "days_per_week": scheduling.get("days_per_week", 5)     # Default to 5 days per week
+        }
     
     @classmethod
     def from_yaml(cls, config_name: str) -> 'SimulationConfig':
@@ -130,6 +154,13 @@ class SimulationConfig:
         if not isinstance(full_config['protocol'], TreatmentProtocol):
             raise ValueError("Protocol must be a TreatmentProtocol object")
             
+        # Extract resources configuration if present
+        resources = None
+        if hasattr(full_config['config'], 'simulation'):
+            sim_config = full_config['config'].simulation
+            if hasattr(sim_config, 'resources'):
+                resources = sim_config.resources
+        
         # Create config with validated protocol
         return cls(
             parameters=full_config['parameters'],
@@ -139,5 +170,6 @@ class SimulationConfig:
             duration_days=full_config['config'].duration_days,
             random_seed=full_config['config'].random_seed,
             verbose=full_config['config'].verbose,
-            start_date=start_date
+            start_date=start_date,
+            resources=resources
         )
