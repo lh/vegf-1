@@ -24,27 +24,15 @@ def run_test_des_simulation(config: Optional[SimulationConfig] = None, verbose: 
         
         if verbose:
             logger.info("Initializing DES simulation...")
-        sim = DiscreteEventSimulation(config, start_date)
         
-        # Add test patients
-        initial_visit = {
-            "visit_type": "injection_visit",
-            "actions": ["vision_test", "oct_scan", "injection"],
-            "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
-        }
-
+        # Initialize simulation and set end date before adding patients
+        sim = DiscreteEventSimulation(config, start_date)
+        sim.clock.end_date = end_date  # Set end date first
+        
+        # Add test patients after end date is set
         for i in range(1, 8):  # Create patients TEST001 through TEST007
             patient_id = f"TEST{i:03d}"
-            sim.add_patient(patient_id, "treat_and_extend")
-            
-            # Schedule initial visit with 30 minute spacing
-            sim.clock.schedule_event(Event(
-                time=start_date + timedelta(minutes=30*(i-1)),
-                event_type="visit",
-                patient_id=patient_id,
-                data=initial_visit,
-                priority=1
-            ))
+            sim.add_patient(patient_id, "test_simulation")  # Use the protocol type from YAML
         
         # Run simulation
         if verbose:
@@ -61,13 +49,13 @@ def run_test_des_simulation(config: Optional[SimulationConfig] = None, verbose: 
             print("\nSimulation Statistics:")
             print("-" * 20)
             for stat, value in sim.global_stats.items():
-                if stat != "resource_utilization":
+                if stat == "scheduling":
+                    print("\nScheduling Statistics:")
+                    print("-" * 20)
+                    for sched_stat, sched_value in value.items():
+                        print(f"{sched_stat}: {sched_value}")
+                else:
                     print(f"{stat}: {value}")
-                    
-            print("\nResource Utilization:")
-            print("-" * 20)
-            for resource, usage in sim.global_stats["resource_utilization"].items():
-                print(f"{resource}: {usage}")
                 
             # Print patient timelines
             print("\nPatient Timelines:")
@@ -86,11 +74,16 @@ def run_test_des_simulation(config: Optional[SimulationConfig] = None, verbose: 
                 for key, value in state.items():
                     print(f"  {key}: {value}")
         
-        # Generate acuity plot (suppressed but code kept for future use)
-        if False:  # Set to True to show plots
-            plot_multiple_patients(patient_histories, start_date, end_date,
-                                 title="Discrete Event Simulation: Visual Acuity Over Time",
-                                 show=False)  # Add show=False parameter
+        # Generate acuity plot if enabled in config
+        if config.get_output_params().get("plots", False):
+            plot_multiple_patients(
+                patient_histories, 
+                start_date, 
+                end_date,
+                title="Discrete Event Simulation: Visual Acuity Over Time",
+                show=False,
+                save_path="des_acuity_plot.png"
+            )
         
         return patient_histories
             
@@ -99,4 +92,4 @@ def run_test_des_simulation(config: Optional[SimulationConfig] = None, verbose: 
         raise
 
 if __name__ == "__main__":
-    run_test_des_simulation(verbose=False)
+    run_test_des_simulation(verbose=True)

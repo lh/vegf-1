@@ -137,6 +137,19 @@ class SimulationConfig:
             "daily_capacity": scheduling.get("daily_capacity", 20),  # Default to 20 patients per day
             "days_per_week": scheduling.get("days_per_week", 5)     # Default to 5 days per week
         }
+        
+    def get_output_params(self) -> Dict[str, Any]:
+        """Get output-related parameters"""
+        output_params = self.parameters.get("output", {})
+        if not output_params:
+            # Default values if not specified
+            return {
+                "save_results": True,
+                "database": "simulations.db",
+                "plots": True,
+                "verbose": False
+            }
+        return output_params
     
     @classmethod
     def from_yaml(cls, config_name: str) -> 'SimulationConfig':
