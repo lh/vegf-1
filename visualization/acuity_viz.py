@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 import matplotlib.pyplot as plt
-from matplotlib.dates import DateFormatter
+from matplotlib.dates import DateFormatter, MonthLocator
 import numpy as np
 
 def plot_patient_acuity(patient_id: str, history: List[Dict], 
@@ -88,15 +88,7 @@ def plot_multiple_patients(patient_data: Dict[str, List[Dict]],
                          start_date: datetime, end_date: datetime,
                          show: bool = True, save_path: Optional[str] = None,
                          title: str = "Visual Acuity Over Time - Multiple Patients"):
-    """Create a comparative plot of multiple patients' visual acuity
-    
-    Args:
-        patient_data: Dictionary of patient IDs to their visit histories
-        start_date: Start date of simulation
-        end_date: End date of simulation
-        show: Whether to display the plot
-        save_path: Optional path to save the plot
-    """
+    """Create a comparative plot of multiple patients' visual acuity"""
     plt.figure(figsize=(12, 6))
     
     for patient_id, history in patient_data.items():
@@ -143,6 +135,109 @@ def plot_multiple_patients(patient_data: Dict[str, List[Dict]],
     plt.gcf().autofmt_xdate()
     
     plt.grid(True, linestyle='--', alpha=0.7)
+    plt.legend()
+    plt.tight_layout()
+    
+    if save_path:
+        plt.savefig(save_path)
+    
+    if show:
+        plt.show()
+    else:
+        plt.close()
+
+def plot_mean_acuity(patient_data: Dict[str, List[Dict]], 
+                    start_date: datetime, end_date: datetime,
+                    show: bool = True, save_path: Optional[str] = None,
+                    title: str = "Mean Visual Acuity Over Time"):
+    """Create a plot showing mean acuity with confidence intervals over time
+    
+    Args:
+        patient_data: Dictionary of patient IDs to their visit histories
+        start_date: Start date of simulation
+        end_date: End date of simulation
+        show: Whether to display the plot
+        save_path: Optional path to save the plot
+        title: Title for the plot
+    """
+    import numpy as np
+    from scipy import interpolate
+    
+    # Create weekly timeline
+    total_weeks = int((end_date - start_date).days / 7) + 1
+    week_dates = [start_date + timedelta(weeks=w) for w in range(total_weeks)]
+    
+    # Initialize arrays for weekly data
+    all_acuities = []  # List of lists, each inner list contains one patient's weekly values
+    
+    # Process each patient's data
+    for patient_id, history in patient_data.items():
+        # Extract dates and vision values
+        visit_dates = []
+        vision_values = []
+        
+        for visit in history:
+            if 'date' in visit and 'vision' in visit:
+                visit_dates.append(visit['date'])
+                vision_values.append(float(visit['vision']))
+        
+        if not visit_dates:  # Skip if no data
+            continue
+            
+        # Convert dates to weeks from start
+        visit_weeks = [(d - start_date).days / 7 for d in visit_dates]
+        weeks = list(range(total_weeks))
+        
+        # Create interpolation function
+        if len(visit_weeks) > 1:  # Need at least 2 points for interpolation
+            f = interpolate.interp1d(visit_weeks, vision_values, 
+                                   bounds_error=False, fill_value="extrapolate")
+            weekly_values = f(weeks)
+            all_acuities.append(weekly_values)
+    
+    if not all_acuities:  # No data to plot
+        return
+        
+    # Convert to numpy array for calculations
+    all_acuities = np.array(all_acuities)
+    
+    # Calculate statistics
+    mean_acuity = np.mean(all_acuities, axis=0)
+    std_acuity = np.std(all_acuities, axis=0)
+    
+    # Calculate 95% confidence interval
+    n_patients = len(all_acuities)
+    confidence_interval = 1.96 * std_acuity / np.sqrt(n_patients)
+    upper_bound = mean_acuity + confidence_interval
+    lower_bound = mean_acuity - confidence_interval
+    
+    # Create the plot
+    plt.figure(figsize=(12, 6))
+    
+    # Plot mean line
+    plt.plot(week_dates, mean_acuity, 'b-', linewidth=2, label='Mean Acuity')
+    
+    # Add shaded confidence interval
+    plt.fill_between(week_dates, lower_bound, upper_bound, 
+                    color='b', alpha=0.2, label='95% Confidence Interval')
+    
+    plt.title(title)
+    plt.xlabel('Time from Treatment Start')
+    plt.ylabel('Visual Acuity (ETDRS letters)')
+    
+    # Set y-axis range
+    plt.ylim(0, 85)
+    
+    # Format x-axis with monthly grid
+    ax = plt.gca()
+    ax.xaxis.set_major_locator(MonthLocator())
+    ax.xaxis.set_major_formatter(DateFormatter('%b %Y'))
+    plt.gcf().autofmt_xdate()
+    
+    # Add grid
+    plt.grid(True, which='major', linestyle='-', alpha=0.3)
+    plt.grid(True, which='minor', linestyle=':', alpha=0.2)
+    
     plt.legend()
     plt.tight_layout()
     
