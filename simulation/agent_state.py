@@ -25,15 +25,21 @@ class AgentState(PatientState):
             start_time: Time when patient enters the simulation
             risk_factors: Dictionary of risk factors and their values
         """
+        # Initialize base state
         super().__init__(patient_id, protocol_name, initial_vision, start_time)
         
-        # Initialize agent-specific state
+        # Initialize risk factors first
+        self.state["risk_factors"] = risk_factors or {}
+        
+        # Calculate progression rate based on risk factors
+        progression_rate = self._calculate_progression_rate()
+        
+        # Add remaining agent-specific state
         self.state.update({
-            "risk_factors": risk_factors or {},
             "treatment_adherence": 1.0,  # Base adherence rate
             "missed_appointments": 0,
             "treatment_decisions": [],
-            "disease_progression_rate": self._calculate_progression_rate(),
+            "disease_progression_rate": progression_rate,
             "quality_of_life": self._calculate_qol(),
             "last_decision_time": start_time,
             "treatment_outcomes": {
