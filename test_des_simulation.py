@@ -4,7 +4,7 @@ from simulation.config import SimulationConfig
 from simulation import DiscreteEventSimulation, Event
 from protocol_parser import load_protocol
 from visualization.timeline_viz import print_patient_timeline
-from visualization.acuity_viz import plot_patient_acuity, plot_multiple_patients, plot_mean_acuity
+from visualization.outcome_viz import OutcomeVisualizer
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -69,24 +69,23 @@ def run_test_des_simulation(config: Optional[SimulationConfig] = None, verbose: 
         
         # Generate acuity plots if enabled in config
         if config.get_output_params().get("plots", False):
-            # Individual patient trajectories
-            plot_multiple_patients(
-                patient_histories, 
-                start_date, 
-                end_date,
-                title="Discrete Event Simulation: Individual Patient Trajectories",
-                show=False,
-                save_path="des_individual_trajectories.png"
-            )
+            # Create visualizer
+            viz = OutcomeVisualizer()
             
-            # Mean acuity with confidence intervals
-            plot_mean_acuity(
+            # Plot mean acuity with confidence intervals
+            viz.plot_mean_acuity(
                 patient_histories,
-                start_date,
-                end_date,
                 title="Discrete Event Simulation: Mean Visual Acuity",
                 show=False,
                 save_path="des_mean_acuity.png"
+            )
+            
+            # Plot patient retention
+            viz.plot_patient_retention(
+                patient_histories,
+                title="Discrete Event Simulation: Patient Retention",
+                show=False,
+                save_path="des_patient_retention.png"
             )
         
         return patient_histories
