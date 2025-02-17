@@ -63,15 +63,21 @@
    - Update the Configuration System to include new clinical parameters, ensure backward compatibility, create migration utilities, and update validation schemas
    - Finalize Testing & Validation by adding an integration test suite and performance benchmarks
 
-2. Review and update the Configuration Requirements to ensure they align with the latest changes in the clinical model
+2. Implement visualization capabilities for comparing simulation runs:
+   - Create a new visualization module for comparing mean acuity between DES and ABS models
+   - Ensure the new visualization is similar to the existing 'des_mean_acuity.png'
+   - Add functionality to overlay results from both models on the same graph
+   - Implement options for customizing the visualization (e.g., time range, patient subgroups)
 
-3. Begin planning for the next phases:
-   - Visualization Improvements
+3. Review and update the Configuration Requirements to ensure they align with the latest changes in the clinical model
+
+4. Begin planning for the next phases:
+   - Further Visualization Improvements
    - Analysis Methods Enhancement
 
-4. Conduct a comprehensive review of the entire ABS implementation to ensure consistency and alignment with project goals
+5. Conduct a comprehensive review of the entire ABS implementation to ensure consistency and alignment with project goals
 
-5. Update documentation to reflect recent changes and additions to the clinical model
+6. Update documentation to reflect recent changes and additions to the clinical model, including the new visualization capabilities
 
 ## Future Phases
 4. Configuration System Updates
