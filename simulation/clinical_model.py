@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List, Optional
 import numpy as np
 
 class ClinicalModel:
