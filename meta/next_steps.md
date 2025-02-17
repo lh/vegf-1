@@ -1,68 +1,66 @@
-# DES Simulation Refactoring Status
+# Implementation Plan for ABS Improvements
 
-## Completed Changes
+# ABS Implementation Progress
 
-The refactoring of the Discrete Event Simulation (DES) to handle clinic capacity on a daily basis has been completed. The following changes have been implemented:
+## Completed
+1. Patient Generation Enhancement (Phase 1)
+   - ✓ Implemented ABSPatientGenerator class
+   - ✓ Added risk factor generation
+   - ✓ Implemented disease activity calculation
+   - ✓ Added baseline vision generation
+   - ✓ Created comprehensive test suite
 
-1. Updated SimulationConfig:
-   - Changed DES parameters to focus on daily capacity
-   - Added days_per_week parameter
-   - Removed minute-based scheduling parameters
+## Next Phase (Start New Conversation)
+2. Agent State Management
+   - [ ] Create AgentState class
+   - [ ] Implement timeline alignment
+   - [ ] Add outcome tracking
+   - [ ] Create state management tests
+   - [ ] Integrate with clinical model
 
-2. Updated DES implementation (simulation/des.py):
-   - Removed minute-based resource tracking
-   - Added daily slot tracking
-   - Updated visit handling to work with daily capacity
-   - Implemented clinic day awareness (Mon-Fri by default)
-   - Changed rescheduling logic to work with days instead of minutes
-   - Removed schedule_resource_release method
-   - Removed resource utilization tracking
-   - Updated visit data structure to use actions_performed
+3. Future Phases
+   - [ ] Clinical Model Integration
+   - [ ] Configuration System Updates
+   - [ ] Visualization Improvements
+   - [ ] Analysis Methods Enhancement
 
-3. Updated test infrastructure:
-   - Modified test configuration to use daily_capacity and days_per_week
-   - Updated test output to show scheduling statistics
-   - Removed obsolete resource utilization reporting
+## Implementation Details
 
-## Testing Results
+### AgentState Class (Next Phase)
+The AgentState class will need to:
+- Handle patient state transitions
+- Track treatment history
+- Manage visit timelines
+- Calculate and store outcomes
+- Interface with clinical model
 
-The DES simulation refactoring has been successfully verified:
+### Configuration Requirements
+```yaml
+abs_parameters:
+  patient_generation:
+    rate_per_week: 3
+    random_seed: 42
+  clinic_capacity:
+    daily_slots: 20
+    days_per_week: 5
+  outcome_measures:
+    vision_improvement_threshold: 5
+    treatment_success_threshold: 70
+```
 
-1. Daily Capacity Management:
-   - Correctly using configured daily_capacity (20 patients/day)
-   - Properly respecting days_per_week (5 days, Mon-Fri)
-   - All 7 test patients receiving scheduled visits
-   - Minimal rescheduling needed (14 rescheduled visits total)
+## Testing Strategy
+- Unit tests for each component
+- Integration tests for full workflow
+- Validation against DES results
+- Performance benchmarking
 
-2. Visit Scheduling:
-   - All visits occur on weekdays (Mon-Fri)
-   - Proper week-based intervals (4 weeks loading, 12 weeks maintenance)
-   - No queue_full_events observed
-   - Visits distributed efficiently across available clinic days
+## Expected Benefits
+1. More Realistic Patient Flow
+2. Better State Management
+3. Improved Analysis Capabilities
+4. Enhanced Configurability
 
-3. Patient Outcomes:
-   - All patients completed expected visits (12 visits each)
-   - Vision improvements tracked and recorded
-   - Phase transitions (loading to maintenance) working correctly
-   - Visit histories properly maintained
-
-## Next Steps
-
-1. Consider Additional Optimizations:
-   - Review rescheduling algorithm for further improvements
-   - Analyze visit distribution patterns
-   - Consider adding capacity utilization metrics
-
-2. Documentation:
-   - Update design documentation with new scheduling approach
-   - Document configuration parameters and their effects
-
-## Key Concepts
-
-The refactoring has moved from a minute-by-minute resource management model to a more realistic daily capacity model that:
-- Tracks available slots per day
-- Respects clinic working days (e.g. Mon-Fri)
-- Schedules follow-up visits in weeks
-- Better reflects how real clinics operate
-
-This should eliminate the unrealistic queue_full_events and provide a more accurate simulation of clinic operations.
+## Notes
+- Start new conversation for AgentState implementation
+- Maintain test coverage throughout
+- Document design decisions
