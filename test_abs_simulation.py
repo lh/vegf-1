@@ -36,6 +36,18 @@ def run_test_simulation(config: Optional[SimulationConfig] = None, verbose: bool
             patient_id = f"TEST{i:03d}"
             sim.add_patient(patient_id, "treat_and_extend")
             
+            # Log initial state (zero-time output)
+            if verbose:
+                print(f"\nInitial state for Patient {patient_id}:")
+                print(f"Time: {start_date}")
+                if patient_id in sim.agents:
+                    patient_state = sim.agents[patient_id].state
+                    print(f"Disease State: {patient_state.state['disease_state']}")
+                    print(f"Vision: {patient_state.state['current_vision']}")
+                else:
+                    print("Patient state not available yet")
+                print("---")
+            
             # Schedule initial visit with proper data structure
             sim.clock.schedule_event(Event(
                 time=start_date + timedelta(minutes=30*(i-1)),
@@ -93,10 +105,11 @@ def run_test_simulation(config: Optional[SimulationConfig] = None, verbose: bool
             visit_dates = [visit['date'] for visit in history]
             
             print(f"\nDetailed disease state transitions for Patient {patient_id}:")
-            for i, (state, date) in enumerate(zip(disease_states, visit_dates)):
-                print(f"Visit {i+1}: Date: {date}, State: {state}")
+            print(f"Initial state: NAIVE")
+            for i, (state, date) in enumerate(zip(disease_states, visit_dates), start=1):
+                print(f"Visit {i}: Date: {date}, State: {state}")
             
-            unique_states = set(disease_states)
+            unique_states = set(disease_states) | {'NAIVE'}
             print(f"Unique states: {unique_states}")
             
             # Assert that disease states are changing
