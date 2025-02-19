@@ -8,6 +8,7 @@ from visualization.timeline_viz import print_patient_timeline
 from visualization.acuity_viz import plot_patient_acuity, plot_multiple_patients
 from simulation.clinical_model import DiseaseState
 import logging
+from datetime import datetime, timedelta
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -104,36 +105,58 @@ def run_test_simulation(config: Optional[SimulationConfig] = None, verbose: bool
             disease_states = [visit['disease_state'] for visit in history]
             visit_dates = [visit['date'] for visit in history]
             
-            print(f"\nDetailed disease state transitions for Patient {patient_id}:")
-            print(f"Initial state: NAIVE")
+            logger.debug(f"\nDetailed disease state transitions for Patient {patient_id}:")
+            logger.debug(f"Initial state: NAIVE")
             for i, (state, date) in enumerate(zip(disease_states, visit_dates), start=1):
-                print(f"Visit {i}: Date: {date}, State: {state}")
+                logger.debug(f"Visit {i}: Date: {date}, State: {state}")
             
             unique_states = set(disease_states) | {'NAIVE'}
-            print(f"Unique states: {unique_states}")
+            logger.debug(f"Unique states: {unique_states}")
             
-            # Assert that disease states are changing
-            if len(unique_states) <= 1:
-                print(f"WARNING: Patient {patient_id} did not have any disease state transitions")
+            # Assert that disease states are changing after a minimum number of visits
+            min_visits_for_transition = 3
+            if len(visit_dates) >= min_visits_for_transition:
+                assert len(unique_states) > 1, f"Patient {patient_id} did not have any disease state transitions after {min_visits_for_transition} visits"
+                logger.debug(f"Patient {patient_id} had {len(unique_states)} different disease states")
             else:
-                print(f"Patient {patient_id} had {len(unique_states)} different disease states")
+                logger.debug(f"Not enough visits to check for state transitions for Patient {patient_id}")
             
             # Assert that all disease states are valid
             valid_states = set(DiseaseState)
             invalid_states = [state for state in unique_states if DiseaseState[state.upper()] not in valid_states]
-            if invalid_states:
-                print(f"WARNING: Invalid disease states found for Patient {patient_id}: {invalid_states}")
-            else:
-                print(f"All disease states are valid for Patient {patient_id}")
+            assert not invalid_states, f"Invalid disease states found for Patient {patient_id}: {invalid_states}"
+            logger.debug(f"All disease states are valid for Patient {patient_id}")
             
-            # Check visit intervals
-            for i in range(1, len(visit_dates)):
-                interval = (visit_dates[i] - visit_dates[i-1]).days // 7
-                assert 4 <= interval <= 12, f"Invalid visit interval for Patient {patient_id}: {interval} weeks"
+            # Verify fixed schedule adherence
+            expected_months = [0, 1, 2, 4, 6, 8, 10, 12]
+            expected_weeks = [0, 4, 9, 18, 27, 36, 44, 52]
+            actual_weeks = [(d - start_date).days // 7 for d in visit_dates[:8]]
+            logger.debug(f"Expected weeks: {expected_weeks}")
+            logger.debug(f"Actual weeks: {actual_weeks}")
+            for i, (expected, actual) in enumerate(zip(expected_weeks, actual_weeks)):
+                assert abs(expected - actual) <= 1, f"Fixed schedule mismatch for Patient {patient_id} at visit {i+1}: Expected week {expected}, got week {actual}"
+            logger.debug(f"Fixed schedule adherence verified for Patient {patient_id}")
+            
+            # Verify HIGHLY_ACTIVE handling
+            highly_active_count = disease_states.count("highly_active")
+            logger.debug(f"HIGHLY_ACTIVE occurrences: {highly_active_count}")
+            if highly_active_count > 0:
+                assert highly_active_count <= 5, f"Unexpected number of HIGHLY_ACTIVE occurrences: {highly_active_count}"
+                highly_active_index = disease_states.index("highly_active")
+                assert visit_dates[highly_active_index].month < 12, "HIGHLY_ACTIVE state occurred after loading phase"
+                logger.debug("Handled HIGHLY_ACTIVE state during loading phase")
             
             # Check number of injections
-            injections = sum(1 for visit in history if 'injection' in visit.get('actions', []))
-            assert injections > 0, f"Patient {patient_id} did not receive any injections"
+            injections = sum(1 for visit in history[:8] if 'injection' in visit.get('actions', []))
+            assert injections == 8, f"Patient {patient_id} did not receive exactly 8 injections in the first year"
+            logger.debug(f"Patient {patient_id} received {injections} injections in the first year")
+
+            # Add timeline logging
+            logger.debug(f"Visit timeline for Patient {patient_id}:")
+            for i, (date, state) in enumerate(zip(visit_dates, disease_states), start=1):
+                phase = "initial_loading" if i <= 8 else "maintenance"
+                next_visit = visit_dates[i] if i < len(visit_dates) else "N/A"
+                logger.debug(f"Visit {i}: Phase: {phase} | State: {state} | Date: {date} | Next Visit: {next_visit}")
 
         return patient_histories
             
