@@ -6,9 +6,10 @@ from simulation import AgentBasedSimulation, Event
 from protocol_parser import load_protocol
 from visualization.timeline_viz import print_patient_timeline
 from visualization.acuity_viz import plot_patient_acuity, plot_multiple_patients
+from simulation.clinical_model import DiseaseState
 import logging
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 def run_test_simulation(config: Optional[SimulationConfig] = None, verbose: bool = False):
@@ -27,23 +28,24 @@ def run_test_simulation(config: Optional[SimulationConfig] = None, verbose: bool
             logger.info("Initializing simulation...")
         sim = AgentBasedSimulation(config, start_date)
         
+        # Set end date before adding patients
+        sim.clock.end_date = end_date
+        
         # Add test patients
-        initial_visit = {
-            "visit_type": "injection_visit",
-            "actions": ["vision_test", "oct_scan", "injection"],
-            "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
-        }
-
-        for i in range(1, 8):  # Create patients TEST001 through TEST007
+        for i in range(1, config.num_patients + 1):
             patient_id = f"TEST{i:03d}"
             sim.add_patient(patient_id, "treat_and_extend")
             
-            # Schedule initial visit
+            # Schedule initial visit with proper data structure
             sim.clock.schedule_event(Event(
                 time=start_date + timedelta(minutes=30*(i-1)),
                 event_type="visit",
                 patient_id=patient_id,
-                data={"visit_type": initial_visit},
+                data={
+                    "visit_type": "injection_visit",
+                    "actions": ["vision_test", "oct_scan", "injection"],
+                    "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
+                },
                 priority=1
             ))
             
@@ -75,7 +77,7 @@ def run_test_simulation(config: Optional[SimulationConfig] = None, verbose: bool
             print("-----------------")
             for patient_id, patient in sim.agents.items():
                 print(f"\nPatient {patient_id}:")
-                for key, value in patient.state.items():
+                for key, value in patient.get_state_dict().items():
                     print(f"{key}: {value}")
                     
         # Generate combined acuity plot (suppressed but code kept for future use)
@@ -84,6 +86,42 @@ def run_test_simulation(config: Optional[SimulationConfig] = None, verbose: bool
                                  title="Agent-Based Simulation: Visual Acuity Over Time",
                                  show=False)  # Add show=False parameter
         
+        # Verify disease state transitions and visit intervals
+        for patient_id, patient in sim.agents.items():
+            history = patient.state.visit_history
+            disease_states = [visit['disease_state'] for visit in history]
+            visit_dates = [visit['date'] for visit in history]
+            
+            print(f"\nDetailed disease state transitions for Patient {patient_id}:")
+            for i, (state, date) in enumerate(zip(disease_states, visit_dates)):
+                print(f"Visit {i+1}: Date: {date}, State: {state}")
+            
+            unique_states = set(disease_states)
+            print(f"Unique states: {unique_states}")
+            
+            # Assert that disease states are changing
+            if len(unique_states) <= 1:
+                print(f"WARNING: Patient {patient_id} did not have any disease state transitions")
+            else:
+                print(f"Patient {patient_id} had {len(unique_states)} different disease states")
+            
+            # Assert that all disease states are valid
+            valid_states = set(DiseaseState)
+            invalid_states = [state for state in unique_states if DiseaseState[state.upper()] not in valid_states]
+            if invalid_states:
+                print(f"WARNING: Invalid disease states found for Patient {patient_id}: {invalid_states}")
+            else:
+                print(f"All disease states are valid for Patient {patient_id}")
+            
+            # Check visit intervals
+            for i in range(1, len(visit_dates)):
+                interval = (visit_dates[i] - visit_dates[i-1]).days // 7
+                assert 4 <= interval <= 12, f"Invalid visit interval for Patient {patient_id}: {interval} weeks"
+            
+            # Check number of injections
+            injections = sum(1 for visit in history if 'injection' in visit.get('actions', []))
+            assert injections > 0, f"Patient {patient_id} did not receive any injections"
+
         return patient_histories
             
     except Exception as e:
@@ -91,4 +129,4 @@ def run_test_simulation(config: Optional[SimulationConfig] = None, verbose: bool
         raise
 
 if __name__ == "__main__":
-    run_test_simulation()
+    run_test_simulation(verbose=True)
