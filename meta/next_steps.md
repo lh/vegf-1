@@ -40,48 +40,51 @@
      * Implemented validation against real patterns
 
 ## Current Phase
-3. Clinical Model Integration (Continued)
-   - [ ] Advanced OCT Modeling (Completion)
-     * Implement anatomical constraints
-     * Add biomarker tracking
-   - [ ] Risk Factor Integration (Completion)
-     * Implement time-dependent evolution
-     * Create risk factor validation tests
-   - [ ] Configuration System Updates
-     * Add new clinical parameters
-     * Maintain backward compatibility
-     * Create migration utilities
-     * Update validation schemas
-   - [ ] Testing & Validation (Completion)
-     * Add integration test suite
-     * Add performance benchmarks
+3. Core Clinical Model Validation and Visualization
+   - [✓] Simplify clinical state transitions
+   - [✓] Implement basic acuity-treatment relationships
+   - [✓] Create visualization comparison system
+   - [✓] Implement fixed 8-injection schedule for the first year
+   - [✓] Improve HIGHLY_ACTIVE state handling and reporting
+   - [ ] Ensure configuration backward compatibility
+   - [ ] Develop validation tests for real-data patterns
+   - [✓] Update documentation for current scope
 
 ## Next Steps
-1. Complete the remaining tasks in the Clinical Model Integration phase:
-   - Finish Advanced OCT Modeling by implementing anatomical constraints and adding biomarker tracking
-   - Complete Risk Factor Integration by implementing time-dependent evolution and creating validation tests
-   - Update the Configuration System to include new clinical parameters, ensure backward compatibility, create migration utilities, and update validation schemas
-   - Finalize Testing & Validation by adding an integration test suite and performance benchmarks
+1. Finalize Core Clinical Model Implementation:
+   - [✓] Review and refine simplified state transitions and acuity relationships
+   - [ ] Optimize fixed injection schedule implementation in simulation/abs.py
+   - [ ] Enhance disease state transition logic in simulation/patient_state.py
+   - [ ] Update configuration schemas with minimal required parameters
 
-2. Implement visualization capabilities for comparing simulation runs:
-   - Create a new visualization module for comparing mean acuity between DES and ABS models
-   - Ensure the new visualization is similar to the existing 'des_mean_acuity.png'
-   - Add functionality to overlay results from both models on the same graph
-   - Implement options for customizing the visualization (e.g., time range, patient subgroups)
+2. Enhanced Validation System:
+   - [ ] Add real-data pattern validation tests
+   - [ ] Implement visualization output validation
+   - [ ] Ensure backward compatibility testing
+   - [ ] Add comprehensive assertions for disease state transitions and HIGHLY_ACTIVE occurrences in test_abs_simulation.py
 
-3. Review and update the Configuration Requirements to ensure they align with the latest changes in the clinical model
+3. Visualization Refinement:
+   - [ ] Test the new comparison visualization by running full simulations
+   - [ ] Refine visualization options (e.g., time range, patient subgroups)
+   - [ ] Ensure consistency in styling between individual and comparison plots
+   - [ ] Add disease state transition visualization
 
-4. Begin planning for the next phases:
-   - Further Visualization Improvements
-   - Analysis Methods Enhancement
+4. Configuration and Documentation Updates:
+   - [ ] Review and update the Configuration Requirements
+   - [ ] Update design_decisions.md to reflect the rationale behind the fixed injection schedule and HIGHLY_ACTIVE state handling
+   - [ ] Update documentation for the new visualization capabilities
 
-5. Conduct a comprehensive review of the entire ABS implementation to ensure consistency and alignment with project goals
+5. Statistical Analysis Enhancement:
+   - [ ] Implement analysis of HIGHLY_ACTIVE state occurrences and their impact on treatment outcomes
+   - [ ] Add statistical summaries to the simulation results
 
-6. Update documentation to reflect recent changes and additions to the clinical model, including the new visualization capabilities
+6. Comprehensive Review and Planning:
+   - [ ] Conduct a comprehensive review of the entire ABS implementation
+   - [ ] Ensure consistency and alignment with project goals
+   - [ ] Begin planning for the next phases (Further Visualization Improvements, Analysis Methods Enhancement)
 
 ## Future Phases
-4. Configuration System Updates
-5. Visualization Improvements
-6. Analysis Methods Enhancement
-
-[The rest of the file content remains unchanged]
+1. Advanced Risk Factor System
+2. OCT Modeling Integration
+3. Analysis Methods Enhancement
+4. Real-world Data Integration and Validation

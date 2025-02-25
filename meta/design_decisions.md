@@ -12,5 +12,7 @@
 10. **Decision Pipeline**: Structured nurse->doctor decision flow matching clinical practice
 11. **Vision Modeling**: Realistic vision change simulation with treatment memory and ceiling effects
 12. **DES Event Scheduling**: End date must be set before adding patients to ensure proper event validation
-13. **Resource Management**: Adequate resource capacity needed to prevent infinite rescheduling loops
-14. **Event Processing**: Strict event processing order with proper resource allocation/release tracking
+13. **Daily Capacity Model**: Using daily slot allocation and clinic day awareness (Mon-Fri) to better reflect real clinic operations
+14. **Event Processing**: Strict event processing order with visit scheduling based on daily capacity limits
+15. **Clinic Scheduling**: Rescheduling logic respects working days and daily patient limits to prevent overloading
+16. **Simplified Clinical Model**: Implemented a streamlined disease state model with three states (STABLE, ACTIVE, HIGHLY_ACTIVE) and fixed transition probabilities. This simplification allows for easier validation and calibration while still capturing the essential dynamics of AMD progression. Vision changes are modeled using normal distributions, differentiating between injection and non-injection visits, to maintain biological plausibility while reducing complexity.
