@@ -42,7 +42,8 @@ def main():
     
     # Set logging level based on debug flag
     if args.debug:
-        logging.getLogger().setLevel(logging.DEBUG)
+        # Use INFO level instead of DEBUG to reduce output volume
+        logging.getLogger().setLevel(logging.INFO)
     
     # Set up output directory
     output_dir = Path(args.output)

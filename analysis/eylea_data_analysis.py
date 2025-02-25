@@ -76,8 +76,8 @@ class EyleaDataAnalyzer:
         self.injection_intervals = None
         self.va_trajectories = None
         
-        # Debug flag to control verbose output
-        self.debug = True
+        # Debug flag to control verbose output - set to False to reduce output
+        self.debug = False
         
         # Track column mapping used
         self.column_mapping_used = {}
