@@ -15,13 +15,17 @@ from pathlib import Path
 import re
 from typing import Dict, List, Optional, Tuple, Set, Any, Union
 
-# Set up logging with DEBUG statements
+# Set up logging with ERROR level to minimize output
 import logging
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.ERROR,  # Set to ERROR to minimize output
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Suppress matplotlib and PIL debug messages
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
+logging.getLogger('PIL').setLevel(logging.WARNING)
 
 class EyleaDataAnalyzer:
     """Analyzer for Eylea treatment data to derive simulation parameters."""
@@ -38,6 +42,7 @@ class EyleaDataAnalyzer:
         'Date of 1st Injection': ['Date of 1st Injection', 'First Injection Date', 
                                   'Initial Treatment Date', 'First Treatment Date'],
         'Current Age': ['Current Age', 'Age', 'Patient Age'],
+        'Age at Death': ['Age at Death', 'Death Age', 'Age When Deceased', 'Deceased Age'],
         'Gender': ['Gender', 'Sex'],
         'Eye': ['Eye', 'Treated Eye'],
         'Deceased': ['Deceased', 'Death', 'Mortality'],
@@ -55,6 +60,8 @@ class EyleaDataAnalyzer:
         'Baseline CRT': {'type': float, 'min': 0, 'max': 1000, 'required': False},
         'Date of 1st Injection': {'type': 'datetime', 'required': False},
         'Current Age': {'type': float, 'min': 0, 'max': 120, 'required': False},
+        'Age at Death': {'type': float, 'min': 0, 'max': 120, 'required': False},
+        'Deceased': {'type': int, 'min': 0, 'max': 1, 'required': False},
         'Days Since Last Injection': {'type': float, 'min': 0, 'max': 365, 'required': False},
         'CRT at Injection': {'type': float, 'min': 0, 'max': 1000, 'required': False}
     }
@@ -89,7 +96,8 @@ class EyleaDataAnalyzer:
             'missing_values': {},
             'outliers': {},
             'temporal_anomalies': {},
-            'column_mapping': {}
+            'column_mapping': {},
+            'age_adjustments': {}
         }
     
     def load_data(self):
@@ -274,6 +282,43 @@ class EyleaDataAnalyzer:
                 validation_warnings.append(warning_msg)
                 logger.warning(warning_msg)
         
+        # Validate deceased status and age fields
+        if 'Deceased' in self.data.columns:
+            # Convert to numeric if not already
+            self.data['Deceased'] = pd.to_numeric(self.data['Deceased'], errors='coerce')
+            
+            # Check deceased=1 cases
+            deceased_true = self.data['Deceased'] == 1
+            if deceased_true.any():
+                if 'Age at Death' not in self.data.columns:
+                    error_msg = "'Age at Death' column required when Deceased=1"
+                    validation_errors.append(error_msg)
+                    logger.error(error_msg)
+                elif self.data.loc[deceased_true, 'Age at Death'].isna().any():
+                    warning_msg = "Some deceased patients are missing Age at Death"
+                    validation_warnings.append(warning_msg)
+                    logger.warning(warning_msg)
+                
+                # Check if deceased patients have Current Age (they shouldn't)
+                if 'Current Age' in self.data.columns and self.data.loc[deceased_true, 'Current Age'].notna().any():
+                    warning_msg = "Deceased patients should not have Current Age"
+                    validation_warnings.append(warning_msg)
+                    logger.warning(warning_msg)
+            
+            # Check deceased=0 cases
+            deceased_false = self.data['Deceased'] == 0
+            if deceased_false.any():
+                if 'Current Age' in self.data.columns and self.data.loc[deceased_false, 'Current Age'].isna().any():
+                    warning_msg = "Some living patients are missing Current Age"
+                    validation_warnings.append(warning_msg)
+                    logger.warning(warning_msg)
+                
+                # Check if living patients have Age at Death (they shouldn't)
+                if 'Age at Death' in self.data.columns and self.data.loc[deceased_false, 'Age at Death'].notna().any():
+                    warning_msg = "Living patients should not have Age at Death"
+                    validation_warnings.append(warning_msg)
+                    logger.warning(warning_msg)
+        
         # Check temporal sequence integrity
         if 'UUID' in self.data.columns and 'Injection Date' in self.data.columns:
             # Group by patient and check date ordering
@@ -341,6 +386,45 @@ class EyleaDataAnalyzer:
                         first_va = patient_data['VA Letter Score at Injection'].iloc[0]
                         self.data.loc[(self.data['UUID'] == patient_id) & missing_baseline, 'Baseline VA Letter Score'] = first_va
                         logger.debug(f"Set Baseline VA for patient {patient_id} to {first_va}")
+        
+        # Handle age data based on deceased status
+        if 'Deceased' in self.data.columns:
+            # For deceased patients, ensure Age at Death is used
+            deceased_patients = self.data['Deceased'] == 1
+            if deceased_patients.any() and 'Age at Death' in self.data.columns:
+                logger.info(f"Processing age data for {deceased_patients.sum()} deceased patients")
+                
+                # Remove Current Age for deceased patients if present
+                if 'Current Age' in self.data.columns:
+                    self.data.loc[deceased_patients, 'Current Age'] = np.nan
+                    logger.debug("Removed Current Age for deceased patients")
+        
+        # Adjust Current Age by adding 0.5 years
+        if 'Current Age' in self.data.columns:
+            # Only adjust for non-deceased patients
+            if 'Deceased' in self.data.columns:
+                living_patients = (self.data['Deceased'] != 1) | self.data['Deceased'].isna()
+                self.data.loc[living_patients, 'Adjusted Age'] = self.data.loc[living_patients, 'Current Age'] + 0.5
+            else:
+                self.data['Adjusted Age'] = self.data['Current Age'] + 0.5
+                
+            logger.info("Added 'Adjusted Age' column (+0.5 years to Current Age)")
+            
+            # Track age adjustments in data quality report
+            self.data_quality_report['age_adjustments'] = {
+                'adjustment_factor': 0.5,
+                'adjusted_records': len(self.data[self.data['Adjusted Age'].notna()]),
+                'description': "Added 0.5 years to Current Age to account for temporal alignment"
+            }
+            
+            # Calculate estimated birth date if injection dates exist
+            if 'Injection Date' in self.data.columns:
+                # Convert age in years to days
+                age_in_days = self.data['Adjusted Age'] * 365.25
+                
+                # Subtract from injection date to get estimated birth date
+                self.data['Estimated Birth Date'] = self.data['Injection Date'] - pd.to_timedelta(age_in_days, unit='D')
+                logger.info("Added 'Estimated Birth Date' based on Adjusted Age and Injection Date")
         
         # Handle missing Days Since Last Injection by calculating from dates
         if 'Injection Date' in self.data.columns and 'UUID' in self.data.columns:
@@ -536,6 +620,15 @@ class EyleaDataAnalyzer:
                     f.write(f"  {col}: {count} ({percentage:.2f}%)\n")
             f.write("\n")
             
+            # Write age adjustments
+            if 'age_adjustments' in self.data_quality_report:
+                f.write("AGE DATA PROCESSING:\n")
+                age_adj = self.data_quality_report['age_adjustments']
+                f.write(f"  Adjustment factor: +{age_adj.get('adjustment_factor', 0.5)} years\n")
+                f.write(f"  Adjusted records: {age_adj.get('adjusted_records', 0)}\n")
+                f.write(f"  Description: {age_adj.get('description', 'Age adjustment applied')}\n")
+                f.write("\n")
+            
             # Write temporal anomalies
             f.write("TEMPORAL ANOMALIES:\n")
             f.write(f"  Sequence errors: {self.data_quality_report.get('temporal_anomalies', {}).get('sequence_errors', 0)}\n")
@@ -577,13 +670,15 @@ class EyleaDataAnalyzer:
             patient_info = {
                 'patient_id': patient_id,
                 'age': first_row.get('Current Age', np.nan),
+                'adjusted_age': first_row.get('Adjusted Age', np.nan),
                 'gender': first_row.get('Gender', 'Unknown'),
                 'eye': first_row.get('Eye', 'Unknown'),
                 'baseline_va': first_row.get('Baseline VA Letter Score', np.nan),
                 'baseline_crt': first_row.get('Baseline CRT', np.nan),
                 'first_injection_date': first_row.get('Date of 1st Injection', np.nan),
                 'injection_count': len(patient_rows),
-                'deceased': first_row.get('Deceased', 0)
+                'deceased': int(first_row.get('Deceased', 0)),  # Ensure it's an integer
+                'age_at_death': first_row.get('Age at Death', np.nan)
             }
             
             # Calculate treatment duration if possible
@@ -681,23 +776,60 @@ class EyleaDataAnalyzer:
                 
                 # Extract VA at each injection
                 for i, row in enumerate(patient_rows.itertuples()):
-                    injection_date = getattr(row, 'Injection Date', None)
-                    va_score = getattr(row, 'VA Letter Score at Injection', np.nan)
+                    # Get injection date - handle different column name formats in namedtuples
+                    injection_date = None
+                    try:
+                        # Try direct attribute access first
+                        if hasattr(row, 'Injection Date'):
+                            injection_date = getattr(row, 'Injection Date')
+                        # Try underscore version next
+                        elif hasattr(row, 'Injection_Date'):
+                            injection_date = row.Injection_Date
+                        # If still not found, try index-based access using the original DataFrame
+                        else:
+                            row_idx = row.Index if hasattr(row, 'Index') else i
+                            if 'Injection Date' in patient_rows.columns:
+                                injection_date = patient_rows.iloc[i]['Injection Date']
+                    except Exception as e:
+                        logger.warning(f"Error accessing injection date for patient {patient_id}: {str(e)}")
+                        injection_date = None
                     
+                    # Get VA score - handle different column name formats
+                    va_score = np.nan
+                    try:
+                        # Try direct attribute access first
+                        if hasattr(row, 'VA Letter Score at Injection'):
+                            va_score = getattr(row, 'VA Letter Score at Injection')
+                        # Try underscore version next
+                        elif hasattr(row, 'VA_Letter_Score_at_Injection'):
+                            va_score = row.VA_Letter_Score_at_Injection
+                        # If still not found, try index-based access using the original DataFrame
+                        else:
+                            row_idx = row.Index if hasattr(row, 'Index') else i
+                            if 'VA Letter Score at Injection' in patient_rows.columns:
+                                va_score = patient_rows.iloc[i]['VA Letter Score at Injection']
+                    except Exception as e:
+                        logger.warning(f"Error accessing VA score for patient {patient_id}: {str(e)}")
+                        va_score = np.nan
+                    
+                    # Only add valid data points
                     if pd.notna(injection_date) and pd.notna(va_score):
-                        # Calculate days from first injection
-                        first_date = pd.to_datetime(patient_rows.iloc[0]['Injection Date'])
-                        current_date = pd.to_datetime(injection_date)
-                        days_from_first = (current_date - first_date).days
-                        
-                        va_data.append({
-                            'patient_id': patient_id,
-                            'injection_number': i,
-                            'days_from_first': days_from_first,
-                            'va_score': va_score,
-                            'baseline_va': baseline_va,
-                            'va_change': va_score - baseline_va if pd.notna(baseline_va) else np.nan
-                        })
+                        try:
+                            # Calculate days from first injection
+                            first_date = pd.to_datetime(patient_rows.iloc[0]['Injection Date'])
+                            current_date = pd.to_datetime(injection_date)
+                            days_from_first = (current_date - first_date).days
+                            
+                            va_data.append({
+                                'patient_id': patient_id,
+                                'injection_number': i,
+                                'days_from_first': days_from_first,
+                                'va_score': float(va_score),  # Ensure numeric type
+                                'baseline_va': baseline_va,
+                                'va_change': float(va_score) - baseline_va if pd.notna(baseline_va) else np.nan
+                            })
+                        except Exception as e:
+                            logger.warning(f"Error processing VA trajectory for patient {patient_id}: {str(e)}")
         
         self.va_trajectories = pd.DataFrame(va_data)
         logger.debug(f"Created va_trajectories DataFrame with {len(self.va_trajectories)} rows")
@@ -941,6 +1073,10 @@ class EyleaDataAnalyzer:
     
     def run_analysis(self):
         """Run the complete analysis pipeline."""
+        # Reduce debug output
+        import logging
+        logging.getLogger('matplotlib').setLevel(logging.WARNING)
+        logging.getLogger('PIL').setLevel(logging.WARNING)
         logger.info("Starting Eylea data analysis")
         
         # Load and clean data

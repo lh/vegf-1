@@ -10,6 +10,7 @@ import numpy as np
 from pathlib import Path
 import tempfile
 import shutil
+from datetime import datetime, timedelta
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
@@ -24,15 +25,21 @@ class TestEyleaDataAnalyzer(unittest.TestCase):
         # Create a temporary directory for output
         self.temp_dir = tempfile.mkdtemp()
         
-        # Create a small test dataset
+        # Create an enhanced test dataset with more data points for better visualization
         self.test_data = pd.DataFrame({
-            'UUID': ['P001', 'P001', 'P001', 'P002', 'P002'],
-            'Injection Date': ['2023-01-01', '2023-02-01', '2023-03-01', '2023-01-15', '2023-03-15'],
-            'VA Letter Score at Injection': [60, 65, 70, 50, 55],
-            'Baseline VA': [60, 60, 60, 50, 50],
-            'Current Age': [75, 75, 75, 80, 80],
-            'Gender': ['Female', 'Female', 'Female', 'Male', 'Male'],
-            'Eye': ['Right Eye', 'Right Eye', 'Right Eye', 'Left Eye', 'Left Eye']
+            'UUID': ['P001']*6 + ['P002']*4,
+            'Injection Date': [
+                '2023-01-01', '2023-02-01', '2023-03-01', 
+                '2023-04-01', '2023-05-01', '2023-06-01',
+                '2023-01-15', '2023-03-15', '2023-05-15', '2023-07-15'
+            ],
+            'VA Letter Score at Injection': [60, 65, 70, 75, 80, 85, 50, 55, 60, 65],
+            'Baseline VA': [60, 60, 60, 60, 60, 60, 50, 50, 50, 50],
+            'Current Age': [75, 75, 75, 75, 75, 75, 80, 80, 80, 80],
+            'Gender': ['Female', 'Female', 'Female', 'Female', 'Female', 'Female', 
+                      'Male', 'Male', 'Male', 'Male'],
+            'Eye': ['Right Eye', 'Right Eye', 'Right Eye', 'Right Eye', 'Right Eye', 'Right Eye',
+                   'Left Eye', 'Left Eye', 'Left Eye', 'Left Eye']
         })
         
         # Save test data to a temporary CSV file
@@ -89,8 +96,10 @@ class TestEyleaDataAnalyzer(unittest.TestCase):
         """Test handling of temporal anomalies."""
         # Create data with out-of-sequence dates
         test_data_anomaly = self.test_data.copy()
-        test_data_anomaly['Injection Date'] = ['2023-03-01', '2023-01-01', '2023-02-01', 
-                                              '2023-03-15', '2023-01-15']
+        test_data_anomaly['Injection Date'] = [
+            '2023-03-01', '2023-01-01', '2023-02-01', '2023-06-01', '2023-04-01', '2023-05-01',
+            '2023-03-15', '2023-01-15', '2023-07-15', '2023-05-15'
+        ]
         
         # Save to CSV
         anomaly_csv_path = os.path.join(self.temp_dir, 'test_anomaly.csv')
@@ -122,6 +131,113 @@ class TestEyleaDataAnalyzer(unittest.TestCase):
         self.assertLessEqual(analyzer_outliers.data['VA Letter Score at Injection'].max(), 100)
         self.assertGreaterEqual(analyzer_outliers.data['VA Letter Score at Injection'].min(), 0)
     
+    def test_deceased_status_validation(self):
+        """Test validation of deceased status and related age fields."""
+        # Create data with deceased patients
+        test_data_deceased = self.test_data.copy()
+        test_data_deceased['Deceased'] = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1]
+        test_data_deceased['Age at Death'] = [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 82, 82]
+        
+        # Save to CSV
+        deceased_csv_path = os.path.join(self.temp_dir, 'test_deceased.csv')
+        test_data_deceased.to_csv(deceased_csv_path, index=False)
+        
+        # Create analyzer and load data
+        analyzer_deceased = EyleaDataAnalyzer(deceased_csv_path, self.temp_dir)
+        analyzer_deceased.load_data()
+        
+        # Check that Current Age is removed for deceased patients
+        deceased_rows = analyzer_deceased.data['Deceased'] == 1
+        self.assertTrue(analyzer_deceased.data.loc[deceased_rows, 'Current Age'].isna().all())
+        
+        # Check that Age at Death is preserved for deceased patients
+        self.assertFalse(analyzer_deceased.data.loc[deceased_rows, 'Age at Death'].isna().any())
+    
+    def test_invalid_deceased_status(self):
+        """Test validation warnings for invalid deceased status data."""
+        # Create data with inconsistent deceased status
+        test_data_invalid = self.test_data.copy()
+        test_data_invalid['Deceased'] = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1]
+        # Missing Age at Death for deceased patient
+        test_data_invalid['Age at Death'] = [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 82]
+        
+        # Save to CSV
+        invalid_csv_path = os.path.join(self.temp_dir, 'test_invalid_deceased.csv')
+        test_data_invalid.to_csv(invalid_csv_path, index=False)
+        
+        # Create analyzer and load data
+        analyzer_invalid = EyleaDataAnalyzer(invalid_csv_path, self.temp_dir)
+        analyzer_invalid.load_data()
+        
+        # Check that validation warning was generated
+        warnings = analyzer_invalid.data_quality_report['validation_warnings']
+        self.assertTrue(any('deceased patients are missing Age at Death' in warning for warning in warnings))
+    
+    def test_age_adjustment(self):
+        """Test age adjustment functionality."""
+        # Load data
+        self.analyzer.load_data()
+        
+        # Check that Adjusted Age column was created
+        self.assertIn('Adjusted Age', self.analyzer.data.columns)
+        
+        # Check that adjustment was applied correctly (+0.5 years)
+        for i, row in self.analyzer.data.iterrows():
+            if pd.notna(row['Current Age']):
+                self.assertEqual(row['Adjusted Age'], row['Current Age'] + 0.5)
+        
+        # Check that age adjustment was recorded in data quality report
+        self.assertIn('age_adjustments', self.analyzer.data_quality_report)
+        self.assertEqual(self.analyzer.data_quality_report['age_adjustments']['adjustment_factor'], 0.5)
+    
+    def test_birth_date_estimation(self):
+        """Test birth date estimation from adjusted age and injection date."""
+        # Load data
+        self.analyzer.load_data()
+        
+        # Check that Estimated Birth Date column was created
+        self.assertIn('Estimated Birth Date', self.analyzer.data.columns)
+        
+        # Check that birth date estimation is correct
+        for i, row in self.analyzer.data.iterrows():
+            if pd.notna(row['Adjusted Age']) and pd.notna(row['Injection Date']):
+                injection_date = pd.to_datetime(row['Injection Date'])
+                expected_birth_date = injection_date - pd.Timedelta(days=int(row['Adjusted Age'] * 365.25))
+                # Allow for small rounding differences
+                diff = abs((row['Estimated Birth Date'] - expected_birth_date).total_seconds())
+                self.assertLess(diff, 86400)  # Less than 1 day difference
+    
+    def test_patient_cohort_analysis_with_age_data(self):
+        """Test patient cohort analysis with age data."""
+        # Create data with deceased patients - make sure P002 is deceased
+        test_data_cohort = self.test_data.copy()
+        # Set all P002 rows to deceased=1 (last 4 rows)
+        test_data_cohort['Deceased'] = [0, 0, 0, 0, 0, 0, 1, 1, 1, 1]
+        test_data_cohort['Age at Death'] = [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 82, 82, 82, 82]
+        
+        # Save to CSV
+        cohort_csv_path = os.path.join(self.temp_dir, 'test_cohort.csv')
+        test_data_cohort.to_csv(cohort_csv_path, index=False)
+        
+        # Create analyzer and run analysis
+        analyzer_cohort = EyleaDataAnalyzer(cohort_csv_path, self.temp_dir)
+        analyzer_cohort.load_data()
+        patient_data = analyzer_cohort.analyze_patient_cohort()
+        
+        # Check that patient data includes both age fields
+        self.assertIn('adjusted_age', patient_data.columns)
+        self.assertIn('age_at_death', patient_data.columns)
+        
+        # Check that deceased patients have age_at_death
+        deceased_patients = patient_data['deceased'] == 1
+        self.assertFalse(patient_data.loc[deceased_patients, 'age_at_death'].isna().any())
+        
+        # Verify we have the expected number of patients
+        self.assertEqual(len(patient_data), 2)  # Should have 2 patients (P001 and P002)
+        
+        # Verify one patient is deceased and one is not
+        self.assertEqual(patient_data['deceased'].sum(), 1)  # One deceased patient
+    
     def test_run_analysis(self):
         """Test the complete analysis pipeline."""
         # Run analysis
@@ -129,11 +245,17 @@ class TestEyleaDataAnalyzer(unittest.TestCase):
         
         # Check that analysis completed successfully
         self.assertEqual(results['patient_count'], 2)
-        self.assertEqual(results['injection_count'], 5)
+        self.assertEqual(results['injection_count'], 10)
         
         # Check that output files were created
         self.assertTrue(os.path.exists(os.path.join(self.temp_dir, 'injection_intervals.png')))
+        
+        # Now we should check for va_trajectories.png since we've fixed the attribute access issues
         self.assertTrue(os.path.exists(os.path.join(self.temp_dir, 'va_trajectories.png')))
+        
+        # Check for other output files
+        self.assertTrue(os.path.exists(os.path.join(self.temp_dir, 'injection_intervals_by_sequence.png')))
+        self.assertTrue(os.path.exists(os.path.join(self.temp_dir, 'va_by_injection_number.png')))
         self.assertTrue(os.path.exists(os.path.join(self.temp_dir, 'va_change_distribution.png')))
 
 
