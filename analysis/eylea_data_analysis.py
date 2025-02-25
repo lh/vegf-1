@@ -82,6 +82,7 @@ class EyleaDataAnalyzer:
         self.patient_data = None
         self.injection_intervals = None
         self.va_trajectories = None
+        self.treatment_courses = None
         
         # Debug flag to control verbose output - set to False to reduce output
         self.debug = False
@@ -534,12 +535,25 @@ class EyleaDataAnalyzer:
     def create_patient_id(self):
         """
         Create a unique patient identifier if not already present.
+        Also creates an eye-specific key to track treatments per eye.
         """
         # Create a unique patient identifier
         if 'UUID' in self.data.columns:
             # Use existing UUID if available
             self.data['patient_id'] = self.data['UUID']
             logger.debug("Using existing UUID as patient_id")
+            
+            # Create an eye-specific key for tracking treatments per eye
+            if 'Eye' in self.data.columns:
+                # Standardize eye values (uppercase, remove spaces)
+                self.data['eye_standardized'] = self.data['Eye'].str.upper().str.replace(' ', '_')
+                # Create composite key: UUID_EYE
+                self.data['eye_key'] = self.data['UUID'] + '_' + self.data['eye_standardized']
+                logger.info(f"Created eye-specific key for tracking treatments per eye")
+            else:
+                logger.warning("Eye column not found, cannot create eye-specific key")
+                # Fall back to using UUID as eye_key
+                self.data['eye_key'] = self.data['UUID']
         else:
             # Create a composite ID from available fields
             id_components = []
@@ -550,8 +564,23 @@ class EyleaDataAnalyzer:
             if id_components:
                 self.data['patient_id'] = pd.Series(['_'.join(row) for row in zip(*id_components)])
                 logger.debug("Created composite patient_id")
+                
+                # Also create eye_key if Eye column is available
+                if 'Eye' in self.data.columns:
+                    self.data['eye_standardized'] = self.data['Eye'].str.upper().str.replace(' ', '_')
+                    self.data['eye_key'] = self.data['patient_id'] + '_' + self.data['eye_standardized']
+                else:
+                    self.data['eye_key'] = self.data['patient_id']
             else:
                 logger.warning("Could not create patient_id, no suitable columns found")
+                # Create a sequential ID as fallback
+                self.data['patient_id'] = [f"P{i:06d}" for i in range(len(self.data))]
+                self.data['eye_key'] = self.data['patient_id']
+        
+        # Sort data by eye_key and injection date to ensure chronological ordering
+        if 'Injection Date' in self.data.columns:
+            self.data = self.data.sort_values(['eye_key', 'Injection Date'])
+            logger.debug("Sorted data by eye_key and injection date")
     
     def generate_data_quality_report(self):
         """
@@ -677,7 +706,8 @@ class EyleaDataAnalyzer:
                 'baseline_crt': first_row.get('Baseline CRT', np.nan),
                 'first_injection_date': first_row.get('Date of 1st Injection', np.nan),
                 'injection_count': len(patient_rows),
-                'deceased': int(first_row.get('Deceased', 0)),  # Ensure it's an integer
+                # Handle potential non-numeric values in Deceased column
+                'deceased': int(float(first_row.get('Deceased', 0))) if pd.notna(first_row.get('Deceased', 0)) and str(first_row.get('Deceased', 0)).strip() != '' else 0,
                 'age_at_death': first_row.get('Age at Death', np.nan)
             }
             
@@ -699,36 +729,59 @@ class EyleaDataAnalyzer:
         return self.patient_data
     
     def analyze_injection_intervals(self):
-        """Analyze the intervals between injections."""
+        """Analyze the intervals between injections, grouped by eye."""
         if self.data is None:
             self.load_data()
         
-        logger.debug("Analyzing injection intervals")
+        logger.info("Analyzing injection intervals by eye")
         
         # Create a list to store interval data
         intervals_data = []
         
-        # Group by patient_id
-        for patient_id, patient_rows in self.data.groupby('patient_id'):
+        # Log the number of unique eye_keys
+        unique_eye_keys = self.data['eye_key'].unique()
+        logger.info(f"Found {len(unique_eye_keys)} unique eye_keys")
+        
+        # Group by eye_key instead of patient_id to track treatments per eye
+        for eye_key, eye_rows in self.data.groupby('eye_key'):
+            # Extract patient_id and eye from eye_key
+            patient_id = eye_rows['patient_id'].iloc[0]
+            eye = eye_rows['Eye'].iloc[0] if 'Eye' in eye_rows.columns else 'Unknown'
+            
+            # Log the number of injections for this eye
+            logger.info(f"Processing eye_key {eye_key} with {len(eye_rows)} injections")
+            
             # Sort by injection date
-            if 'Injection Date' in patient_rows.columns:
-                patient_rows = patient_rows.sort_values('Injection Date')
+            if 'Injection Date' in eye_rows.columns:
+                eye_rows = eye_rows.sort_values('Injection Date')
                 
                 # Calculate intervals between consecutive injections
-                injection_dates = pd.to_datetime(patient_rows['Injection Date'])
+                injection_dates = pd.to_datetime(eye_rows['Injection Date'])
                 
                 if len(injection_dates) > 1:
+                    logger.info(f"Eye {eye_key} has {len(injection_dates)} injection dates, calculating intervals")
                     for i in range(1, len(injection_dates)):
                         interval = (injection_dates.iloc[i] - injection_dates.iloc[i-1]).days
                         
+                        # Flag very large gaps (>365 days) as potential new treatment course
+                        very_long_gap = interval > 365
+                        
+                        logger.info(f"  Interval {i}: {interval} days between {injection_dates.iloc[i-1]} and {injection_dates.iloc[i]}")
+                        
                         intervals_data.append({
                             'patient_id': patient_id,
+                            'eye': eye,
+                            'eye_key': eye_key,
                             'injection_number': i,
                             'previous_date': injection_dates.iloc[i-1],
                             'current_date': injection_dates.iloc[i],
                             'interval_days': interval,
-                            'long_gap': interval > 180  # Flag gaps > 6 months
+                            'long_gap': interval > 180,  # Flag gaps > 6 months
+                            'very_long_gap': very_long_gap,  # Flag gaps > 12 months
+                            'potential_new_course': very_long_gap  # Flag as potential new course
                         })
+                else:
+                    logger.info(f"Eye {eye_key} has only {len(injection_dates)} injection date(s), skipping interval calculation")
         
         self.injection_intervals = pd.DataFrame(intervals_data)
         logger.debug(f"Created injection_intervals DataFrame with {len(self.injection_intervals)} rows")
@@ -749,33 +802,37 @@ class EyleaDataAnalyzer:
         return self.injection_intervals
     
     def analyze_va_trajectories(self):
-        """Analyze visual acuity trajectories over time."""
+        """Analyze visual acuity trajectories over time, grouped by eye."""
         if self.data is None:
             self.load_data()
         
-        logger.debug("Analyzing visual acuity trajectories")
+        logger.debug("Analyzing visual acuity trajectories by eye")
         
         # Create a list to store VA trajectory data
         va_data = []
         
-        # Group by patient_id
-        for patient_id, patient_rows in self.data.groupby('patient_id'):
+        # Group by eye_key instead of patient_id to track VA trajectories per eye
+        for eye_key, eye_rows in self.data.groupby('eye_key'):
+            # Extract patient_id and eye from eye_key
+            patient_id = eye_rows['patient_id'].iloc[0]
+            eye = eye_rows['Eye'].iloc[0] if 'Eye' in eye_rows.columns else 'Unknown'
+            
             # Sort by injection date
-            if 'Injection Date' in patient_rows.columns:
-                patient_rows = patient_rows.sort_values('Injection Date')
+            if 'Injection Date' in eye_rows.columns:
+                eye_rows = eye_rows.sort_values('Injection Date')
                 
                 # Get baseline VA
-                baseline_va = patient_rows.iloc[0].get('Baseline VA Letter Score', np.nan)
+                baseline_va = eye_rows.iloc[0].get('Baseline VA Letter Score', np.nan)
                 
                 # If baseline VA is missing, use first available VA measurement
-                if pd.isna(baseline_va) and 'VA Letter Score at Injection' in patient_rows.columns:
-                    first_va = patient_rows.iloc[0].get('VA Letter Score at Injection', np.nan)
+                if pd.isna(baseline_va) and 'VA Letter Score at Injection' in eye_rows.columns:
+                    first_va = eye_rows.iloc[0].get('VA Letter Score at Injection', np.nan)
                     if pd.notna(first_va):
                         baseline_va = first_va
-                        logger.debug(f"Using first VA measurement as baseline for patient {patient_id}")
+                        logger.debug(f"Using first VA measurement as baseline for eye {eye_key}")
                 
                 # Extract VA at each injection
-                for i, row in enumerate(patient_rows.itertuples()):
+                for i, row in enumerate(eye_rows.itertuples()):
                     # Get injection date - handle different column name formats in namedtuples
                     injection_date = None
                     try:
@@ -788,8 +845,8 @@ class EyleaDataAnalyzer:
                         # If still not found, try index-based access using the original DataFrame
                         else:
                             row_idx = row.Index if hasattr(row, 'Index') else i
-                            if 'Injection Date' in patient_rows.columns:
-                                injection_date = patient_rows.iloc[i]['Injection Date']
+                            if 'Injection Date' in eye_rows.columns:
+                                injection_date = eye_rows.iloc[i]['Injection Date']
                     except Exception as e:
                         logger.warning(f"Error accessing injection date for patient {patient_id}: {str(e)}")
                         injection_date = None
@@ -806,8 +863,8 @@ class EyleaDataAnalyzer:
                         # If still not found, try index-based access using the original DataFrame
                         else:
                             row_idx = row.Index if hasattr(row, 'Index') else i
-                            if 'VA Letter Score at Injection' in patient_rows.columns:
-                                va_score = patient_rows.iloc[i]['VA Letter Score at Injection']
+                            if 'VA Letter Score at Injection' in eye_rows.columns:
+                                va_score = eye_rows.iloc[i]['VA Letter Score at Injection']
                     except Exception as e:
                         logger.warning(f"Error accessing VA score for patient {patient_id}: {str(e)}")
                         va_score = np.nan
@@ -816,12 +873,14 @@ class EyleaDataAnalyzer:
                     if pd.notna(injection_date) and pd.notna(va_score):
                         try:
                             # Calculate days from first injection
-                            first_date = pd.to_datetime(patient_rows.iloc[0]['Injection Date'])
+                            first_date = pd.to_datetime(eye_rows.iloc[0]['Injection Date'])
                             current_date = pd.to_datetime(injection_date)
                             days_from_first = (current_date - first_date).days
                             
                             va_data.append({
                                 'patient_id': patient_id,
+                                'eye': eye,
+                                'eye_key': eye_key,
                                 'injection_number': i,
                                 'days_from_first': days_from_first,
                                 'va_score': float(va_score),  # Ensure numeric type
@@ -895,7 +954,7 @@ class EyleaDataAnalyzer:
         plt.close()
     
     def plot_va_trajectories(self):
-        """Plot visual acuity trajectories."""
+        """Plot visual acuity trajectories by eye."""
         if self.va_trajectories is None:
             self.analyze_va_trajectories()
         
@@ -903,17 +962,17 @@ class EyleaDataAnalyzer:
             logger.warning("No VA trajectory data available for plotting")
             return
         
-        logger.debug("Plotting VA trajectories")
+        logger.debug("Plotting VA trajectories by eye")
         
         plt.figure(figsize=(12, 8))
         
-        # Plot individual patient trajectories (limit to 20 patients for clarity)
-        patient_ids = self.va_trajectories['patient_id'].unique()
-        sample_patients = patient_ids[:min(20, len(patient_ids))]
+        # Plot individual eye trajectories (limit to 20 eyes for clarity)
+        eye_keys = self.va_trajectories['eye_key'].unique()
+        sample_eyes = eye_keys[:min(20, len(eye_keys))]
         
-        for patient_id in sample_patients:
-            patient_data = self.va_trajectories[self.va_trajectories['patient_id'] == patient_id]
-            plt.plot(patient_data['days_from_first'], patient_data['va_score'], 
+        for eye_key in sample_eyes:
+            eye_data = self.va_trajectories[self.va_trajectories['eye_key'] == eye_key]
+            plt.plot(eye_data['days_from_first'], eye_data['va_score'], 
                      'o-', alpha=0.5, linewidth=1)
         
         # Add a LOESS smoothed average line
@@ -939,7 +998,7 @@ class EyleaDataAnalyzer:
                 plt.plot(grouped['days_from_first'], grouped['va_score'], 'r-', linewidth=3,
                          label='Population average')
         
-        plt.title('Visual Acuity Trajectories')
+        plt.title('Visual Acuity Trajectories by Eye')
         plt.xlabel('Days from First Injection')
         plt.ylabel('VA Letter Score')
         plt.grid(True, alpha=0.3)
@@ -991,9 +1050,9 @@ class EyleaDataAnalyzer:
         
         logger.debug("Plotting VA change distribution")
         
-        # Filter to last available VA measurement for each patient
+        # Filter to last available VA measurement for each eye
         last_measurements = self.va_trajectories.loc[
-            self.va_trajectories.groupby('patient_id')['injection_number'].idxmax()
+            self.va_trajectories.groupby('eye_key')['injection_number'].idxmax()
         ]
         
         plt.figure(figsize=(10, 6))
@@ -1001,7 +1060,7 @@ class EyleaDataAnalyzer:
         # Create a histogram of VA changes
         sns.histplot(last_measurements['va_change'].dropna(), bins=20, kde=True)
         
-        plt.title('Distribution of VA Changes from Baseline (Last Available Measurement)')
+        plt.title('Distribution of VA Changes from Baseline by Eye (Last Available Measurement)')
         plt.xlabel('VA Change (letters)')
         plt.ylabel('Frequency')
         
@@ -1045,7 +1104,7 @@ class EyleaDataAnalyzer:
         category_order = ['≥15 letter gain', '5-14 letter gain', 'Stable (-4 to +4)', 
                           '5-14 letter loss', '≥15 letter loss', 'Unknown']
         
-        # Count patients in each category
+        # Count eyes in each category
         outcome_counts = last_measurements['outcome_category'].value_counts().reindex(category_order).fillna(0)
         
         # Calculate percentages
@@ -1059,8 +1118,8 @@ class EyleaDataAnalyzer:
         for i, (count, percentage) in enumerate(zip(outcome_counts, outcome_percentages)):
             plt.text(i, count + 0.5, f"{percentage}%", ha='center')
         
-        plt.title('Visual Acuity Outcomes (Last Available Measurement)')
-        plt.ylabel('Number of Patients')
+        plt.title('Visual Acuity Outcomes by Eye (Last Available Measurement)')
+        plt.ylabel('Number of Eyes')
         plt.xticks(rotation=45, ha='right')
         plt.tight_layout()
         
@@ -1068,6 +1127,150 @@ class EyleaDataAnalyzer:
         output_path = os.path.join(self.output_dir, 'va_outcome_categories.png')
         plt.savefig(output_path)
         logger.debug(f"Saved VA outcome categories plot to {output_path}")
+        
+        plt.close()
+    
+    def analyze_treatment_courses(self):
+        """
+        Analyze treatment courses by identifying potential breaks in treatment.
+        
+        In this version, all injections for an eye are considered part of a single course,
+        but long gaps (>365 days) are flagged for potential separate analysis.
+        """
+        if self.injection_intervals is None:
+            self.analyze_injection_intervals()
+        
+        if self.injection_intervals.empty:
+            logger.warning("No injection interval data available for course analysis")
+            self.treatment_courses = pd.DataFrame()
+            return self.treatment_courses
+        
+        logger.debug("Analyzing treatment courses")
+        
+        # Create a list to store course data
+        course_data = []
+        
+        # Group by eye_key
+        for eye_key, eye_intervals in self.injection_intervals.groupby('eye_key'):
+            # Sort by injection number
+            eye_intervals = eye_intervals.sort_values('injection_number')
+            
+            # Extract patient_id and eye
+            patient_id = eye_intervals['patient_id'].iloc[0]
+            eye = eye_intervals['eye'].iloc[0]
+            
+            # Get first and last injection dates
+            first_injection_date = eye_intervals['previous_date'].iloc[0]
+            last_injection_date = eye_intervals['current_date'].iloc[-1]
+            
+            # Count total injections (intervals + 1)
+            total_injections = len(eye_intervals) + 1
+            
+            # Check for long pauses
+            has_long_pause = eye_intervals['very_long_gap'].any()
+            
+            # If we wanted to split into multiple courses (keeping for reference)
+            potential_courses = []
+            if has_long_pause:
+                # Track potential separate courses for future analysis
+                current_course = 1
+                course_start_date = first_injection_date
+                course_injections = 1
+                
+                # Process each interval to identify potential separate courses
+                for i, interval in eye_intervals.iterrows():
+                    if interval['very_long_gap']:
+                        # End previous potential course
+                        potential_courses.append({
+                            'potential_course_number': current_course,
+                            'start_date': course_start_date,
+                            'end_date': interval['previous_date'],
+                            'duration_days': (interval['previous_date'] - course_start_date).days,
+                            'injection_count': course_injections,
+                            'gap_to_next_course': interval['interval_days']
+                        })
+                        
+                        # Start new potential course
+                        current_course += 1
+                        course_start_date = interval['current_date']
+                        course_injections = 1
+                    else:
+                        # Continue current potential course
+                        course_injections += 1
+                
+                # Add the last potential course
+                if course_start_date != last_injection_date:
+                    potential_courses.append({
+                        'potential_course_number': current_course,
+                        'start_date': course_start_date,
+                        'end_date': last_injection_date,
+                        'duration_days': (last_injection_date - course_start_date).days,
+                        'injection_count': course_injections,
+                        'gap_to_next_course': None
+                    })
+            
+            # Add a single course for this eye
+            course_data.append({
+                'patient_id': patient_id,
+                'eye': eye,
+                'eye_key': eye_key,
+                'course_number': 1,
+                'start_date': first_injection_date,
+                'end_date': last_injection_date,
+                'duration_days': (last_injection_date - first_injection_date).days,
+                'injection_count': total_injections,
+                'has_long_pause': has_long_pause,
+                'potential_separate_courses': len(potential_courses) if has_long_pause else 1,
+                'potential_courses_detail': str(potential_courses) if has_long_pause else None
+            })
+        
+        self.treatment_courses = pd.DataFrame(course_data)
+        logger.debug(f"Created treatment_courses DataFrame with {len(self.treatment_courses)} rows")
+        
+        return self.treatment_courses
+    
+    def plot_treatment_courses(self):
+        """Plot treatment courses by eye."""
+        if self.treatment_courses is None:
+            self.analyze_treatment_courses()
+        
+        if self.treatment_courses.empty:
+            logger.warning("No treatment course data available for plotting")
+            return
+        
+        logger.debug("Plotting treatment courses")
+        
+        plt.figure(figsize=(12, 8))
+        
+        # Create a histogram of course durations
+        sns.histplot(self.treatment_courses['duration_days'], bins=30, kde=True)
+        
+        plt.title('Distribution of Treatment Course Durations')
+        plt.xlabel('Duration (days)')
+        plt.ylabel('Frequency')
+        
+        # Save the plot
+        output_path = os.path.join(self.output_dir, 'treatment_course_durations.png')
+        plt.savefig(output_path)
+        logger.debug(f"Saved treatment course durations plot to {output_path}")
+        
+        plt.close()
+        
+        # Also plot injection count per course
+        plt.figure(figsize=(10, 6))
+        
+        # Create a histogram of injection counts
+        sns.histplot(self.treatment_courses['injection_count'], bins=range(1, 21), kde=False, discrete=True)
+        
+        plt.title('Injections per Treatment Course')
+        plt.xlabel('Number of Injections')
+        plt.ylabel('Frequency')
+        plt.xticks(range(1, 21))
+        
+        # Save the plot
+        output_path = os.path.join(self.output_dir, 'injections_per_course.png')
+        plt.savefig(output_path)
+        logger.debug(f"Saved injections per course plot to {output_path}")
         
         plt.close()
     
@@ -1091,17 +1294,26 @@ class EyleaDataAnalyzer:
         # Analyze VA trajectories
         self.analyze_va_trajectories()
         
+        # Analyze treatment courses
+        self.analyze_treatment_courses()
+        
         # Generate plots
         self.plot_injection_intervals()
         self.plot_va_trajectories()
         self.plot_va_change_distribution()
+        self.plot_treatment_courses()
         
         logger.info("Analysis complete")
+        
+        # Count unique eyes
+        eye_count = len(self.data['eye_key'].unique()) if 'eye_key' in self.data.columns else 0
         
         # Return a summary of the analysis
         return {
             'patient_count': len(self.patient_data) if self.patient_data is not None else 0,
+            'eye_count': eye_count,
             'injection_count': len(self.data) if self.data is not None else 0,
+            'course_count': len(self.treatment_courses) if self.treatment_courses is not None else 0,
             'mean_injection_interval': self.injection_intervals['interval_days'].mean() if self.injection_intervals is not None and not self.injection_intervals.empty else None,
             'median_injection_interval': self.injection_intervals['interval_days'].median() if self.injection_intervals is not None and not self.injection_intervals.empty else None,
             'output_dir': str(self.output_dir),
