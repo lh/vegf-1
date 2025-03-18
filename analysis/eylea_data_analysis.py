@@ -70,9 +70,19 @@ class EyleaDataAnalyzer:
         """
         Initialize the analyzer with data path.
         
-        Args:
-            data_path: Path to the CSV data file
-            output_dir: Directory to save outputs (default: creates 'output' dir)
+        Parameters
+        ----------
+        data_path : str
+            Path to the CSV data file containing Eylea treatment data
+        output_dir : str, optional
+            Directory to save outputs. If None, creates an 'output' directory
+            in the current working directory.
+            
+        Notes
+        -----
+        This initializes the analyzer but does not load or process the data.
+        Call `load_data()` to load and validate the data, or `run_analysis()`
+        to perform the complete analysis pipeline.
         """
         self.data_path = data_path
         self.output_dir = output_dir or Path('output')
@@ -105,11 +115,26 @@ class EyleaDataAnalyzer:
         """
         Load and perform initial cleaning of the data with enhanced validation.
         
-        Returns:
-            DataFrame: The loaded and validated data
+        Returns
+        -------
+        pandas.DataFrame
+            The loaded and validated data
             
-        Raises:
-            ValueError: If critical data validation fails
+        Raises
+        ------
+        ValueError
+            If critical data validation fails, such as missing required columns
+            
+        Notes
+        -----
+        This method performs several operations:
+        1. Loads the CSV file specified in `data_path`
+        2. Maps column names to standardized format
+        3. Validates data structure and types
+        4. Cleans and preprocesses the data
+        5. Generates a data quality report
+        
+        The processed data is stored in the `data` attribute and also returned.
         """
         logger.info(f"Loading data from {self.data_path}")
         
@@ -138,7 +163,23 @@ class EyleaDataAnalyzer:
     def map_column_names(self):
         """
         Map various possible column names to standardized names.
-        Uses fuzzy matching for minor variations in column names.
+        
+        This method handles variations in column naming conventions by mapping
+        them to a standardized set of column names defined in COLUMN_MAPPINGS.
+        It uses both exact matching and fuzzy matching for minor variations.
+        
+        Returns
+        -------
+        None
+            Modifies the `data` attribute in-place
+            
+        Notes
+        -----
+        The mapping results are stored in:
+        - `column_mapping_used` attribute: Dictionary mapping standard names to original names
+        - `data_quality_report['column_mapping']`: Same mapping for reporting
+        
+        Columns that cannot be mapped to standard names are kept unchanged.
         """
         logger.info("Mapping column names to standardized format")
         
@@ -209,8 +250,36 @@ class EyleaDataAnalyzer:
         """
         Validate the data structure to ensure critical columns exist and have valid values.
         
-        Raises:
-            ValueError: If critical validation fails
+        This method performs comprehensive validation of the dataset structure and content,
+        including checking for required columns, converting data types, validating value ranges,
+        and identifying temporal anomalies.
+        
+        Returns
+        -------
+        None
+            Modifies the `data` attribute in-place
+            
+        Raises
+        ------
+        ValueError
+            If critical validation fails, such as missing required columns
+            
+        Notes
+        -----
+        Validation steps include:
+        1. Checking for required columns defined in DATA_VALIDATION
+        2. Converting date columns to datetime format
+        3. Converting and validating numeric columns
+        4. Checking for duplicate records
+        5. Validating deceased status and age fields
+        6. Checking temporal sequence integrity
+        
+        Validation results are stored in:
+        - `data_quality_report['validation_errors']`: List of critical errors
+        - `data_quality_report['validation_warnings']`: List of non-critical warnings
+        
+        For patients with out-of-sequence injection dates, information is saved to
+        a CSV file in the output directory.
         """
         logger.info("Validating data structure")
         
@@ -362,6 +431,25 @@ class EyleaDataAnalyzer:
     def clean_data(self):
         """
         Clean the data by handling missing values, outliers, and other anomalies.
+        
+        This method performs several data cleaning operations to prepare the dataset
+        for analysis, including handling missing values, cleaning measurements,
+        fixing temporal anomalies, and creating identifiers.
+        
+        Returns
+        -------
+        None
+            Modifies the `data` attribute in-place
+            
+        Notes
+        -----
+        Cleaning operations include:
+        1. Handling missing values in critical fields
+        2. Cleaning Visual Acuity measurements
+        3. Handling temporal anomalies (e.g., out-of-sequence dates)
+        4. Creating unique patient and eye identifiers
+        
+        The cleaning process is tracked in the data_quality_report attribute.
         """
         logger.info("Cleaning and preprocessing data")
         
@@ -382,6 +470,26 @@ class EyleaDataAnalyzer:
     def handle_missing_values(self):
         """
         Handle missing values in the dataset.
+        
+        This method identifies and handles missing values in various columns,
+        with special attention to baseline VA, age data, and injection intervals.
+        
+        Returns
+        -------
+        None
+            Modifies the `data` attribute in-place
+            
+        Notes
+        -----
+        Missing value handling includes:
+        1. For missing baseline VA: Use first available VA measurement
+        2. For age data: Handle deceased patients differently
+        3. For current age: Add 0.5 years to account for temporal alignment
+        4. For missing injection intervals: Calculate from dates
+        
+        Missing value counts before and after cleaning are stored in:
+        - `data_quality_report['missing_values_before']`
+        - `data_quality_report['missing_values_after']`
         """
         # Track missing value counts before cleaning
         missing_before = {col: self.data[col].isna().sum() for col in self.data.columns}
@@ -467,6 +575,22 @@ class EyleaDataAnalyzer:
     def clean_va_measurements(self):
         """
         Validate and clean Visual Acuity measurements.
+        
+        This method identifies and handles outliers and implausible changes
+        in Visual Acuity (VA) measurements.
+        
+        Returns
+        -------
+        None
+            Modifies the `data` attribute in-place
+            
+        Notes
+        -----
+        VA cleaning operations include:
+        1. Clipping VA values to valid range [0, 100]
+        2. Identifying implausibly large changes between consecutive measurements (>30 letters)
+        
+        Information about implausible VA changes is saved to a CSV file in the output directory.
         """
         if 'VA Letter Score at Injection' in self.data.columns:
             va_col = 'VA Letter Score at Injection'
@@ -522,6 +646,23 @@ class EyleaDataAnalyzer:
     def handle_temporal_anomalies(self):
         """
         Handle anomalies related to dates and time intervals.
+        
+        This method identifies and fixes temporal anomalies such as out-of-sequence
+        injection dates and long treatment gaps.
+        
+        Returns
+        -------
+        None
+            Modifies the `data` attribute in-place
+            
+        Notes
+        -----
+        Temporal anomaly handling includes:
+        1. Identifying patients with single injections
+        2. Fixing out-of-sequence injection dates by sorting
+        3. Identifying treatment gaps > 6 months (180 days)
+        
+        Information about fixed sequence errors is saved to a CSV file in the output directory.
         """
         if 'Injection Date' not in self.data.columns or 'UUID' not in self.data.columns:
             return
@@ -585,7 +726,22 @@ class EyleaDataAnalyzer:
     def create_patient_id(self):
         """
         Create a unique patient identifier if not already present.
-        Also creates an eye-specific key to track treatments per eye.
+        
+        This method ensures each patient has a unique identifier and creates
+        an eye-specific key to track treatments per eye.
+        
+        Returns
+        -------
+        None
+            Modifies the `data` attribute in-place
+            
+        Notes
+        -----
+        Identifier creation includes:
+        1. Using existing UUID if available
+        2. Creating a composite ID from available fields if UUID is not present
+        3. Creating an eye-specific key by combining patient ID and eye information
+        4. Sorting data by eye_key and injection date for chronological ordering
         """
         # Create a unique patient identifier
         if 'UUID' in self.data.columns:
@@ -635,6 +791,27 @@ class EyleaDataAnalyzer:
     def generate_data_quality_report(self):
         """
         Generate a comprehensive data quality report.
+        
+        This method calculates various data quality metrics and saves them
+        to a text file in the output directory.
+        
+        Returns
+        -------
+        dict
+            The data quality report as a dictionary
+            
+        Notes
+        -----
+        The report includes:
+        1. Summary metrics (rows, columns, missing data percentage)
+        2. Column mapping information
+        3. Validation errors and warnings
+        4. Missing values by column
+        5. Age data processing details
+        6. Temporal anomalies
+        7. VA measurement anomalies
+        
+        The report is saved to 'data_quality_report.txt' in the output directory.
         """
         logger.info("Generating data quality report")
         
@@ -726,7 +903,28 @@ class EyleaDataAnalyzer:
         return self.data_quality_report
     
     def analyze_patient_cohort(self):
-        """Analyze the patient cohort characteristics."""
+        """
+        Analyze the patient cohort characteristics.
+        
+        This method creates a DataFrame with one row per patient, containing
+        demographic and treatment information.
+        
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame with patient-level information
+            
+        Notes
+        -----
+        The patient data includes:
+        - Demographics (age, gender)
+        - Eye information
+        - Baseline measurements (VA, CRT)
+        - Treatment information (injection count, dates)
+        - Mortality information (deceased status, age at death)
+        
+        If the data has not been loaded yet, this method will call `load_data()` first.
+        """
         if self.data is None:
             self.load_data()
         
@@ -779,7 +977,29 @@ class EyleaDataAnalyzer:
         return self.patient_data
     
     def analyze_injection_intervals(self):
-        """Analyze the intervals between injections, grouped by eye."""
+        """
+        Analyze the intervals between injections, grouped by eye.
+        
+        This method calculates the time intervals between consecutive injections
+        for each eye and creates a DataFrame with interval information.
+        
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame with injection interval information
+            
+        Notes
+        -----
+        The interval data includes:
+        - Patient and eye identifiers
+        - Injection sequence information
+        - Dates of consecutive injections
+        - Interval in days between injections
+        - VA measurements at consecutive injections
+        - Flags for long gaps (>180 days) and very long gaps (>365 days)
+        
+        If the data has not been loaded yet, this method will call `load_data()` first.
+        """
         if self.data is None:
             self.load_data()
         
@@ -864,7 +1084,29 @@ class EyleaDataAnalyzer:
         return self.injection_intervals
     
     def analyze_va_trajectories(self):
-        """Analyze visual acuity trajectories over time, grouped by eye."""
+        """
+        Analyze visual acuity trajectories over time, grouped by eye.
+        
+        This method tracks changes in Visual Acuity (VA) over time for each eye
+        and creates a DataFrame with trajectory information.
+        
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame with VA trajectory information
+            
+        Notes
+        -----
+        The VA trajectory data includes:
+        - Patient and eye identifiers
+        - Injection sequence information
+        - Days from first injection
+        - VA score at each injection
+        - Baseline VA
+        - VA change from baseline
+        
+        If the data has not been loaded yet, this method will call `load_data()` first.
+        """
         if self.data is None:
             self.load_data()
         
@@ -958,7 +1200,30 @@ class EyleaDataAnalyzer:
         return self.va_trajectories
     
     def plot_injection_intervals(self):
-        """Plot the distribution of injection intervals."""
+        """
+        Plot the distribution of injection intervals.
+        
+        This method creates and saves two plots:
+        1. A histogram of injection intervals
+        2. A plot of intervals by injection sequence
+        
+        Returns
+        -------
+        None
+            Saves plots to the output directory
+            
+        Notes
+        -----
+        The histogram includes vertical lines for common intervals:
+        - 28 days (monthly)
+        - 56 days (bi-monthly)
+        - 84 days (quarterly)
+        
+        The sequence plot shows mean and median intervals by injection number.
+        
+        If injection intervals have not been analyzed yet, this method will call
+        `analyze_injection_intervals()` first.
+        """
         if self.injection_intervals is None:
             self.analyze_injection_intervals()
         
@@ -1016,7 +1281,29 @@ class EyleaDataAnalyzer:
         plt.close()
     
     def plot_va_trajectories(self):
-        """Plot visual acuity trajectories by eye."""
+        """
+        Plot visual acuity trajectories by eye.
+        
+        This method creates and saves two plots:
+        1. VA trajectories over time for a sample of eyes
+        2. VA by injection number
+        
+        Returns
+        -------
+        None
+            Saves plots to the output directory
+            
+        Notes
+        -----
+        The trajectory plot includes:
+        - Individual eye trajectories (limited to 20 eyes for clarity)
+        - A population average line (LOESS smoothed if statsmodels is available)
+        
+        The injection number plot shows mean VA with error bars by injection number.
+        
+        If VA trajectories have not been analyzed yet, this method will call
+        `analyze_va_trajectories()` first.
+        """
         if self.va_trajectories is None:
             self.analyze_va_trajectories()
         
@@ -1102,7 +1389,38 @@ class EyleaDataAnalyzer:
         plt.close()
     
     def plot_va_change_distribution(self):
-        """Plot the distribution of VA changes from baseline."""
+        """
+        Plot the distribution of VA changes from baseline.
+        
+        This method creates and saves two plots:
+        1. A histogram of VA changes from baseline
+        2. A categorical plot of VA outcomes
+        
+        Returns
+        -------
+        None
+            Saves plots to the output directory
+            
+        Notes
+        -----
+        The histogram includes vertical lines for clinically significant changes:
+        - No change (0)
+        - +5 letters (gain)
+        - +15 letters (significant gain)
+        - -5 letters (loss)
+        - -15 letters (significant loss)
+        
+        The categorical plot groups outcomes into categories:
+        - ≥15 letter gain
+        - 5-14 letter gain
+        - Stable (-4 to +4)
+        - 5-14 letter loss
+        - ≥15 letter loss
+        - Unknown
+        
+        If VA trajectories have not been analyzed yet, this method will call
+        `analyze_va_trajectories()` first.
+        """
         if self.va_trajectories is None:
             self.analyze_va_trajectories()
         
@@ -1196,8 +1514,29 @@ class EyleaDataAnalyzer:
         """
         Analyze treatment courses by identifying potential breaks in treatment.
         
-        In this version, all injections for an eye are considered part of a single course,
+        This method identifies treatment courses for each eye and flags potential
+        breaks in treatment based on long gaps between injections.
+        
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame with treatment course information
+            
+        Notes
+        -----
+        In this implementation, all injections for an eye are considered part of a single course,
         but long gaps (>365 days) are flagged for potential separate analysis.
+        
+        The treatment course data includes:
+        - Patient and eye identifiers
+        - Course start and end dates
+        - Duration in days
+        - Injection count
+        - Flags for long pauses
+        - Information about potential separate courses
+        
+        If injection intervals have not been analyzed yet, this method will call
+        `analyze_injection_intervals()` first.
         """
         if self.injection_intervals is None:
             self.analyze_injection_intervals()
@@ -1292,7 +1631,27 @@ class EyleaDataAnalyzer:
         return self.treatment_courses
     
     def plot_treatment_courses(self):
-        """Plot treatment courses by eye."""
+        """
+        Plot treatment courses by eye.
+        
+        This method creates and saves two plots:
+        1. A histogram of treatment course durations
+        2. A histogram of injections per course
+        
+        Returns
+        -------
+        None
+            Saves plots to the output directory
+            
+        Notes
+        -----
+        The duration histogram shows the distribution of treatment course durations in days.
+        
+        The injections histogram shows the distribution of injection counts per course.
+        
+        If treatment courses have not been analyzed yet, this method will call
+        `analyze_treatment_courses()` first.
+        """
         if self.treatment_courses is None:
             self.analyze_treatment_courses()
         
@@ -1340,12 +1699,34 @@ class EyleaDataAnalyzer:
         """
         Export the interval and VA data to CSV and optionally to SQLite.
         
-        Args:
-            format: Output format ('csv', 'sqlite', or 'both')
-            db_path: Path to SQLite database (if None, uses default path)
+        Parameters
+        ----------
+        format : str, optional
+            Output format, one of 'csv', 'sqlite', or 'both'. Default is 'csv'.
+        db_path : str, optional
+            Path to SQLite database. If None, uses default path in the output directory.
         
-        Returns:
-            dict: Paths to the exported files
+        Returns
+        -------
+        dict
+            Dictionary with paths to the exported files
+            
+        Notes
+        -----
+        This method exports two types of data:
+        1. Detailed interval and VA data for each injection
+        2. Summary data with intervals and VA changes for each patient
+        
+        For CSV export:
+        - Detailed data is saved to 'interval_va_data.csv'
+        - Summary data is saved to 'interval_va_summary.csv'
+        
+        For SQLite export:
+        - Detailed data is saved to 'interval_va_data' table
+        - Summary data is saved to 'interval_summary' table
+        
+        If injection intervals have not been analyzed yet, this method will call
+        `analyze_injection_intervals()` first.
         """
         if self.injection_intervals is None:
             self.analyze_injection_intervals()
@@ -1472,7 +1853,38 @@ class EyleaDataAnalyzer:
         return export_paths
     
     def run_analysis(self):
-        """Run the complete analysis pipeline."""
+        """
+        Run the complete analysis pipeline.
+        
+        This method executes the full analysis workflow, including data loading,
+        cleaning, analysis, visualization, and export.
+        
+        Returns
+        -------
+        dict
+            Dictionary with summary results of the analysis
+            
+        Notes
+        -----
+        The analysis pipeline includes:
+        1. Loading and cleaning data
+        2. Analyzing patient cohort
+        3. Analyzing injection intervals
+        4. Analyzing VA trajectories
+        5. Analyzing treatment courses
+        6. Generating plots
+        7. Exporting data
+        
+        The returned summary includes:
+        - Patient count
+        - Eye count
+        - Injection count
+        - Course count
+        - Mean and median injection intervals
+        - Output directory
+        - Data quality report
+        - Export paths
+        """
         # Reduce debug output
         import logging
         logging.getLogger('matplotlib').setLevel(logging.WARNING)
@@ -1523,7 +1935,28 @@ class EyleaDataAnalyzer:
 
 
 def main():
-    """Main function to run the analysis."""
+    """
+    Main function to run the analysis.
+    
+    This function parses command-line arguments, creates an EyleaDataAnalyzer instance,
+    runs the analysis, and prints summary results.
+    
+    Returns
+    -------
+    None
+        Prints summary results to stdout
+        
+    Notes
+    -----
+    Command-line arguments:
+    --data : Path to the data CSV file (default: 'input_data/sample_raw.csv')
+    --output : Directory to save output files (default: 'output')
+    --debug : Enable debug output
+    --validation-strictness : Validation strictness level ('strict', 'moderate', 'lenient')
+    
+    Example usage:
+    python eylea_data_analysis.py --data input_data/my_data.csv --output my_results
+    """
     # Set up command line argument parsing
     import argparse
     parser = argparse.ArgumentParser(description='Analyze Eylea treatment data')
