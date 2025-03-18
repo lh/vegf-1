@@ -5,6 +5,9 @@ This script analyzes the injection intervals data from the SQLite database
 to identify patterns in treatment, specifically looking for two groups:
 - Group LH: 7 injections in first year, then continuing with injections every ~2 months
 - Group MR: 7 injections in first year, then a pause before resumption of treatment
+
+The script also performs Principal Component Analysis (PCA) to identify patterns
+in treatment intervals and visual acuity measures (previous VA, current VA, next VA).
 """
 
 import polars as pl
@@ -474,6 +477,310 @@ def analyze_intervals_by_group(df: pl.DataFrame, interval_data: pl.DataFrame) ->
     plt.savefig(output_dir / "avg_intervals_by_sequence_and_group.png")
     plt.close()
 
+def prepare_va_interval_data_for_pca(interval_data: pl.DataFrame) -> pl.DataFrame:
+    """
+    Prepare data for PCA analysis by calculating next VA for each record.
+    
+    This function processes the interval data to create a dataset with:
+    - treatment_interval (interval_days)
+    - previous_va (prev_va)
+    - current_va
+    - next_va (calculated by joining with next record)
+    
+    Args:
+        interval_data: Raw interval data from the database
+        
+    Returns:
+        DataFrame with prepared features for PCA analysis
+    """
+    # Work with a copy of the data
+    df = interval_data.clone()
+    
+    # Sort data by patient and date
+    df = df.sort(["uuid", "eye", "previous_date"])
+    
+    # Create a unique identifier for each eye of each patient
+    df = df.with_columns([
+        (pl.col("uuid") + "_" + pl.col("eye")).alias("patient_eye_id")
+    ])
+    
+    # For each patient_eye_id, we need to calculate the next VA
+    # We'll do this by creating a shifted version of the dataframe
+    
+    # Group by patient_eye_id and create a window for shifting
+    result_dfs = []
+    
+    for patient_eye_id in df.select("patient_eye_id").unique().to_series():
+        # Get data for this patient eye
+        patient_eye_data = df.filter(pl.col("patient_eye_id") == patient_eye_id)
+        
+        if len(patient_eye_data) <= 1:
+            # Skip if there's only one record (can't calculate next VA)
+            continue
+            
+        # Create next_va column by shifting current_va
+        patient_eye_data = patient_eye_data.with_columns([
+            pl.col("current_va").shift(-1).alias("next_va")
+        ])
+        
+        # Drop the last row which will have null next_va
+        patient_eye_data = patient_eye_data.filter(pl.col("next_va").is_not_null())
+        
+        result_dfs.append(patient_eye_data)
+    
+    if not result_dfs:
+        print("No valid data for PCA analysis")
+        return pl.DataFrame()
+        
+    # Combine all patient eye data
+    result_df = pl.concat(result_dfs)
+    
+    # Select only the columns we need for PCA
+    pca_data = result_df.select([
+        "uuid", 
+        "eye", 
+        "interval_days", 
+        "prev_va", 
+        "current_va", 
+        "next_va",
+        "previous_date",
+        "current_date"
+    ])
+    
+    # Rename columns for clarity
+    pca_data = pca_data.rename({
+        "interval_days": "treatment_interval"
+    })
+    
+    return pca_data
+
+def perform_va_interval_pca(interval_data: pl.DataFrame) -> None:
+    """
+    Perform PCA analysis on treatment intervals and visual acuity measures.
+    
+    This function identifies patterns in:
+    - Treatment interval
+    - Previous VA
+    - Current VA
+    - Next VA
+    
+    Args:
+        interval_data: Raw interval data from the database
+    """
+    print("Preparing data for PCA analysis...")
+    pca_data = prepare_va_interval_data_for_pca(interval_data)
+    
+    if len(pca_data) == 0:
+        print("No data available for PCA analysis")
+        return
+        
+    print(f"Prepared {pca_data.height} records for PCA analysis")
+    
+    # Select features for PCA
+    features = ["treatment_interval", "prev_va", "current_va", "next_va"]
+    
+    # Drop rows with missing values in features
+    complete_data = pca_data.drop_nulls(features)
+    
+    if len(complete_data) < 10:
+        print("Not enough complete data for PCA analysis")
+        return
+    
+    print(f"Using {complete_data.height} complete records for PCA analysis")
+    
+    # Extract feature matrix
+    X = complete_data.select(features).to_numpy()
+    
+    # Standardize features
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    
+    # Apply PCA
+    pca = PCA(n_components=2)
+    X_pca = pca.fit_transform(X_scaled)
+    
+    # Create a DataFrame with PCA results
+    pca_result = pl.DataFrame({
+        "uuid": complete_data.select("uuid").to_series(),
+        "eye": complete_data.select("eye").to_series(),
+        "pca1": X_pca[:, 0],
+        "pca2": X_pca[:, 1],
+        "treatment_interval": complete_data.select("treatment_interval").to_series(),
+        "prev_va": complete_data.select("prev_va").to_series(),
+        "current_va": complete_data.select("current_va").to_series(),
+        "next_va": complete_data.select("next_va").to_series()
+    })
+    
+    # Save PCA results
+    pca_result.write_csv(output_dir / "va_interval_pca_results.csv")
+    
+    # Visualize PCA results
+    plt.figure(figsize=(12, 10))
+    
+    # Create a scatter plot of PCA results
+    scatter = plt.scatter(
+        X_pca[:, 0], 
+        X_pca[:, 1], 
+        c=complete_data.select("treatment_interval").to_numpy(), 
+        cmap="viridis", 
+        alpha=0.7,
+        s=50
+    )
+    
+    # Add a colorbar
+    cbar = plt.colorbar(scatter)
+    cbar.set_label("Treatment Interval (days)")
+    
+    # Add feature vectors
+    feature_names = ["Treatment Interval", "Previous VA", "Current VA", "Next VA"]
+    
+    # Get the PCA components (loadings)
+    components = pca.components_
+    
+    # Calculate scaling factor for arrows
+    # This helps make the arrows visible on the plot
+    scale_factor = 5
+    
+    # Plot feature vectors
+    for i, (name, component) in enumerate(zip(feature_names, components.T)):
+        plt.arrow(
+            0, 0,  # Start at origin
+            component[0] * scale_factor,  # Scale x component
+            component[1] * scale_factor,  # Scale y component
+            head_width=0.2,
+            head_length=0.3,
+            fc='red',
+            ec='red'
+        )
+        
+        # Add feature name label
+        # Position the label slightly beyond the arrow
+        label_scale = scale_factor * 1.1
+        plt.text(
+            component[0] * label_scale,
+            component[1] * label_scale,
+            name,
+            color='red',
+            ha='center',
+            va='center'
+        )
+    
+    plt.title("PCA of Treatment Intervals and Visual Acuity")
+    plt.xlabel(f"Principal Component 1 ({pca.explained_variance_ratio_[0]:.2%} variance)")
+    plt.ylabel(f"Principal Component 2 ({pca.explained_variance_ratio_[1]:.2%} variance)")
+    plt.grid(True, alpha=0.3)
+    plt.savefig(output_dir / "va_interval_pca.png")
+    plt.close()
+    
+    # Create additional visualizations to explore patterns
+    
+    # 1. Scatter plot of treatment interval vs. VA change
+    plt.figure(figsize=(12, 8))
+    
+    # Calculate VA change
+    va_change = complete_data.select("next_va").to_numpy() - complete_data.select("current_va").to_numpy()
+    
+    # Create scatter plot
+    scatter = plt.scatter(
+        complete_data.select("treatment_interval").to_numpy(),
+        va_change,
+        c=complete_data.select("current_va").to_numpy(),
+        cmap="coolwarm",
+        alpha=0.7,
+        s=50
+    )
+    
+    # Add a colorbar
+    cbar = plt.colorbar(scatter)
+    cbar.set_label("Current VA (letters)")
+    
+    plt.title("Treatment Interval vs. VA Change")
+    plt.xlabel("Treatment Interval (days)")
+    plt.ylabel("VA Change (letters)")
+    plt.grid(True, alpha=0.3)
+    plt.savefig(output_dir / "interval_vs_va_change.png")
+    plt.close()
+    
+    # 2. Cluster the PCA results using K-means
+    # Try different numbers of clusters
+    for n_clusters in [2, 3, 4]:
+        # Apply K-means clustering
+        kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+        clusters = kmeans.fit_predict(X_pca)
+        
+        # Add cluster labels to the dataframe
+        cluster_df = pl.DataFrame({
+            "uuid": complete_data.select("uuid").to_series(),
+            "eye": complete_data.select("eye").to_series(),
+            "cluster": clusters,
+            "pca1": X_pca[:, 0],
+            "pca2": X_pca[:, 1],
+            "treatment_interval": complete_data.select("treatment_interval").to_series(),
+            "prev_va": complete_data.select("prev_va").to_series(),
+            "current_va": complete_data.select("current_va").to_series(),
+            "next_va": complete_data.select("next_va").to_series()
+        })
+        
+        # Save cluster results
+        cluster_df.write_csv(output_dir / f"va_interval_clusters_{n_clusters}.csv")
+        
+        # Visualize clusters
+        plt.figure(figsize=(12, 10))
+        
+        # Create a scatter plot of clusters
+        for cluster_id in range(n_clusters):
+            mask = clusters == cluster_id
+            plt.scatter(
+                X_pca[mask, 0], 
+                X_pca[mask, 1], 
+                label=f"Cluster {cluster_id+1}", 
+                alpha=0.7,
+                s=50
+            )
+        
+        # Add cluster centroids
+        plt.scatter(
+            kmeans.cluster_centers_[:, 0],
+            kmeans.cluster_centers_[:, 1],
+            marker='X',
+            s=200,
+            c='black',
+            label='Centroids'
+        )
+        
+        plt.title(f"PCA with {n_clusters} Clusters")
+        plt.xlabel(f"Principal Component 1 ({pca.explained_variance_ratio_[0]:.2%} variance)")
+        plt.ylabel(f"Principal Component 2 ({pca.explained_variance_ratio_[1]:.2%} variance)")
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.savefig(output_dir / f"va_interval_clusters_{n_clusters}.png")
+        plt.close()
+        
+        # Analyze cluster characteristics
+        cluster_stats = []
+        for cluster_id in range(n_clusters):
+            cluster_data = complete_data.filter(
+                pl.Series(clusters) == cluster_id
+            )
+            
+            stats = {
+                "cluster_id": cluster_id + 1,
+                "count": len(cluster_data),
+                "avg_interval": cluster_data.select("treatment_interval").mean()[0, 0],
+                "avg_prev_va": cluster_data.select("prev_va").mean()[0, 0],
+                "avg_current_va": cluster_data.select("current_va").mean()[0, 0],
+                "avg_next_va": cluster_data.select("next_va").mean()[0, 0],
+                "avg_va_change": (cluster_data.select("next_va").mean()[0, 0] - 
+                                 cluster_data.select("current_va").mean()[0, 0])
+            }
+            cluster_stats.append(stats)
+        
+        # Save cluster statistics
+        with open(output_dir / f"va_interval_cluster_stats_{n_clusters}.json", "w") as f:
+            json.dump(cluster_stats, f, indent=2)
+    
+    print(f"PCA analysis complete. Results saved to {output_dir}")
+
 def analyze_va_by_group(df: pl.DataFrame, interval_data: pl.DataFrame) -> None:
     """
     Analyze and visualize visual acuity by treatment group.
@@ -702,6 +1009,9 @@ def main():
     
     print("Analyzing visual acuity by group...")
     analyze_va_by_group(clustered_data, interval_data)
+    
+    print("Performing PCA analysis on treatment intervals and visual acuity...")
+    perform_va_interval_pca(interval_data)
     
     print(f"Analysis complete. Results saved to {output_dir}")
     

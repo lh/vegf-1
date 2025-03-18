@@ -2,6 +2,56 @@
 
 ## Current Status (March 18, 2025)
 
+### PCA Analysis of Treatment Intervals and Visual Acuity
+
+We have implemented a Principal Component Analysis (PCA) to identify patterns in treatment intervals and visual acuity measures. The analysis focused on:
+- Treatment interval (days between injections)
+- Previous VA (visual acuity at previous injection)
+- Current VA (visual acuity at current injection)
+- Next VA (visual acuity at next injection)
+
+The PCA analysis revealed several distinct clusters of treatment patterns:
+
+#### Two-Cluster Analysis:
+1. **Cluster 1** (5,165 records):
+   - Higher average interval: 83.6 days
+   - Lower average VA: ~41-42 letters
+   - Greater VA decline: -0.65 letters between injections
+
+2. **Cluster 2** (11,604 records):
+   - Lower average interval: 73.5 days
+   - Higher average VA: ~68-69 letters
+   - Less VA decline: -0.21 letters between injections
+
+#### Three-Cluster Analysis:
+1. **Cluster 1** (5,331 records):
+   - Moderate interval: 80.5 days
+   - Moderate VA: ~56 letters
+   - Moderate VA decline: -0.45 letters
+
+2. **Cluster 2** (3,028 records):
+   - Longer interval: 86.2 days
+   - Low VA: ~35 letters
+   - Greater VA decline: -0.61 letters
+
+3. **Cluster 3** (8,410 records):
+   - Shorter interval: 70.7 days
+   - High VA: ~72 letters
+   - Less VA decline: -0.19 letters
+
+#### Four-Cluster Analysis:
+The four-cluster analysis revealed a particularly interesting small group:
+
+4. **Cluster 4** (207 records):
+   - Very long intervals: 793.7 days (>2 years)
+   - Moderate starting VA: 64.4 letters
+   - Significant VA drop at injection: 52.4 letters
+   - VA improvement after injection: +1.59 letters
+
+This suggests a group of patients who have very long gaps between treatments, experience significant vision loss during the gap, but show improvement after receiving an injection.
+
+### Previous Treatment Pattern Analysis
+
 We have successfully implemented a new analysis to identify distinct treatment patterns in Eylea patients, specifically focusing on two hypothesized groups:
 
 1. **Group LH**: Patients who receive 7 injections in first year and then continue with injections approximately every two months.
