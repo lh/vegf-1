@@ -1,0 +1,18 @@
+[
+  {
+    "cluster_id": 0,
+    "count": 91,
+    "avg_pause": 223.92307692307693,
+    "avg_interval": 67.42880960860637,
+    "avg_std_interval": 26.391537548709405,
+    "avg_long_gaps": 0.3626373626373626
+  },
+  {
+    "cluster_id": 1,
+    "count": 31,
+    "avg_pause": 15.67741935483871,
+    "avg_interval": 130.10808099484652,
+    "avg_std_interval": 150.4631325220471,
+    "avg_long_gaps": 2.6451612903225805
+  }
+]
