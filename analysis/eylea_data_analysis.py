@@ -229,17 +229,19 @@ class EyleaDataAnalyzer:
             if not found:
                 logger.warning(f"Could not find any match for standard column '{std_col}'")
         
-        # Add any unmapped columns to the new DataFrame - use batch approach to avoid fragmentation
+        # Add any unmapped columns to the new DataFrame using batch approach to prevent DataFrame fragmentation
+        # This is more efficient than adding columns one by one with df[col] = value
         unmapped_cols = {}
         for col in original_columns:
             if col not in mapped_columns:
                 unmapped_cols[col] = self.data[col]
                 logger.debug(f"Kept unmapped column '{col}'")
         
-        # Create a DataFrame with unmapped columns
+        # Create a DataFrame with unmapped columns and concatenate with mapped columns
+        # Using pd.concat is more efficient than sequential column assignment for preventing fragmentation
         if unmapped_cols:
             unmapped_df = pd.DataFrame(unmapped_cols)
-            # Combine with the mapped columns
+            # Combine with the mapped columns in a single operation
             self.data = pd.concat([new_data, unmapped_df], axis=1)
         else:
             # No unmapped columns, just use the new_data
@@ -530,15 +532,18 @@ class EyleaDataAnalyzer:
         
         # Adjust Current Age by adding 0.5 years
         if 'Current Age' in self.data.columns:
-            # Create new columns in batch to avoid fragmentation
+            # Create new columns in batch to avoid DataFrame fragmentation
+            # This approach prevents the performance warnings that occur when adding columns one by one
             new_cols = pd.DataFrame()
             
             # Only adjust for non-deceased patients
             if 'Deceased' in self.data.columns:
                 living_patients = (self.data['Deceased'] != 1) | self.data['Deceased'].isna()
                 # Create Adjusted Age column - handle boolean mask correctly
+                # We use a temporary Series to handle the conditional assignment properly
                 new_cols['Adjusted Age'] = np.nan  # Initialize with NaN
-                # Create a temporary series with the adjusted age values
+                # Create a temporary series with the adjusted age values to avoid fragmentation
+                # This is more efficient than direct assignment to the DataFrame
                 adjusted_age = pd.Series(np.nan, index=self.data.index)
                 adjusted_age[living_patients] = self.data.loc[living_patients, 'Current Age'] + 0.5
                 new_cols['Adjusted Age'] = adjusted_age
@@ -770,9 +775,11 @@ class EyleaDataAnalyzer:
         """
         # Create a unique patient identifier
         if 'UUID' in self.data.columns:
-            # Use existing UUID if available and create eye-specific key - batch creation to avoid fragmentation
+            # Use existing UUID if available and create eye-specific key
+            # Using batch column creation with pd.DataFrame and pd.concat to avoid DataFrame fragmentation
+            # This approach is more efficient than adding columns one by one with df[col] = value
             if 'Eye' in self.data.columns:
-                # Create all columns at once
+                # Create all columns at once in a new DataFrame
                 new_cols = pd.DataFrame({
                     'patient_id': self.data['UUID'],
                     'eye_standardized': self.data['Eye'].str.upper().str.replace(' ', '_')
@@ -780,7 +787,8 @@ class EyleaDataAnalyzer:
                 # Add the eye_key column which depends on the other two
                 new_cols['eye_key'] = new_cols['patient_id'] + '_' + new_cols['eye_standardized']
                 
-                # Concatenate with original dataframe
+                # Concatenate with original dataframe in a single operation
+                # This prevents the performance warnings that occur when adding columns sequentially
                 self.data = pd.concat([self.data, new_cols], axis=1)
                 logger.info(f"Created eye-specific key for tracking treatments per eye")
             else:
