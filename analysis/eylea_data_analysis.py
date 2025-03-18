@@ -325,12 +325,18 @@ class EyleaDataAnalyzer:
             # Group by patient and check date ordering
             patient_groups = self.data.groupby('UUID')
             sequence_errors = 0
+            patients_with_sequence_errors = []
             
             for patient_id, group in patient_groups:
                 sorted_group = group.sort_values('Injection Date')
                 if not sorted_group['Injection Date'].equals(group['Injection Date']):
                     sequence_errors += 1
-                    logger.warning(f"Patient {patient_id} has out-of-sequence injection dates")
+                    # Store patient info instead of logging a warning
+                    patients_with_sequence_errors.append({
+                        'patient_id': patient_id,
+                        'injection_count': len(group),
+                        'date_range': f"{group['Injection Date'].min().strftime('%Y-%m-%d')} to {group['Injection Date'].max().strftime('%Y-%m-%d')}"
+                    })
             
             if sequence_errors > 0:
                 warning_msg = f"Found {sequence_errors} patients with out-of-sequence injection dates"
@@ -339,6 +345,13 @@ class EyleaDataAnalyzer:
                 
                 # Track temporal anomalies in data quality report
                 self.data_quality_report['temporal_anomalies']['sequence_errors'] = sequence_errors
+                self.data_quality_report['patients_with_sequence_errors'] = patients_with_sequence_errors
+                
+                # Save the list of patients with sequence errors to a CSV file
+                if self.output_dir:
+                    sequence_errors_path = os.path.join(self.output_dir, 'sequence_errors.csv')
+                    pd.DataFrame(patients_with_sequence_errors).to_csv(sequence_errors_path, index=False)
+                    logger.info(f"Saved list of patients with out-of-sequence injection dates to {sequence_errors_path}")
         
         # Store validation results in data quality report
         self.data_quality_report['validation_errors'] = validation_errors
@@ -470,6 +483,7 @@ class EyleaDataAnalyzer:
             # Handle implausible changes in VA
             if 'UUID' in self.data.columns:
                 implausible_changes = 0
+                patients_with_implausible_changes = []
                 
                 for patient_id, group in self.data.groupby('UUID'):
                     sorted_group = group.sort_values('Injection Date')
@@ -481,10 +495,29 @@ class EyleaDataAnalyzer:
                         large_changes = changes > 30
                         
                         if large_changes.sum() > 0:
-                            implausible_changes += large_changes.sum()
-                            logger.warning(f"Patient {patient_id} has {large_changes.sum()} implausibly large VA changes")
+                            change_count = large_changes.sum()
+                            implausible_changes += change_count
+                            
+                            # Store patient info instead of logging a warning
+                            patients_with_implausible_changes.append({
+                                'patient_id': patient_id,
+                                'implausible_change_count': int(change_count),
+                                'max_change': float(changes[large_changes].max())
+                            })
                 
+                # Store in data quality report
                 self.data_quality_report['va_implausible_changes'] = implausible_changes
+                self.data_quality_report['patients_with_implausible_changes'] = patients_with_implausible_changes
+                
+                # Log a summary instead of individual warnings
+                if implausible_changes > 0:
+                    logger.warning(f"Found {implausible_changes} implausibly large VA changes across {len(patients_with_implausible_changes)} patients")
+                    
+                    # Save the list of patients with implausible changes to a CSV file
+                    if self.output_dir:
+                        implausible_changes_path = os.path.join(self.output_dir, 'implausible_va_changes.csv')
+                        pd.DataFrame(patients_with_implausible_changes).to_csv(implausible_changes_path, index=False)
+                        logger.info(f"Saved list of patients with implausible VA changes to {implausible_changes_path}")
     
     def handle_temporal_anomalies(self):
         """
@@ -500,6 +533,7 @@ class EyleaDataAnalyzer:
         
         # Handle out-of-sequence dates
         sequence_fixes = 0
+        patients_fixed = []
         
         for patient_id, group in self.data.groupby('UUID'):
             if len(group) <= 1:
@@ -510,8 +544,14 @@ class EyleaDataAnalyzer:
                 continue
                 
             # Fix by sorting and recalculating intervals
-            logger.warning(f"Fixing out-of-sequence dates for patient {patient_id}")
             sequence_fixes += 1
+            
+            # Store patient info instead of logging a warning
+            patients_fixed.append({
+                'patient_id': patient_id,
+                'injection_count': len(group),
+                'date_range': f"{group['Injection Date'].min().strftime('%Y-%m-%d')} to {group['Injection Date'].max().strftime('%Y-%m-%d')}"
+            })
             
             # Sort by date
             sorted_indices = group.sort_values('Injection Date').index
@@ -520,6 +560,16 @@ class EyleaDataAnalyzer:
             self.data.loc[sorted_indices, 'Injection Date'] = self.data.loc[sorted_indices, 'Injection Date'].values
         
         self.data_quality_report['sequence_fixes'] = sequence_fixes
+        
+        # Log a summary instead of individual warnings
+        if sequence_fixes > 0:
+            logger.warning(f"Fixed out-of-sequence dates for {sequence_fixes} patients")
+            
+            # Save the list of patients with fixed sequence errors to a CSV file
+            if self.output_dir:
+                sequence_fixes_path = os.path.join(self.output_dir, 'sequence_fixes.csv')
+                pd.DataFrame(patients_fixed).to_csv(sequence_fixes_path, index=False)
+                logger.info(f"Saved list of patients with fixed sequence errors to {sequence_fixes_path}")
         
         # Identify treatment gaps > 6 months (180 days)
         if 'Days Since Last Injection' in self.data.columns:
@@ -746,10 +796,11 @@ class EyleaDataAnalyzer:
         for eye_key, eye_rows in self.data.groupby('eye_key'):
             # Extract patient_id and eye from eye_key
             patient_id = eye_rows['patient_id'].iloc[0]
+            uuid = eye_rows['UUID'].iloc[0] if 'UUID' in eye_rows.columns else patient_id
             eye = eye_rows['Eye'].iloc[0] if 'Eye' in eye_rows.columns else 'Unknown'
             
-            # Log the number of injections for this eye
-            logger.info(f"Processing eye_key {eye_key} with {len(eye_rows)} injections")
+            # Log the number of injections for this eye (at DEBUG level instead of INFO)
+            logger.debug(f"Processing eye_key {eye_key} with {len(eye_rows)} injections")
             
             # Sort by injection date
             if 'Injection Date' in eye_rows.columns:
@@ -759,16 +810,25 @@ class EyleaDataAnalyzer:
                 injection_dates = pd.to_datetime(eye_rows['Injection Date'])
                 
                 if len(injection_dates) > 1:
-                    logger.info(f"Eye {eye_key} has {len(injection_dates)} injection dates, calculating intervals")
+                    logger.debug(f"Eye {eye_key} has {len(injection_dates)} injection dates, calculating intervals")
                     for i in range(1, len(injection_dates)):
                         interval = (injection_dates.iloc[i] - injection_dates.iloc[i-1]).days
                         
                         # Flag very large gaps (>365 days) as potential new treatment course
                         very_long_gap = interval > 365
                         
-                        logger.info(f"  Interval {i}: {interval} days between {injection_dates.iloc[i-1]} and {injection_dates.iloc[i]}")
+                        # Extract VA scores if available
+                        prev_va = None
+                        current_va = None
+                        
+                        if 'VA Letter Score at Injection' in eye_rows.columns:
+                            prev_va = eye_rows.iloc[i-1]['VA Letter Score at Injection']
+                            current_va = eye_rows.iloc[i]['VA Letter Score at Injection']
+                        
+                        # Removed redundant interval logging
                         
                         intervals_data.append({
+                            'uuid': uuid,
                             'patient_id': patient_id,
                             'eye': eye,
                             'eye_key': eye_key,
@@ -776,12 +836,14 @@ class EyleaDataAnalyzer:
                             'previous_date': injection_dates.iloc[i-1],
                             'current_date': injection_dates.iloc[i],
                             'interval_days': interval,
+                            'prev_va': prev_va,
+                            'current_va': current_va,
                             'long_gap': interval > 180,  # Flag gaps > 6 months
                             'very_long_gap': very_long_gap,  # Flag gaps > 12 months
                             'potential_new_course': very_long_gap  # Flag as potential new course
                         })
                 else:
-                    logger.info(f"Eye {eye_key} has only {len(injection_dates)} injection date(s), skipping interval calculation")
+                    logger.debug(f"Eye {eye_key} has only {len(injection_dates)} injection date(s), skipping interval calculation")
         
         self.injection_intervals = pd.DataFrame(intervals_data)
         logger.debug(f"Created injection_intervals DataFrame with {len(self.injection_intervals)} rows")
@@ -1274,6 +1336,141 @@ class EyleaDataAnalyzer:
         
         plt.close()
     
+    def export_interval_va_data(self, format='csv', db_path=None):
+        """
+        Export the interval and VA data to CSV and optionally to SQLite.
+        
+        Args:
+            format: Output format ('csv', 'sqlite', or 'both')
+            db_path: Path to SQLite database (if None, uses default path)
+        
+        Returns:
+            dict: Paths to the exported files
+        """
+        if self.injection_intervals is None:
+            self.analyze_injection_intervals()
+        
+        if self.injection_intervals.empty:
+            logger.warning("No injection interval data available for export")
+            return {}
+        
+        logger.info("Exporting interval and VA data")
+        
+        # Create a DataFrame with the required columns
+        export_data = self.injection_intervals[['uuid', 'eye', 'interval_days', 
+                                               'prev_va', 'current_va', 
+                                               'previous_date', 'current_date']].copy()
+        
+        # Convert dates to string format for easier export
+        export_data['previous_date'] = export_data['previous_date'].dt.strftime('%Y-%m-%d')
+        export_data['current_date'] = export_data['current_date'].dt.strftime('%Y-%m-%d')
+        
+        # Create a list column with all intervals for each UUID
+        uuid_intervals = {}
+        
+        for uuid, group in export_data.groupby('uuid'):
+            intervals = group['interval_days'].tolist()
+            uuid_intervals[uuid] = intervals
+        
+        # Create a summary DataFrame with UUID and intervals list
+        summary_data = pd.DataFrame({
+            'uuid': list(uuid_intervals.keys()),
+            'intervals': list(uuid_intervals.values())
+        })
+        
+        # Add VA data to summary
+        uuid_va_data = {}
+        for uuid, group in export_data.groupby('uuid'):
+            va_data = []
+            for _, row in group.iterrows():
+                if pd.notna(row['prev_va']) and pd.notna(row['current_va']):
+                    va_data.append({
+                        'interval': row['interval_days'],
+                        'prev_va': row['prev_va'],
+                        'current_va': row['current_va']
+                    })
+            uuid_va_data[uuid] = va_data
+        
+        summary_data['va_data'] = [uuid_va_data.get(uuid, []) for uuid in summary_data['uuid']]
+        
+        # Export paths
+        export_paths = {}
+        
+        # Export to CSV
+        if format in ['csv', 'both']:
+            # Export detailed data
+            csv_path = os.path.join(self.output_dir, 'interval_va_data.csv')
+            export_data.to_csv(csv_path, index=False)
+            export_paths['csv'] = csv_path
+            logger.info(f"Exported interval and VA data to {csv_path}")
+            
+            # Export summary data (convert lists to strings for CSV)
+            summary_csv_path = os.path.join(self.output_dir, 'interval_va_summary.csv')
+            
+            # Convert lists to strings for CSV export
+            summary_data_csv = summary_data.copy()
+            summary_data_csv['intervals'] = summary_data_csv['intervals'].apply(lambda x: ','.join(map(str, x)))
+            summary_data_csv['va_data'] = summary_data_csv['va_data'].apply(lambda x: str(x))
+            
+            summary_data_csv.to_csv(summary_csv_path, index=False)
+            export_paths['summary_csv'] = summary_csv_path
+            logger.info(f"Exported interval and VA summary to {summary_csv_path}")
+        
+        # Export to SQLite
+        if format in ['sqlite', 'both']:
+            try:
+                import sqlite3
+                
+                # Use default path if not provided
+                if db_path is None:
+                    db_path = os.path.join(self.output_dir, 'eylea_intervals.db')
+                
+                # Connect to SQLite database
+                conn = sqlite3.connect(db_path)
+                
+                # Export detailed data
+                export_data.to_sql('interval_va_data', conn, if_exists='replace', index=False)
+                
+                # For the summary table with list data, we need to create it manually
+                cursor = conn.cursor()
+                
+                # Create summary table
+                cursor.execute('''
+                CREATE TABLE IF NOT EXISTS interval_summary (
+                    uuid TEXT PRIMARY KEY,
+                    intervals TEXT,
+                    va_data TEXT
+                )
+                ''')
+                
+                # Clear existing data
+                cursor.execute('DELETE FROM interval_summary')
+                
+                # Insert summary data
+                for _, row in summary_data.iterrows():
+                    cursor.execute(
+                        'INSERT INTO interval_summary VALUES (?, ?, ?)',
+                        (
+                            row['uuid'],
+                            str(row['intervals']),
+                            str(row['va_data'])
+                        )
+                    )
+                
+                # Commit changes and close connection
+                conn.commit()
+                conn.close()
+                
+                export_paths['sqlite'] = db_path
+                logger.info(f"Exported interval and VA data to SQLite database: {db_path}")
+                
+            except ImportError:
+                logger.warning("SQLite support not available, skipping SQLite export")
+            except Exception as e:
+                logger.error(f"Error exporting to SQLite: {str(e)}")
+        
+        return export_paths
+    
     def run_analysis(self):
         """Run the complete analysis pipeline."""
         # Reduce debug output
@@ -1303,6 +1500,9 @@ class EyleaDataAnalyzer:
         self.plot_va_change_distribution()
         self.plot_treatment_courses()
         
+        # Export interval and VA data
+        export_paths = self.export_interval_va_data(format='both')
+        
         logger.info("Analysis complete")
         
         # Count unique eyes
@@ -1317,7 +1517,8 @@ class EyleaDataAnalyzer:
             'mean_injection_interval': self.injection_intervals['interval_days'].mean() if self.injection_intervals is not None and not self.injection_intervals.empty else None,
             'median_injection_interval': self.injection_intervals['interval_days'].median() if self.injection_intervals is not None and not self.injection_intervals.empty else None,
             'output_dir': str(self.output_dir),
-            'data_quality_report': self.data_quality_report.get('summary', {})
+            'data_quality_report': self.data_quality_report.get('summary', {}),
+            'export_paths': export_paths
         }
 
 
