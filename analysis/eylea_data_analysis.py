@@ -229,14 +229,21 @@ class EyleaDataAnalyzer:
             if not found:
                 logger.warning(f"Could not find any match for standard column '{std_col}'")
         
-        # Add any unmapped columns to the new DataFrame
+        # Add any unmapped columns to the new DataFrame - use batch approach to avoid fragmentation
+        unmapped_cols = {}
         for col in original_columns:
             if col not in mapped_columns:
-                new_data[col] = self.data[col]
+                unmapped_cols[col] = self.data[col]
                 logger.debug(f"Kept unmapped column '{col}'")
         
-        # Replace the original DataFrame with the new one
-        self.data = new_data
+        # Create a DataFrame with unmapped columns
+        if unmapped_cols:
+            unmapped_df = pd.DataFrame(unmapped_cols)
+            # Combine with the mapped columns
+            self.data = pd.concat([new_data, unmapped_df], axis=1)
+        else:
+            # No unmapped columns, just use the new_data
+            self.data = new_data
         
         # Log column mapping results
         logger.info(f"Column mapping complete. Mapped {len(self.column_mapping_used)} columns.")
@@ -523,13 +530,37 @@ class EyleaDataAnalyzer:
         
         # Adjust Current Age by adding 0.5 years
         if 'Current Age' in self.data.columns:
+            # Create new columns in batch to avoid fragmentation
+            new_cols = pd.DataFrame()
+            
             # Only adjust for non-deceased patients
             if 'Deceased' in self.data.columns:
                 living_patients = (self.data['Deceased'] != 1) | self.data['Deceased'].isna()
-                self.data.loc[living_patients, 'Adjusted Age'] = self.data.loc[living_patients, 'Current Age'] + 0.5
+                # Create Adjusted Age column - handle boolean mask correctly
+                new_cols['Adjusted Age'] = np.nan  # Initialize with NaN
+                # Create a temporary series with the adjusted age values
+                adjusted_age = pd.Series(np.nan, index=self.data.index)
+                adjusted_age[living_patients] = self.data.loc[living_patients, 'Current Age'] + 0.5
+                new_cols['Adjusted Age'] = adjusted_age
             else:
-                self.data['Adjusted Age'] = self.data['Current Age'] + 0.5
+                new_cols['Adjusted Age'] = self.data['Current Age'] + 0.5
+            
+            # Calculate estimated birth date if injection dates exist
+            if 'Injection Date' in self.data.columns:
+                # Convert age in years to days
+                age_in_days = new_cols['Adjusted Age'] * 365.25
                 
+                # Subtract from injection date to get estimated birth date
+                new_cols['Estimated Birth Date'] = self.data['Injection Date'] - pd.to_timedelta(age_in_days, unit='D')
+            
+            # Add Days Since Last Injection column if needed
+            if 'Injection Date' in self.data.columns and 'UUID' in self.data.columns:
+                if 'Days Since Last Injection' not in self.data.columns:
+                    new_cols['Days Since Last Injection'] = np.nan
+            
+            # Concatenate new columns with original dataframe
+            self.data = pd.concat([self.data, new_cols], axis=1)
+            
             logger.info("Added 'Adjusted Age' column (+0.5 years to Current Age)")
             
             # Track age adjustments in data quality report
@@ -539,19 +570,10 @@ class EyleaDataAnalyzer:
                 'description': "Added 0.5 years to Current Age to account for temporal alignment"
             }
             
-            # Calculate estimated birth date if injection dates exist
-            if 'Injection Date' in self.data.columns:
-                # Convert age in years to days
-                age_in_days = self.data['Adjusted Age'] * 365.25
-                
-                # Subtract from injection date to get estimated birth date
-                self.data['Estimated Birth Date'] = self.data['Injection Date'] - pd.to_timedelta(age_in_days, unit='D')
+            if 'Estimated Birth Date' in new_cols.columns:
                 logger.info("Added 'Estimated Birth Date' based on Adjusted Age and Injection Date")
-        
-        # Handle missing Days Since Last Injection by calculating from dates
-        if 'Injection Date' in self.data.columns and 'UUID' in self.data.columns:
-            if 'Days Since Last Injection' not in self.data.columns:
-                self.data['Days Since Last Injection'] = np.nan
+            
+            if 'Days Since Last Injection' in new_cols.columns:
                 logger.info("Created 'Days Since Last Injection' column")
             
             # Calculate days since last injection for each patient
@@ -720,8 +742,11 @@ class EyleaDataAnalyzer:
             if long_gaps > 0:
                 logger.info(f"Found {long_gaps} treatment gaps > 6 months")
                 
-                # Flag these gaps in the data
-                self.data['Long_Gap'] = self.data['Days Since Last Injection'] > 180
+                # Flag these gaps in the data - use batch column creation to avoid fragmentation
+                new_cols = pd.DataFrame({
+                    'Long_Gap': self.data['Days Since Last Injection'] > 180
+                })
+                self.data = pd.concat([self.data, new_cols], axis=1)
     
     def create_patient_id(self):
         """
@@ -745,21 +770,27 @@ class EyleaDataAnalyzer:
         """
         # Create a unique patient identifier
         if 'UUID' in self.data.columns:
-            # Use existing UUID if available
-            self.data['patient_id'] = self.data['UUID']
-            logger.debug("Using existing UUID as patient_id")
-            
-            # Create an eye-specific key for tracking treatments per eye
+            # Use existing UUID if available and create eye-specific key - batch creation to avoid fragmentation
             if 'Eye' in self.data.columns:
-                # Standardize eye values (uppercase, remove spaces)
-                self.data['eye_standardized'] = self.data['Eye'].str.upper().str.replace(' ', '_')
-                # Create composite key: UUID_EYE
-                self.data['eye_key'] = self.data['UUID'] + '_' + self.data['eye_standardized']
+                # Create all columns at once
+                new_cols = pd.DataFrame({
+                    'patient_id': self.data['UUID'],
+                    'eye_standardized': self.data['Eye'].str.upper().str.replace(' ', '_')
+                })
+                # Add the eye_key column which depends on the other two
+                new_cols['eye_key'] = new_cols['patient_id'] + '_' + new_cols['eye_standardized']
+                
+                # Concatenate with original dataframe
+                self.data = pd.concat([self.data, new_cols], axis=1)
                 logger.info(f"Created eye-specific key for tracking treatments per eye")
             else:
+                # No Eye column, simpler case
+                new_cols = pd.DataFrame({
+                    'patient_id': self.data['UUID'],
+                    'eye_key': self.data['UUID']
+                })
+                self.data = pd.concat([self.data, new_cols], axis=1)
                 logger.warning("Eye column not found, cannot create eye-specific key")
-                # Fall back to using UUID as eye_key
-                self.data['eye_key'] = self.data['UUID']
         else:
             # Create a composite ID from available fields
             id_components = []
