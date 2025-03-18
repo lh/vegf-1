@@ -1,6 +1,22 @@
 # Eylea Data Analysis Progress
 
-## Current Status (February 25, 2025)
+## Current Status (March 18, 2025)
+
+We have successfully implemented a new analysis to identify distinct treatment patterns in Eylea patients, specifically focusing on two hypothesized groups:
+
+1. **Group LH**: Patients who receive 7 injections in first year and then continue with injections approximately every two months.
+2. **Group MR**: Patients who receive 7 injections in first year, then have a pause before resumption of treatment.
+
+The analysis identified:
+- 36 patients in Group LH (2.1% of total)
+- 33 patients in Group MR (1.9% of total)
+- 382 patients with exactly 7 injections in first year (22.2% of total)
+
+We also performed K-means clustering which identified similar patterns but with more patients in each group, suggesting our manual criteria may be too strict.
+
+A detailed report of this analysis is available in [eylea_treatment_patterns_analysis.md](eylea_treatment_patterns_analysis.md).
+
+## Previous Status (February 25, 2025)
 
 We have successfully fixed several issues in the Eylea data analysis code that were causing test failures and analysis problems. The main improvements include:
 
