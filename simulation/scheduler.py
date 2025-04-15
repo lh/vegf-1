@@ -87,11 +87,29 @@ class ClinicScheduler:
         bool
             True if slot is available, False if needs rescheduling
 
+        Examples
+        --------
+        >>> event = Event(time=datetime(2023,1,1), ...)
+        >>> if scheduler.request_slot(event, end_date=datetime(2023,12,31)):
+        ...     print("Slot available")
+        ... else:
+        ...     print("Visit needs rescheduling")
+
         Notes
         -----
         - Automatically initializes tracking for new dates
         - Handles non-clinic days (e.g., weekends) by rescheduling
         - Updates appointment counts when slot is granted
+        - Rescheduling maintains original appointment details
+        - Time values should be timezone-naive datetimes
+
+        Algorithm
+        ---------
+        1. Check if requested date is a clinic day
+        2. Initialize slot count if new date
+        3. Check daily capacity
+        4. If no capacity or non-clinic day, trigger rescheduling
+        5. If capacity available, increment count and return True
         """
         visit_date = event.time.date()
         
@@ -124,22 +142,40 @@ class ClinicScheduler:
         Parameters
         ----------
         event_factory : Callable
-            Function to create visit events
+            Function to create visit events with signature:
+            (time: datetime, event_type: str, patient_id: str, data: dict) -> Event
         patient_id : str
             Patient identifier
         last_visit : datetime
             Time of the last visit
         next_visit_interval : int
-            Number of weeks until the next visit
+            Number of weeks until the next visit (must be positive)
 
         Returns
         -------
         Optional[Event]
             Scheduled visit event, or None if beyond simulation end
 
+        Raises
+        ------
+        ValueError
+            If next_visit_interval is not positive
+
+        Examples
+        --------
+        >>> next_visit = scheduler.schedule_next_visit(
+        ...     event_factory=create_visit_event,
+        ...     patient_id="123",
+        ...     last_visit=datetime(2023,1,1),
+        ...     next_visit_interval=4
+        ... )
+
         Notes
         -----
-        Maintains the same time of day as the original appointment for consistency.
+        - Maintains the same time of day as the original appointment
+        - Handles week-to-day conversion automatically
+        - Returns None if calculated visit would be after simulation end
+        - Visit intervals must be positive integers
         """
         # Calculate next visit time based on last visit
         next_time = last_visit + timedelta(weeks=next_visit_interval)
