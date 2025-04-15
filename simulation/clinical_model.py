@@ -189,7 +189,7 @@ class ClinicalModel:
         return self.transition_probabilities[current_state].copy()
 
     def simulate_disease_progression(self, current_state: DiseaseState) -> DiseaseState:
-        """Simulate disease state progression.
+        """Simulate disease state progression using configured transition probabilities.
 
         Parameters
         ----------
@@ -201,13 +201,40 @@ class ClinicalModel:
         DiseaseState
             New disease state after progression
 
+        Raises
+        ------
+        ValueError
+            If current_state is not a valid DiseaseState
+
+        Examples
+        --------
+        >>> model = ClinicalModel(config)
+        >>> current_state = DiseaseState.NAIVE
+        >>> new_state = model.simulate_disease_progression(current_state)
+        >>> print(f"Transitioned from {current_state} to {new_state}")
+
         Notes
         -----
-        Progression logic:
-        1. NAIVE state has special transition probabilities to other states
-        2. Other states use configured transition probabilities
+        Disease progression follows these rules:
+        1. NAIVE state has fixed transition probabilities:
+            - STABLE: 30%
+            - ACTIVE: 60%
+            - HIGHLY_ACTIVE: 10%
+        2. Other states use probabilities from configuration
         3. If no probabilities defined, remains in current state
-        4. Probabilities are normalized to sum to 1
+        4. Probabilities are normalized to sum to 1 if needed
+
+        The method handles:
+        - Validation of current_state
+        - Special case for NAIVE state
+        - Probability normalization
+        - Random selection of next state
+        - Debug logging of transitions
+
+        Transition probabilities represent clinical observations of AMD progression:
+        - NAIVE patients most likely to transition to ACTIVE state
+        - STABLE patients typically remain stable
+        - ACTIVE patients may progress to HIGHLY_ACTIVE or regress to STABLE
         """
         print(f"DEBUG: Simulating disease progression - Current state: {current_state}")
         
