@@ -63,10 +63,29 @@ class DiseaseState(Enum):
     """Disease states for AMD progression.
 
     Enumeration of possible disease states in the AMD progression model:
-    - NAIVE: Initial state for new patients
-    - STABLE: Disease is under control
-    - ACTIVE: Disease shows signs of activity
-    - HIGHLY_ACTIVE: Disease shows high levels of activity
+
+    Attributes
+    ----------
+    NAIVE : 
+        Initial state for new patients with no prior treatment.
+        Typically transitions to other states in first visit.
+    STABLE : 
+        Disease is under control with minimal activity.
+        Patients typically maintain or slightly improve vision.
+    ACTIVE : 
+        Disease shows signs of activity with fluid accumulation.
+        Patients typically experience vision decline without treatment.
+    HIGHLY_ACTIVE : 
+        Disease shows high levels of activity with significant fluid.
+        Patients experience rapid vision decline without treatment.
+
+    Notes
+    -----
+    State transitions are probabilistic and configurable via ClinicalModel.
+    Default transition probabilities from NAIVE state:
+        - STABLE: 30%
+        - ACTIVE: 60%
+        - HIGHLY_ACTIVE: 10%
     """
     NAIVE = 0
     STABLE = 1
@@ -285,12 +304,20 @@ class ClinicalModel:
         Parameters
         ----------
         state : Dict
-            Current patient state including:
+            Current patient state dictionary with these required keys:
                 - disease_state: Current disease state (str or DiseaseState)
+                    Must be one of: NAIVE, STABLE, ACTIVE, HIGHLY_ACTIVE
                 - injections: Total number of injections (int)
-                - last_recorded_injection: Number of last recorded injection (int)
+                    Count of all injections received
+                - last_recorded_injection: Number of last recorded injection (int) 
+                    Used to detect new injections
                 - weeks_since_last_injection: Weeks since last injection (int)
+                    Used in time factor calculation
                 - current_vision: Current vision score (ETDRS letters, int)
+                    Must be between 0-100 (will be clamped if outside range)
+            
+            Optional keys:
+                - debug: bool - Enable debug output if True
 
         Returns
         -------
@@ -318,22 +345,37 @@ class ClinicalModel:
 
         Notes
         -----
-        Vision change is calculated using the formula:
+        Mathematical Model:
             ΔV = (B × T × C) + N
 
         Where:
             ΔV: Vision change (ETDRS letters)
+                Positive values indicate vision improvement
+                Negative values indicate vision decline
             B: Base change (state and injection dependent)
-                - Normally distributed with state-specific mean/SD
-                - Different distributions for injection vs non-injection visits
+                - Normally distributed: N(μ, σ)
+                - μ and σ configured per state in vision_change_params
+                - Separate distributions for injection vs non-injection visits
+                - Typical ranges:
+                    Injection: μ = +5 to +15 letters
+                    Non-injection: μ = -5 to +5 letters
             T: Time factor (1 + weeks_since_injection/max_weeks)
                 - Models decreasing treatment effect over time
-                - max_weeks typically 52 (1 year)
-            C: Ceiling factor (1 - current_vision/max_vision) 
-                - Reduces effect as vision approaches maximum (typically 100 letters)
-                - Prevents unrealistic high vision scores
+                - max_weeks typically 52 (1 year) from config
+                - Ranges from 1 (immediate post-injection) to 2 (1 year post-injection)
+            C: Ceiling factor (1 - current_vision/max_vision)
+                - max_vision typically 100 letters from config  
+                - Ranges from 1 (0 letters) to 0 (100 letters)
+                - Limits unrealistic vision improvements at high acuity
             N: Measurement noise (normally distributed)
-                - Represents test-retest variability (SD typically 0.5 letters)
+                - Represents test-retest variability
+                - Typically N(0, 0.5) letters from config
+
+        Edge Cases:
+            - If current_vision > max_vision, ceiling_factor is clamped to 0
+            - If weeks_since_injection > max_weeks, time_factor is clamped to 2
+            - If state missing required keys, uses defaults:
+                weeks_since_injection=0, current_vision=70
 
         The model captures key clinical aspects:
         1. State-dependent response to treatment
