@@ -272,21 +272,47 @@ class ClinicalModel:
                 - Vision change in ETDRS letters (positive = improvement)
                 - New disease state
 
-        Notes
-        -----
-        Vision change calculation formula:
-            total_change = (base_change * time_factor * ceiling_factor) + measurement_noise
-
-        Where:
-            - base_change: State and injection-dependent mean change
-            - time_factor: 1 + (weeks_since_injection / max_weeks)
-            - ceiling_factor: 1 - (current_vision / max_vision)
-            - measurement_noise: Random variability
-
         Raises
         ------
         ValueError
             If required vision change parameters are missing from configuration
+
+        Examples
+        --------
+        >>> state = {
+        ...     "disease_state": "NAIVE", 
+        ...     "injections": 1,
+        ...     "last_recorded_injection": 0,
+        ...     "weeks_since_last_injection": 4,
+        ...     "current_vision": 70
+        ... }
+        >>> vision_change, new_state = model.simulate_vision_change(state)
+        >>> print(f"Vision changed by {vision_change:.1f} letters")
+
+        Notes
+        -----
+        Vision change is calculated using the formula:
+            ΔV = (B × T × C) + N
+
+        Where:
+            ΔV: Vision change (ETDRS letters)
+            B: Base change (state and injection dependent)
+                - Normally distributed with state-specific mean/SD
+                - Different distributions for injection vs non-injection visits
+            T: Time factor (1 + weeks_since_injection/max_weeks)
+                - Models decreasing treatment effect over time
+                - max_weeks typically 52 (1 year)
+            C: Ceiling factor (1 - current_vision/max_vision) 
+                - Reduces effect as vision approaches maximum (typically 100 letters)
+                - Prevents unrealistic high vision scores
+            N: Measurement noise (normally distributed)
+                - Represents test-retest variability (SD typically 0.5 letters)
+
+        The model captures key clinical aspects:
+        1. State-dependent response to treatment
+        2. Waning of treatment effect over time  
+        3. Diminishing returns at higher vision levels
+        4. Realistic measurement variability
         """
         current_disease_state = state.get("disease_state", DiseaseState.NAIVE)
         if isinstance(current_disease_state, str):
