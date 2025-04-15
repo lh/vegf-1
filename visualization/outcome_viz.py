@@ -1,3 +1,35 @@
+"""Visualization of patient outcomes and treatment results.
+
+This module provides tools for visualizing key metrics from ophthalmic treatment
+protocols, including visual acuity trends, patient retention, and other outcomes.
+
+Key Features
+------------
+- Mean visual acuity plotting with confidence intervals
+- Patient retention curves
+- Statistical annotations and reference lines
+- Publication-quality figure formatting
+
+Dependencies
+------------
+- matplotlib: For figure generation
+- numpy: For numerical operations
+- analysis.patient_outcomes: For statistical analysis
+
+Examples
+--------
+>>> from visualization.outcome_viz import OutcomeVisualizer
+>>> viz = OutcomeVisualizer()
+>>> viz.plot_mean_acuity(patient_data)
+>>> viz.plot_patient_retention(patient_data)
+
+Notes
+-----
+- All visual acuity values in ETDRS letters
+- Time units in weeks unless specified
+- Figures automatically handle date formatting and labeling
+"""
+
 from datetime import datetime
 from typing import Dict, List, Optional
 import matplotlib.pyplot as plt
@@ -5,13 +37,43 @@ import numpy as np
 from analysis.patient_outcomes import PatientOutcomeAnalyzer, TimePoint
 
 class OutcomeVisualizer:
-    """Visualizes patient outcome data with statistical analysis"""
+    """Visualizes patient outcome data with statistical analysis.
+
+    This class provides methods to generate publication-quality visualizations
+    of clinical trial outcomes, including visual acuity trends and patient retention.
+
+    Attributes
+    ----------
+    figsize : tuple
+        Default figure size (width, height) in inches
+    analyzer : PatientOutcomeAnalyzer
+        Statistical analysis helper class
+
+    Examples
+    --------
+    >>> viz = OutcomeVisualizer(figsize=(10, 6))
+    >>> viz.plot_mean_acuity(patient_data)
+    >>> viz.plot_patient_retention(patient_data)
+
+    Notes
+    -----
+    - All visualizations use ETDRS letter scores (0-100 scale)
+    - Time units are in weeks unless specified
+    - Figures include statistical annotations and reference lines
+    """
     
     def __init__(self, figsize=(12, 6)):
-        """Initialize visualizer
-        
-        Args:
-            figsize: Figure size in inches (width, height)
+        """Initialize the outcome visualizer with default figure size.
+
+        Parameters
+        ----------
+        figsize : tuple, optional
+            Default figure dimensions (width, height) in inches.
+            Default is (12, 6) for landscape orientation.
+
+        Examples
+        --------
+        >>> viz = OutcomeVisualizer(figsize=(10, 5))
         """
         self.figsize = figsize
         self.analyzer = PatientOutcomeAnalyzer()
@@ -19,13 +81,33 @@ class OutcomeVisualizer:
     def plot_mean_acuity(self, patient_data: Dict[str, List[Dict]], 
                         show: bool = True, save_path: Optional[str] = None,
                         title: str = "Mean Visual Acuity Over Time"):
-        """Create a plot showing mean acuity with confidence intervals over time
-        
-        Args:
-            patient_data: Dictionary of patient IDs to their visit histories
-            show: Whether to display the plot
-            save_path: Optional path to save the plot
-            title: Title for the plot
+        """Plot mean visual acuity with confidence intervals over time.
+
+        Parameters
+        ----------
+        patient_data : Dict[str, List[Dict]]
+            Dictionary mapping patient IDs to lists of visit dictionaries.
+            Each visit dict should contain:
+            - 'date': datetime of visit
+            - 'vision': ETDRS letter score (0-100)
+        show : bool, optional
+            Whether to display the plot (default True)
+        save_path : str, optional
+            File path to save the plot (default None)
+        title : str, optional
+            Plot title (default "Mean Visual Acuity Over Time")
+
+        Returns
+        -------
+        None
+            Displays or saves plot but returns nothing
+
+        Notes
+        -----
+        - Uses 95% confidence intervals assuming normal distribution
+        - Includes secondary axis showing number of patients
+        - Automatically converts weeks to months on x-axis
+        - Adds median follow-up annotation
         """
         # Analyze data
         time_points = self.analyzer.analyze_visual_acuity(patient_data)
@@ -98,13 +180,31 @@ class OutcomeVisualizer:
     def plot_patient_retention(self, patient_data: Dict[str, List[Dict]],
                              show: bool = True, save_path: Optional[str] = None,
                              title: str = "Patient Retention Over Time"):
-        """Create a plot showing patient retention over time
-        
-        Args:
-            patient_data: Dictionary of patient IDs to their visit histories
-            show: Whether to display the plot
-            save_path: Optional path to save the plot
-            title: Title for the plot
+        """Plot patient retention percentage over time.
+
+        Parameters
+        ----------
+        patient_data : Dict[str, List[Dict]]
+            Dictionary mapping patient IDs to lists of visit dictionaries.
+            Each visit dict should contain:
+            - 'date': datetime of visit
+        show : bool, optional
+            Whether to display the plot (default True)
+        save_path : str, optional
+            File path to save the plot (default None)
+        title : str, optional
+            Plot title (default "Patient Retention Over Time")
+
+        Returns
+        -------
+        None
+            Displays or saves plot but returns nothing
+
+        Notes
+        -----
+        - Retention calculated as percentage of initial cohort
+        - X-axis shows months since treatment start
+        - Uses same patient data structure as plot_mean_acuity
         """
         # Analyze data
         time_points = self.analyzer.analyze_visual_acuity(patient_data)
