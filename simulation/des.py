@@ -10,13 +10,70 @@ from .clinical_model import ClinicalModel
 from .scheduler import ClinicScheduler
 
 class DiscreteEventSimulation(BaseSimulation):
-    """
-    Pure DES implementation focusing on event flows and aggregate statistics
-    rather than individual agent modeling.
+    """Pure Discrete Event Simulation (DES) implementation for AMD treatment modeling.
+
+    This implementation focuses on event flows and aggregate statistics rather than
+    individual agent modeling. It provides a more efficient alternative to ABS when
+    detailed patient-level tracking isn't required.
+
+    Parameters
+    ----------
+    config : SimulationConfig
+        Configuration object containing:
+        - protocol: Treatment protocol definition
+        - start_date: Simulation start date
+        - duration_days: Simulation duration in days
+        - random_seed: Optional random seed
+    environment : Optional[SimulationEnvironment], optional
+        Shared simulation environment, creates new one if None (default: None)
+
+    Attributes
+    ----------
+    config : SimulationConfig
+        Simulation configuration
+    global_stats : Dict[str, Any]
+        Aggregated statistics including:
+        - total_visits: Count of all visits
+        - total_injections: Count of injections
+        - total_oct_scans: Count of OCT scans
+        - vision_improvements: Count of vision improvements
+        - vision_declines: Count of vision declines
+        - scheduling: Clinic scheduling metrics
+    scheduler : ClinicScheduler
+        Manages clinic visit scheduling
+    patient_generator : PatientGenerator
+        Generates patient arrival times
+    patients : Dict[str, PatientState]
+        Dictionary of patient states keyed by ID
+
+    Notes
+    -----
+    Key differences from ABS:
+    - Tracks aggregate statistics rather than individual histories
+    - Uses simplified patient state representation
+    - More efficient for large-scale simulations
+    - Better for analyzing system-level performance
     """
     def __init__(self, config: SimulationConfig,
                  environment: Optional[SimulationEnvironment] = None):
-        """Initialize DES with configuration"""
+        """Initialize DES simulation with configuration.
+
+        Parameters
+        ----------
+        config : SimulationConfig
+            Simulation configuration parameters
+        environment : Optional[SimulationEnvironment], optional
+            Shared simulation environment (default: None)
+
+        Notes
+        -----
+        Initializes:
+        - Protocol registration
+        - Random seed
+        - Statistics tracking
+        - Scheduler
+        - Patient generator
+        """
         super().__init__(config.start_date, environment)
         self.config = config
         
@@ -63,7 +120,13 @@ class DiscreteEventSimulation(BaseSimulation):
         self.patients: Dict[str, PatientState] = {}
     
     def _schedule_patient_arrivals(self):
-        """Schedule patient arrival events based on generator"""
+        """Schedule patient arrival events based on generator.
+
+        Notes
+        -----
+        Uses Poisson process to generate realistic arrival times.
+        Creates 'add_patient' events for each arrival.
+        """
         arrival_times = self.patient_generator.generate_arrival_times()
         for arrival_time, patient_num in arrival_times:
             patient_id = f"TEST{patient_num:03d}"
@@ -76,7 +139,20 @@ class DiscreteEventSimulation(BaseSimulation):
             ))
     
     def process_event(self, event: Event):
-        """Process different event types in the simulation"""
+        """Process different event types in the simulation.
+
+        Parameters
+        ----------
+        event : Event
+            Event to process, with types:
+            - 'visit': Patient visit
+            - 'treatment_decision': Treatment decision
+            - 'add_patient': New patient arrival
+
+        Notes
+        -----
+        Routes events to appropriate handler methods.
+        """
         if event.event_type == "visit":
             self._handle_visit(event)
         elif event.event_type == "treatment_decision":
@@ -85,7 +161,19 @@ class DiscreteEventSimulation(BaseSimulation):
             self._handle_add_patient(event)
     
     def _handle_add_patient(self, event: Event):
-        """Handle patient arrival events"""
+        """Handle patient arrival events.
+
+        Parameters
+        ----------
+        event : Event
+            Event containing:
+            - patient_id: Generated patient ID
+            - data.protocol_name: Protocol to assign
+
+        Notes
+        -----
+        Creates new patient state and schedules initial visit.
+        """
         patient_id = event.patient_id
         protocol_name = event.data["protocol_name"]
         
@@ -117,7 +205,21 @@ class DiscreteEventSimulation(BaseSimulation):
         ))
     
     def _handle_visit(self, event: Event):
-        """Handle patient visit events using protocol objects"""
+        """Handle patient visit events using protocol objects.
+
+        Parameters
+        ----------
+        event : Event
+            Visit event containing:
+            - patient_id: Patient identifier
+            - data.actions: List of actions to perform
+            - data.visit_type: Type of visit
+
+        Notes
+        -----
+        Updates global statistics and schedules treatment decisions.
+        Only processes visit if clinic resources are available.
+        """
         patient_id = event.patient_id
         if patient_id not in self.patients:
             return
@@ -166,7 +268,21 @@ class DiscreteEventSimulation(BaseSimulation):
             ))
     
     def _handle_treatment_decision(self, event: Event):
-        """Handle treatment decision events using protocol objects"""
+        """Handle treatment decision events using protocol objects.
+
+        Parameters
+        ----------
+        event : Event
+            Decision event containing:
+            - patient_id: Patient identifier
+            - data.decision_type: Type of decision
+            - data.visit_data: Results from visit
+
+        Notes
+        -----
+        Processes phase transitions and schedules next visit.
+        Applies safety checks to visit intervals.
+        """
         patient_id = event.patient_id
         if patient_id not in self.patients:
             return
@@ -211,5 +327,20 @@ class DiscreteEventSimulation(BaseSimulation):
     
     @property
     def patient_states(self) -> Dict[str, Dict]:
-        """Get all patient states for compatibility with existing code"""
+        """Get all patient states for analysis and reporting.
+
+        Returns
+        -------
+        Dict[str, Dict]
+            Dictionary mapping patient IDs to their state dictionaries
+
+        Notes
+        -----
+        Provides compatibility with existing analysis code.
+        State dictionaries contain:
+        - current_vision: Visual acuity
+        - disease_state: AMD stage
+        - treatment_history: List of treatments
+        - next_visit_weeks: Weeks until next visit
+        """
         return {pid: patient.state for pid, patient in self.patients.items()}
