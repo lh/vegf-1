@@ -1,8 +1,36 @@
-"""
-Treatment Patterns Visualization
+"""Visualization tools for analyzing intravitreal injection treatment patterns.
 
-This module provides visualization functions for analyzing treatment patterns
-in intravitreal injection data.
+This module provides functions to generate publication-quality visualizations of
+treatment patterns in patients receiving intravitreal injections.
+
+Key Features
+------------
+- Injection frequency heatmaps by month/year
+- Treatment duration waterfall plots
+- Injection interval analysis by sequence number
+- Kaplan-Meier treatment persistence curves
+- Visual acuity outcomes by injection count
+
+Dependencies
+------------
+- pandas: For data manipulation
+- matplotlib: For figure generation
+- seaborn: For enhanced visualizations
+- lifelines: For survival analysis (optional)
+
+Examples
+--------
+>>> from visualization import treatment_patterns_viz
+>>> df = pd.read_csv('injection_data.csv')
+>>> fig = treatment_patterns_viz.plot_injection_frequency_heatmap(df)
+>>> fig.show()
+
+Notes
+-----
+- All visual acuity values in ETDRS letters (0-100 scale)
+- Time units in days unless specified
+- Figures include statistical annotations and reference lines
+- Automatic figure saving supported
 """
 
 import os
@@ -19,15 +47,36 @@ logger = logging.getLogger(__name__)
 
 
 def plot_injection_frequency_heatmap(data, output_path=None):
-    """
-    Create a heatmap showing injection frequency over time.
+    """Create a heatmap of injection frequency by month and year.
     
-    Args:
-        data: DataFrame with 'patient_id' and 'Injection Date' columns
-        output_path: Path to save the plot (optional)
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        DataFrame containing injection records with required columns:
+        - 'patient_id': Unique patient identifier (str or int)
+        - 'Injection Date': Date of each injection (datetime or parsable string)
+    output_path : str, optional
+        File path to save the plot image. If None, plot is not saved.
+        Supported formats: .png, .jpg, .pdf, .svg
     
-    Returns:
-        matplotlib figure
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated figure object. Can be displayed with fig.show()
+        or saved with fig.savefig().
+
+    Examples
+    --------
+    >>> df = pd.read_csv('injection_data.csv')
+    >>> fig = plot_injection_frequency_heatmap(df, output_path='output/heatmap.png')
+    >>> fig.show()
+
+    Notes
+    -----
+    - Automatically handles date parsing from strings
+    - Uses YlGnBu color palette by default
+    - Includes month names on x-axis
+    - Logs warnings if required columns are missing
     """
     logger.debug("Creating injection frequency heatmap")
     
@@ -72,15 +121,34 @@ def plot_injection_frequency_heatmap(data, output_path=None):
 
 
 def plot_treatment_duration_waterfall(patient_data, output_path=None):
-    """
-    Create a waterfall plot of treatment durations.
+    """Create waterfall plot of treatment durations across patients.
     
-    Args:
-        patient_data: DataFrame with 'patient_id' and 'treatment_duration_days' columns
-        output_path: Path to save the plot (optional)
+    Parameters
+    ----------
+    patient_data : pandas.DataFrame
+        DataFrame containing treatment duration data with required columns:
+        - 'patient_id': Unique patient identifier (str or int)
+        - 'treatment_duration_days': Numeric duration in days
+    output_path : str, optional
+        File path to save the plot image. If None, plot is not saved.
     
-    Returns:
-        matplotlib figure
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated figure object with waterfall plot
+    
+    Examples
+    --------
+    >>> df = pd.read_csv('treatment_durations.csv')
+    >>> fig = plot_treatment_duration_waterfall(df)
+    >>> fig.savefig('output/duration_waterfall.png')
+
+    Notes
+    -----
+    - Patients are sorted by treatment duration
+    - Includes reference lines at 1, 2 and 3 year durations
+    - Uses steelblue color for bars
+    - Logs warnings if required columns are missing
     """
     logger.debug("Creating treatment duration waterfall plot")
     
@@ -119,15 +187,35 @@ def plot_treatment_duration_waterfall(patient_data, output_path=None):
 
 
 def plot_injection_interval_by_sequence(intervals_data, output_path=None):
-    """
-    Plot injection intervals by sequence number.
+    """Plot injection intervals by sequence number with statistics.
     
-    Args:
-        intervals_data: DataFrame with 'injection_number' and 'interval_days' columns
-        output_path: Path to save the plot (optional)
+    Parameters
+    ----------
+    intervals_data : pandas.DataFrame
+        DataFrame containing interval data with required columns:
+        - 'injection_number': Integer sequence number (1st, 2nd, etc.)
+        - 'interval_days': Numeric days since previous injection
+    output_path : str, optional
+        File path to save the plot image. If None, plot is not saved.
     
-    Returns:
-        matplotlib figure
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated figure object with interval statistics
+    
+    Examples
+    --------
+    >>> df = pd.read_csv('injection_intervals.csv')
+    >>> fig = plot_injection_interval_by_sequence(df)
+    >>> fig.show()
+
+    Notes
+    -----
+    - Only includes injection numbers with ≥5 patients (configurable)
+    - Shows mean ± SD and median intervals
+    - Includes reference lines for monthly (28d), bi-monthly (56d), quarterly (84d)
+    - Annotates each point with patient count
+    - Logs warnings if required columns are missing
     """
     logger.debug("Creating injection interval by sequence plot")
     
@@ -186,15 +274,27 @@ def plot_injection_interval_by_sequence(intervals_data, output_path=None):
 
 
 def plot_treatment_persistence(patient_data, output_path=None):
-    """
-    Create a Kaplan-Meier plot of treatment persistence.
+    """Create Kaplan-Meier plot of treatment persistence over time.
     
-    Args:
-        patient_data: DataFrame with treatment duration information
-        output_path: Path to save the plot (optional)
+    Parameters
+    ----------
+    patient_data : pandas.DataFrame
+        DataFrame containing treatment duration data with columns:
+        - 'treatment_duration_days': Days from first to last injection
+        - 'event': 1 if discontinued, 0 if still in treatment (optional)
+    output_path : str, optional
+        File path to save the plot image
     
-    Returns:
-        matplotlib figure
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated figure object
+    
+    Notes
+    -----
+    - Falls back to simple histogram if lifelines package not available
+    - Includes reference lines at 1, 2 and 3 years
+    - Requires 'treatment_duration_days' column
     """
     logger.debug("Creating treatment persistence plot")
     
@@ -278,15 +378,27 @@ def plot_treatment_persistence(patient_data, output_path=None):
 
 
 def plot_va_by_injection_count(data, output_path=None):
-    """
-    Plot visual acuity outcomes by number of injections received.
+    """Plot visual acuity outcomes by number of injections received.
     
-    Args:
-        data: DataFrame with patient data including VA and injection counts
-        output_path: Path to save the plot (optional)
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        DataFrame containing visual acuity and injection data with columns:
+        - 'injection_count': Total number of injections received
+        - 'va_change': Change in visual acuity from baseline (ETDRS letters)
+    output_path : str, optional
+        File path to save the plot image
     
-    Returns:
-        matplotlib figure
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated figure object
+    
+    Notes
+    -----
+    - Only includes injection counts with at least 3 patients
+    - Shows both mean (with SD) and median VA change
+    - Includes reference line at zero change
     """
     logger.debug("Creating VA by injection count plot")
     
