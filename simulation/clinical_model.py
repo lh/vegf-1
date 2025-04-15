@@ -4,17 +4,55 @@ This module implements the clinical aspects of AMD progression, including diseas
 vision changes, and treatment effects. It uses a state-based model with probabilistic
 transitions and configurable parameters for vision changes.
 
-Notes
------
-Key Features:
+Classes
+-------
+DiseaseState
+    Enumeration of possible AMD disease states
+ClinicalModel
+    Core class implementing disease progression and vision change logic
+
+Key Features
+------------
 - Four disease states (NAIVE, STABLE, ACTIVE, HIGHLY_ACTIVE)
 - Configurable transition probabilities between states
 - Vision change modeling with:
-  - State-dependent base changes
-  - Time since last injection factor
-  - Vision ceiling effect
-  - Measurement noise
+    - State-dependent base changes
+    - Time since last injection factor
+    - Vision ceiling effect
+    - Measurement noise
 - Injection vs non-injection visit differentiation
+
+Mathematical Model
+-----------------
+Vision change is calculated as:
+    ΔV = (B × T × C) + N
+Where:
+    ΔV: Vision change (ETDRS letters)
+    B: Base change (state and injection dependent)
+    T: Time factor (1 + weeks_since_injection/max_weeks)
+    C: Ceiling factor (1 - current_vision/max_vision)
+    N: Measurement noise (normally distributed)
+
+State Transitions
+----------------
+NAIVE → STABLE: 30%
+NAIVE → ACTIVE: 60% 
+NAIVE → HIGHLY_ACTIVE: 10%
+Other transitions configurable via parameters
+
+Examples
+--------
+>>> config = SimulationConfig.from_yaml("protocols/eylea.yaml")
+>>> model = ClinicalModel(config)
+>>> state = {"disease_state": "NAIVE", "injections": 0, ...}
+>>> vision_change, new_state = model.simulate_vision_change(state)
+
+Notes
+-----
+- Vision measured in ETDRS letters (0-100 range)
+- Positive ΔV indicates vision improvement
+- Time factor increases linearly with weeks since last injection
+- Ceiling effect reduces changes as vision approaches maximum
 """
 
 from typing import Dict, List, Optional, Tuple
@@ -51,29 +89,29 @@ class ClinicalModel:
 
     Parameters
     ----------
-    config : SimulationConfig
+    config : simulation.config.SimulationConfig
         Configuration object containing:
-        - clinical_model_params: Clinical model parameters
-        - vision_params: Vision change parameters
-        - transition_probabilities: State transition probabilities
+            - clinical_model_params: Clinical model parameters
+            - vision_params: Vision change parameters
+            - transition_probabilities: State transition probabilities
 
     Attributes
     ----------
-    config : SimulationConfig
+    config : simulation.config.SimulationConfig
         Configuration object containing model parameters
     transition_probabilities : Dict[DiseaseState, Dict[DiseaseState, float]]
         Probability matrix for transitions between disease states with structure:
-        {
-            DiseaseState.NAIVE: {DiseaseState.STABLE: 0.3, ...},
-            DiseaseState.STABLE: {DiseaseState.STABLE: 0.7, ...},
-            ...
-        }
+            {
+                DiseaseState.NAIVE: {DiseaseState.STABLE: 0.3, ...},
+                DiseaseState.STABLE: {DiseaseState.STABLE: 0.7, ...},
+                ...
+            }
     vision_change_params : Dict
         Parameters controlling vision changes under different conditions including:
-        - base_change: Mean/SD for each state and injection status
-        - time_factor: Effect of time since last injection
-        - ceiling_factor: Vision ceiling effect
-        - measurement_noise: Random variability
+            - base_change: Mean/SD for each state and injection status
+            - time_factor: Effect of time since last injection
+            - ceiling_factor: Vision ceiling effect
+            - measurement_noise: Random variability
     """
     
     def __init__(self, config: SimulationConfig):
@@ -221,29 +259,29 @@ class ClinicalModel:
         ----------
         state : Dict
             Current patient state including:
-            - disease_state: Current disease state (str or DiseaseState)
-            - injections: Total number of injections (int)
-            - last_recorded_injection: Number of last recorded injection (int)
-            - weeks_since_last_injection: Weeks since last injection (int)
-            - current_vision: Current vision score (ETDRS letters, int)
+                - disease_state: Current disease state (str or DiseaseState)
+                - injections: Total number of injections (int)
+                - last_recorded_injection: Number of last recorded injection (int)
+                - weeks_since_last_injection: Weeks since last injection (int)
+                - current_vision: Current vision score (ETDRS letters, int)
 
         Returns
         -------
         Tuple[float, DiseaseState]
             Tuple containing:
-            - Vision change in ETDRS letters (positive = improvement)
-            - New disease state
+                - Vision change in ETDRS letters (positive = improvement)
+                - New disease state
 
         Notes
         -----
         Vision change calculation formula:
-        total_change = (base_change * time_factor * ceiling_factor) + measurement_noise
+            total_change = (base_change * time_factor * ceiling_factor) + measurement_noise
 
         Where:
-        - base_change: State and injection-dependent mean change
-        - time_factor: 1 + (weeks_since_injection / max_weeks)
-        - ceiling_factor: 1 - (current_vision / max_vision)
-        - measurement_noise: Random variability
+            - base_change: State and injection-dependent mean change
+            - time_factor: 1 + (weeks_since_injection / max_weeks)
+            - ceiling_factor: 1 - (current_vision / max_vision)
+            - measurement_noise: Random variability
 
         Raises
         ------

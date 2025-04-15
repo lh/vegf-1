@@ -1,9 +1,34 @@
-"""
-Clinic scheduling and resource allocation management.
+"""Clinic scheduling and resource allocation management.
 
-This module implements a scheduler for managing clinic appointments, handling capacity
-constraints, and rescheduling visits when necessary. It supports configurable daily
-capacity and working days per week.
+This module implements a scheduler for managing clinic appointments with capacity
+constraints and automatic rescheduling. It supports configurable daily capacity
+and working days per week.
+
+Classes
+-------
+ClinicScheduler
+    Manages appointment scheduling with capacity constraints
+
+Key Features
+------------
+- Daily capacity limits
+- Configurable clinic days per week
+- Automatic rescheduling when capacity exceeded
+- Weekend/holiday handling
+- Appointment tracking
+
+Examples
+--------
+>>> scheduler = ClinicScheduler(daily_capacity=20, days_per_week=5)
+>>> event = Event(time=datetime(2023,1,1), ...)
+>>> if not scheduler.request_slot(event, end_date=datetime(2023,12,31)):
+...     print("Visit needs rescheduling")
+
+Notes
+-----
+- Time values should be timezone-naive datetimes
+- Capacity checks are performed per calendar day
+- Rescheduling maintains original appointment details
 """
 
 from datetime import datetime, timedelta

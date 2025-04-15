@@ -1,8 +1,33 @@
-"""
-Patient state management for AMD treatment simulation.
+"""Patient state management for AMD treatment simulation.
 
 This module handles the state tracking and updates for individual patients throughout
 the simulation, including vision changes, treatment history, and visit scheduling.
+
+Classes
+-------
+PatientState
+    Tracks all aspects of a patient's state during treatment
+
+Key Features
+------------
+- Maintains complete treatment history
+- Tracks visual acuity changes
+- Manages disease state transitions
+- Records all visits and treatments
+- Handles treatment phase transitions
+
+Examples
+--------
+>>> model = ClinicalModel()
+>>> patient = PatientState("123", "treat_and_extend", 70, datetime.now())
+>>> visit_data = patient.process_visit(datetime.now(), ["vision_test", "injection"], model)
+>>> print(f"Vision change: {visit_data['vision_change']} letters")
+
+Notes
+-----
+- Visual acuity is measured in ETDRS letters (0-85 range)
+- Disease states include: NAIVE, ACTIVE, INACTIVE, ATROPHIC
+- Visit intervals are clamped between 4-52 weeks
 """
 
 from datetime import datetime
