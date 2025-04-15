@@ -1,33 +1,66 @@
 """Patient state management for AMD treatment simulation.
 
-This module handles the state tracking and updates for individual patients throughout
-the simulation, including vision changes, treatment history, and visit scheduling.
+This module implements a state machine for tracking individual patient progression
+through AMD treatment protocols. It maintains all clinical and treatment-related
+state information and handles state transitions during clinic visits.
+
+Key Concepts
+------------
+1. **State Machine**:
+   - Tracks disease state (NAIVE, ACTIVE, INACTIVE, ATROPHIC)
+   - Manages treatment phases (loading, maintenance, etc.)
+   - Handles transitions between states based on clinical outcomes
+
+2. **Clinical Tracking**:
+   - Visual acuity measurements (ETDRS letters 0-85)
+   - Treatment history (injections, visits, responses)
+   - Disease progression over time
+
+3. **Visit Processing**:
+   - Handles different visit types and actions
+   - Updates state based on clinical model outputs
+   - Maintains complete visit history
 
 Classes
 -------
 PatientState
-    Tracks all aspects of a patient's state during treatment
+    Core state machine class tracking all patient attributes and history
 
-Key Features
-------------
-- Maintains complete treatment history
-- Tracks visual acuity changes
-- Manages disease state transitions
-- Records all visits and treatments
-- Handles treatment phase transitions
+Key Methods
+-----------
+process_visit()
+    Main entry point for processing clinic visits and updating state
 
 Examples
 --------
+Basic Usage:
 >>> model = ClinicalModel()
 >>> patient = PatientState("123", "treat_and_extend", 70, datetime.now())
->>> visit_data = patient.process_visit(datetime.now(), ["vision_test", "injection"], model)
+>>> visit_data = patient.process_visit(
+...     datetime.now(), 
+...     ["vision_test", "injection"], 
+...     model
+... )
 >>> print(f"Vision change: {visit_data['vision_change']} letters")
+
+Advanced Usage:
+>>> # Custom treatment protocol with phase transitions
+>>> patient = PatientState("456", "custom_protocol", 65, datetime.now())
+>>> while patient.visits < 24:
+...     visit_data = patient.process_visit(
+...         datetime.now(),
+...         ["vision_test", "oct_scan", "injection"],
+...         model
+...     )
+...     if visit_data["vision_change"] < -5:
+...         patient.update_phase("intensified_treatment")
 
 Notes
 -----
-- Visual acuity is measured in ETDRS letters (0-85 range)
-- Disease states include: NAIVE, ACTIVE, INACTIVE, ATROPHIC
+- Visual acuity measurements use ETDRS letters (0-85 range)
+- Disease states follow ClinicalModel definitions
 - Visit intervals are clamped between 4-52 weeks
+- All state changes are recorded in visit_history
 """
 
 from datetime import datetime
@@ -100,53 +133,81 @@ class PatientState:
         """
         Process a clinic visit and update patient state.
 
+        This is the main state transition method that handles all visit processing
+        and state updates. It coordinates vision testing, treatment administration,
+        and disease state transitions.
+
         Parameters
         ----------
         visit_time : datetime
-            Time of the visit (must be timezone-naive)
+            Time of the visit (must be timezone-naive UTC)
+            Example: datetime(2025, 4, 15)
         actions : List[str]
-            List of actions performed (e.g., ["vision_test", "oct_scan", "injection"])
-            Valid actions: "vision_test", "oct_scan", "injection"
+            List of actions performed during the visit. Valid actions:
+                - "vision_test": Measures visual acuity
+                - "oct_scan": Performs OCT imaging
+                - "injection": Administers anti-VEGF treatment
+            Example: ["vision_test", "oct_scan", "injection"]
         clinical_model : ClinicalModel
-            ClinicalModel instance for simulating vision changes
+            ClinicalModel instance for simulating vision changes and disease progression
+            Must be initialized with appropriate parameters
 
         Returns
         -------
         Dict[str, Any]
-            Dictionary containing visit data including:
-            - vision_change: Change in visual acuity (ETDRS letters)
-            - actions_performed: List of completed actions
-            - disease_state: Updated disease state
-            - treatment_response: Response to treatment if injection given
+            Dictionary containing detailed visit results:
+                - vision_change: float - Change in ETDRS letters
+                - actions_performed: List[str] - Completed actions
+                - disease_state: DiseaseState - Updated state
+                - treatment_response: Optional[Dict] - If injection given
+                - visit_type: str - Classification of visit
 
         Raises
         ------
         ValueError
-            If visit_time is timezone-aware or actions contains invalid values
+            If visit_time is timezone-aware
+            If actions contains invalid values
+            If clinical_model is not properly initialized
 
         Examples
         --------
-        >>> model = ClinicalModel()
+        Basic Visit:
+        >>> model = ClinicalModel(config)
         >>> patient = PatientState("123", "treat_and_extend", 70, datetime.now())
         >>> visit_data = patient.process_visit(
         ...     datetime.now(),
-        ...     ["vision_test", "injection"],
+        ...     ["vision_test", "injection"], 
         ...     model
         ... )
-        >>> print(f"Vision change: {visit_data['vision_change']} letters")
+
+        Monitoring Visit:
+        >>> visit_data = patient.process_visit(
+        ...     datetime.now(),
+        ...     ["vision_test", "oct_scan"],
+        ...     model
+        ... )
 
         Notes
         -----
-        Updates multiple aspects of patient state including:
-        - Visit count and timing
-        - Vision measurements (clamped 0-85 ETDRS letters)
-        - Disease state transitions
-        - Treatment history and response
-        - Weeks since last injection
-        - Best vision achieved
+        State Updates:
+        1. Increments visit counter
+        2. Updates last visit date
+        3. Calculates weeks since last injection
+        4. Simulates vision changes using clinical_model
+        5. Processes each action in sequence
+        6. Records complete visit details
 
-        The clinical_model parameter handles the actual vision change simulation
-        based on disease state and treatment history.
+        The method handles:
+        - Validation of input parameters
+        - Coordination of state updates
+        - Error handling for invalid states
+        - Complete visit recording
+
+        Vision changes are simulated by the clinical_model which considers:
+        - Current disease state
+        - Treatment history
+        - Time since last injection
+        - Current vision level
         """
         self.state["visits"] += 1
         self.state["last_visit_date"] = visit_time
@@ -242,7 +303,7 @@ class PatientState:
         self.state["last_injection_date"] = visit_time
         self.state["weeks_since_last_injection"] = 0
     
-    def _record_visit(self, visit_time: datetime, actions: List[str], 
+    def _record_visit(self, visit_time: datetime, actions: List[str],
                      visit_data: Dict[str, Any]):
         """
         Record visit details in patient history.
@@ -250,16 +311,35 @@ class PatientState:
         Parameters
         ----------
         visit_time : datetime
-            Time of the visit
+            Time of visit (will be stripped to minute precision)
         actions : List[str]
-            List of actions performed during the visit
+            Actions performed, validated against allowed actions
         visit_data : Dict[str, Any]
-            Data collected during the visit
+            Must contain at minimum:
+                - vision: float - Current ETDRS letters
+                - disease_state: str/DiseaseState - Current state
+
+        Returns
+        -------
+        None
+            Modifies state['visit_history'] in place
 
         Notes
         -----
-        Stores a standardized record of each visit including timing, actions,
-        vision measurements, and disease state.
+        Visit records contain these standardized fields:
+            - date: datetime - Visit time
+            - actions: List[str] - Performed actions
+            - vision: float - ETDRS letters
+            - phase: str - Current treatment phase
+            - type: str - Visit classification
+            - disease_state: str - Current disease state
+
+        The visit history provides a complete audit trail of all patient
+        interactions and is used for:
+            - Treatment decision making
+            - Outcome analysis
+            - Protocol adherence monitoring
+            - Simulation validation
         """
         visit_record = {
             'date': visit_time.replace(second=0, microsecond=0),
