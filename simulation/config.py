@@ -1,9 +1,70 @@
-"""
-Simulation configuration management.
+"""Simulation configuration management.
 
 This module handles the configuration of simulation runs, including parameter validation,
 protocol integration, and resource management. It ensures all simulation parameters
 are properly validated before being used in a simulation run.
+
+Classes
+-------
+SimulationConfig
+    Main configuration class that encapsulates all simulation parameters
+
+Key Features
+------------
+- Parameter validation for all configuration sections
+- Protocol integration with validation
+- Resource management
+- Default value handling
+- Type checking and range validation
+
+Configuration Structure
+----------------------
+Example YAML configuration structure:
+```yaml
+simulation:
+  type: "des"
+  num_patients: 1000
+  duration_days: 365
+  random_seed: 42
+  verbose: true
+  start_date: "2023-01-01"
+  resources:
+    capacity:
+      doctors: 5
+      nurses: 10
+      oct_machines: 3
+
+clinical_model:
+  disease_states: ["NAIVE", "STABLE", "ACTIVE", "HIGHLY_ACTIVE"]
+  transition_probabilities:
+    NAIVE:
+      STABLE: 0.3
+      ACTIVE: 0.6
+      HIGHLY_ACTIVE: 0.1
+    STABLE:
+      STABLE: 0.7
+      ACTIVE: 0.3
+  vision_change:
+    base_change:
+      NAIVE:
+        injection: [5, 2]
+        no_injection: [0, 1]
+      STABLE:
+        injection: [2, 1]
+        no_injection: [-1, 0.5]
+    time_factor:
+      max_weeks: 52
+    ceiling_factor:
+      max_vision: 100
+    measurement_noise: [0, 0.5]
+```
+
+Notes
+-----
+- All numeric parameters are validated against expected ranges
+- Probability parameters must sum to 1 where applicable
+- Dates must be in YYYY-MM-DD format
+- Missing parameters will use sensible defaults where possible
 """
 
 from dataclasses import dataclass
@@ -259,8 +320,7 @@ class SimulationConfig:
         }
     
     def get_des_params(self) -> Dict[str, Any]:
-        """
-        Get DES-specific parameters.
+        """Get DES-specific parameters.
 
         Returns
         -------
