@@ -1,9 +1,20 @@
-"""
-Clinical model for AMD disease progression and vision changes.
+"""Clinical model for AMD disease progression and vision changes.
 
 This module implements the clinical aspects of AMD progression, including disease states,
 vision changes, and treatment effects. It uses a state-based model with probabilistic
 transitions and configurable parameters for vision changes.
+
+Notes
+-----
+Key Features:
+- Four disease states (NAIVE, STABLE, ACTIVE, HIGHLY_ACTIVE)
+- Configurable transition probabilities between states
+- Vision change modeling with:
+  - State-dependent base changes
+  - Time since last injection factor
+  - Vision ceiling effect
+  - Measurement noise
+- Injection vs non-injection visit differentiation
 """
 
 from typing import Dict, List, Optional, Tuple
@@ -11,8 +22,7 @@ from enum import Enum
 import numpy as np
 
 class DiseaseState(Enum):
-    """
-    Disease states for AMD progression.
+    """Disease states for AMD progression.
 
     Enumeration of possible disease states in the AMD progression model:
     - NAIVE: Initial state for new patients
@@ -31,8 +41,7 @@ class DiseaseState(Enum):
 from simulation.config import SimulationConfig
 
 class ClinicalModel:
-    """
-    Models clinical aspects of AMD progression, including disease states and vision changes.
+    """Models clinical aspects of AMD progression, including disease states and vision changes.
     
     This model includes four disease states: NAIVE, STABLE, ACTIVE, and HIGHLY_ACTIVE.
     It simulates disease progression and vision changes based on the current state and treatment.
@@ -43,16 +52,28 @@ class ClinicalModel:
     Parameters
     ----------
     config : SimulationConfig
-        Configuration object containing clinical model parameters
+        Configuration object containing:
+        - clinical_model_params: Clinical model parameters
+        - vision_params: Vision change parameters
+        - transition_probabilities: State transition probabilities
 
     Attributes
     ----------
     config : SimulationConfig
         Configuration object containing model parameters
     transition_probabilities : Dict[DiseaseState, Dict[DiseaseState, float]]
-        Probability matrix for transitions between disease states
+        Probability matrix for transitions between disease states with structure:
+        {
+            DiseaseState.NAIVE: {DiseaseState.STABLE: 0.3, ...},
+            DiseaseState.STABLE: {DiseaseState.STABLE: 0.7, ...},
+            ...
+        }
     vision_change_params : Dict
-        Parameters controlling vision changes under different conditions
+        Parameters controlling vision changes under different conditions including:
+        - base_change: Mean/SD for each state and injection status
+        - time_factor: Effect of time since last injection
+        - ceiling_factor: Vision ceiling effect
+        - measurement_noise: Random variability
     """
     
     def __init__(self, config: SimulationConfig):
@@ -61,8 +82,7 @@ class ClinicalModel:
         self.vision_change_params = self._parse_vision_change_params()
 
     def _parse_transition_probabilities(self) -> Dict[DiseaseState, Dict[DiseaseState, float]]:
-        """
-        Parse transition probabilities from configuration.
+        """Parse transition probabilities from configuration.
 
         Returns
         -------
@@ -90,8 +110,7 @@ class ClinicalModel:
         }
 
     def _parse_vision_change_params(self) -> Dict:
-        """
-        Parse vision change parameters from configuration.
+        """Parse vision change parameters from configuration.
 
         Returns
         -------
@@ -110,13 +129,12 @@ class ClinicalModel:
         return vision_change
 
     def get_transition_probabilities(self, current_state: DiseaseState) -> Dict[DiseaseState, float]:
-        """
-        Get transition probabilities for the current disease state.
+        """Get transition probabilities for the current disease state.
 
         Parameters
         ----------
         current_state : DiseaseState
-            Current disease state
+            Current disease state (NAIVE, STABLE, ACTIVE, or HIGHLY_ACTIVE)
 
         Returns
         -------
@@ -133,13 +151,12 @@ class ClinicalModel:
         return self.transition_probabilities[current_state].copy()
 
     def simulate_disease_progression(self, current_state: DiseaseState) -> DiseaseState:
-        """
-        Simulate disease state progression.
+        """Simulate disease state progression.
 
         Parameters
         ----------
         current_state : DiseaseState
-            Current disease state
+            Current disease state (NAIVE, STABLE, ACTIVE, or HIGHLY_ACTIVE)
 
         Returns
         -------
@@ -148,8 +165,11 @@ class ClinicalModel:
 
         Notes
         -----
-        Uses different transition probabilities for NAIVE state vs other states.
-        Includes debug logging for progression steps.
+        Progression logic:
+        1. NAIVE state has special transition probabilities to other states
+        2. Other states use configured transition probabilities
+        3. If no probabilities defined, remains in current state
+        4. Probabilities are normalized to sum to 1
         """
         print(f"DEBUG: Simulating disease progression - Current state: {current_state}")
         
@@ -177,8 +197,7 @@ class ClinicalModel:
         return new_state
 
     def get_initial_vision(self) -> int:
-        """
-        Get initial vision for a new patient.
+        """Get initial vision for a new patient.
 
         Returns
         -------
@@ -196,33 +215,35 @@ class ClinicalModel:
         return int(np.random.normal(baseline_mean, baseline_sd))
 
     def simulate_vision_change(self, state: Dict) -> Tuple[float, DiseaseState]:
-        """
-        Calculate vision change and new disease state based on current state and treatment.
+        """Calculate vision change and new disease state based on current state and treatment.
 
         Parameters
         ----------
         state : Dict
             Current patient state including:
-            - disease_state: Current disease state
-            - injections: Total number of injections
-            - last_recorded_injection: Number of last recorded injection
-            - weeks_since_last_injection: Weeks since last injection
-            - current_vision: Current vision score
+            - disease_state: Current disease state (str or DiseaseState)
+            - injections: Total number of injections (int)
+            - last_recorded_injection: Number of last recorded injection (int)
+            - weeks_since_last_injection: Weeks since last injection (int)
+            - current_vision: Current vision score (ETDRS letters, int)
 
         Returns
         -------
         Tuple[float, DiseaseState]
             Tuple containing:
-            - Vision change in ETDRS letters
+            - Vision change in ETDRS letters (positive = improvement)
             - New disease state
 
         Notes
         -----
-        Vision change calculation includes:
-        - Base change depending on disease state and injection status
-        - Time factor based on weeks since last injection
-        - Ceiling effect based on current vision level
-        - Random measurement noise
+        Vision change calculation formula:
+        total_change = (base_change * time_factor * ceiling_factor) + measurement_noise
+
+        Where:
+        - base_change: State and injection-dependent mean change
+        - time_factor: 1 + (weeks_since_injection / max_weeks)
+        - ceiling_factor: 1 - (current_vision / max_vision)
+        - measurement_noise: Random variability
 
         Raises
         ------
