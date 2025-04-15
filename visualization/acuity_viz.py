@@ -1,3 +1,21 @@
+"""Visual acuity plotting utilities for clinical trial data visualization.
+
+This module provides matplotlib-based visualizations for analyzing visual acuity data
+from clinical trials and simulations. All visualizations use ETDRS letter scores (0-100 scale).
+
+Key Features
+------------
+- Individual patient acuity trajectories with treatment markers
+- Multi-patient comparative plots
+- Population-level mean acuity with confidence intervals
+- Standardized formatting for clinical publications
+
+Notes
+-----
+- All visual acuity values should be in ETDRS letters (0-100 scale)
+- Dates should be datetime objects for proper axis formatting
+- Plots are designed for 12x6 inch figures suitable for publications
+"""
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 import matplotlib.pyplot as plt
@@ -7,15 +25,38 @@ import numpy as np
 def plot_patient_acuity(patient_id: str, history: List[Dict], 
                        start_date: datetime, end_date: datetime,
                        show: bool = True, save_path: Optional[str] = None):
-    """Create a line plot of visual acuity over time with treatment markers
+    """Plot single patient's visual acuity trajectory with treatment markers.
     
-    Args:
-        patient_id: Identifier for the patient
-        history: List of visit dictionaries containing date, vision, and actions
-        start_date: Start date of simulation
-        end_date: End date of simulation
-        show: Whether to display the plot
-        save_path: Optional path to save the plot
+    Creates a line plot of visual acuity over time, with markers indicating
+    injection visits and other clinical visits. The y-axis shows ETDRS letter
+    scores (0-100 scale).
+
+    Parameters
+    ----------
+    patient_id : str
+        Unique identifier for the patient
+    history : List[Dict]
+        List of visit dictionaries containing:
+        - date: datetime of visit
+        - vision: ETDRS letter score (0-100)
+        - actions: List of actions taken (e.g. ['injection'])
+    start_date : datetime
+        Start date of the observation period
+    end_date : datetime
+        End date of the observation period  
+    show : bool, optional
+        Whether to display the plot (default True)
+    save_path : str, optional
+        If provided, save plot to this file path
+
+    Returns
+    -------
+    None
+        Displays or saves plot but returns nothing
+
+    Examples
+    --------
+    >>> plot_patient_acuity('123', visits, start, end, save_path='acuity.png')
     """
     # Extract dates and vision values, and also non-injection visits
     dates = []
@@ -88,7 +129,32 @@ def plot_multiple_patients(patient_data: Dict[str, List[Dict]],
                          start_date: datetime, end_date: datetime,
                          show: bool = True, save_path: Optional[str] = None,
                          title: str = "Visual Acuity Over Time - Multiple Patients"):
-    """Create a comparative plot of multiple patients' visual acuity"""
+    """Plot comparative visual acuity trajectories for multiple patients.
+    
+    Creates a line plot showing visual acuity over time for multiple patients
+    on the same axes, with unique colors for each patient and markers for
+    treatment visits.
+
+    Parameters
+    ----------
+    patient_data : Dict[str, List[Dict]]
+        Dictionary mapping patient IDs to their visit histories
+    start_date : datetime
+        Start date of the observation period
+    end_date : datetime 
+        End date of the observation period
+    show : bool, optional
+        Whether to display the plot (default True)
+    save_path : str, optional
+        If provided, save plot to this file path
+    title : str, optional
+        Custom title for the plot
+
+    Returns
+    -------
+    None
+        Displays or saves plot but returns nothing
+    """
     plt.figure(figsize=(12, 6))
     
     for patient_id, history in patient_data.items():
@@ -150,15 +216,40 @@ def plot_mean_acuity(patient_data: Dict[str, List[Dict]],
                     start_date: datetime, end_date: datetime,
                     show: bool = True, save_path: Optional[str] = None,
                     title: str = "Mean Visual Acuity Over Time"):
-    """Create a plot showing mean acuity with confidence intervals over time
+    """Plot mean visual acuity with confidence intervals over time.
     
-    Args:
-        patient_data: Dictionary of patient IDs to their visit histories
-        start_date: Start date of simulation
-        end_date: End date of simulation
-        show: Whether to display the plot
-        save_path: Optional path to save the plot
-        title: Title for the plot
+    Creates a plot showing the mean visual acuity trajectory across patients
+    with 95% confidence intervals. Uses linear interpolation between visits
+    to calculate weekly acuity values.
+
+    Parameters
+    ----------
+    patient_data : Dict[str, List[Dict]]
+        Dictionary mapping patient IDs to their visit histories
+    start_date : datetime
+        Start date of the observation period
+    end_date : datetime
+        End date of the observation period
+    show : bool, optional
+        Whether to display the plot (default True)
+    save_path : str, optional
+        If provided, save plot to this file path
+    title : str, optional
+        Custom title for the plot
+
+    Returns
+    -------
+    None
+        Displays or saves plot but returns nothing
+
+    Notes
+    -----
+    - Uses linear interpolation between visits to estimate weekly values
+    - Requires at least 2 visits per patient for interpolation
+    - Confidence intervals assume normal distribution
+    - Missing values are handled via linear extrapolation
+    - Weekly interpolation provides smoother trajectories than raw visit data
+    - For small sample sizes (<30), consider using t-distribution instead
     """
     import numpy as np
     from scipy import interpolate
