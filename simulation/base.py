@@ -1,9 +1,17 @@
-"""
-Base classes and components for discrete event simulation.
+"""Base classes and components for discrete event simulation.
 
 This module provides the fundamental building blocks for discrete event simulation,
 including event management, simulation clock, and protocol handling. It defines
 the base classes that specific simulation implementations will extend.
+
+Notes
+-----
+Key components:
+- Event: Represents discrete simulation events with timing and data
+- SimulationClock: Manages event scheduling and time progression  
+- BaseSimulation: Abstract base class for all simulation implementations
+- ProtocolEvent: Protocol-specific event data structure
+- SimulationEnvironment: Global simulation state container
 """
 
 from abc import ABC, abstractmethod
@@ -18,8 +26,7 @@ from protocol_models import (
 
 @dataclass
 class ProtocolEvent:
-    """
-    Protocol-specific event data.
+    """Protocol-specific event data.
 
     Represents an event that is specific to a treatment protocol, containing
     information about the phase, action, and associated parameters.
@@ -27,13 +34,21 @@ class ProtocolEvent:
     Parameters
     ----------
     phase_type : PhaseType
-        Type of protocol phase this event belongs to
+        Type of protocol phase this event belongs to (e.g., INITIAL, MAINTENANCE)
     action : str
-        Action to be performed
+        Action to be performed (e.g., 'inject', 'assess', 'adjust_interval')
     parameters : Dict[str, Any], optional
-        Additional parameters for the action
+        Additional parameters for the action (default: {})
     result : Optional[Dict[str, Any]], optional
-        Results from executing the action
+        Results from executing the action (default: None)
+
+    Examples
+    --------
+    >>> event = ProtocolEvent(
+    ...     phase_type=PhaseType.MAINTENANCE,
+    ...     action='inject',
+    ...     parameters={'drug': 'eylea', 'dose': 2.0}
+    ... )
     """
     phase_type: PhaseType
     action: str
@@ -41,8 +56,7 @@ class ProtocolEvent:
     result: Optional[Dict[str, Any]] = None
 
 class SimulationEnvironment:
-    """
-    Global simulation environment.
+    """Global simulation environment.
 
     Maintains global state and timing information for the simulation.
 
@@ -56,7 +70,16 @@ class SimulationEnvironment:
     current_time : datetime
         Current simulation time
     global_state : Dict[str, Any]
-        Dictionary storing global simulation state
+        Dictionary storing global simulation state including:
+        - resource_availability: Dict of resource counts
+        - queue_lengths: Dict of patient queue lengths
+        - statistics: Aggregated simulation metrics
+
+    Notes
+    -----
+    The environment provides shared state across all simulation components
+    and patients. It should be used for system-wide properties rather than
+    patient-specific state.
     """
     def __init__(self, start_date: datetime):
         self.current_time = start_date
@@ -64,8 +87,7 @@ class SimulationEnvironment:
 
 @dataclass
 class Event:
-    """
-    Simulation event.
+    """Simulation event.
 
     Represents a discrete event in the simulation with timing, type, and associated data.
 
@@ -74,24 +96,38 @@ class Event:
     time : datetime
         When the event occurs
     event_type : str
-        Type of event
+        Type of event (e.g., 'arrival', 'treatment', 'assessment')
     patient_id : str
         ID of the patient this event relates to
     data : Dict[str, Any], optional
-        Additional event data
+        Additional event data (default: {})
     priority : int, optional
-        Event priority (lower numbers = higher priority)
+        Event priority (lower numbers = higher priority) (default: 1)
     protocol_event : Optional[ProtocolEvent], optional
-        Associated protocol-specific event data
+        Associated protocol-specific event data (default: None)
     phase : Optional[ProtocolPhase], optional
-        Treatment phase this event belongs to
+        Treatment phase this event belongs to (default: None)
     protocol : Optional[TreatmentProtocol], optional
-        Treatment protocol this event belongs to
+        Treatment protocol this event belongs to (default: None)
+
+    Attributes
+    ----------
+    _hash : int
+        Internal hash value for event comparison
 
     Notes
     -----
     Events are comparable and hashable based on their time, type, and patient_id.
     This enables proper ordering in priority queues and event lists.
+
+    Examples
+    --------
+    >>> event = Event(
+    ...     time=datetime(2023, 1, 1),
+    ...     event_type='treatment',
+    ...     patient_id='pat123',
+    ...     data={'drug': 'eylea', 'dose': 2.0}
+    ... )
     """
     time: datetime
     event_type: str
