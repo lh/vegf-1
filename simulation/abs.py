@@ -1,3 +1,11 @@
+"""
+Agent-Based Simulation (ABS) implementation for modeling AMD treatment pathways.
+
+This module implements an agent-based simulation approach where each patient is modeled
+as an autonomous agent following a treatment protocol. The simulation handles patient
+visits, treatment decisions, and disease progression over time.
+"""
+
 from typing import Dict, Any
 from datetime import datetime, timedelta
 from .base import BaseSimulation, Event
@@ -6,17 +14,76 @@ from .clinical_model import ClinicalModel
 from .scheduler import ClinicScheduler
 
 class Patient:
+    """
+    Patient agent in the simulation.
+    
+    Represents a single patient in the agent-based simulation, maintaining their
+    current state and history of visits and treatments.
+
+    Parameters
+    ----------
+    patient_id : str
+        Unique identifier for the patient
+    initial_state : PatientState
+        Initial clinical and treatment state of the patient
+
+    Attributes
+    ----------
+    patient_id : str
+        Unique identifier for the patient
+    state : PatientState
+        Current state of the patient
+    history : list
+        List of historical visit records
+    """
+
     def __init__(self, patient_id: str, initial_state: PatientState):
         self.patient_id = patient_id
         self.state = initial_state
         self.history = []
 
     def get_state_dict(self):
+        """
+        Get the current state as a dictionary.
+
+        Returns
+        -------
+        dict
+            Dictionary containing the current patient state
+        """
         return self.state.state
 
 from .base import BaseSimulation, Event, SimulationClock
 
 class AgentBasedSimulation(BaseSimulation):
+    """
+    Agent-based simulation for AMD treatment pathways.
+
+    Implements a discrete-event simulation where patients are modeled as individual
+    agents following treatment protocols. The simulation handles scheduling of visits,
+    treatment decisions, and disease progression.
+
+    Parameters
+    ----------
+    config : Any
+        Configuration object containing simulation parameters
+    start_date : datetime
+        Start date for the simulation
+
+    Attributes
+    ----------
+    start_date : datetime
+        Start date of the simulation
+    agents : Dict[str, Patient]
+        Dictionary of patient agents in the simulation
+    clinical_model : ClinicalModel
+        Model for disease progression and treatment effects
+    scheduler : ClinicScheduler
+        Scheduler for clinic visits
+    clock : SimulationClock
+        Simulation clock for event management
+    """
+
     def __init__(self, config, start_date: datetime):
         super().__init__(config)
         self.start_date = start_date
@@ -27,10 +94,36 @@ class AgentBasedSimulation(BaseSimulation):
         self.clock = SimulationClock(start_date)
 
     def add_patient(self, patient_id: str, protocol_name: str):
+        """
+        Add a new patient to the simulation.
+
+        Parameters
+        ----------
+        patient_id : str
+            Unique identifier for the patient
+        protocol_name : str
+            Name of the treatment protocol to follow
+
+        Notes
+        -----
+        Creates a new patient agent with initial state and adds them to the simulation.
+        """
         initial_state = PatientState(patient_id, protocol_name, self.clinical_model.get_initial_vision(), self.start_date)
         self.agents[patient_id] = Patient(patient_id, initial_state)
 
     def run(self, end_date: datetime):
+        """
+        Run the simulation until the specified end date.
+
+        Parameters
+        ----------
+        end_date : datetime
+            Date to end the simulation
+
+        Notes
+        -----
+        Processes events chronologically until reaching the end date or running out of events.
+        """
         while self.clock.current_time <= end_date:
             event = self.clock.get_next_event()
             if event is None:
@@ -39,6 +132,19 @@ class AgentBasedSimulation(BaseSimulation):
         print(f"Simulation completed. End time: {self.clock.current_time}")
 
     def process_event(self, event: Event):
+        """
+        Process a simulation event.
+
+        Parameters
+        ----------
+        event : Event
+            Event to process
+
+        Notes
+        -----
+        Handles visit events by updating patient state, recording visit data,
+        and scheduling the next visit according to the protocol.
+        """
         if event.event_type == "visit":
             patient = self.agents[event.patient_id]
             visit_data = patient.state.process_visit(event.time, event.data['actions'], self.clinical_model)
@@ -56,6 +162,26 @@ class AgentBasedSimulation(BaseSimulation):
                 self.clock.schedule_event(next_visit)
 
     def schedule_next_visit(self, patient_id: str, current_date: datetime) -> Event:
+        """
+        Schedule the next visit for a patient.
+
+        Parameters
+        ----------
+        patient_id : str
+            ID of the patient to schedule
+        current_date : datetime
+            Current date in the simulation
+
+        Returns
+        -------
+        Event
+            Next visit event for the patient
+
+        Notes
+        -----
+        Uses a fixed schedule for the first year (weeks 0, 4, 9, 18, 27, 36, 44, 52)
+        and then switches to intervals based on the patient's state.
+        """
         patient = self.agents[patient_id]
         treatment_start = patient.state.state['treatment_start']
         weeks_since_start = (current_date - treatment_start).days // 7
@@ -81,6 +207,18 @@ class AgentBasedSimulation(BaseSimulation):
         )
 
     def get_results(self):
+        """
+        Get the simulation results.
+
+        Returns
+        -------
+        dict
+            Dictionary containing patient agents and event history
+
+        Notes
+        -----
+        Returns all patient data and the complete event history for analysis.
+        """
         return {
             'patients': self.agents,
             'events': self.clock.event_history

@@ -1,30 +1,72 @@
+"""
+Clinic scheduling and resource allocation management.
+
+This module implements a scheduler for managing clinic appointments, handling capacity
+constraints, and rescheduling visits when necessary. It supports configurable daily
+capacity and working days per week.
+"""
+
 from datetime import datetime, timedelta
-from typing import Dict, Optional
+from typing import Dict, Optional, Callable
 from .base import Event
 
 class ClinicScheduler:
-    """Manages clinic scheduling and resource allocation"""
+    """
+    Manages clinic scheduling and resource allocation.
+
+    This class handles the scheduling of patient visits while respecting clinic
+    capacity constraints. It supports configurable daily patient capacity and
+    working days per week, with automatic rescheduling when capacity is exceeded.
+
+    Parameters
+    ----------
+    daily_capacity : int
+        Maximum number of patients that can be seen per day
+    days_per_week : int
+        Number of clinic days per week (e.g., 5 for Mon-Fri)
+
+    Attributes
+    ----------
+    daily_capacity : int
+        Maximum patients per day
+    days_per_week : int
+        Working days per week
+    daily_slots : Dict[datetime, int]
+        Tracks number of appointments for each date
+    rescheduled_visits : int
+        Counter for number of rescheduled appointments
+    """
     
     def __init__(self, daily_capacity: int, days_per_week: int):
-        """
-        Args:
-            daily_capacity: Maximum number of patients that can be seen per day
-            days_per_week: Number of clinic days per week (e.g., 5 for Mon-Fri)
-        """
         self.daily_capacity = daily_capacity
         self.days_per_week = days_per_week
         self.daily_slots: Dict[datetime, int] = {}  # date -> number of appointments
         self.rescheduled_visits = 0
     
     def request_slot(self, event: Event, end_date: datetime) -> bool:
-        """Check if there's capacity for this visit on this day
-        
-        Args:
-            event: Event containing visit details
-            end_date: Simulation end date for rescheduling bounds
-            
-        Returns:
-            bool: True if slot is available, False if needs rescheduling
+        """
+        Check if there's capacity for a visit on the requested day.
+
+        Verifies if the requested visit can be accommodated on the specified day,
+        considering both clinic working days and daily capacity constraints.
+
+        Parameters
+        ----------
+        event : Event
+            Event containing visit details including requested time
+        end_date : datetime
+            Simulation end date for rescheduling bounds
+
+        Returns
+        -------
+        bool
+            True if slot is available, False if needs rescheduling
+
+        Notes
+        -----
+        - Automatically initializes tracking for new dates
+        - Handles non-clinic days (e.g., weekends) by rescheduling
+        - Updates appointment counts when slot is granted
         """
         visit_date = event.time.date()
         
@@ -46,25 +88,40 @@ class ClinicScheduler:
         self.daily_slots[visit_date] += 1
         return True
     
-    def schedule_next_visit(self, event_factory, patient_id: str, 
-                          last_visit: datetime, weeks: int) -> Optional[Event]:
-        """Schedule the next visit for a patient
-        
-        Args:
-            event_factory: Function to create visit events
-            patient_id: Patient identifier
-            last_visit: Time of the last visit
-            weeks: Number of weeks until next visit
-            
-        Returns:
-            Event: Scheduled visit event, or None if beyond simulation end
+    def schedule_next_visit(self, event_factory: Callable, patient_id: str, 
+                          last_visit: datetime, next_visit_interval: int) -> Optional[Event]:
+        """
+        Schedule the next visit for a patient.
+
+        Creates a new visit event for a patient based on their last visit and
+        the specified interval.
+
+        Parameters
+        ----------
+        event_factory : Callable
+            Function to create visit events
+        patient_id : str
+            Patient identifier
+        last_visit : datetime
+            Time of the last visit
+        next_visit_interval : int
+            Number of weeks until the next visit
+
+        Returns
+        -------
+        Optional[Event]
+            Scheduled visit event, or None if beyond simulation end
+
+        Notes
+        -----
+        Maintains the same time of day as the original appointment for consistency.
         """
         # Calculate next visit time based on last visit
-        next_time = last_visit + timedelta(weeks=weeks)
+        next_time = last_visit + timedelta(weeks=next_visit_interval)
         # Keep the same time of day as original appointment
         next_time = next_time.replace(hour=last_visit.hour, minute=last_visit.minute)
         
-        return event_factory(
+        return Event(
             time=next_time,
             event_type="visit",
             patient_id=patient_id,
@@ -77,15 +134,32 @@ class ClinicScheduler:
         )
     
     def _reschedule_visit(self, event: Event, end_date: datetime, next_clinic_day: bool = False) -> Optional[Event]:
-        """Reschedule a visit to the next available day
-        
-        Args:
-            event: Event to reschedule
-            end_date: Simulation end date
-            next_clinic_day: If True, skip to next clinic day (e.g., Monday after Friday)
-            
-        Returns:
-            Event: Rescheduled event, or None if beyond end date
+        """
+        Reschedule a visit to the next available day.
+
+        Attempts to find the next available slot for a visit that needs rescheduling,
+        considering clinic days and capacity constraints.
+
+        Parameters
+        ----------
+        event : Event
+            Event to reschedule
+        end_date : datetime
+            Simulation end date
+        next_clinic_day : bool, optional
+            If True, skip to next clinic day (e.g., Monday after Friday)
+
+        Returns
+        -------
+        Optional[Event]
+            Rescheduled event, or None if beyond end date
+
+        Notes
+        -----
+        - Handles both immediate next day scheduling and next clinic day scheduling
+        - Maintains appointment details while updating the time
+        - Tracks number of rescheduled visits
+        - Respects clinic working days and capacity constraints
         """
         # If the original event time is already past the end date, don't reschedule
         if event.time >= end_date:
