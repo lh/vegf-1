@@ -103,9 +103,10 @@ class PatientState:
         Parameters
         ----------
         visit_time : datetime
-            Time of the visit
+            Time of the visit (must be timezone-naive)
         actions : List[str]
             List of actions performed (e.g., ["vision_test", "oct_scan", "injection"])
+            Valid actions: "vision_test", "oct_scan", "injection"
         clinical_model : ClinicalModel
             ClinicalModel instance for simulating vision changes
 
@@ -113,17 +114,39 @@ class PatientState:
         -------
         Dict[str, Any]
             Dictionary containing visit data including:
-            - vision_change: Change in visual acuity
+            - vision_change: Change in visual acuity (ETDRS letters)
             - actions_performed: List of completed actions
             - disease_state: Updated disease state
+            - treatment_response: Response to treatment if injection given
+
+        Raises
+        ------
+        ValueError
+            If visit_time is timezone-aware or actions contains invalid values
+
+        Examples
+        --------
+        >>> model = ClinicalModel()
+        >>> patient = PatientState("123", "treat_and_extend", 70, datetime.now())
+        >>> visit_data = patient.process_visit(
+        ...     datetime.now(),
+        ...     ["vision_test", "injection"],
+        ...     model
+        ... )
+        >>> print(f"Vision change: {visit_data['vision_change']} letters")
 
         Notes
         -----
         Updates multiple aspects of patient state including:
         - Visit count and timing
-        - Vision measurements
-        - Disease state
-        - Treatment history
+        - Vision measurements (clamped 0-85 ETDRS letters)
+        - Disease state transitions
+        - Treatment history and response
+        - Weeks since last injection
+        - Best vision achieved
+
+        The clinical_model parameter handles the actual vision change simulation
+        based on disease state and treatment history.
         """
         self.state["visits"] += 1
         self.state["last_visit_date"] = visit_time
@@ -174,17 +197,24 @@ class PatientState:
     
     def _process_vision_test(self, vision_change: float):
         """
-        Process vision test results.
+        Process vision test results with measurement noise and bounds checking.
 
         Parameters
         ----------
         vision_change : float
-            Change in visual acuity since last measurement
+            Change in visual acuity since last measurement (ETDRS letters)
 
         Notes
         -----
-        Includes measurement noise and updates best vision achieved if applicable.
-        Vision scores are clamped between 0 and 85 ETDRS letters.
+        Key steps:
+        1. Adds Gaussian measurement noise (SD=2 letters)
+        2. Updates current vision score
+        3. Clamps vision between 0-85 ETDRS letters
+        4. Updates best vision achieved if improved
+
+        Measurement noise represents typical test-retest variability in
+        clinical vision testing. The 0-85 letter range reflects the
+        standard ETDRS chart limits.
         """
         # Add measurement noise
         measurement_noise = np.random.normal(0, 2)  # SD of 2 letters
