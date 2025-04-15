@@ -1,12 +1,71 @@
+"""
+Simulation configuration management.
+
+This module handles the configuration of simulation runs, including parameter validation,
+protocol integration, and resource management. It ensures all simulation parameters
+are properly validated before being used in a simulation run.
+"""
+
 from dataclasses import dataclass
 from typing import Dict, Any, Optional
 from datetime import datetime
 from protocol_parser import ProtocolParser
 from protocol_models import TreatmentProtocol
+import logging
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class SimulationConfig:
-    """Configuration for a simulation run with protocol objects"""
+    """
+    Configuration for a simulation run with protocol objects.
+
+    This class encapsulates all configuration parameters needed to run a simulation,
+    including treatment protocols, patient parameters, and resource constraints.
+    Provides validation methods for all configuration sections.
+
+    Parameters
+    ----------
+    parameters : Dict[str, Any]
+        Dictionary of simulation parameters
+    protocol : TreatmentProtocol
+        Treatment protocol to use in simulation
+    simulation_type : str
+        Type of simulation ('abs' or 'des')
+    num_patients : int
+        Number of patients to simulate
+    duration_days : int
+        Duration of simulation in days
+    random_seed : int
+        Random seed for reproducibility
+    verbose : bool
+        Whether to enable verbose logging
+    start_date : datetime
+        Simulation start date
+    resources : Optional[Dict[str, Any]], optional
+        Resource configuration dictionary
+
+    Attributes
+    ----------
+    parameters : Dict[str, Any]
+        Raw simulation parameters
+    protocol : TreatmentProtocol
+        Treatment protocol instance
+    simulation_type : str
+        Simulation type identifier
+    num_patients : int
+        Number of simulated patients
+    duration_days : int
+        Simulation duration
+    random_seed : int
+        Random seed value
+    verbose : bool
+        Verbosity flag
+    start_date : datetime
+        Simulation start date
+    resources : Optional[Dict[str, Any]]
+        Resource configuration
+    """
     parameters: Dict[str, Any]
     protocol: TreatmentProtocol
     simulation_type: str
@@ -18,17 +77,38 @@ class SimulationConfig:
     resources: Optional[Dict[str, Any]] = None
     
     def get_vision_params(self) -> Dict[str, Any]:
-        """Get vision-related parameters with validation"""
+        """
+        Get validated vision-related parameters.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Validated vision parameters
+
+        Raises
+        ------
+        ValueError
+            If required parameters are missing or invalid
+
+        Notes
+        -----
+        Validates the following parameters:
+        - baseline_mean: Valid ETDRS letter range (30-85)
+        - measurement_noise_sd: Reasonable measurement noise (0-5)
+        - max_letters: ETDRS maximum (0-100)
+        - min_letters: ETDRS minimum (0-30)
+        - headroom_factor: Must be between 0 and 1
+        """
         vision_params = self.parameters.get("vision", {})
         if not vision_params:
             raise ValueError("Vision parameters not found")
             
         required_params = {
-            "baseline_mean": (30, 85),  # Valid ETDRS letter range
-            "measurement_noise_sd": (0, 5),  # Reasonable measurement noise
-            "max_letters": (0, 100),  # ETDRS maximum
-            "min_letters": (0, 30),  # ETDRS minimum
-            "headroom_factor": (0, 1)  # Must be between 0 and 1
+            "baseline_mean": (30, 85),
+            "measurement_noise_sd": (0, 5),
+            "max_letters": (0, 100),
+            "min_letters": (0, 30),
+            "headroom_factor": (0, 1)
         }
         
         for param, (min_val, max_val) in required_params.items():
@@ -43,23 +123,46 @@ class SimulationConfig:
         return vision_params
     
     def get_maintenance_params(self) -> Dict[str, Any]:
-        """Get maintenance phase parameters with validation"""
+        """
+        Get validated maintenance phase parameters.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Validated maintenance phase parameters
+
+        Raises
+        ------
+        ValueError
+            If required parameters are missing or invalid
+
+        Notes
+        -----
+        Validates the following parameters:
+        - memory_factor: Must be between 0 and 1
+        - base_effect_ceiling: Maximum reasonable improvement (0-15)
+        - regression_factor: Must be between 0 and 1
+        - random_effect_mean: Reasonable range for log-normal mean (-2 to 2)
+        - random_effect_sd: Reasonable range for log-normal SD (0 to 1)
+        - decline_probability: Must be probability (0 to 1)
+        - decline_effect_mean: Reasonable vision loss range (-5 to 0)
+        - decline_effect_sd: Reasonable variation in loss (0 to 2)
+        """
         params = self.parameters.get("treatment_response", {}).get("maintenance_phase", {})
         if not params:
             raise ValueError("Maintenance phase parameters not found")
             
         required_params = {
-            "memory_factor": (0, 1),  # Must be between 0 and 1
-            "base_effect_ceiling": (0, 15),  # Maximum reasonable improvement
-            "regression_factor": (0, 1),  # Must be between 0 and 1
-            "random_effect_mean": (-2, 2),  # Reasonable range for log-normal mean
-            "random_effect_sd": (0, 1),  # Reasonable range for log-normal SD
-            "decline_probability": (0, 1),  # Must be probability
-            "decline_effect_mean": (-5, 0),  # Reasonable vision loss range
-            "decline_effect_sd": (0, 2)  # Reasonable variation in loss
+            "memory_factor": (0, 1),
+            "base_effect_ceiling": (0, 15),
+            "regression_factor": (0, 1),
+            "random_effect_mean": (-2, 2),
+            "random_effect_sd": (0, 1),
+            "decline_probability": (0, 1),
+            "decline_effect_mean": (-5, 0),
+            "decline_effect_sd": (0, 2)
         }
         
-        # Validate required parameters
         for param, (min_val, max_val) in required_params.items():
             if param not in params:
                 raise ValueError(f"Missing required maintenance phase parameter: {param}")
@@ -72,20 +175,40 @@ class SimulationConfig:
         return params
 
     def get_loading_phase_params(self) -> Dict[str, Any]:
-        """Get loading phase parameters with validation"""
+        """
+        Get validated loading phase parameters.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Validated loading phase parameters
+
+        Raises
+        ------
+        ValueError
+            If required parameters are missing, invalid, or probabilities don't sum to 1
+
+        Notes
+        -----
+        Validates the following parameters:
+        - vision_improvement_mean: Reasonable letter improvement (0-15)
+        - vision_improvement_sd: Reasonable variation (0-5)
+        - improve_probability: Must be probability (0-1)
+        - stable_probability: Must be probability (0-1)
+        - decline_probability: Must be probability (0-1)
+        """
         params = self.parameters.get("treatment_response", {}).get("loading_phase", {})
         if not params:
             raise ValueError("Loading phase parameters not found")
             
         required_params = {
-            "vision_improvement_mean": (0, 15),  # Reasonable letter improvement
-            "vision_improvement_sd": (0, 5),  # Reasonable variation
-            "improve_probability": (0, 1),  # Must be probability
+            "vision_improvement_mean": (0, 15),
+            "vision_improvement_sd": (0, 5),
+            "improve_probability": (0, 1),
             "stable_probability": (0, 1),
             "decline_probability": (0, 1)
         }
         
-        # Validate required parameters
         for param, (min_val, max_val) in required_params.items():
             if param not in params:
                 raise ValueError(f"Missing required loading phase parameter: {param}")
@@ -95,25 +218,31 @@ class SimulationConfig:
             if not min_val <= value <= max_val:
                 raise ValueError(f"Loading phase parameter {param} must be between {min_val} and {max_val}")
                 
-        # Validate probabilities sum to 1
         prob_sum = (params["improve_probability"] + 
                    params["stable_probability"] + 
                    params["decline_probability"])
-        if not 0.99 <= prob_sum <= 1.01:  # Allow for small floating point errors
+        if not 0.99 <= prob_sum <= 1.01:
             raise ValueError("Loading phase probabilities must sum to 1.0")
                 
         return params
     
-    def get_vision_params(self) -> Dict[str, Any]:
-        """Get vision-related parameters"""
-        vision_params = self.parameters.get("vision", {})
-        if not vision_params:
-            raise ValueError("Vision parameters not found")
-        return vision_params
-
     def get_resource_params(self) -> Dict[str, Any]:
-        """Get resource-related parameters"""
-        # Get from simulation.resources.capacity if it exists
+        """
+        Get resource configuration parameters.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Resource parameters with defaults:
+            - doctors: 5
+            - nurses: 5
+            - oct_machines: 5
+
+        Notes
+        -----
+        First checks simulation.resources.capacity if it exists,
+        otherwise falls back to default values.
+        """
         sim_resources = getattr(self, 'resources', {})
         if sim_resources and isinstance(sim_resources, dict):
             capacity = sim_resources.get("capacity", {})
@@ -123,7 +252,6 @@ class SimulationConfig:
                     "nurses": capacity.get("nurses", 5),
                     "oct_machines": capacity.get("oct_machines", 5)
                 }
-        # Fallback to default values
         return {
             "doctors": 5,
             "nurses": 5,
@@ -131,18 +259,47 @@ class SimulationConfig:
         }
     
     def get_des_params(self) -> Dict[str, Any]:
-        """Get DES-specific parameters"""
-        scheduling = self.parameters.get("simulation", {}).get("scheduling", {})
+        """
+        Get DES-specific parameters.
+
+        Returns
+        -------
+        Dict[str, Any]
+            DES parameters with defaults:
+            - daily_capacity: 20 patients
+            - days_per_week: 5 days
+            - patient_generation:
+                - rate_per_week: 3 patients
+                - random_seed: None (use simulation seed)
+        """
+        simulation = self.parameters.get("simulation", {})
+        scheduling = simulation.get("scheduling", {})
+        patient_gen = simulation.get("patient_generation", {})
+        
         return {
-            "daily_capacity": scheduling.get("daily_capacity", 20),  # Default to 20 patients per day
-            "days_per_week": scheduling.get("days_per_week", 5)     # Default to 5 days per week
+            "daily_capacity": scheduling.get("daily_capacity", 20),
+            "days_per_week": scheduling.get("days_per_week", 5),
+            "patient_generation": {
+                "rate_per_week": patient_gen.get("rate_per_week", 3),
+                "random_seed": patient_gen.get("random_seed", None)
+            }
         }
         
     def get_output_params(self) -> Dict[str, Any]:
-        """Get output-related parameters"""
+        """
+        Get output configuration parameters.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Output parameters with defaults:
+            - save_results: True
+            - database: 'simulations.db'
+            - plots: True
+            - verbose: False
+        """
         output_params = self.parameters.get("output", {})
         if not output_params:
-            # Default values if not specified
             return {
                 "save_results": True,
                 "database": "simulations.db",
@@ -150,31 +307,97 @@ class SimulationConfig:
                 "verbose": False
             }
         return output_params
+
+    def get_clinical_model_params(self) -> Dict[str, Any]:
+        """
+        Get validated clinical model parameters.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Validated clinical model parameters
+
+        Raises
+        ------
+        ValueError
+            If required sections or parameters are missing
+
+        Notes
+        -----
+        Validates the following required sections:
+        - disease_states
+        - transition_probabilities
+        - vision_change
+
+        For vision_change, validates:
+        - base_change
+        - time_factor
+        - ceiling_factor
+        - measurement_noise
+        """
+        logger.debug(f"Getting clinical model parameters. Full parameters: {self.parameters}")
+        clinical_model_params = self.parameters.get("clinical_model", {})
+        if not clinical_model_params:
+            logger.error("Clinical model parameters not found in configuration")
+            raise ValueError("Clinical model parameters not found in configuration")
+        
+        required_sections = ["disease_states", "transition_probabilities", "vision_change"]
+        for section in required_sections:
+            if section not in clinical_model_params:
+                logger.error(f"Missing required clinical model section: {section}")
+                raise ValueError(f"Missing required clinical model section: {section}")
+        
+        vision_change = clinical_model_params["vision_change"]
+        required_vision_change_params = ["base_change", "time_factor", "ceiling_factor", "measurement_noise"]
+        for param in required_vision_change_params:
+            if param not in vision_change:
+                logger.error(f"Missing required vision change parameter: {param}")
+                raise ValueError(f"Missing required vision change parameter: {param}")
+        
+        return clinical_model_params
     
     @classmethod
     def from_yaml(cls, config_name: str) -> 'SimulationConfig':
-        """Create configuration from YAML with protocol objects"""
+        """
+        Create configuration from YAML with protocol objects.
+
+        Parameters
+        ----------
+        config_name : str
+            Name of the configuration to load
+
+        Returns
+        -------
+        SimulationConfig
+            New SimulationConfig instance
+
+        Raises
+        ------
+        ValueError
+            If protocol is invalid or required parameters are missing
+
+        Notes
+        -----
+        Uses ProtocolParser to load and validate the full configuration,
+        including protocol definitions and parameter validation.
+        """
         parser = ProtocolParser()
         full_config = parser.get_full_configuration(config_name)
         
-        # Parse start_date string to datetime
         start_date = datetime.strptime(
             full_config['config'].start_date,
             '%Y-%m-%d'
         )
         
-        # Validate protocol is correct type
         if not isinstance(full_config['protocol'], TreatmentProtocol):
             raise ValueError("Protocol must be a TreatmentProtocol object")
             
-        # Extract resources configuration if present
         resources = None
         if hasattr(full_config['config'], 'simulation'):
             sim_config = full_config['config'].simulation
             if hasattr(sim_config, 'resources'):
                 resources = sim_config.resources
         
-        # Create config with validated protocol
         return cls(
             parameters=full_config['parameters'],
             protocol=full_config['protocol'],
