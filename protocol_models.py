@@ -1,3 +1,50 @@
+"""Core models for defining and managing ophthalmic treatment protocols.
+
+This module provides classes for modeling complete treatment protocols including
+phases, visit types, clinical actions, and decision criteria. It forms the foundation
+for protocol-driven clinical simulations and analysis.
+
+Key Features
+------------
+- Phase-based protocol modeling (loading, maintenance, extension, discontinuation)
+- Configurable visit types with required/optional actions
+- Decision criteria with evaluation logic
+- Protocol validation and phase transition management
+- State processing for each protocol phase
+
+Classes Overview
+---------------
+PhaseType : Enum of protocol phase types
+ActionType : Enum of clinical actions (tests, scans, treatments)
+DecisionType : Enum of clinical decision points
+VisitType : Definition of a visit's structure and requirements
+TreatmentDecision : Criteria for treatment decisions
+ProtocolPhase : Abstract base class for protocol phases
+TreatmentProtocol : Complete protocol definition and management
+
+Examples
+--------
+>>> from protocol_models import *
+>>> loading = LoadingPhase(
+...     duration_weeks=12,
+...     visit_interval_weeks=4,
+...     required_treatments=3
+... )
+>>> protocol = TreatmentProtocol(
+...     agent="Aflibercept",
+...     protocol_name="Standard AMD Protocol",
+...     version="1.0",
+...     phases={"loading": loading},
+...     parameters={}
+... )
+
+Notes
+-----
+- All time values are in weeks
+- Phase transitions are validated against sequence rules
+- Decision criteria support complex evaluation logic
+- State dictionaries track patient progress through protocol
+"""
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Any, Union, Type
