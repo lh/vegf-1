@@ -1,9 +1,17 @@
-"""
-Agent-Based Simulation (ABS) implementation for modeling AMD treatment pathways.
+"""Agent-Based Simulation (ABS) implementation for modeling AMD treatment pathways.
 
 This module implements an agent-based simulation approach where each patient is modeled
 as an autonomous agent following a treatment protocol. The simulation handles patient
 visits, treatment decisions, and disease progression over time.
+
+Notes
+-----
+Key Features:
+- Individual patient agents with unique states
+- Protocol-driven treatment decisions
+- Vision progression modeling
+- Clinic scheduling constraints
+- Detailed visit history tracking
 """
 
 from typing import Dict, Any
@@ -14,8 +22,7 @@ from .clinical_model import ClinicalModel
 from .scheduler import ClinicScheduler
 
 class Patient:
-    """
-    Patient agent in the simulation.
+    """Patient agent in the simulation.
     
     Represents a single patient in the agent-based simulation, maintaining their
     current state and history of visits and treatments.
@@ -25,16 +32,36 @@ class Patient:
     patient_id : str
         Unique identifier for the patient
     initial_state : PatientState
-        Initial clinical and treatment state of the patient
+        Initial clinical and treatment state including:
+        - current_vision: ETDRS letters
+        - disease_state: AMD stage
+        - treatment_history: List of previous treatments
+        - protocol_name: Treatment protocol being followed
 
     Attributes
     ----------
     patient_id : str
         Unique identifier for the patient
     state : PatientState
-        Current state of the patient
+        Current state of the patient including:
+        - vision: Current visual acuity
+        - disease_state: Current AMD stage
+        - next_visit_interval: Weeks until next visit
+        - treatment_history: List of treatments received
     history : list
-        List of historical visit records
+        List of historical visit records containing:
+        - date: Visit date
+        - type: Visit type
+        - actions: Procedures performed
+        - vision: Visual acuity at visit
+        - disease_state: AMD stage at visit
+
+    Examples
+    --------
+    >>> patient = Patient(
+    ...     patient_id="pat123",
+    ...     initial_state=PatientState(...)
+    ... )
     """
 
     def __init__(self, patient_id: str, initial_state: PatientState):
@@ -42,22 +69,30 @@ class Patient:
         self.state = initial_state
         self.history = []
 
-    def get_state_dict(self):
-        """
-        Get the current state as a dictionary.
+    def get_state_dict(self) -> Dict[str, Any]:
+        """Get the current state as a dictionary.
 
         Returns
         -------
-        dict
-            Dictionary containing the current patient state
+        Dict[str, Any]
+            Dictionary containing:
+            - 'patient_id': str
+            - 'current_vision': float
+            - 'disease_state': str
+            - 'treatment_history': List[Dict]
+            - 'next_visit_interval': int
+            - 'last_visit_date': datetime
+
+        Notes
+        -----
+        The returned dictionary is suitable for serialization and analysis.
         """
         return self.state.state
 
 from .base import BaseSimulation, Event, SimulationClock
 
 class AgentBasedSimulation(BaseSimulation):
-    """
-    Agent-based simulation for AMD treatment pathways.
+    """Agent-based simulation for AMD treatment pathways.
 
     Implements a discrete-event simulation where patients are modeled as individual
     agents following treatment protocols. The simulation handles scheduling of visits,
@@ -66,7 +101,10 @@ class AgentBasedSimulation(BaseSimulation):
     Parameters
     ----------
     config : Any
-        Configuration object containing simulation parameters
+        Configuration object containing:
+        - protocol_parameters: Treatment protocol definitions
+        - clinical_model_params: Disease progression parameters
+        - des_params: Scheduling constraints
     start_date : datetime
         Start date for the simulation
 
@@ -75,13 +113,24 @@ class AgentBasedSimulation(BaseSimulation):
     start_date : datetime
         Start date of the simulation
     agents : Dict[str, Patient]
-        Dictionary of patient agents in the simulation
+        Dictionary mapping patient IDs to Patient agents
     clinical_model : ClinicalModel
         Model for disease progression and treatment effects
     scheduler : ClinicScheduler
-        Scheduler for clinic visits
+        Scheduler for clinic visits with attributes:
+        - daily_capacity: Max patients per day
+        - days_per_week: Clinic operating days
     clock : SimulationClock
-        Simulation clock for event management
+        Simulation clock managing event queue
+
+    Examples
+    --------
+    >>> sim = AgentBasedSimulation(
+    ...     config=load_config(),
+    ...     start_date=datetime(2023, 1, 1)
+    ... )
+    >>> sim.add_patient("pat123", "treat_and_extend")
+    >>> sim.run(datetime(2024, 1, 1))
     """
 
     def __init__(self, config, start_date: datetime):
