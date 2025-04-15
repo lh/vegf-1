@@ -1,3 +1,12 @@
+"""Visualization tools for population-level treatment analysis.
+
+This module provides statistical visualizations and summaries for analyzing
+treatment patterns and outcomes across patient populations. Includes:
+- Vision distribution plots
+- Treatment interval analysis
+- Response category distributions
+- Population summary statistics
+"""
 from typing import Dict, List, Optional, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,20 +16,46 @@ import seaborn as sns
 from analysis.simulation_results import SimulationResults
 
 class PopulationVisualizer:
-    """Visualization tools for population-level analysis"""
+    """Static methods for visualizing population treatment data.
+    
+    Provides tools for analyzing treatment patterns and outcomes across
+    patient cohorts. All methods are static since they operate on
+    simulation results without maintaining state.
+    """
     
     @staticmethod
     def plot_vision_distribution(results: SimulationResults,
                                time_points: Optional[List[datetime]] = None,
                                show: bool = True,
-                               save_path: Optional[str] = None):
-        """Plot vision distribution across population at different timepoints
-        
-        Args:
-            results: SimulationResults object containing patient histories
-            time_points: Optional list of timepoints to analyze (default: start, middle, end)
-            show: Whether to display the plot
-            save_path: Optional path to save the plot
+                               save_path: Optional[str] = None) -> Optional[plt.Figure]:
+        """Plot violin distributions of vision across population at timepoints.
+
+        Parameters
+        ----------
+        results : SimulationResults
+            Contains patient histories with vision measurements
+        time_points : List[datetime], optional
+            Specific dates to analyze (default: start/middle/end)
+        show : bool
+            Whether to display the plot (default: True)
+        save_path : str, optional
+            Path to save figure (default: None)
+
+        Returns
+        -------
+        Optional[plt.Figure]
+            The figure object if show=False, else None
+
+        Examples
+        --------
+        >>> fig = PopulationVisualizer.plot_vision_distribution(results)
+        >>> fig.savefig('vision_distributions.png')
+
+        Notes
+        -----
+        - Uses violin plots to show distribution shape
+        - Looks for vision measurements within ±2 weeks of each timepoint
+        - Y-axis fixed to 0-85 ETDRS letters for consistency
         """
         if not time_points:
             # Default to start, middle, and end points
@@ -75,13 +110,28 @@ class PopulationVisualizer:
     @staticmethod
     def plot_treatment_patterns(results: SimulationResults,
                               show: bool = True,
-                              save_path: Optional[str] = None):
-        """Plot treatment patterns across the population
-        
-        Shows:
-        - Distribution of intervals between treatments
-        - Treatment frequency over time
-        - Loading phase completion rate
+                              save_path: Optional[str] = None) -> Optional[plt.Figure]:
+        """Visualize treatment patterns across patient population.
+
+        Parameters
+        ----------
+        results : SimulationResults
+            Contains patient treatment histories
+        show : bool
+            Whether to display the plot (default: True)
+        save_path : str, optional
+            Path to save figure (default: None)
+
+        Returns
+        -------
+        Optional[plt.Figure]
+            The figure object if show=False, else None
+
+        Notes
+        -----
+        Creates a 2-panel figure showing:
+        1. Histogram of treatment intervals (weeks between injections)
+        2. Bar chart of monthly treatment frequency
         """
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
         
@@ -140,13 +190,29 @@ class PopulationVisualizer:
     @staticmethod
     def plot_response_categories(results: SimulationResults,
                                show: bool = True,
-                               save_path: Optional[str] = None):
-        """Plot distribution of treatment responses across population
-        
-        Categories:
-        - Strong improvement (>15 letters)
-        - Moderate improvement (5-15 letters)
-        - Stable (±5 letters)
+                               save_path: Optional[str] = None) -> Optional[plt.Figure]:
+        """Plot pie chart of treatment response categories.
+
+        Parameters
+        ----------
+        results : SimulationResults
+            Contains patient histories with vision data
+        show : bool
+            Whether to display the plot (default: True)
+        save_path : str, optional
+            Path to save figure (default: None)
+
+        Returns
+        -------
+        Optional[plt.Figure]
+            The figure object if show=False, else None
+
+        Notes
+        -----
+        Response categories:
+        - Strong improvement (>15 ETDRS letters gain)
+        - Moderate improvement (5-15 letters gain)
+        - Stable (±5 letters change)
         - Decline (>5 letters loss)
         """
         # Calculate vision changes from baseline
@@ -185,10 +251,27 @@ class PopulationVisualizer:
             plt.close()
 
     @staticmethod
-    def create_population_summary(results: SimulationResults) -> Dict:
-        """Create a comprehensive summary of population outcomes
-        
-        Returns dictionary with key statistics and metrics
+    def create_population_summary(results: SimulationResults) -> Dict[str, float]:
+        """Generate statistical summary of population treatment outcomes.
+
+        Parameters
+        ----------
+        results : SimulationResults
+            Contains patient histories and treatment data
+
+        Returns
+        -------
+        Dict[str, float]
+            Dictionary containing metrics including:
+            - total_patients: Number of patients analyzed
+            - mean_visits: Average visits per patient
+            - mean_treatments: Average injections per patient
+            - mean_vision_change: Average vision change (letters)
+            - vision_improved_percent: % with >5 letter gain
+            - vision_stable_percent: % with ±5 letter change
+            - vision_declined_percent: % with >5 letter loss
+            - loading_phase_completion: % completing 3 initial treatments
+            - mean_treatment_interval: Average weeks between treatments
         """
         summary = {
             'total_patients': len(results.patient_histories),
