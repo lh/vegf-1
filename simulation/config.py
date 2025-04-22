@@ -70,7 +70,7 @@ Notes
 from dataclasses import dataclass
 from typing import Dict, Any, Optional
 from datetime import datetime
-from protocol_parser import ProtocolParser
+from protocols.protocol_parser import ProtocolParser
 from protocol_models import TreatmentProtocol
 import logging
 
