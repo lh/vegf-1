@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Config Parser Module &mdash; Macular Simulation  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Visual Acuity Visualization Module" href="../visualization/acuity_viz.html" />
+    <link rel="prev" title="Visit Types Configuration" href="visit_types.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Macular Simulation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../PROJECT_OVERVIEW.html">Macular Degeneration Treatment Simulation Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simulation/index.html">Simulation Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis/index.html">Analysis Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Protocol Modules</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../simulation/patient_state.html">Patient State Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simulation/scheduler.html">Scheduler Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simulation/config.html">Simulation Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simulation/clinical_model.html">Clinical Model Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../analysis/eylea_data_analysis.html">Eylea Data Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis/eylea_intervals_analysis.html">Eylea Intervals Analysis Module</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="visit_types.html">Visit Types Configuration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Config Parser Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#key-components">Key Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-files">Configuration Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#protocols.config_parser.SimulationConfig"><code class="docutils literal notranslate"><span class="pre">SimulationConfig</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#protocols.config_parser.SimulationConfig.name"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#protocols.config_parser.SimulationConfig.protocol_agent"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.protocol_agent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#protocols.config_parser.SimulationConfig.protocol_type"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.protocol_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#protocols.config_parser.SimulationConfig.parameter_set"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.parameter_set</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#protocols.config_parser.SimulationConfig.simulation_type"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.simulation_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#protocols.config_parser.SimulationConfig.duration_days"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.duration_days</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#protocols.config_parser.SimulationConfig.num_patients"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.num_patients</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#protocols.config_parser.SimulationConfig.random_seed"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.random_seed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#protocols.config_parser.SimulationConfig.save_results"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.save_results</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#protocols.config_parser.SimulationConfig.database"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.database</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#protocols.config_parser.SimulationConfig.plots"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.plots</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#protocols.config_parser.SimulationConfig.verbose"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.verbose</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#protocols.config_parser.SimulationConfig.resources"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.resources</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#protocols.config_parser.SimulationConfig.__init__"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#protocols.config_parser.ConfigurationManager"><code class="docutils literal notranslate"><span class="pre">ConfigurationManager</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#protocols.config_parser.ConfigurationManager.__init__"><code class="docutils literal notranslate"><span class="pre">ConfigurationManager.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#protocols.config_parser.ConfigurationManager.load_simulation_config"><code class="docutils literal notranslate"><span class="pre">ConfigurationManager.load_simulation_config()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#protocols.config_parser.ConfigurationManager.get_full_configuration"><code class="docutils literal notranslate"><span class="pre">ConfigurationManager.get_full_configuration()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../visualization/acuity_viz.html">Visual Acuity Visualization Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Macular Simulation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Config Parser Module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/protocols/config_parser.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-protocols.config_parser">
+<span id="config-parser-module"></span><h1>Config Parser Module<a class="headerlink" href="#module-protocols.config_parser" title="Link to this heading"></a></h1>
+<p>Configuration management for ophthalmic treatment protocol simulations.</p>
+<p>This module handles loading and merging configuration files for simulation runs,
+including protocol definitions, parameter sets, and simulation settings.</p>
+<section id="key-components">
+<h2>Key Components<a class="headerlink" href="#key-components" title="Link to this heading"></a></h2>
+<p>SimulationConfig : Dataclass for storing simulation configuration
+ConfigurationManager : Main class for loading and merging configurations</p>
+</section>
+<section id="configuration-files">
+<h2>Configuration Files<a class="headerlink" href="#configuration-files" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>base_parameters.yaml : Common parameters for all protocols</p></li>
+<li><p>protocol_definitions/ : Protocol-specific definitions</p></li>
+<li><p>parameter_sets/ : Protocol-specific parameters</p></li>
+<li><p>simulation_configs/ : Complete simulation configurations</p></li>
+</ul>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">ConfigurationManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">load_simulation_config</span><span class="p">(</span><span class="s1">&#39;test_simulation&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">full_config</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">get_full_configuration</span><span class="p">(</span><span class="s1">&#39;test_simulation&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="protocols.config_parser.SimulationConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">protocols.config_parser.</span></span><span class="sig-name descname"><span class="pre">SimulationConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol_agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_patients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">database</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plots</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/protocols/config_parser.html#SimulationConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#protocols.config_parser.SimulationConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configuration for a simulation run.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of the simulation configuration</p></li>
+<li><p><strong>protocol_agent</strong> (<em>str</em>) – Name of the treatment agent (e.g., ‘Aflibercept’)</p></li>
+<li><p><strong>protocol_type</strong> (<em>str</em>) – Type of protocol (e.g., ‘standard’, ‘intensive’)</p></li>
+<li><p><strong>parameter_set</strong> (<em>str</em>) – Name of parameter set to use</p></li>
+<li><p><strong>simulation_type</strong> (<em>str</em>) – Type of simulation (‘abs’ or ‘des’)</p></li>
+<li><p><strong>duration_days</strong> (<em>int</em>) – Duration of simulation in days</p></li>
+<li><p><strong>num_patients</strong> (<em>int</em>) – Number of patients to simulate</p></li>
+<li><p><strong>random_seed</strong> (<em>int</em>) – Random seed for reproducibility</p></li>
+<li><p><strong>save_results</strong> (<em>bool</em>) – Whether to save results to database</p></li>
+<li><p><strong>database</strong> (<em>str</em>) – Database path/name for results</p></li>
+<li><p><strong>plots</strong> (<em>bool</em>) – Whether to generate plots</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – Enable verbose output</p></li>
+<li><p><strong>resources</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>optional</em>) – Additional resource definitions</p></li>
+</ul>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>)</p></li>
+<li><p><strong>protocol_agent</strong> (<em>str</em>)</p></li>
+<li><p><strong>protocol_type</strong> (<em>str</em>)</p></li>
+<li><p><strong>parameter_set</strong> (<em>str</em>)</p></li>
+<li><p><strong>simulation_type</strong> (<em>str</em>)</p></li>
+<li><p><strong>duration_days</strong> (<em>int</em>)</p></li>
+<li><p><strong>num_patients</strong> (<em>int</em>)</p></li>
+<li><p><strong>random_seed</strong> (<em>int</em>)</p></li>
+<li><p><strong>save_results</strong> (<em>bool</em>)</p></li>
+<li><p><strong>database</strong> (<em>str</em>)</p></li>
+<li><p><strong>plots</strong> (<em>bool</em>)</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>)</p></li>
+<li><p><strong>resources</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="protocols.config_parser.SimulationConfig.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#protocols.config_parser.SimulationConfig.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="protocols.config_parser.SimulationConfig.protocol_agent">
+<span class="sig-name descname"><span class="pre">protocol_agent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#protocols.config_parser.SimulationConfig.protocol_agent" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="protocols.config_parser.SimulationConfig.protocol_type">
+<span class="sig-name descname"><span class="pre">protocol_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#protocols.config_parser.SimulationConfig.protocol_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="protocols.config_parser.SimulationConfig.parameter_set">
+<span class="sig-name descname"><span class="pre">parameter_set</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#protocols.config_parser.SimulationConfig.parameter_set" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="protocols.config_parser.SimulationConfig.simulation_type">
+<span class="sig-name descname"><span class="pre">simulation_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#protocols.config_parser.SimulationConfig.simulation_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="protocols.config_parser.SimulationConfig.duration_days">
+<span class="sig-name descname"><span class="pre">duration_days</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#protocols.config_parser.SimulationConfig.duration_days" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="protocols.config_parser.SimulationConfig.num_patients">
+<span class="sig-name descname"><span class="pre">num_patients</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#protocols.config_parser.SimulationConfig.num_patients" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="protocols.config_parser.SimulationConfig.random_seed">
+<span class="sig-name descname"><span class="pre">random_seed</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#protocols.config_parser.SimulationConfig.random_seed" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="protocols.config_parser.SimulationConfig.save_results">
+<span class="sig-name descname"><span class="pre">save_results</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><a class="headerlink" href="#protocols.config_parser.SimulationConfig.save_results" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="protocols.config_parser.SimulationConfig.database">
+<span class="sig-name descname"><span class="pre">database</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#protocols.config_parser.SimulationConfig.database" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="protocols.config_parser.SimulationConfig.plots">
+<span class="sig-name descname"><span class="pre">plots</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><a class="headerlink" href="#protocols.config_parser.SimulationConfig.plots" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="protocols.config_parser.SimulationConfig.verbose">
+<span class="sig-name descname"><span class="pre">verbose</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><a class="headerlink" href="#protocols.config_parser.SimulationConfig.verbose" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="protocols.config_parser.SimulationConfig.resources">
+<span class="sig-name descname"><span class="pre">resources</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">,</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#protocols.config_parser.SimulationConfig.resources" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="protocols.config_parser.SimulationConfig.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol_agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_patients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">database</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plots</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#protocols.config_parser.SimulationConfig.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>)</p></li>
+<li><p><strong>protocol_agent</strong> (<em>str</em>)</p></li>
+<li><p><strong>protocol_type</strong> (<em>str</em>)</p></li>
+<li><p><strong>parameter_set</strong> (<em>str</em>)</p></li>
+<li><p><strong>simulation_type</strong> (<em>str</em>)</p></li>
+<li><p><strong>duration_days</strong> (<em>int</em>)</p></li>
+<li><p><strong>num_patients</strong> (<em>int</em>)</p></li>
+<li><p><strong>random_seed</strong> (<em>int</em>)</p></li>
+<li><p><strong>save_results</strong> (<em>bool</em>)</p></li>
+<li><p><strong>database</strong> (<em>str</em>)</p></li>
+<li><p><strong>plots</strong> (<em>bool</em>)</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>)</p></li>
+<li><p><strong>resources</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="protocols.config_parser.ConfigurationManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">protocols.config_parser.</span></span><span class="sig-name descname"><span class="pre">ConfigurationManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'protocols'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/protocols/config_parser.html#ConfigurationManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#protocols.config_parser.ConfigurationManager" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>base_path</strong> (<em>str</em>)</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="protocols.config_parser.ConfigurationManager.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'protocols'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/protocols/config_parser.html#ConfigurationManager.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#protocols.config_parser.ConfigurationManager.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>base_path</strong> (<em>str</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="protocols.config_parser.ConfigurationManager.load_simulation_config">
+<span class="sig-name descname"><span class="pre">load_simulation_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/protocols/config_parser.html#ConfigurationManager.load_simulation_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#protocols.config_parser.ConfigurationManager.load_simulation_config" title="Link to this definition"></a></dt>
+<dd><p>Load a simulation configuration from YAML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config_name</strong> (<em>str</em>) – Name of configuration file (without .yaml extension)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Configuration dataclass instance</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="index.html#protocols.config_parser.SimulationConfig" title="protocols.config_parser.SimulationConfig">SimulationConfig</a></p>
+</dd>
+</dl>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">ConfigurationManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">load_simulation_config</span><span class="p">(</span><span class="s1">&#39;test_simulation&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">protocol_agent</span><span class="p">)</span>
+<span class="go">&#39;Aflibercept&#39;</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="protocols.config_parser.ConfigurationManager.get_full_configuration">
+<span class="sig-name descname"><span class="pre">get_full_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/protocols/config_parser.html#ConfigurationManager.get_full_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#protocols.config_parser.ConfigurationManager.get_full_configuration" title="Link to this definition"></a></dt>
+<dd><p>Get complete merged configuration for a simulation.</p>
+<p>Combines:
+- Simulation configuration
+- Protocol definition
+- Parameter sets
+- Clinical model parameters (if present)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config_name</strong> (<em>str</em>) – Name of configuration file (without .yaml extension)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing all configuration components with keys:
+- ‘config’: SimulationConfig
+- ‘protocol’: Protocol definition
+- ‘parameters’: Merged parameters</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">manager</span> <span class="o">=</span> <span class="n">ConfigurationManager</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">full_config</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">get_full_configuration</span><span class="p">(</span><span class="s1">&#39;test_simulation&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">][</span><span class="s1">&#39;injection_interval_weeks&#39;</span><span class="p">])</span>
+<span class="go">4</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="visit_types.html" class="btn btn-neutral float-left" title="Visit Types Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../visualization/acuity_viz.html" class="btn btn-neutral float-right" title="Visual Acuity Visualization Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Rose.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -8,8 +8,8 @@ protocol:
 
 simulation:
   type: agent_based
-  duration_days: 1095  # 3 years
-  num_patients: 200
+  duration_days: 365  # 1 year
+  num_patients: 50
   random_seed: 42
   start_date: "2023-01-01"
   
@@ -20,8 +20,55 @@ simulation:
   
   # Patient generation settings
   patient_generation:
-    rate_per_week: 3    # Average number of new patients per week
+    rate_per_week: 1    # Average number of new patients per week
     random_seed: 42     # For reproducible patient arrival times
+
+  # Clinical model settings
+  clinical_model:
+    disease_states:
+      - NAIVE
+      - STABLE
+      - ACTIVE
+      - HIGHLY_ACTIVE
+    initial_phase_transitions:
+      HIGHLY_ACTIVE: 0.01  # 1% chance per decision in the first year
+    transition_probabilities:
+      NAIVE:
+        NAIVE: 0.0
+        STABLE: 0.35
+        ACTIVE: 0.6
+        HIGHLY_ACTIVE: 0.05
+      STABLE:
+        STABLE: 0.88
+        ACTIVE: 0.12
+        HIGHLY_ACTIVE: 0.0
+      ACTIVE:
+        STABLE: 0.2
+        ACTIVE: 0.75
+        HIGHLY_ACTIVE: 0.05
+      HIGHLY_ACTIVE:
+        STABLE: 0.1
+        ACTIVE: 0.3
+        HIGHLY_ACTIVE: 0.6
+    vision_change:
+      base_change:
+        NAIVE:
+          injection: [5, 1]  # mean, std dev
+          no_injection: [0, 0.5]
+        STABLE:
+          injection: [1, 0.5]  # mean, std dev
+          no_injection: [-0.5, 0.5]
+        ACTIVE:
+          injection: [3, 1]
+          no_injection: [-2, 1]
+        HIGHLY_ACTIVE:
+          injection: [2, 1]
+          no_injection: [-3, 1]
+      time_factor:
+        max_weeks: 52  # Time factor increases linearly over this period
+      ceiling_factor:
+        max_vision: 100  # Vision score at which improvement becomes minimal
+      measurement_noise: [0, 0.5]  # mean, std dev of measurement variability
 
 output:
   save_results: true

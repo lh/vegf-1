@@ -1,0 +1,13 @@
+
+Analysis Results Summary:
+Patient count: 1775
+Injection count: 23962
+Mean injection interval: 77.3 days
+Median injection interval: 62.0 days
+Output saved to: output
+
+Data Quality Summary:
+Total rows: 23962
+Missing data: 23.9%
+Validation warnings: 16
+Column mappings applied: 12

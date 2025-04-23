@@ -1,0 +1,94 @@
+.
+├── __pycache__
+│   ├── conftest.cpython-312-pytest-8.3.4.pyc
+│   ├── protocol_models.cpython-312.pyc
+│   ├── protocol_parser.cpython-312.pyc
+│   ├── test_abs_simulation.cpython-312.pyc
+│   ├── test_des_simulation.cpython-312.pyc
+│   ├── test_protocol_config_validation.cpython-312-pytest-8.3.4.pyc
+│   └── test_protocol_models.cpython-312-pytest-8.3.4.pyc
+├── analysis
+│   ├── __pycache__
+│   │   └── simulation_results.cpython-312.pyc
+│   └── simulation_results.py
+├── conftest.py
+├── meta
+│   ├── Veeramani_pathway_amd_diagram.md
+│   ├── aider.md
+│   ├── aims.md
+│   ├── design_decisions.md
+│   ├── files_in_use.md
+│   ├── issues.md
+│   ├── next_steps.md
+│   ├── overview.md
+│   ├── refactoring_plan.md
+│   └── references.md
+├── protocol_models.py
+├── protocol_parameters.py
+├── protocol_parser.py
+├── protocols
+│   ├── __init__.py
+│   ├── base_parameters.yaml
+│   ├── config_parser.py
+│   ├── eylea.yaml
+│   ├── parameter_sets
+│   │   └── eylea
+│   │       ├── invalid.yaml
+│   │       └── standard.yaml
+│   ├── protocol_definitions
+│   │   └── eylea
+│   │       ├── test_simulation.yaml
+│   │       └── treat_and_extend.yaml
+│   ├── simulation_configs
+│   │   └── test_simulation.yaml
+│   └── visit_types.yaml
+├── requirements.yaml
+├── session
+├── setup_env.py
+├── simulation
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── abs.cpython-312.pyc
+│   │   ├── base.cpython-312.pyc
+│   │   ├── config.cpython-312.pyc
+│   │   └── des.cpython-312.pyc
+│   ├── abs.py
+│   ├── base.py
+│   ├── config.py
+│   └── des.py
+├── simulation_comparison.png
+├── simulations.db
+├── test_abs_simulation.py
+├── test_des_simulation.py
+├── test_multiple_simulations.py
+├── test_protocol_config_validation.py
+├── test_protocol_configs.py
+├── test_protocol_models.py
+├── tests
+│   └── unit
+│       ├── __pycache__
+│       │   ├── test_population_viz.cpython-312-pytest-8.3.4.pyc
+│       │   ├── test_simulation_base.cpython-312-pytest-8.3.4.pyc
+│       │   ├── test_simulation_events.cpython-312-pytest-8.3.4.pyc
+│       │   └── test_simulation_results.cpython-312-pytest-8.3.4.pyc
+│       ├── test_population_viz.py
+│       ├── test_simulation_base.py
+│       ├── test_simulation_events.py
+│       └── test_simulation_results.py
+├── tree.txt
+├── validation
+│   ├── __pycache__
+│   │   └── config_validator.cpython-312.pyc
+│   └── config_validator.py
+└── visualization
+    ├── __pycache__
+    │   ├── acuity_viz.cpython-312.pyc
+    │   ├── population_viz.cpython-312.pyc
+    │   └── timeline_viz.cpython-312.pyc
+    ├── acuity_viz.py
+    ├── population_viz.py
+    ├── protocol_viz.py
+    └── timeline_viz.py
+
+20 directories, 72 files

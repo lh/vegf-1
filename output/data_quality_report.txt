@@ -1,0 +1,165 @@
+=== EYLEA DATA QUALITY REPORT ===
+
+SUMMARY:
+Total rows: 23962
+Total columns: 113
+Missing cells: 648046 (23.93%)
+Validation errors: 0
+Validation warnings: 16
+
+COLUMN MAPPING:
+  UUID <- UUID
+  Injection Date <- Injection Date
+  VA Letter Score at Injection <- VA Letter Score at Injection
+  Baseline VA Letter Score <- Baseline VA Letter Score
+  Baseline CRT <- Baseline CRT
+  Date of 1st Injection <- Date of 1st Injection
+  Current Age <- Current Age
+  Age at Death <- Age at Death
+  Gender <- Gender
+  Eye <- Eye
+  Deceased <- Deceased
+  CRT at Injection <- CRT at Injection
+
+VALIDATION WARNINGS:
+  Found 1 invalid date values in 'Injection Date'
+  Found 1 invalid date values in 'Date of 1st Injection'
+  Found 17383 invalid date values in 'Baseline OCT Date'
+  Found 430 invalid date values in 'VA Date After 3rd Injection'
+  Found 23575 invalid date values in 'Expiry Date'
+  Found 15546 invalid date values in 'OCT Date After 3rd Injection'
+  Found 1832 invalid date values in 'Baseline VA Date'
+  Found 1531 non-numeric values in 'VA Letter Score at Injection'
+  Found 2354 non-numeric values in 'Baseline VA Letter Score'
+  Found 17383 non-numeric values in 'Baseline CRT'
+  Found 4079 non-numeric values in 'Current Age'
+  Found 19884 non-numeric values in 'Age at Death'
+  Found 1 non-numeric values in 'Deceased'
+  Found 22054 non-numeric values in 'CRT at Injection'
+  Found 1682 duplicate patient-date combinations
+  Found 398 patients with out-of-sequence injection dates
+
+MISSING VALUES BY COLUMN:
+  Injection Date: 1 (0.00%)
+  VA Letter Score at Injection: 1531 (6.39%)
+  Baseline VA Letter Score: 1822 (7.60%)
+  Baseline CRT: 17383 (72.54%)
+  Date of 1st Injection: 1 (0.00%)
+  Current Age: 4079 (17.02%)
+  Age at Death: 19884 (82.98%)
+  Gender: 1 (0.00%)
+  Eye: 1 (0.00%)
+  Deceased: 1 (0.00%)
+  CRT at Injection: 22054 (92.04%)
+  Ocular Co-Pathology: 18612 (77.67%)
+  Preparation 1: 5613 (23.42%)
+  Cataract Surgery Prior to Injection: 1 (0.00%)
+  Operative Complications: 1 (0.00%)
+  Surgeon Grade: 1428 (5.96%)
+  Post-Operative Complications: 22348 (93.26%)
+  Other Details: 23895 (99.72%)
+  Anaesthetic Sedation: 23956 (99.97%)
+  Age at Injection: 1 (0.00%)
+  Conjunctiva Displaced: 1 (0.00%)
+  Hospital: 1 (0.00%)
+  Baseline CPFT: 23878 (99.65%)
+  Macular Volume at Injection: 23949 (99.95%)
+  Patient First Drug Group IVI: 1 (0.00%)
+  CPFT After 3rd Injection: 23099 (96.40%)
+  Eye Treated Order: 1 (0.00%)
+  CPFT at Injection: 23949 (99.95%)
+  Number of Previous Steroid IVIs: 23554 (98.30%)
+  Supplementary Anaesthetic: 22009 (91.85%)
+  Baseline OCT Machine: 17383 (72.54%)
+  Glaucoma Surgery Prior to Injection: 1 (0.00%)
+  Baseline OCT Date: 17383 (72.54%)
+  Patient Latest IVI: 1 (0.00%)
+  Injection NHS Month: 1 (0.00%)
+  Number of Previous Anti-VEGF IVIs: 1 (0.00%)
+  Anaesthetic Drug: 10 (0.04%)
+  Indication at 1st Injection: 1 (0.00%)
+  Eye First IVI: 1 (0.00%)
+  Eye Latest Drug IVI: 1 (0.00%)
+  Eye Latest Drug Group IVI: 1 (0.00%)
+  Intraretinal Fluid Prior to Injection: 1 (0.00%)
+  VA Date After 3rd Injection: 430 (1.79%)
+  CRT After 3rd Injection: 15546 (64.88%)
+  Needle Angle: 7912 (33.02%)
+  Macular Volume After 3rd Injection: 23089 (96.36%)
+  Injected Drug Group: 1 (0.00%)
+  AC Tap: 1 (0.00%)
+  VA Correction After 3rd Injection: 430 (1.79%)
+  Laser Prior to 1st Injection: 1 (0.00%)
+  Able to CF: 1 (0.00%)
+  Patient Latest Drug Group IVI: 1 (0.00%)
+  Subretinal Fluid Prior to Injection: 1 (0.00%)
+  Preparation 2: 4723 (19.71%)
+  Expiry Date: 23575 (98.38%)
+  PPV Prior to Injection: 1 (0.00%)
+  Eye First Drug IVI: 1 (0.00%)
+  Clock Hour: 23955 (99.97%)
+  Patient First Drug IVI: 1 (0.00%)
+  VA Correction at Injection: 1137 (4.75%)
+  Injection Month: 1 (0.00%)
+  Retinal Detachment Surgery Prior to Injection: 1 (0.00%)
+  Baseline Macular Volume: 23878 (99.65%)
+  Eye First Drug Group IVI: 1 (0.00%)
+  Drug at 1st Injection: 1 (0.00%)
+  Anaesthetist: 1 (0.00%)
+  Supplementary Other Drug: 23782 (99.25%)
+  Injection NHS Year: 1 (0.00%)
+  Bilateral Injection: 1 (0.00%)
+  Patient First IVI: 1 (0.00%)
+  Responsible Clinician: 1 (0.00%)
+  CRA Perfused: 1 (0.00%)
+  IMD Percentile per Country: 117 (0.49%)
+  Baseline VA Correction: 1832 (7.65%)
+  Indication Group at 1st Injection: 1 (0.00%)
+  Injection At: 4723 (19.71%)
+  Batch Number: 5635 (23.52%)
+  Patient Latest Drug IVI: 1 (0.00%)
+  Lens Status: 13538 (56.50%)
+  VA Letter Score After 3rd Injection: 430 (1.79%)
+  Fellow Eye Treated: 1 (0.00%)
+  Eye Latest IVI: 1 (0.00%)
+  Injection Calendar Year: 1 (0.00%)
+  Entry from Limbus: 9923 (41.41%)
+  OCT Date After 3rd Injection: 15546 (64.88%)
+  OCT Machine After 3rd Injection: 15546 (64.88%)
+  OCT Machine at Injection: 22054 (92.04%)
+  Anaesthetist Grade: 12563 (52.43%)
+  Age at 1st Injection: 1 (0.00%)
+  Injected Drug Name: 1 (0.00%)
+  Surgeon: 1 (0.00%)
+  Ethnicity: 1 (0.00%)
+  Hospital of 1st Injection: 1 (0.00%)
+  Anaesthetic Complications: 23960 (99.99%)
+  Supplementary Antibiotic: 23961 (100.00%)
+  Indication: 1 (0.00%)
+  General Anaesthetic: 1 (0.00%)
+  Injected Drug Dose: 1 (0.00%)
+  Subretinal Haemorrhage Prior to Injection: 1 (0.00%)
+  Glaucoma Prior to Injection: 1 (0.00%)
+  Intraretinal Haemorrhage Prior to Injection: 1 (0.00%)
+  Responsible Clinician at 1st Injection: 1 (0.00%)
+  Country: 117 (0.49%)
+  Baseline VA Date: 1832 (7.65%)
+  Current Diabetic Status: 1 (0.00%)
+  Adjusted Age: 4079 (17.02%)
+  Estimated Birth Date: 4079 (17.02%)
+  Days Since Last Injection: 1775 (7.41%)
+
+AGE DATA PROCESSING:
+  Adjustment factor: +0.5 years
+  Adjusted records: 19883
+  Description: Added 0.5 years to Current Age to account for temporal alignment
+
+TEMPORAL ANOMALIES:
+  Sequence errors: 398
+  Sequence fixes: 398
+  Long treatment gaps (>6 months): 859
+  Single injection patients: 50
+
+VA MEASUREMENT ANOMALIES:
+  VA outliers before cleaning: 0
+  Implausible VA changes (>30 letters): 740

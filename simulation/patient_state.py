@@ -1,4 +1,5 @@
-"""Patient state management for AMD treatment simulation.
+""":no-index:
+Patient state management for AMD treatment simulation.
 
 This module implements a state machine for tracking individual patient progression
 through AMD treatment protocols. It maintains all clinical and treatment-related
@@ -69,7 +70,7 @@ import numpy as np
 from .clinical_model import ClinicalModel
 
 class PatientState:
-    """
+    """:no-index:
     Manages patient state and history throughout the simulation.
 
     This class maintains the complete state of a patient including their treatment history,

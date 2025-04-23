@@ -1,3 +1,47 @@
+"""Discrete Event Simulation (DES) core for AMD treatment modeling.
+
+This module implements a pure Discrete Event Simulation approach for modeling
+AMD treatment protocols, focusing on system-level performance and efficiency.
+
+Classes
+-------
+DiscreteEventSimulation
+    Core DES implementation with event processing and statistics
+
+Key Components
+--------------
+- Event scheduling and processing
+- Protocol-driven treatment decisions
+- Clinic resource management
+- Patient state tracking
+- Statistical aggregation
+
+Differences from ABS
+-------------------
+- Focuses on aggregate statistics rather than individual histories
+- Uses simplified patient state representation
+- More efficient for large-scale simulations
+- Better for analyzing system-level performance
+
+Examples
+--------
+>>> config = SimulationConfig(
+...     protocol=load_protocol("treat_and_extend"),
+...     start_date=datetime(2023,1,1),
+...     duration_days=365,
+...     random_seed=42
+... )
+>>> sim = DiscreteEventSimulation(config)
+>>> sim.run()
+
+Notes
+-----
+- Events are processed in chronological order
+- Time values are in datetime objects
+- Vision values are in ETDRS letters
+- Visit intervals are in weeks
+"""
+
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import numpy as np
@@ -244,7 +288,8 @@ class DiscreteEventSimulation(BaseSimulation):
             
             # Process visit
             actions = [action.value for action in event.get_required_actions()]
-            visit_data = patient.process_visit(event.time, actions)
+            clinical_model = ClinicalModel(self.config)
+            visit_data = patient.process_visit(event.time, actions, clinical_model)
             
             # Update global stats
             if "injection" in actions:

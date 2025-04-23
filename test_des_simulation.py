@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 from simulation.config import SimulationConfig
 from simulation import DiscreteEventSimulation, Event
-from protocol_parser import load_protocol
+from protocols.protocol_parser import load_protocol
 from visualization.timeline_viz import print_patient_timeline
 from visualization.outcome_viz import OutcomeVisualizer
 import logging

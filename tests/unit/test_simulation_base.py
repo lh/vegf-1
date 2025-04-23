@@ -56,6 +56,7 @@ class TestSimulationClock:
         assert clock._counter == 0
 
     def test_event_scheduling(self, clock):
+        clock.end_date = clock.current_time + timedelta(days=365)  # Add 1 year end date
         start_time = clock.current_time
         event1 = Event(
             time=start_time + timedelta(days=1),
@@ -83,6 +84,7 @@ class TestSimulationClock:
         assert next_event.time == start_time + timedelta(days=2)
 
     def test_priority_ordering(self, clock):
+        clock.end_date = clock.current_time + timedelta(days=365)  # Add 1 year end date
         # Create events with same time but different priorities
         time = clock.current_time + timedelta(days=1)
         event1 = Event(time=time, event_type="test", patient_id="TEST001", data={}, priority=2)
@@ -160,6 +162,7 @@ class TestBaseSimulation:
 
     def test_run_until(self, start_date):
         sim = MockSimulation(start_date)
+        sim.clock.end_date = start_date + timedelta(weeks=52)  # Add 1 year end date
         end_date = start_date + timedelta(weeks=12)  # Use longer timeframe
         
         # Schedule some test events
@@ -184,6 +187,5 @@ class TestBaseSimulation:
         
         # Only first event should have been processed
         assert sim.clock.current_time == start_date + timedelta(weeks=4)
-        # Verify second event was rescheduled
-        next_event = sim.clock.get_next_event()
-        assert next_event.time == start_date + timedelta(weeks=16)
+        # Verify second event was not processed (since it's after end_date)
+        assert sim.clock.get_next_event() is None

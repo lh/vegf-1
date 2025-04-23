@@ -1,0 +1,112 @@
+{
+  "injection_intervals": {
+    "mean_interval_days": 77.78947368421052,
+    "median_interval_days": 61.0,
+    "std_interval_days": 109.4443435152561,
+    "min_interval_days": 30.0,
+    "max_interval_days": 524.0,
+    "gamma_shape": 0.32588820407448016,
+    "gamma_loc": 29.999999999999996,
+    "gamma_scale": 112.86200620810564,
+    "lognorm_shape": 11.220744210129912,
+    "lognorm_loc": 29.999999999999996,
+    "lognorm_scale": 0.47417444763540045,
+    "monthly_frequency": 0.3157894736842105,
+    "bimonthly_frequency": 0.42105263157894735,
+    "quarterly_frequency": 0.0
+  },
+  "va_response": {
+    "timepoints": {
+      "day_30": {
+        "actual_day": 30.0,
+        "n": 1,
+        "mean_va": 32.0,
+        "mean_va_change": 0.0,
+        "std_va_change": NaN,
+        "median_va_change": 0.0,
+        "pct_improved_5plus": 0.0,
+        "pct_improved_15plus": 0.0,
+        "pct_worsened_5plus": 0.0,
+        "pct_worsened_15plus": 0.0
+      },
+      "day_60": {
+        "actual_day": 66.0,
+        "n": 1,
+        "mean_va": 72.0,
+        "mean_va_change": 8.0,
+        "std_va_change": NaN,
+        "median_va_change": 8.0,
+        "pct_improved_5plus": 1.0,
+        "pct_improved_15plus": 0.0,
+        "pct_worsened_5plus": 0.0,
+        "pct_worsened_15plus": 0.0
+      },
+      "day_90": {
+        "actual_day": 72.0,
+        "n": 1,
+        "mean_va": 51.0,
+        "mean_va_change": 16.0,
+        "std_va_change": NaN,
+        "median_va_change": 16.0,
+        "pct_improved_5plus": 1.0,
+        "pct_improved_15plus": 1.0,
+        "pct_worsened_5plus": 0.0,
+        "pct_worsened_15plus": 0.0
+      },
+      "day_180": {
+        "actual_day": 192.0,
+        "n": 1,
+        "mean_va": 74.0,
+        "mean_va_change": 10.0,
+        "std_va_change": NaN,
+        "median_va_change": 10.0,
+        "pct_improved_5plus": 1.0,
+        "pct_improved_15plus": 0.0,
+        "pct_worsened_5plus": 0.0,
+        "pct_worsened_15plus": 0.0
+      },
+      "day_365": {
+        "actual_day": 378.0,
+        "n": 1,
+        "mean_va": 70.0,
+        "mean_va_change": 5.0,
+        "std_va_change": NaN,
+        "median_va_change": 5.0,
+        "pct_improved_5plus": 1.0,
+        "pct_improved_15plus": 0.0,
+        "pct_worsened_5plus": 0.0,
+        "pct_worsened_15plus": 0.0
+      }
+    },
+    "responder_rate": 0.5,
+    "responders": {
+      "n": 2,
+      "mean_va_change": 10.0,
+      "std_va_change": 0.0,
+      "mean_injections": 5.0
+    },
+    "non_responders": {
+      "n": 2,
+      "mean_va_change": -13.0,
+      "std_va_change": 18.384776310850235,
+      "mean_injections": 6.5
+    }
+  },
+  "treatment_duration": {
+    "mean_duration_days": 369.5,
+    "median_duration_days": 194.0,
+    "std_duration_days": 469.4297959581745,
+    "min_duration_days": 30.0,
+    "max_duration_days": 1060.0,
+    "p25_duration_days": 107.25,
+    "p50_duration_days": 194.0,
+    "p75_duration_days": 456.25,
+    "p90_duration_days": 818.5000000000001,
+    "prop_gt_1yr": 0.25,
+    "prop_gt_2yr": 0.25,
+    "prop_gt_3yr": 0.0,
+    "mean_injections_per_year": 11.921687021382535,
+    "median_injections_per_year": 9.782839451570101,
+    "std_injections_per_year": 8.797985032315351
+  }
+}

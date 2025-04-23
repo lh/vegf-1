@@ -1,0 +1,8 @@
+/drop
+/add       meta/issues.md
+/add       meta/next_steps.md
+/add       meta/refactoring_plan.md
+/add       protocol_models.py
+/add       protocols/config_parser.py
+/add       simulation/abs.py
+/add       simulation/config.py

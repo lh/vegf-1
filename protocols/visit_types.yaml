@@ -1,12 +1,55 @@
+"""
+# Visit Type Definitions
+#
+# This file defines standard visit types used in ophthalmic treatment protocols.
+# Each visit type specifies:
+#   - actions: Clinical procedures performed during the visit
+#   - decisions: Clinical decisions made during/after the visit
+#
+# Standard Actions:
+#   - vision_test: Standard ETDRS vision test (0-85 letters)
+#   - oct_scan: Optical coherence tomography imaging
+#   - injection: Anti-VEGF intravitreal injection
+#
+# Standard Decisions:
+#   - nurse_vision_check: Nurse reviews vision results
+#   - doctor_oct_review: Doctor reviews OCT scan
+#   - doctor_treatment_decision: Doctor makes treatment decisions
+#
+# Visit types are referenced by:
+#   - Simulation engine (process_visit method)
+#   - Protocol definitions
+#   - Outcome analysis
+#
+# Notes:
+# - Visit types can be extended by adding new entries
+# - Actions/decisions must match expected values in simulation code
+# - Changes here may require updates to clinical workflow logic
+"""
+
+# Visit type definitions for ophthalmic treatment protocols
+#
+# Each visit type specifies:
+# - actions: Clinical procedures performed during the visit
+# - decisions: Clinical decisions made during/after the visit
+#
+# Standard visit types:
+# - basic_vision: Simple vision check only
+# - vision_oct: Vision test + OCT scan
+# - injection_visit: Full treatment visit with injection
+
 visit_types:
+  # Basic vision test visit (no imaging or treatment)
   basic_vision:
-    actions: [vision_test]
-    decisions: [nurse_vision_check]
+    actions: [vision_test]  # Standard ETDRS vision test
+    decisions: [nurse_vision_check]  # Nurse reviews vision results
     
+  # Vision test + OCT imaging visit (no treatment)
   vision_oct:
-    actions: [vision_test, oct_scan]
-    decisions: [nurse_vision_check, doctor_oct_review]
+    actions: [vision_test, oct_scan]  # Vision test + OCT scan
+    decisions: [nurse_vision_check, doctor_oct_review]  # Nurse and doctor review
     
+  # Full treatment visit with injection
   injection_visit:
-    actions: [vision_test, oct_scan, injection]
-    decisions: [nurse_vision_check, doctor_treatment_decision]
+    actions: [vision_test, oct_scan, injection]  # Vision, OCT, and anti-VEGF injection
+    decisions: [nurse_vision_check, doctor_treatment_decision]  # Treatment decisions

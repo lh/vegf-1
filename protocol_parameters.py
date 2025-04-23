@@ -1,9 +1,79 @@
+"""Protocol parameter definitions and configuration for macular simulation.
+
+This module defines the ProtocolParameters class which encapsulates all
+configuration parameters needed for running clinical protocols and simulations.
+
+The parameters are organized into logical groups:
+- Vision assessment parameters
+- Loading phase treatment parameters
+- Treatment response parameters
+- Disease progression parameters
+- Resource allocation parameters
+
+Examples
+--------
+>>> params = ProtocolParameters.from_dict(config)
+>>> print(params.max_letters)
+85
+"""
+
 from dataclasses import dataclass
 from typing import Dict, Any
 
 @dataclass
 class ProtocolParameters:
-    """Container for protocol parameters with validation"""
+    """Container for all protocol parameters with validation.
+
+    This class holds default values for all simulation parameters and provides
+    a method to load parameters from configuration dictionaries.
+
+    Attributes
+    ----------
+    max_letters : int
+        Maximum possible letters on vision chart (default: 85)
+    min_letters : int
+        Minimum possible letters on vision chart (default: 0)
+    baseline_mean : float
+        Mean baseline visual acuity in letters (default: 65.0)
+    baseline_sd : float
+        Standard deviation of baseline visual acuity (default: 5.0)
+    measurement_noise_sd : float
+        Standard deviation of measurement noise (default: 2.0)
+    loading_duration_weeks : int
+        Duration of loading phase in weeks (default: 12)
+    loading_visits : int
+        Number of required loading visits (default: 3)
+    loading_interval_weeks : int
+        Weeks between loading visits (default: 4)
+    loading_improvement_prob : float
+        Probability of improvement during loading (default: 0.25)
+    loading_stable_prob : float
+        Probability of stable vision during loading (default: 0.70)
+    loading_decline_prob : float
+        Probability of decline during loading (default: 0.05)
+    memory_factor : float
+        Memory effect factor for treatment (default: 0.7)
+    headroom_factor : float
+        Headroom factor for treatment effect (default: 0.2)
+    regression_factor : float
+        Regression factor for treatment effect (default: 0.8)
+    base_decline_mean : float
+        Mean baseline decline rate in letters/year (default: -2.0)
+    base_decline_sd : float
+        Standard deviation of baseline decline (default: 0.5)
+    time_factor_weeks : int
+        Time factor for disease progression in weeks (default: 12)
+    vision_factor : int
+        Vision threshold factor for progression (default: 20)
+    doctors : int
+        Number of available doctors (default: 2)
+    nurses : int
+        Number of available nurses (default: 4)
+    oct_machines : int
+        Number of OCT machines (default: 2)
+    visit_duration_minutes : int
+        Duration of clinic visit in minutes (default: 30)
+    """
     
     # Vision parameters
     max_letters: int = 85
@@ -39,7 +109,34 @@ class ProtocolParameters:
     
     @classmethod
     def from_dict(cls, params: Dict[str, Any]) -> 'ProtocolParameters':
-        """Create parameters from configuration dictionary"""
+        """Create ProtocolParameters instance from configuration dictionary.
+
+        Parameters
+        ----------
+        params : Dict[str, Any]
+            Configuration dictionary with parameter groups:
+            - 'vision': Visual acuity parameters
+            - 'treatment_response': Treatment response parameters
+            - 'disease_progression': Disease progression parameters
+            - 'resources': Clinic resource parameters
+
+        Returns
+        -------
+        ProtocolParameters
+            New instance with parameters loaded from dictionary
+
+        Examples
+        --------
+        >>> config = {
+        ...     'vision': {'max_letters': 90},
+        ...     'resources': {'doctors': 3}
+        ... }
+        >>> params = ProtocolParameters.from_dict(config)
+        >>> params.max_letters
+        90
+        >>> params.doctors
+        3
+        """
         vision_params = params.get('vision', {})
         treatment_params = params.get('treatment_response', {})
         disease_params = params.get('disease_progression', {})

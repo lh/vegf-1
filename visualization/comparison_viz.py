@@ -67,6 +67,63 @@ def plot_mean_acuity_comparison(
     None
         The function saves the plot to 'mean_acuity_comparison.png' but returns nothing.
 
+    Notes
+    -----
+    - Handles both daily and weekly data by automatically resampling
+    - Uses solid lines for DES results and dashed lines for ABS results
+    - Automatically saves plot as PNG with fixed filename
+    """
+    # Validate and align data dimensions
+    def align_data(data: List[float], target_length: int) -> List[float]:
+        if len(data) == target_length:
+            return data
+        if len(data) > target_length:
+            # Downsample by averaging
+            step = len(data) // target_length
+            return [np.mean(data[i*step:(i+1)*step]) for i in range(target_length)]
+        else:
+            # Upsample by linear interpolation
+            x_old = np.linspace(0, 1, len(data))
+            x_new = np.linspace(0, 1, target_length)
+            return np.interp(x_new, x_old, data).tolist()
+
+    # Find the most common data length
+    all_lengths = [len(v) for v in list(des_data.values()) + list(abs_data.values())]
+    target_length = max(set(all_lengths), key=all_lengths.count)
+
+    # Align all data to target length
+    for subgroup in des_data:
+        des_data[subgroup] = align_data(des_data[subgroup], target_length)
+    for subgroup in abs_data:
+        abs_data[subgroup] = align_data(abs_data[subgroup], target_length)
+
+    # Ensure time_points matches target length
+    if len(time_points) != target_length:
+        time_points = list(range(0, target_length))
+    """Generate a comparison plot of mean acuity between DES and ABS models.
+
+    Parameters
+    ----------
+    des_data : Dict[str, List[float]]
+        Dictionary mapping subgroup names to lists of DES acuity values.
+        Each list should contain mean acuity values at corresponding time_points.
+    abs_data : Dict[str, List[float]] 
+        Dictionary mapping subgroup names to lists of ABS acuity values.
+        Each list should contain mean acuity values at corresponding time_points.
+    time_points : List[int]
+        List of time points (in weeks) corresponding to the acuity measurements.
+    title : str
+        Title to display at the top of the plot.
+    time_range : tuple, optional
+        (start_time, end_time) to limit the x-axis range (in weeks).
+    subgroups : List[str], optional
+        Specific subgroups to include in the plot. If None, plots all available subgroups.
+
+    Returns
+    -------
+    None
+        The function saves the plot to 'mean_acuity_comparison.png' but returns nothing.
+
     Examples
     --------
     >>> time_points = list(range(0, 53, 4))  # Weekly data for one year

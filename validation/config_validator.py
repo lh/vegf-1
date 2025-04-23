@@ -1,3 +1,27 @@
+"""Configuration validation for ophthalmic treatment protocol simulations.
+
+This module provides validation of configuration files to ensure they meet the
+required schema and contain all necessary parameters for simulation runs.
+
+Key Components
+-------------
+ConfigurationError : Dataclass for storing validation errors
+ConfigValidator : Main validation class with validation methods
+
+Validation Types
+---------------
+- Base parameters validation
+- Protocol definition validation
+- Parameter set validation
+- Simulation configuration validation
+
+Examples
+--------
+>>> validator = ConfigValidator()
+>>> is_valid = validator.validate_base_parameters(params)
+>>> errors = validator.errors
+"""
+
 from typing import Dict, Any, List
 from dataclasses import dataclass
 from pathlib import Path
@@ -5,17 +29,63 @@ import yaml
 
 @dataclass
 class ConfigurationError:
+    """Dataclass for storing configuration validation errors.
+    
+    Attributes
+    ----------
+    path : str
+        Path to the configuration element that failed validation
+        Example: "protocol_definition.phases.loading"
+    message : str
+        Description of the validation error
+        Example: "Missing required parameter: duration_weeks"
+    """
     path: str
     message: str
 
 class ConfigValidator:
-    """Validates configuration files against schema"""
+    """Validates configuration files against required schemas.
+    
+    Provides validation for:
+    - Base parameters
+    - Protocol definitions  
+    - Parameter sets
+    - Simulation configurations
+    
+    Attributes
+    ----------
+    errors : List[ConfigurationError]
+        List of validation errors encountered during validation
+    """
     
     def __init__(self):
         self.errors: List[ConfigurationError] = []
     
     def validate_base_parameters(self, params: Dict) -> bool:
-        """Validate base parameters structure"""
+        """Validate base parameters structure.
+        
+        Parameters
+        ----------
+        params : Dict
+            Dictionary containing base parameters configuration
+            Must include sections: vision, treatment_response, disease_progression, resources
+            
+        Returns
+        -------
+        bool
+            True if validation passes, False otherwise
+            
+        Examples
+        --------
+        >>> validator = ConfigValidator()
+        >>> params = {
+        ...     "vision": {...},
+        ...     "treatment_response": {...},
+        ...     "disease_progression": {...},
+        ...     "resources": {...}
+        ... }
+        >>> is_valid = validator.validate_base_parameters(params)
+        """
         required_sections = {
             'vision', 'treatment_response', 'disease_progression', 'resources'
         }
@@ -44,7 +114,27 @@ class ConfigValidator:
         return True
     
     def validate_protocol_definition(self, protocol: Dict) -> bool:
-        """Validate protocol definition structure"""
+        """Validate protocol definition structure.
+        
+        Parameters
+        ----------
+        protocol : Dict
+            Dictionary containing protocol definition
+            Must include fields: name, description, version, phases
+            
+        Returns
+        -------
+        bool
+            True if validation passes, False otherwise
+            
+        Notes
+        -----
+        Validates:
+        - Required fields are present
+        - Required phases (loading, maintenance) exist
+        - Phase parameters meet requirements
+        - Visit types (if specified) are valid
+        """
         required_fields = {'name', 'description', 'version', 'phases'}
         
         if not all(field in protocol for field in required_fields):
@@ -88,7 +178,25 @@ class ConfigValidator:
         return True
         
     def _validate_visit_type(self, visit_type: Dict) -> bool:
-        """Validate visit type configuration"""
+        """Validate visit type configuration.
+        
+        Parameters
+        ----------
+        visit_type : Dict
+            Dictionary containing visit type configuration
+            Must include fields: name, required_actions
+            
+        Returns
+        -------
+        bool
+            True if validation passes, False otherwise
+            
+        Notes
+        -----
+        Validates:
+        - Required fields are present
+        - Action types are valid (vision_test, oct_scan, injection, consultation)
+        """
         required_fields = {'name', 'required_actions'}
         if not all(field in visit_type for field in required_fields):
             self.errors.append(ConfigurationError(
@@ -110,7 +218,19 @@ class ConfigValidator:
         return True
     
     def validate_parameter_set(self, params: Dict) -> bool:
-        """Validate parameter set structure"""
+        """Validate parameter set structure.
+        
+        Parameters
+        ----------
+        params : Dict
+            Dictionary containing parameter set configuration
+            Must include section: protocol_specific
+            
+        Returns
+        -------
+        bool
+            True if validation passes, False otherwise
+        """
         if 'protocol_specific' not in params:
             self.errors.append(ConfigurationError(
                 'parameter_set',
@@ -121,7 +241,30 @@ class ConfigValidator:
         return True
     
     def validate_simulation_config(self, config: Dict) -> bool:
-        """Validate simulation configuration"""
+        """Validate simulation configuration.
+        
+        Parameters
+        ----------
+        config : Dict
+            Dictionary containing simulation configuration
+            Must include sections: name, protocol, simulation, output
+            
+        Returns
+        -------
+        bool
+            True if validation passes, False otherwise
+            
+        Examples
+        --------
+        >>> validator = ConfigValidator()
+        >>> config = {
+        ...     "name": "test_simulation",
+        ...     "protocol": "treat_and_extend",
+        ...     "simulation": {...},
+        ...     "output": {...}
+        ... }
+        >>> is_valid = validator.validate_simulation_config(config)
+        """
         required_sections = {'name', 'protocol', 'simulation', 'output'}
         
         if not all(section in config for section in required_sections):

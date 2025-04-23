@@ -1,41 +1,16 @@
-name: Eylea Treat and Extend
-description: Standard treat and extend protocol for Eylea
-version: 1.0
-
-phases:
-  loading:
-    duration_weeks: 12
-    visit_interval_weeks: 4
-    required_treatments: 3
-    assessment_criteria:
-      - metric: vision
-        comparator: ">="
-        value: "baseline"
-      - metric: retinal_thickness
-        comparator: "improved"
-        value: null
+treatment_phases:
+  initial_loading:
+    duration_months: 12
+    fixed_schedule: [0, 1, 2, 4, 6, 8, 10, 12]
+    rules:
+      allow_interval_changes: false
+      mandatory_injection: true
+      max_activity_tolerance: 5%  # Allows HIGHLY_ACTIVE at 0.05 probability
 
   maintenance:
-    duration_weeks: null
-    visit_interval_weeks: 8
-    required_injections: null
-    initial_interval_weeks: 8
-    min_interval_weeks: 4
-    max_interval_weeks: 16
-    interval_adjustment_weeks: 2
-    
-    extension_criteria:
-      - metric: disease_activity
-        comparator: "=="
-        value: "stable"
-        
-    reduction_criteria:
-      - metric: disease_activity
-        comparator: "=="
-        value: "recurring"
-
-discontinuation_criteria:
-  - metric: vision
-    comparator: "<="
-    value: "baseline - 15"
-    action: "consider_stop"
+    start_after: initial_loading
+    rules:
+      initial_interval_weeks: 8
+      max_interval_weeks: 12
+      extension_step: 2
+      reduction_step: 4

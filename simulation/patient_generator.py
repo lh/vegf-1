@@ -1,3 +1,24 @@
+"""Patient generation module for ophthalmic simulation models.
+
+This module provides functionality for generating patient arrival times using a
+Poisson process, which models random arrivals with a known average rate.
+
+The main class `PatientGenerator` creates patient arrival schedules between
+specified dates with configurable arrival rates.
+
+Notes
+-----
+The Poisson process is implemented using exponentially distributed inter-arrival
+times, which is mathematically equivalent to a Poisson process for arrivals.
+
+Examples
+--------
+>>> generator = PatientGenerator(rate_per_week=10,
+...                            start_date=datetime(2023,1,1),
+...                            end_date=datetime(2023,12,31))
+>>> arrivals = generator.generate_arrival_times()
+"""
+
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple
 import numpy as np

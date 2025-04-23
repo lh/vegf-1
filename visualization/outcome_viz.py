@@ -9,6 +9,9 @@ Key Features
 - Patient retention curves
 - Statistical annotations and reference lines
 - Publication-quality figure formatting
+- Consistent color schemes and styling
+- Automatic time unit conversion (weeks to months)
+- Median follow-up annotations
 
 Dependencies
 ------------
@@ -16,18 +19,43 @@ Dependencies
 - numpy: For numerical operations
 - analysis.patient_outcomes: For statistical analysis
 
+Visualization Defaults
+---------------------
+- Figure size: 12x6 inches (landscape)
+- Primary color: Blue (#1f77b4) for acuity data
+- Secondary color: Red (#d62728) for patient counts
+- Font size: 10pt for labels, 12pt for titles
+- Grid: Major (solid), minor (dotted)
+- Confidence intervals: 95% with alpha=0.2 fill
+
 Examples
 --------
+Basic Usage:
 >>> from visualization.outcome_viz import OutcomeVisualizer
->>> viz = OutcomeVisualizer()
+>>> viz = OutcomeVisualizer(figsize=(10, 5))
 >>> viz.plot_mean_acuity(patient_data)
 >>> viz.plot_patient_retention(patient_data)
 
+Saving Plots:
+>>> viz = OutcomeVisualizer()
+>>> viz.plot_mean_acuity(patient_data, show=False, 
+...                     save_path="output/mean_acuity.png")
+
+Customizing:
+>>> viz = OutcomeVisualizer(figsize=(8, 4))
+>>> viz.plot_mean_acuity(patient_data, 
+...                     title="Custom Title")
+
 Notes
 -----
-- All visual acuity values in ETDRS letters
+- All visual acuity values in ETDRS letters (0-100 scale)
 - Time units in weeks unless specified
-- Figures automatically handle date formatting and labeling
+- Figures automatically handle:
+  - Date formatting
+  - Axis labeling
+  - Month/week conversion
+  - Statistical annotations
+- Designed for publication-quality output
 """
 
 from datetime import datetime
@@ -188,23 +216,45 @@ class OutcomeVisualizer:
             Dictionary mapping patient IDs to lists of visit dictionaries.
             Each visit dict should contain:
             - 'date': datetime of visit
+            - 'vision': ETDRS letter score (0-100) [optional]
         show : bool, optional
-            Whether to display the plot (default True)
+            Whether to display the plot immediately (default True)
+            Set to False when saving multiple plots
         save_path : str, optional
-            File path to save the plot (default None)
+            File path to save the plot (e.g. "output/retention.png")
+            Supported formats: .png, .jpg, .pdf, .svg
         title : str, optional
             Plot title (default "Patient Retention Over Time")
+            Can include formatting like "\n" for line breaks
 
         Returns
         -------
         None
             Displays or saves plot but returns nothing
 
+        Examples
+        --------
+        Basic usage:
+        >>> viz = OutcomeVisualizer()
+        >>> viz.plot_patient_retention(patient_data)
+
+        Saving to file:
+        >>> viz.plot_patient_retention(patient_data, 
+        ...                          show=False,
+        ...                          save_path="output/retention.png")
+
+        Custom title:
+        >>> viz.plot_patient_retention(patient_data,
+        ...                          title="Patient Retention\n(2023 Cohort)")
+
         Notes
         -----
         - Retention calculated as percentage of initial cohort
         - X-axis shows months since treatment start
         - Uses same patient data structure as plot_mean_acuity
+        - Blue line with default width of 2 points
+        - Automatic month/week conversion on x-axis
+        - Grid lines for better readability
         """
         # Analyze data
         time_points = self.analyzer.analyze_visual_acuity(patient_data)

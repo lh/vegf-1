@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>simulation.base &mdash; Macular Simulation  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Macular Simulation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../PROJECT_OVERVIEW.html">Macular Degeneration Treatment Simulation Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/index.html">Simulation Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/index.html">Analysis Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/index.html">Protocol Modules</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/patient_state.html">Patient State Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/scheduler.html">Scheduler Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/config.html">Simulation Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/clinical_model.html">Clinical Model Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/eylea_data_analysis.html">Eylea Data Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/eylea_intervals_analysis.html">Eylea Intervals Analysis Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/visit_types.html">Visit Types Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/config_parser.html">Config Parser Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../visualization/acuity_viz.html">Visual Acuity Visualization Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Macular Simulation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">simulation.base</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for simulation.base</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Base classes and components for discrete event simulation.</span>
+
+<span class="sd">This module provides the fundamental building blocks for discrete event simulation,</span>
+<span class="sd">including event management, simulation clock, and protocol handling. It defines</span>
+<span class="sd">the base classes that specific simulation implementations will extend.</span>
+
+<span class="sd">Notes</span>
+<span class="sd">-----</span>
+<span class="sd">Key components:</span>
+<span class="sd">- Event: Represents discrete simulation events with timing and data</span>
+<span class="sd">- SimulationClock: Manages event scheduling and time progression  </span>
+<span class="sd">- BaseSimulation: Abstract base class for all simulation implementations</span>
+<span class="sd">- ProtocolEvent: Protocol-specific event data structure</span>
+<span class="sd">- SimulationEnvironment: Global simulation state container</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">queue</span> <span class="kn">import</span> <span class="n">PriorityQueue</span>
+<span class="kn">from</span> <span class="nn">protocol_models</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TreatmentProtocol</span><span class="p">,</span> <span class="n">ProtocolPhase</span><span class="p">,</span> <span class="n">PhaseType</span><span class="p">,</span>
+    <span class="n">VisitType</span><span class="p">,</span> <span class="n">ActionType</span><span class="p">,</span> <span class="n">DecisionType</span>
+<span class="p">)</span>
+
+<div class="viewcode-block" id="ProtocolEvent">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.ProtocolEvent">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ProtocolEvent</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Protocol-specific event data.</span>
+
+<span class="sd">    Represents an event that is specific to a treatment protocol, containing</span>
+<span class="sd">    information about the phase, action, and associated parameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    phase_type : PhaseType</span>
+<span class="sd">        Type of protocol phase this event belongs to (e.g., INITIAL, MAINTENANCE)</span>
+<span class="sd">    action : str</span>
+<span class="sd">        Action to be performed (e.g., &#39;inject&#39;, &#39;assess&#39;, &#39;adjust_interval&#39;)</span>
+<span class="sd">    parameters : Dict[str, Any], optional</span>
+<span class="sd">        Additional parameters for the action (default: {})</span>
+<span class="sd">    result : Optional[Dict[str, Any]], optional</span>
+<span class="sd">        Results from executing the action (default: None)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; event = ProtocolEvent(</span>
+<span class="sd">    ...     phase_type=PhaseType.MAINTENANCE,</span>
+<span class="sd">    ...     action=&#39;inject&#39;,</span>
+<span class="sd">    ...     parameters={&#39;drug&#39;: &#39;eylea&#39;, &#39;dose&#39;: 2.0}</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">phase_type</span><span class="p">:</span> <span class="n">PhaseType</span>
+    <span class="n">action</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">parameters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">result</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="SimulationEnvironment">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.SimulationEnvironment">[docs]</a>
+<span class="k">class</span> <span class="nc">SimulationEnvironment</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Global simulation environment.</span>
+
+<span class="sd">    Maintains global state and timing information for the simulation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start_date : datetime</span>
+<span class="sd">        Start date and time for the simulation</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    current_time : datetime</span>
+<span class="sd">        Current simulation time</span>
+<span class="sd">    global_state : Dict[str, Any]</span>
+<span class="sd">        Dictionary storing global simulation state including:</span>
+<span class="sd">        - resource_availability: Dict of resource counts</span>
+<span class="sd">        - queue_lengths: Dict of patient queue lengths</span>
+<span class="sd">        - statistics: Aggregated simulation metrics</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The environment provides shared state across all simulation components</span>
+<span class="sd">    and patients. It should be used for system-wide properties rather than</span>
+<span class="sd">    patient-specific state.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SimulationEnvironment.__init__">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.SimulationEnvironment.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_date</span><span class="p">:</span> <span class="n">datetime</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span> <span class="o">=</span> <span class="n">start_date</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">global_state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></div>
+</div>
+
+
+<div class="viewcode-block" id="Event">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.Event">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Event</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simulation event.</span>
+
+<span class="sd">    Represents a discrete event in the simulation with timing, type, and associated data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    time : datetime</span>
+<span class="sd">        When the event occurs</span>
+<span class="sd">    event_type : str</span>
+<span class="sd">        Type of event (e.g., &#39;arrival&#39;, &#39;treatment&#39;, &#39;assessment&#39;)</span>
+<span class="sd">    patient_id : str</span>
+<span class="sd">        ID of the patient this event relates to</span>
+<span class="sd">    data : Dict[str, Any], optional</span>
+<span class="sd">        Additional event data (default: {})</span>
+<span class="sd">    priority : int, optional</span>
+<span class="sd">        Event priority (lower numbers = higher priority) (default: 1)</span>
+<span class="sd">    protocol_event : Optional[ProtocolEvent], optional</span>
+<span class="sd">        Associated protocol-specific event data (default: None)</span>
+<span class="sd">    phase : Optional[ProtocolPhase], optional</span>
+<span class="sd">        Treatment phase this event belongs to (default: None)</span>
+<span class="sd">    protocol : Optional[TreatmentProtocol], optional</span>
+<span class="sd">        Treatment protocol this event belongs to (default: None)</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    _hash : int</span>
+<span class="sd">        Internal hash value for event comparison</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Events are comparable and hashable based on their time, type, and patient_id.</span>
+<span class="sd">    This enables proper ordering in priority queues and event lists.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; event = Event(</span>
+<span class="sd">    ...     time=datetime(2023, 1, 1),</span>
+<span class="sd">    ...     event_type=&#39;treatment&#39;,</span>
+<span class="sd">    ...     patient_id=&#39;pat123&#39;,</span>
+<span class="sd">    ...     data={&#39;drug&#39;: &#39;eylea&#39;, &#39;dose&#39;: 2.0}</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">time</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="n">event_type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">patient_id</span><span class="p">:</span> <span class="nb">str</span> 
+    <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">protocol_event</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ProtocolEvent</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">phase</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ProtocolPhase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">protocol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TreatmentProtocol</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_hash</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">patient_id</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Event</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">patient_id</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">event_type</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">patient_id</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Event.create_protocol_event">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.Event.create_protocol_event">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">create_protocol_event</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> 
+                            <span class="n">time</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+                            <span class="n">patient_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                            <span class="n">phase_type</span><span class="p">:</span> <span class="n">PhaseType</span><span class="p">,</span>
+                            <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                            <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+                            <span class="n">phase</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ProtocolPhase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="n">protocol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TreatmentProtocol</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Event&#39;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a protocol-specific event with phase and protocol context.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time : datetime</span>
+<span class="sd">            When the event occurs</span>
+<span class="sd">        patient_id : str</span>
+<span class="sd">            ID of the patient</span>
+<span class="sd">        phase_type : PhaseType</span>
+<span class="sd">            Type of protocol phase</span>
+<span class="sd">        action : str</span>
+<span class="sd">            Action to be performed</span>
+<span class="sd">        data : Dict[str, Any], optional</span>
+<span class="sd">            Additional event data</span>
+<span class="sd">        priority : int, optional</span>
+<span class="sd">            Event priority</span>
+<span class="sd">        phase : Optional[ProtocolPhase], optional</span>
+<span class="sd">            Treatment phase</span>
+<span class="sd">        protocol : Optional[TreatmentProtocol], optional</span>
+<span class="sd">            Treatment protocol</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Event</span>
+<span class="sd">            New protocol event</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">protocol_event</span> <span class="o">=</span> <span class="n">ProtocolEvent</span><span class="p">(</span>
+            <span class="n">phase_type</span><span class="o">=</span><span class="n">phase_type</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
+            <span class="n">parameters</span><span class="o">=</span><span class="n">data</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span>
+            <span class="n">event_type</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;protocol_</span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">patient_id</span><span class="o">=</span><span class="n">patient_id</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">data</span> <span class="ow">or</span> <span class="p">{},</span>
+            <span class="n">priority</span><span class="o">=</span><span class="n">priority</span><span class="p">,</span>
+            <span class="n">protocol_event</span><span class="o">=</span><span class="n">protocol_event</span><span class="p">,</span>
+            <span class="n">phase</span><span class="o">=</span><span class="n">phase</span><span class="p">,</span>
+            <span class="n">protocol</span><span class="o">=</span><span class="n">protocol</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Event.get_visit_type">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.Event.get_visit_type">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_visit_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VisitType</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get visit type from phase if available.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Optional[VisitType]</span>
+<span class="sd">            Visit type if phase is set, None otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase</span><span class="o">.</span><span class="n">visit_type</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Event.get_required_actions">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.Event.get_required_actions">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_required_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ActionType</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get required actions from visit type.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        List[ActionType]</span>
+<span class="sd">            List of required actions for this visit type</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">visit_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_visit_type</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">visit_type</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">visit_type</span><span class="o">.</span><span class="n">required_actions</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="Event.get_optional_actions">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.Event.get_optional_actions">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_optional_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ActionType</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get optional actions from visit type.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        List[ActionType]</span>
+<span class="sd">            List of optional actions for this visit type</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">visit_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_visit_type</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">visit_type</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">visit_type</span><span class="o">.</span><span class="n">optional_actions</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="Event.get_decisions">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.Event.get_decisions">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_decisions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">DecisionType</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get decisions from visit type.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        List[DecisionType]</span>
+<span class="sd">            List of decisions required for this visit type</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">visit_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_visit_type</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">visit_type</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">visit_type</span><span class="o">.</span><span class="n">decisions</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+</div>
+
+
+<div class="viewcode-block" id="SimulationClock">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.SimulationClock">[docs]</a>
+<span class="k">class</span> <span class="nc">SimulationClock</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Manages simulation time and event scheduling.</span>
+
+<span class="sd">    Maintains ordered list of events and handles event scheduling with proper</span>
+<span class="sd">    temporal ordering and priority handling.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start_date : datetime</span>
+<span class="sd">        Start date and time for the simulation</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    current_time : datetime</span>
+<span class="sd">        Current simulation time</span>
+<span class="sd">    end_date : Optional[datetime]</span>
+<span class="sd">        End date for the simulation</span>
+<span class="sd">    event_list : List</span>
+<span class="sd">        Ordered list of pending events</span>
+<span class="sd">    _counter : int</span>
+<span class="sd">        Counter for tie-breaking event ordering</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SimulationClock.__init__">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.SimulationClock.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_date</span><span class="p">:</span> <span class="n">datetime</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span> <span class="o">=</span> <span class="n">start_date</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end_date</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Will be set when simulation runs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_counter</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Add a counter for tie-breaking</span></div>
+
+    
+<div class="viewcode-block" id="SimulationClock.schedule_event">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.SimulationClock.schedule_event">[docs]</a>
+    <span class="k">def</span> <span class="nf">schedule_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Schedule an event with proper ordering by time and priority.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        event : Event</span>
+<span class="sd">            Event to schedule</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Events are ordered by:</span>
+<span class="sd">        1. Time (earlier events first)</span>
+<span class="sd">        2. Priority (lower numbers = higher priority)</span>
+<span class="sd">        3. Insertion order (tie-breaker)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c1"># Create event tuple</span>
+        <span class="n">event_tuple</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>  <span class="c1"># Primary sort by time</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">priority</span><span class="p">,</span>  <span class="c1"># Secondary sort by priority</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_counter</span><span class="p">,</span>  <span class="c1"># Tertiary sort by insertion order</span>
+            <span class="n">event</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># Find insertion point using binary search</span>
+        <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_list</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">left</span> <span class="o">&lt;</span> <span class="n">right</span><span class="p">:</span>
+            <span class="n">mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">left</span> <span class="o">+</span> <span class="n">right</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+            <span class="c1"># Compare full tuples for proper ordering</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_list</span><span class="p">[</span><span class="n">mid</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">event_tuple</span><span class="p">:</span>
+                <span class="n">left</span> <span class="o">=</span> <span class="n">mid</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">right</span> <span class="o">=</span> <span class="n">mid</span>
+                
+        <span class="c1"># Insert at the correct position</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">event_tuple</span><span class="p">)</span>
+        
+        <span class="c1"># Safety check - verify event is not beyond end date</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;end_date&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">event</span><span class="o">.</span><span class="n">time</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_date</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">event_list</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">return</span></div>
+
+    
+<div class="viewcode-block" id="SimulationClock.get_next_event">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.SimulationClock.get_next_event">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_next_event</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get next event without updating clock time.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Optional[Event]</span>
+<span class="sd">            Next event in chronological order, or None if no events remain</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_list</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="c1"># Get the next event but don&#39;t update time until it&#39;s processed</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">event</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_list</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">event</span></div>
+</div>
+
+
+<div class="viewcode-block" id="BaseSimulation">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.BaseSimulation">[docs]</a>
+<span class="k">class</span> <span class="nc">BaseSimulation</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class for simulations.</span>
+
+<span class="sd">    Provides core simulation functionality including event processing,</span>
+<span class="sd">    protocol management, and simulation execution control.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start_date : datetime</span>
+<span class="sd">        Start date and time for the simulation</span>
+<span class="sd">    environment : Optional[SimulationEnvironment], optional</span>
+<span class="sd">        Simulation environment, creates new one if not provided</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    clock : SimulationClock</span>
+<span class="sd">        Manages simulation time and events</span>
+<span class="sd">    metrics : Dict[str, List[Any]]</span>
+<span class="sd">        Stores simulation metrics</span>
+<span class="sd">    environment : SimulationEnvironment</span>
+<span class="sd">        Global simulation environment</span>
+<span class="sd">    protocols : Dict[str, TreatmentProtocol]</span>
+<span class="sd">        Registered treatment protocols</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="BaseSimulation.__init__">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.BaseSimulation.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_date</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">environment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SimulationEnvironment</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clock</span> <span class="o">=</span> <span class="n">SimulationClock</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">environment</span> <span class="o">=</span> <span class="n">environment</span> <span class="ow">or</span> <span class="n">SimulationEnvironment</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">protocols</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TreatmentProtocol</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+    
+<div class="viewcode-block" id="BaseSimulation.process_event">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.BaseSimulation.process_event">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">process_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process a simulation event.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        event : Event</span>
+<span class="sd">            Event to process</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This method must be implemented by concrete simulation classes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    
+<div class="viewcode-block" id="BaseSimulation.run">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.BaseSimulation.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">until</span><span class="p">:</span> <span class="n">datetime</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run simulation until specified datetime.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        until : datetime</span>
+<span class="sd">            End date and time for the simulation</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - Processes events chronologically until end time is reached</span>
+<span class="sd">        - Prints progress indicators (dots) for each simulated week</span>
+<span class="sd">        - Includes safety limit to prevent infinite loops</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">end_date</span> <span class="o">=</span> <span class="n">until</span>  <span class="c1"># Set end date in clock</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">current_time</span>
+        <span class="n">total_weeks</span> <span class="o">=</span> <span class="p">(</span><span class="n">until</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span><span class="o">.</span><span class="n">days</span> <span class="o">/</span> <span class="mi">7</span>
+        <span class="n">current_week</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">last_week</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">max_events</span> <span class="o">=</span> <span class="mi">100000</span>  <span class="c1"># Safety limit to prevent infinite loops</span>
+        <span class="n">event_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">while</span> <span class="n">event_count</span> <span class="o">&lt;</span> <span class="n">max_events</span><span class="p">:</span>
+            <span class="n">event_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">event</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">get_next_event</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">event</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Simulation complete after </span><span class="si">{</span><span class="n">event_count</span><span class="si">}</span><span class="s2"> events&quot;</span><span class="p">)</span>
+                <span class="k">return</span>
+            <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">time</span> <span class="o">&gt;</span> <span class="n">until</span><span class="p">:</span>
+                <span class="c1"># Put the event back in the queue if it&#39;s beyond our end time</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">schedule_event</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Reached end time after </span><span class="si">{</span><span class="n">event_count</span><span class="si">}</span><span class="s2"> events&quot;</span><span class="p">)</span>
+                <span class="k">return</span>
+
+            <span class="c1"># Update clock time when processing the event</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">current_time</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">time</span>
+            
+            <span class="c1"># Print progress dot for each week</span>
+            <span class="n">current_week</span> <span class="o">=</span> <span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">time</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span><span class="o">.</span><span class="n">days</span> <span class="o">/</span> <span class="mi">7</span>
+            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">current_week</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">last_week</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">current_week</span><span class="p">)</span> <span class="o">%</span> <span class="mi">52</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># New line every year</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; Year </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">current_week</span><span class="o">/</span><span class="mi">52</span><span class="p">)</span><span class="si">}</span><span class="s2"> (Week </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">current_week</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+                <span class="n">last_week</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">current_week</span><span class="p">)</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">process_event</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+            
+<div class="viewcode-block" id="BaseSimulation.register_protocol">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.BaseSimulation.register_protocol">[docs]</a>
+    <span class="k">def</span> <span class="nf">register_protocol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">protocol</span><span class="p">:</span> <span class="n">TreatmentProtocol</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Register a protocol for use in the simulation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        protocol_type : str</span>
+<span class="sd">            Identifier for the protocol type</span>
+<span class="sd">        protocol : TreatmentProtocol</span>
+<span class="sd">            Protocol instance to register</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">protocols</span><span class="p">[</span><span class="n">protocol_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">protocol</span></div>
+
+        
+<div class="viewcode-block" id="BaseSimulation.get_protocol">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.BaseSimulation.get_protocol">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_protocol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TreatmentProtocol</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a registered protocol by type.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        protocol_type : str</span>
+<span class="sd">            Identifier for the protocol type</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Optional[TreatmentProtocol]</span>
+<span class="sd">            Registered protocol or None if not found</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">protocols</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">protocol_type</span><span class="p">)</span></div>
+
+        
+<div class="viewcode-block" id="BaseSimulation.schedule_protocol_event">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.base.BaseSimulation.schedule_protocol_event">[docs]</a>
+    <span class="k">def</span> <span class="nf">schedule_protocol_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+                              <span class="n">time</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+                              <span class="n">patient_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                              <span class="n">phase_type</span><span class="p">:</span> <span class="n">PhaseType</span><span class="p">,</span>
+                              <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                              <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                              <span class="n">priority</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Schedule a protocol-specific event.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time : datetime</span>
+<span class="sd">            When the event should occur</span>
+<span class="sd">        patient_id : str</span>
+<span class="sd">            ID of the patient</span>
+<span class="sd">        phase_type : PhaseType</span>
+<span class="sd">            Type of protocol phase</span>
+<span class="sd">        action : str</span>
+<span class="sd">            Action to be performed</span>
+<span class="sd">        data : Dict[str, Any], optional</span>
+<span class="sd">            Additional event data</span>
+<span class="sd">        priority : int, optional</span>
+<span class="sd">            Event priority</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">event</span> <span class="o">=</span> <span class="n">Event</span><span class="o">.</span><span class="n">create_protocol_event</span><span class="p">(</span>
+            <span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span>
+            <span class="n">patient_id</span><span class="o">=</span><span class="n">patient_id</span><span class="p">,</span>
+            <span class="n">phase_type</span><span class="o">=</span><span class="n">phase_type</span><span class="p">,</span>
+            <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+            <span class="n">priority</span><span class="o">=</span><span class="n">priority</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clock</span><span class="o">.</span><span class="n">schedule_event</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Rose.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

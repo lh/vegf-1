@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>simulation.config &mdash; Macular Simulation  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Macular Simulation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../PROJECT_OVERVIEW.html">Macular Degeneration Treatment Simulation Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/index.html">Simulation Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/index.html">Analysis Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/index.html">Protocol Modules</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/patient_state.html">Patient State Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/scheduler.html">Scheduler Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/config.html">Simulation Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/clinical_model.html">Clinical Model Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/eylea_data_analysis.html">Eylea Data Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/eylea_intervals_analysis.html">Eylea Intervals Analysis Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/visit_types.html">Visit Types Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/config_parser.html">Config Parser Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../visualization/acuity_viz.html">Visual Acuity Visualization Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Macular Simulation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">simulation.config</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for simulation.config</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Simulation configuration management.</span>
+
+<span class="sd">This module handles the configuration of simulation runs, including parameter validation,</span>
+<span class="sd">protocol integration, and resource management. It ensures all simulation parameters</span>
+<span class="sd">are properly validated before being used in a simulation run.</span>
+
+<span class="sd">Classes</span>
+<span class="sd">-------</span>
+<span class="sd">SimulationConfig</span>
+<span class="sd">    Main configuration class that encapsulates all simulation parameters</span>
+
+<span class="sd">Key Features</span>
+<span class="sd">------------</span>
+<span class="sd">- Parameter validation for all configuration sections</span>
+<span class="sd">- Protocol integration with validation</span>
+<span class="sd">- Resource management</span>
+<span class="sd">- Default value handling</span>
+<span class="sd">- Type checking and range validation</span>
+
+<span class="sd">Configuration Structure</span>
+<span class="sd">----------------------</span>
+<span class="sd">Example YAML configuration structure:</span>
+<span class="sd">```yaml</span>
+<span class="sd">simulation:</span>
+<span class="sd">  type: &quot;des&quot;</span>
+<span class="sd">  num_patients: 1000</span>
+<span class="sd">  duration_days: 365</span>
+<span class="sd">  random_seed: 42</span>
+<span class="sd">  verbose: true</span>
+<span class="sd">  start_date: &quot;2023-01-01&quot;</span>
+<span class="sd">  resources:</span>
+<span class="sd">    capacity:</span>
+<span class="sd">      doctors: 5</span>
+<span class="sd">      nurses: 10</span>
+<span class="sd">      oct_machines: 3</span>
+
+<span class="sd">clinical_model:</span>
+<span class="sd">  disease_states: [&quot;NAIVE&quot;, &quot;STABLE&quot;, &quot;ACTIVE&quot;, &quot;HIGHLY_ACTIVE&quot;]</span>
+<span class="sd">  transition_probabilities:</span>
+<span class="sd">    NAIVE:</span>
+<span class="sd">      STABLE: 0.3</span>
+<span class="sd">      ACTIVE: 0.6</span>
+<span class="sd">      HIGHLY_ACTIVE: 0.1</span>
+<span class="sd">    STABLE:</span>
+<span class="sd">      STABLE: 0.7</span>
+<span class="sd">      ACTIVE: 0.3</span>
+<span class="sd">  vision_change:</span>
+<span class="sd">    base_change:</span>
+<span class="sd">      NAIVE:</span>
+<span class="sd">        injection: [5, 2]</span>
+<span class="sd">        no_injection: [0, 1]</span>
+<span class="sd">      STABLE:</span>
+<span class="sd">        injection: [2, 1]</span>
+<span class="sd">        no_injection: [-1, 0.5]</span>
+<span class="sd">    time_factor:</span>
+<span class="sd">      max_weeks: 52</span>
+<span class="sd">    ceiling_factor:</span>
+<span class="sd">      max_vision: 100</span>
+<span class="sd">    measurement_noise: [0, 0.5]</span>
+<span class="sd">```</span>
+
+<span class="sd">Notes</span>
+<span class="sd">-----</span>
+<span class="sd">- All numeric parameters are validated against expected ranges</span>
+<span class="sd">- Probability parameters must sum to 1 where applicable</span>
+<span class="sd">- Dates must be in YYYY-MM-DD format</span>
+<span class="sd">- Missing parameters will use sensible defaults where possible</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">protocols.protocol_parser</span> <span class="kn">import</span> <span class="n">ProtocolParser</span>
+<span class="kn">from</span> <span class="nn">protocol_models</span> <span class="kn">import</span> <span class="n">TreatmentProtocol</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SimulationConfig">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">SimulationConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Configuration for a simulation run with protocol objects.</span>
+
+<span class="sd">    This class encapsulates all configuration parameters needed to run a simulation,</span>
+<span class="sd">    including treatment protocols, patient parameters, and resource constraints.</span>
+<span class="sd">    Provides validation methods for all configuration sections.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parameters : Dict[str, Any]</span>
+<span class="sd">        Dictionary of simulation parameters</span>
+<span class="sd">    protocol : TreatmentProtocol</span>
+<span class="sd">        Treatment protocol to use in simulation</span>
+<span class="sd">    simulation_type : str</span>
+<span class="sd">        Type of simulation (&#39;abs&#39; or &#39;des&#39;)</span>
+<span class="sd">    num_patients : int</span>
+<span class="sd">        Number of patients to simulate</span>
+<span class="sd">    duration_days : int</span>
+<span class="sd">        Duration of simulation in days</span>
+<span class="sd">    random_seed : int</span>
+<span class="sd">        Random seed for reproducibility</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        Whether to enable verbose logging</span>
+<span class="sd">    start_date : datetime</span>
+<span class="sd">        Simulation start date</span>
+<span class="sd">    resources : Optional[Dict[str, Any]], optional</span>
+<span class="sd">        Resource configuration dictionary</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parameters : Dict[str, Any]</span>
+<span class="sd">        Raw simulation parameters</span>
+<span class="sd">    protocol : TreatmentProtocol</span>
+<span class="sd">        Treatment protocol instance</span>
+<span class="sd">    simulation_type : str</span>
+<span class="sd">        Simulation type identifier</span>
+<span class="sd">    num_patients : int</span>
+<span class="sd">        Number of simulated patients</span>
+<span class="sd">    duration_days : int</span>
+<span class="sd">        Simulation duration</span>
+<span class="sd">    random_seed : int</span>
+<span class="sd">        Random seed value</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        Verbosity flag</span>
+<span class="sd">    start_date : datetime</span>
+<span class="sd">        Simulation start date</span>
+<span class="sd">    resources : Optional[Dict[str, Any]]</span>
+<span class="sd">        Resource configuration</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parameters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+    <span class="n">protocol</span><span class="p">:</span> <span class="n">TreatmentProtocol</span>
+    <span class="n">simulation_type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">num_patients</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">duration_days</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">start_date</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="n">resources</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    
+<div class="viewcode-block" id="SimulationConfig.get_vision_params">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig.get_vision_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_vision_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get validated vision-related parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            Validated vision parameters</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If required parameters are missing or invalid</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Validates the following parameters:</span>
+<span class="sd">        - baseline_mean: Valid ETDRS letter range (30-85)</span>
+<span class="sd">        - measurement_noise_sd: Reasonable measurement noise (0-5)</span>
+<span class="sd">        - max_letters: ETDRS maximum (0-100)</span>
+<span class="sd">        - min_letters: ETDRS minimum (0-30)</span>
+<span class="sd">        - headroom_factor: Must be between 0 and 1</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vision_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;vision&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">vision_params</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Vision parameters not found&quot;</span><span class="p">)</span>
+            
+        <span class="n">required_params</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;baseline_mean&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">85</span><span class="p">),</span>
+            <span class="s2">&quot;measurement_noise_sd&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+            <span class="s2">&quot;max_letters&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span>
+            <span class="s2">&quot;min_letters&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span>
+            <span class="s2">&quot;headroom_factor&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">}</span>
+        
+        <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="p">)</span> <span class="ow">in</span> <span class="n">required_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">param</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vision_params</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing required vision parameter: </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">vision_params</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Vision parameter </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2"> must be numeric&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">min_val</span> <span class="o">&lt;=</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="n">max_val</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Vision parameter </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2"> must be between </span><span class="si">{</span><span class="n">min_val</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">max_val</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                
+        <span class="k">return</span> <span class="n">vision_params</span></div>
+
+    
+<div class="viewcode-block" id="SimulationConfig.get_maintenance_params">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig.get_maintenance_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_maintenance_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get validated maintenance phase parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            Validated maintenance phase parameters</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If required parameters are missing or invalid</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Validates the following parameters:</span>
+<span class="sd">        - memory_factor: Must be between 0 and 1</span>
+<span class="sd">        - base_effect_ceiling: Maximum reasonable improvement (0-15)</span>
+<span class="sd">        - regression_factor: Must be between 0 and 1</span>
+<span class="sd">        - random_effect_mean: Reasonable range for log-normal mean (-2 to 2)</span>
+<span class="sd">        - random_effect_sd: Reasonable range for log-normal SD (0 to 1)</span>
+<span class="sd">        - decline_probability: Must be probability (0 to 1)</span>
+<span class="sd">        - decline_effect_mean: Reasonable vision loss range (-5 to 0)</span>
+<span class="sd">        - decline_effect_sd: Reasonable variation in loss (0 to 2)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;treatment_response&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;maintenance_phase&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">params</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Maintenance phase parameters not found&quot;</span><span class="p">)</span>
+            
+        <span class="n">required_params</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;memory_factor&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="s2">&quot;base_effect_ceiling&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>
+            <span class="s2">&quot;regression_factor&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="s2">&quot;random_effect_mean&quot;</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="s2">&quot;random_effect_sd&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="s2">&quot;decline_probability&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="s2">&quot;decline_effect_mean&quot;</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="s2">&quot;decline_effect_sd&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="p">}</span>
+        
+        <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="p">)</span> <span class="ow">in</span> <span class="n">required_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">param</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing required maintenance phase parameter: </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Maintenance phase parameter </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2"> must be numeric&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">min_val</span> <span class="o">&lt;=</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="n">max_val</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Maintenance phase parameter </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2"> must be between </span><span class="si">{</span><span class="n">min_val</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">max_val</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                
+        <span class="k">return</span> <span class="n">params</span></div>
+
+
+<div class="viewcode-block" id="SimulationConfig.get_loading_phase_params">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig.get_loading_phase_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_loading_phase_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get validated loading phase parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            Validated loading phase parameters</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If required parameters are missing, invalid, or probabilities don&#39;t sum to 1</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Validates the following parameters:</span>
+<span class="sd">        - vision_improvement_mean: Reasonable letter improvement (0-15)</span>
+<span class="sd">        - vision_improvement_sd: Reasonable variation (0-5)</span>
+<span class="sd">        - improve_probability: Must be probability (0-1)</span>
+<span class="sd">        - stable_probability: Must be probability (0-1)</span>
+<span class="sd">        - decline_probability: Must be probability (0-1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;treatment_response&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;loading_phase&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">params</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Loading phase parameters not found&quot;</span><span class="p">)</span>
+            
+        <span class="n">required_params</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;vision_improvement_mean&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>
+            <span class="s2">&quot;vision_improvement_sd&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+            <span class="s2">&quot;improve_probability&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="s2">&quot;stable_probability&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="s2">&quot;decline_probability&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">}</span>
+        
+        <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="p">)</span> <span class="ow">in</span> <span class="n">required_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">param</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing required loading phase parameter: </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading phase parameter </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2"> must be numeric&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">min_val</span> <span class="o">&lt;=</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="n">max_val</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading phase parameter </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2"> must be between </span><span class="si">{</span><span class="n">min_val</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">max_val</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                
+        <span class="n">prob_sum</span> <span class="o">=</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;improve_probability&quot;</span><span class="p">]</span> <span class="o">+</span> 
+                   <span class="n">params</span><span class="p">[</span><span class="s2">&quot;stable_probability&quot;</span><span class="p">]</span> <span class="o">+</span> 
+                   <span class="n">params</span><span class="p">[</span><span class="s2">&quot;decline_probability&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mf">0.99</span> <span class="o">&lt;=</span> <span class="n">prob_sum</span> <span class="o">&lt;=</span> <span class="mf">1.01</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Loading phase probabilities must sum to 1.0&quot;</span><span class="p">)</span>
+                
+        <span class="k">return</span> <span class="n">params</span></div>
+
+    
+<div class="viewcode-block" id="SimulationConfig.get_resource_params">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig.get_resource_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_resource_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get resource configuration parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            Resource parameters with defaults:</span>
+<span class="sd">            - doctors: 5</span>
+<span class="sd">            - nurses: 5</span>
+<span class="sd">            - oct_machines: 5</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        First checks simulation.resources.capacity if it exists,</span>
+<span class="sd">        otherwise falls back to default values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sim_resources</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;resources&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="n">sim_resources</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sim_resources</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">capacity</span> <span class="o">=</span> <span class="n">sim_resources</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;capacity&quot;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="k">if</span> <span class="n">capacity</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">{</span>
+                    <span class="s2">&quot;doctors&quot;</span><span class="p">:</span> <span class="n">capacity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;doctors&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+                    <span class="s2">&quot;nurses&quot;</span><span class="p">:</span> <span class="n">capacity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nurses&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+                    <span class="s2">&quot;oct_machines&quot;</span><span class="p">:</span> <span class="n">capacity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;oct_machines&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+                <span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;doctors&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+            <span class="s2">&quot;nurses&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+            <span class="s2">&quot;oct_machines&quot;</span><span class="p">:</span> <span class="mi">5</span>
+        <span class="p">}</span></div>
+
+    
+<div class="viewcode-block" id="SimulationConfig.get_des_params">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig.get_des_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_des_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get DES-specific parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            DES parameters with defaults:</span>
+<span class="sd">            - daily_capacity: 20 patients</span>
+<span class="sd">            - days_per_week: 5 days</span>
+<span class="sd">            - patient_generation:</span>
+<span class="sd">                - rate_per_week: 3 patients</span>
+<span class="sd">                - random_seed: None (use simulation seed)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">simulation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simulation&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">scheduling</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scheduling&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">patient_gen</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;patient_generation&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;daily_capacity&quot;</span><span class="p">:</span> <span class="n">scheduling</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;daily_capacity&quot;</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span>
+            <span class="s2">&quot;days_per_week&quot;</span><span class="p">:</span> <span class="n">scheduling</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;days_per_week&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+            <span class="s2">&quot;patient_generation&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;rate_per_week&quot;</span><span class="p">:</span> <span class="n">patient_gen</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rate_per_week&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                <span class="s2">&quot;random_seed&quot;</span><span class="p">:</span> <span class="n">patient_gen</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;random_seed&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">}</span></div>
+
+        
+<div class="viewcode-block" id="SimulationConfig.get_output_params">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig.get_output_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_output_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get output configuration parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            Output parameters with defaults:</span>
+<span class="sd">            - save_results: True</span>
+<span class="sd">            - database: &#39;simulations.db&#39;</span>
+<span class="sd">            - plots: True</span>
+<span class="sd">            - verbose: False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">output_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">output_params</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;save_results&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;database&quot;</span><span class="p">:</span> <span class="s2">&quot;simulations.db&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;plots&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;verbose&quot;</span><span class="p">:</span> <span class="kc">False</span>
+            <span class="p">}</span>
+        <span class="k">return</span> <span class="n">output_params</span></div>
+
+
+<div class="viewcode-block" id="SimulationConfig.get_clinical_model_params">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig.get_clinical_model_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_clinical_model_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get validated clinical model parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            Validated clinical model parameters</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If required sections or parameters are missing</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Validates the following required sections:</span>
+<span class="sd">        - disease_states</span>
+<span class="sd">        - transition_probabilities</span>
+<span class="sd">        - vision_change</span>
+
+<span class="sd">        For vision_change, validates:</span>
+<span class="sd">        - base_change</span>
+<span class="sd">        - time_factor</span>
+<span class="sd">        - ceiling_factor</span>
+<span class="sd">        - measurement_noise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Getting clinical model parameters. Full parameters: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">clinical_model_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;clinical_model&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">clinical_model_params</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Clinical model parameters not found in configuration&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Clinical model parameters not found in configuration&quot;</span><span class="p">)</span>
+        
+        <span class="n">required_sections</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;disease_states&quot;</span><span class="p">,</span> <span class="s2">&quot;transition_probabilities&quot;</span><span class="p">,</span> <span class="s2">&quot;vision_change&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">required_sections</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">section</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">clinical_model_params</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing required clinical model section: </span><span class="si">{</span><span class="n">section</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing required clinical model section: </span><span class="si">{</span><span class="n">section</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="n">vision_change</span> <span class="o">=</span> <span class="n">clinical_model_params</span><span class="p">[</span><span class="s2">&quot;vision_change&quot;</span><span class="p">]</span>
+        <span class="n">required_vision_change_params</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;base_change&quot;</span><span class="p">,</span> <span class="s2">&quot;time_factor&quot;</span><span class="p">,</span> <span class="s2">&quot;ceiling_factor&quot;</span><span class="p">,</span> <span class="s2">&quot;measurement_noise&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">required_vision_change_params</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">param</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vision_change</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing required vision change parameter: </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing required vision change parameter: </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">clinical_model_params</span></div>
+
+    
+<div class="viewcode-block" id="SimulationConfig.from_yaml">
+<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig.from_yaml">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_yaml</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SimulationConfig&#39;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create configuration from YAML with protocol objects.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config_name : str</span>
+<span class="sd">            Name of the configuration to load</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        SimulationConfig</span>
+<span class="sd">            New SimulationConfig instance</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If protocol is invalid or required parameters are missing</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Uses ProtocolParser to load and validate the full configuration,</span>
+<span class="sd">        including protocol definitions and parameter validation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">ProtocolParser</span><span class="p">()</span>
+        <span class="n">full_config</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">get_full_configuration</span><span class="p">(</span><span class="n">config_name</span><span class="p">)</span>
+        
+        <span class="n">start_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span>
+            <span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">start_date</span><span class="p">,</span>
+            <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span>
+        <span class="p">)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;protocol&#39;</span><span class="p">],</span> <span class="n">TreatmentProtocol</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Protocol must be a TreatmentProtocol object&quot;</span><span class="p">)</span>
+            
+        <span class="n">resources</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">],</span> <span class="s1">&#39;simulation&#39;</span><span class="p">):</span>
+            <span class="n">sim_config</span> <span class="o">=</span> <span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">simulation</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sim_config</span><span class="p">,</span> <span class="s1">&#39;resources&#39;</span><span class="p">):</span>
+                <span class="n">resources</span> <span class="o">=</span> <span class="n">sim_config</span><span class="o">.</span><span class="n">resources</span>
+        
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">parameters</span><span class="o">=</span><span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">],</span>
+            <span class="n">protocol</span><span class="o">=</span><span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;protocol&#39;</span><span class="p">],</span>
+            <span class="n">simulation_type</span><span class="o">=</span><span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">simulation_type</span><span class="p">,</span>
+            <span class="n">num_patients</span><span class="o">=</span><span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">num_patients</span><span class="p">,</span>
+            <span class="n">duration_days</span><span class="o">=</span><span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">duration_days</span><span class="p">,</span>
+            <span class="n">random_seed</span><span class="o">=</span><span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span>
+            <span class="n">resources</span><span class="o">=</span><span class="n">resources</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Rose.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

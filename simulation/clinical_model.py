@@ -1,4 +1,5 @@
-"""Clinical model for AMD disease progression and vision changes.
+""":no-index:
+Clinical model for AMD disease progression and vision changes.
 
 This module implements the clinical aspects of AMD progression, including disease states,
 vision changes, and treatment effects. It uses a state-based model with probabilistic
@@ -60,7 +61,8 @@ from enum import Enum
 import numpy as np
 
 class DiseaseState(Enum):
-    """Disease states for AMD progression.
+    """:no-index:
+    Disease states for AMD progression.
 
     Enumeration of possible disease states in the AMD progression model:
 
@@ -98,7 +100,8 @@ class DiseaseState(Enum):
 from simulation.config import SimulationConfig
 
 class ClinicalModel:
-    """Models clinical aspects of AMD progression, including disease states and vision changes.
+    """:no-index:
+    Models clinical aspects of AMD progression, including disease states and vision changes.
     
     This model includes four disease states: NAIVE, STABLE, ACTIVE, and HIGHLY_ACTIVE.
     It simulates disease progression and vision changes based on the current state and treatment.

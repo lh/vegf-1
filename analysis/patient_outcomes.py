@@ -1,3 +1,30 @@
+"""Analyze and report patient outcomes over time.
+
+This module provides tools for analyzing patient outcomes data, particularly
+visual acuity measurements over time. It handles data alignment, interpolation,
+and statistical analysis.
+
+Classes
+-------
+TimePoint
+    Named tuple containing statistical results for a specific time point
+PatientOutcomeAnalyzer
+    Main class that performs the analysis and computes statistics
+
+Examples
+--------
+>>> analyzer = PatientOutcomeAnalyzer(max_weeks=104)
+>>> results = analyzer.analyze_visual_acuity(patient_data)
+>>> for point in results:
+...     print(f"Week {point.week}: Mean VA = {point.mean:.2f}")
+
+Notes
+-----
+- All time values are in weeks since treatment start
+- Visual acuity values should be in logMAR units
+- Missing data is handled via interpolation when possible
+"""
+
 from datetime import datetime, timedelta
 from typing import Dict, List, Tuple, Optional, NamedTuple
 import numpy as np

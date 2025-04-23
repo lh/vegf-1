@@ -1,3 +1,39 @@
+"""Generate realistic patient agents for Agent-Based Simulation (ABS).
+
+This module provides specialized patient generation for ABS models, with:
+- Realistic arrival time distributions
+- Detailed initial state generation
+- Risk factor modeling
+- Vision and disease activity initialization
+
+Classes
+-------
+ABSPatientGenerator
+    Generates patients with complete initial states for ABS
+
+Key Features
+------------
+- Poisson process for patient arrivals
+- Normal distributions for baseline vision
+- Risk factor modeling (age, diabetes, hypertension, smoking)
+- Disease activity based on risk factors
+
+Examples
+--------
+>>> generator = ABSPatientGenerator(
+...     rate_per_week=5,
+...     start_date=datetime(2023,1,1),
+...     end_date=datetime(2023,12,31)
+... )
+>>> agents = generator.generate_agents()
+
+Notes
+-----
+- Vision values are in logMAR units (lower is better)
+- Disease activity is on 0-1 scale (higher is worse)
+- Risk factors influence disease progression
+"""
+
 from datetime import datetime
 from typing import List, Tuple, Dict, Optional
 from simulation.patient_generator import PatientGenerator

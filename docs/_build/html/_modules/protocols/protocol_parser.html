@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>protocols.protocol_parser &mdash; Macular Simulation  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Macular Simulation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../PROJECT_OVERVIEW.html">Macular Degeneration Treatment Simulation Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/index.html">Simulation Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/index.html">Analysis Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/index.html">Protocol Modules</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/patient_state.html">Patient State Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/scheduler.html">Scheduler Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/config.html">Simulation Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/clinical_model.html">Clinical Model Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/eylea_data_analysis.html">Eylea Data Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/eylea_intervals_analysis.html">Eylea Intervals Analysis Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/visit_types.html">Visit Types Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/config_parser.html">Config Parser Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../visualization/acuity_viz.html">Visual Acuity Visualization Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Macular Simulation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">protocols.protocol_parser</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for protocols.protocol_parser</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Protocol configuration parser for macular simulation.</span>
+
+<span class="sd">This module handles loading and parsing protocol configuration files (YAML format)</span>
+<span class="sd">into structured Python objects. It provides validation and type conversion for:</span>
+
+<span class="sd">- Protocol definitions (treatment phases, visit types, decision criteria)</span>
+<span class="sd">- Parameter sets (vision, treatment response, disease progression parameters)</span>
+<span class="sd">- Simulation configurations (protocol selection, patient counts, duration)</span>
+
+<span class="sd">Key Classes</span>
+<span class="sd">----------</span>
+<span class="sd">ProtocolParser: Main class for loading and validating protocol configurations</span>
+<span class="sd">SimulationConfig: Container for complete simulation configuration</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">Load a simulation configuration:</span>
+<span class="sd">&gt;&gt;&gt; parser = ProtocolParser()</span>
+<span class="sd">&gt;&gt;&gt; config = parser.load_simulation_config(&quot;test_simulation&quot;)</span>
+<span class="sd">&gt;&gt;&gt; print(config.protocol.protocol_name)</span>
+<span class="sd">&quot;Test Protocol&quot;</span>
+
+<span class="sd">Validate a protocol definition:</span>
+<span class="sd">&gt;&gt;&gt; protocol = parser._load_protocol_definition(&quot;eylea&quot;, &quot;standard&quot;)</span>
+<span class="sd">&gt;&gt;&gt; protocol.validate()</span>
+<span class="sd">True</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">validation.config_validator</span> <span class="kn">import</span> <span class="n">ConfigValidator</span><span class="p">,</span> <span class="n">ConfigurationError</span>
+<span class="kn">from</span> <span class="nn">protocol_models</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TreatmentProtocol</span><span class="p">,</span> <span class="n">ProtocolPhase</span><span class="p">,</span> <span class="n">LoadingPhase</span><span class="p">,</span> <span class="n">MaintenancePhase</span><span class="p">,</span>
+    <span class="n">ExtensionPhase</span><span class="p">,</span> <span class="n">DiscontinuationPhase</span><span class="p">,</span> <span class="n">VisitType</span><span class="p">,</span> <span class="n">TreatmentDecision</span><span class="p">,</span>
+    <span class="n">ActionType</span><span class="p">,</span> <span class="n">DecisionType</span><span class="p">,</span> <span class="n">PhaseType</span>
+<span class="p">)</span>
+
+<div class="viewcode-block" id="SimulationConfig">
+<a class="viewcode-back" href="../../protocols/index.html#protocols.protocol_parser.SimulationConfig">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">SimulationConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container for complete simulation configuration.</span>
+
+<span class="sd">    This class holds all configuration parameters needed to run a simulation,</span>
+<span class="sd">    including protocol definitions, parameter sets, and simulation settings.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Name of the simulation configuration</span>
+<span class="sd">    protocol_agent : str</span>
+<span class="sd">        Name of the treatment agent (e.g. &quot;eylea&quot;)</span>
+<span class="sd">    protocol_type : str  </span>
+<span class="sd">        Type of protocol (e.g. &quot;standard&quot;, &quot;intensive&quot;)</span>
+<span class="sd">    parameter_set : str</span>
+<span class="sd">        Name of parameter set to use</span>
+<span class="sd">    simulation_type : str</span>
+<span class="sd">        Type of simulation (&quot;abs&quot; or &quot;des&quot;)</span>
+<span class="sd">    duration_days : int</span>
+<span class="sd">        Simulation duration in days</span>
+<span class="sd">    num_patients : int</span>
+<span class="sd">        Number of patients to simulate</span>
+<span class="sd">    random_seed : int</span>
+<span class="sd">        Random seed for reproducibility</span>
+<span class="sd">    save_results : bool</span>
+<span class="sd">        Whether to save results to database</span>
+<span class="sd">    database : str</span>
+<span class="sd">        Database path/connection string</span>
+<span class="sd">    plots : bool</span>
+<span class="sd">        Whether to generate plots</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        Verbose output flag</span>
+<span class="sd">    start_date : str</span>
+<span class="sd">        Simulation start date (YYYY-MM-DD)</span>
+<span class="sd">    description : str</span>
+<span class="sd">        Description of simulation</span>
+<span class="sd">    protocol : Optional[TreatmentProtocol]</span>
+<span class="sd">        Loaded protocol definition</span>
+<span class="sd">    parameters : Optional[Dict[str, Any]]</span>
+<span class="sd">        Merged parameter set including:</span>
+<span class="sd">        - vision parameters</span>
+<span class="sd">        - treatment response parameters</span>
+<span class="sd">        - disease progression parameters</span>
+<span class="sd">        - resource parameters</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">protocol_agent</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">protocol_type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">parameter_set</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">simulation_type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">duration_days</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">num_patients</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">save_results</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">database</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">plots</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">start_date</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">protocol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TreatmentProtocol</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="SimulationConfig.__init__">
+<a class="viewcode-back" href="../../protocols/index.html#protocols.protocol_parser.SimulationConfig.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize configuration with provided kwargs.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        **kwargs : dict</span>
+<span class="sd">            Configuration parameters as keyword arguments</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+</div>
+
+
+<span class="k">def</span> <span class="nf">_create_visit_type</span><span class="p">(</span><span class="n">visit_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VisitType</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create VisitType object from dictionary data&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">VisitType</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">visit_data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+        <span class="n">required_actions</span><span class="o">=</span><span class="p">[</span><span class="n">ActionType</span><span class="p">(</span><span class="n">action</span><span class="p">)</span> <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">visit_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;required_actions&quot;</span><span class="p">,</span> <span class="p">[])],</span>
+        <span class="n">optional_actions</span><span class="o">=</span><span class="p">[</span><span class="n">ActionType</span><span class="p">(</span><span class="n">action</span><span class="p">)</span> <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">visit_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;optional_actions&quot;</span><span class="p">,</span> <span class="p">[])],</span>
+        <span class="n">decisions</span><span class="o">=</span><span class="p">[</span><span class="n">DecisionType</span><span class="p">(</span><span class="n">decision</span><span class="p">)</span> <span class="k">for</span> <span class="n">decision</span> <span class="ow">in</span> <span class="n">visit_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;decisions&quot;</span><span class="p">,</span> <span class="p">[])],</span>
+        <span class="n">duration_minutes</span><span class="o">=</span><span class="n">visit_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;duration_minutes&quot;</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+    <span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_create_treatment_decision</span><span class="p">(</span><span class="n">decision_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TreatmentDecision</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create TreatmentDecision object from dictionary data&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">TreatmentDecision</span><span class="p">(</span>
+        <span class="n">metric</span><span class="o">=</span><span class="n">decision_data</span><span class="p">[</span><span class="s2">&quot;metric&quot;</span><span class="p">],</span>
+        <span class="n">comparator</span><span class="o">=</span><span class="n">decision_data</span><span class="p">[</span><span class="s2">&quot;comparator&quot;</span><span class="p">],</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">decision_data</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">decision_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;action&quot;</span><span class="p">,</span> <span class="s2">&quot;continue&quot;</span><span class="p">),</span>
+        <span class="n">priority</span><span class="o">=</span><span class="n">decision_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;priority&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_create_protocol_phase</span><span class="p">(</span><span class="n">phase_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">phase_type</span><span class="p">:</span> <span class="n">PhaseType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ProtocolPhase</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create appropriate ProtocolPhase object based on phase type&quot;&quot;&quot;</span>
+    <span class="n">phase_classes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">PhaseType</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="n">ProtocolPhase</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">PhaseType</span><span class="o">.</span><span class="n">LOADING</span><span class="p">:</span> <span class="n">LoadingPhase</span><span class="p">,</span>
+        <span class="n">PhaseType</span><span class="o">.</span><span class="n">MAINTENANCE</span><span class="p">:</span> <span class="n">MaintenancePhase</span><span class="p">,</span>
+        <span class="n">PhaseType</span><span class="o">.</span><span class="n">EXTENSION</span><span class="p">:</span> <span class="n">ExtensionPhase</span><span class="p">,</span>
+        <span class="n">PhaseType</span><span class="o">.</span><span class="n">DISCONTINUATION</span><span class="p">:</span> <span class="n">DiscontinuationPhase</span>
+    <span class="p">}</span>
+    
+    <span class="n">phase_class</span> <span class="o">=</span> <span class="n">phase_classes</span><span class="p">[</span><span class="n">phase_type</span><span class="p">]</span>
+    
+    <span class="c1"># Convert visit type if present</span>
+    <span class="n">visit_type</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="s2">&quot;visit_type&quot;</span> <span class="ow">in</span> <span class="n">phase_data</span><span class="p">:</span>
+        <span class="n">visit_type</span> <span class="o">=</span> <span class="n">_create_visit_type</span><span class="p">(</span><span class="n">phase_data</span><span class="p">[</span><span class="s2">&quot;visit_type&quot;</span><span class="p">])</span>
+        
+    <span class="c1"># Convert criteria lists if present</span>
+    <span class="n">entry_criteria</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_create_treatment_decision</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> 
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">phase_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;entry_criteria&quot;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="p">]</span>
+    <span class="n">exit_criteria</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_create_treatment_decision</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> 
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">phase_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;exit_criteria&quot;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">phase_class</span><span class="p">(</span>
+        <span class="n">phase_type</span><span class="o">=</span><span class="n">phase_type</span><span class="p">,</span>
+        <span class="n">duration_weeks</span><span class="o">=</span><span class="n">phase_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;duration_weeks&quot;</span><span class="p">),</span>
+        <span class="n">visit_interval_weeks</span><span class="o">=</span><span class="n">phase_data</span><span class="p">[</span><span class="s2">&quot;visit_interval_weeks&quot;</span><span class="p">],</span>
+        <span class="n">required_treatments</span><span class="o">=</span><span class="n">phase_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;required_treatments&quot;</span><span class="p">),</span>
+        <span class="n">min_interval_weeks</span><span class="o">=</span><span class="n">phase_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;min_interval_weeks&quot;</span><span class="p">),</span>
+        <span class="n">max_interval_weeks</span><span class="o">=</span><span class="n">phase_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_interval_weeks&quot;</span><span class="p">),</span>
+        <span class="n">interval_adjustment_weeks</span><span class="o">=</span><span class="n">phase_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;interval_adjustment_weeks&quot;</span><span class="p">),</span>
+        <span class="n">entry_criteria</span><span class="o">=</span><span class="n">entry_criteria</span><span class="p">,</span>
+        <span class="n">exit_criteria</span><span class="o">=</span><span class="n">exit_criteria</span><span class="p">,</span>
+        <span class="n">visit_type</span><span class="o">=</span><span class="n">visit_type</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="ProtocolParser">
+<a class="viewcode-back" href="../../protocols/index.html#protocols.protocol_parser.ProtocolParser">[docs]</a>
+<span class="k">class</span> <span class="nc">ProtocolParser</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parser for protocol configurations that creates protocol objects.</span>
+
+<span class="sd">    This class handles loading and validating protocol configuration files,</span>
+<span class="sd">    including:</span>
+<span class="sd">    - Protocol definitions (phases, visit types, decision criteria)</span>
+<span class="sd">    - Parameter sets (vision, treatment, disease parameters)</span>
+<span class="sd">    - Simulation configurations</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    base_path : str, optional</span>
+<span class="sd">        Base path for protocol files (default: &quot;protocols&quot;)</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    load_simulation_config(config_name)</span>
+<span class="sd">        Load complete simulation configuration</span>
+<span class="sd">    get_full_configuration(config_name)</span>
+<span class="sd">        Get configuration with protocol objects and parameters</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="ProtocolParser.__init__">
+<a class="viewcode-back" href="../../protocols/index.html#protocols.protocol_parser.ProtocolParser.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;protocols&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">base_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validator</span> <span class="o">=</span> <span class="n">ConfigValidator</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_base_parameters</span><span class="p">()</span></div>
+
+        
+    <span class="k">def</span> <span class="nf">_create_visit_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visit_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VisitType</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create VisitType object from dictionary data&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">VisitType</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">visit_data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+            <span class="n">required_actions</span><span class="o">=</span><span class="p">[</span><span class="n">ActionType</span><span class="p">(</span><span class="n">action</span><span class="p">)</span> <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">visit_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;required_actions&quot;</span><span class="p">,</span> <span class="p">[])],</span>
+            <span class="n">optional_actions</span><span class="o">=</span><span class="p">[</span><span class="n">ActionType</span><span class="p">(</span><span class="n">action</span><span class="p">)</span> <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">visit_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;optional_actions&quot;</span><span class="p">,</span> <span class="p">[])],</span>
+            <span class="n">decisions</span><span class="o">=</span><span class="p">[</span><span class="n">DecisionType</span><span class="p">(</span><span class="n">decision</span><span class="p">)</span> <span class="k">for</span> <span class="n">decision</span> <span class="ow">in</span> <span class="n">visit_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;decisions&quot;</span><span class="p">,</span> <span class="p">[])],</span>
+            <span class="n">duration_minutes</span><span class="o">=</span><span class="n">visit_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;duration_minutes&quot;</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+        <span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">_create_treatment_decision</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">decision_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TreatmentDecision</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create TreatmentDecision object from dictionary data&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">TreatmentDecision</span><span class="p">(</span>
+            <span class="n">metric</span><span class="o">=</span><span class="n">decision_data</span><span class="p">[</span><span class="s2">&quot;metric&quot;</span><span class="p">],</span>
+            <span class="n">comparator</span><span class="o">=</span><span class="n">decision_data</span><span class="p">[</span><span class="s2">&quot;comparator&quot;</span><span class="p">],</span>
+            <span class="n">value</span><span class="o">=</span><span class="n">decision_data</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+            <span class="n">action</span><span class="o">=</span><span class="n">decision_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;action&quot;</span><span class="p">,</span> <span class="s2">&quot;continue&quot;</span><span class="p">),</span>
+            <span class="n">priority</span><span class="o">=</span><span class="n">decision_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;priority&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">_load_base_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load and validate base parameters file&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_path</span> <span class="o">/</span> <span class="s2">&quot;base_parameters.yaml&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">validate_base_parameters</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid base parameters: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">errors</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">params</span>
+    
+    <span class="k">def</span> <span class="nf">_create_protocol_phase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phase_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">phase_type</span><span class="p">:</span> <span class="n">PhaseType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ProtocolPhase</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create appropriate protocol phase object from YAML data&quot;&quot;&quot;</span>
+        <span class="n">phase_classes</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">PhaseType</span><span class="o">.</span><span class="n">LOADING</span><span class="p">:</span> <span class="n">LoadingPhase</span><span class="p">,</span>
+            <span class="n">PhaseType</span><span class="o">.</span><span class="n">MAINTENANCE</span><span class="p">:</span> <span class="n">MaintenancePhase</span><span class="p">,</span>
+            <span class="n">PhaseType</span><span class="o">.</span><span class="n">EXTENSION</span><span class="p">:</span> <span class="n">ExtensionPhase</span><span class="p">,</span>
+            <span class="n">PhaseType</span><span class="o">.</span><span class="n">DISCONTINUATION</span><span class="p">:</span> <span class="n">DiscontinuationPhase</span>
+        <span class="p">}</span>
+        
+        <span class="k">if</span> <span class="n">phase_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">phase_classes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown phase type: </span><span class="si">{</span><span class="n">phase_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+        <span class="n">phase_class</span> <span class="o">=</span> <span class="n">phase_classes</span><span class="p">[</span><span class="n">phase_type</span><span class="p">]</span>
+        
+        <span class="c1"># Create visit type if specified</span>
+        <span class="n">visit_type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="s2">&quot;visit_type&quot;</span> <span class="ow">in</span> <span class="n">phase_data</span><span class="p">:</span>
+            <span class="n">visit_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_visit_type</span><span class="p">(</span><span class="n">phase_data</span><span class="p">[</span><span class="s2">&quot;visit_type&quot;</span><span class="p">])</span>
+            
+        <span class="c1"># Convert criteria to TreatmentDecision objects</span>
+        <span class="n">entry_criteria</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_treatment_decision</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> 
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">phase_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;entry_criteria&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="p">]</span>
+        <span class="n">exit_criteria</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_treatment_decision</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> 
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">phase_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;exit_criteria&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="p">]</span>
+        
+        <span class="k">return</span> <span class="n">phase_class</span><span class="p">(</span>
+            <span class="n">phase_type</span><span class="o">=</span><span class="n">phase_type</span><span class="p">,</span>  <span class="c1"># Use the passed-in phase_type directly</span>
+            <span class="n">duration_weeks</span><span class="o">=</span><span class="n">phase_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;duration_weeks&quot;</span><span class="p">),</span>
+            <span class="n">visit_interval_weeks</span><span class="o">=</span><span class="n">phase_data</span><span class="p">[</span><span class="s2">&quot;visit_interval_weeks&quot;</span><span class="p">],</span>
+            <span class="n">required_treatments</span><span class="o">=</span><span class="n">phase_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;required_treatments&quot;</span><span class="p">),</span>
+            <span class="n">min_interval_weeks</span><span class="o">=</span><span class="n">phase_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;min_interval_weeks&quot;</span><span class="p">),</span>
+            <span class="n">max_interval_weeks</span><span class="o">=</span><span class="n">phase_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_interval_weeks&quot;</span><span class="p">),</span>
+            <span class="n">interval_adjustment_weeks</span><span class="o">=</span><span class="n">phase_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;interval_adjustment_weeks&quot;</span><span class="p">),</span>
+            <span class="n">entry_criteria</span><span class="o">=</span><span class="n">entry_criteria</span><span class="p">,</span>
+            <span class="n">exit_criteria</span><span class="o">=</span><span class="n">exit_criteria</span><span class="p">,</span>
+            <span class="n">visit_type</span><span class="o">=</span><span class="n">visit_type</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_load_protocol_definition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">protocol_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TreatmentProtocol</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load and create protocol object from YAML definition&quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_path</span> <span class="o">/</span> <span class="s2">&quot;protocol_definitions&quot;</span> <span class="o">/</span> <span class="n">agent</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">protocol_type</span><span class="si">}</span><span class="s2">.yaml&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">protocol_data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">validate_protocol_definition</span><span class="p">(</span><span class="n">protocol_data</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid protocol definition: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">errors</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+        <span class="c1"># Validate phase definitions</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_protocol_phases</span><span class="p">(</span><span class="n">protocol_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;phases&quot;</span><span class="p">,</span> <span class="p">{})):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid phase definitions: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">errors</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+        <span class="c1"># Create phase objects with proper type mapping</span>
+        <span class="n">phases</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">phase_mapping</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;loading&quot;</span><span class="p">:</span> <span class="n">PhaseType</span><span class="o">.</span><span class="n">LOADING</span><span class="p">,</span>
+            <span class="s2">&quot;maintenance&quot;</span><span class="p">:</span> <span class="n">PhaseType</span><span class="o">.</span><span class="n">MAINTENANCE</span><span class="p">,</span>
+            <span class="s2">&quot;extension&quot;</span><span class="p">:</span> <span class="n">PhaseType</span><span class="o">.</span><span class="n">EXTENSION</span><span class="p">,</span>
+            <span class="s2">&quot;discontinuation&quot;</span><span class="p">:</span> <span class="n">PhaseType</span><span class="o">.</span><span class="n">DISCONTINUATION</span>
+        <span class="p">}</span>
+        
+        <span class="k">for</span> <span class="n">phase_name</span><span class="p">,</span> <span class="n">phase_data</span> <span class="ow">in</span> <span class="n">protocol_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;phases&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">phase_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">phase_mapping</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown phase type: </span><span class="si">{</span><span class="n">phase_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                
+            <span class="n">phase_type</span> <span class="o">=</span> <span class="n">phase_mapping</span><span class="p">[</span><span class="n">phase_name</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">phases</span><span class="p">[</span><span class="n">phase_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_protocol_phase</span><span class="p">(</span><span class="n">phase_data</span><span class="p">,</span> <span class="n">phase_type</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error creating </span><span class="si">{</span><span class="n">phase_name</span><span class="si">}</span><span class="s2"> phase: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+        <span class="c1"># Convert discontinuation criteria with validation</span>
+        <span class="n">discontinuation_criteria</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">criterion</span> <span class="ow">in</span> <span class="n">protocol_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;discontinuation_criteria&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">decision</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_treatment_decision</span><span class="p">(</span><span class="n">criterion</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">decision</span><span class="o">.</span><span class="n">action</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;stop&quot;</span><span class="p">,</span> <span class="s2">&quot;consider_stop&quot;</span><span class="p">]:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid discontinuation action: </span><span class="si">{</span><span class="n">decision</span><span class="o">.</span><span class="n">action</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">discontinuation_criteria</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">decision</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid discontinuation criterion: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Create protocol object</span>
+        <span class="n">protocol</span> <span class="o">=</span> <span class="n">TreatmentProtocol</span><span class="p">(</span>
+            <span class="n">agent</span><span class="o">=</span><span class="n">agent</span><span class="p">,</span>
+            <span class="n">protocol_name</span><span class="o">=</span><span class="n">protocol_data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+            <span class="n">version</span><span class="o">=</span><span class="n">protocol_data</span><span class="p">[</span><span class="s2">&quot;version&quot;</span><span class="p">],</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">protocol_data</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">],</span>
+            <span class="n">phases</span><span class="o">=</span><span class="n">phases</span><span class="p">,</span>
+            <span class="n">parameters</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_load_parameter_set</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="s2">&quot;standard&quot;</span><span class="p">),</span>  <span class="c1"># Always use standard parameter set</span>
+            <span class="n">discontinuation_criteria</span><span class="o">=</span><span class="n">discontinuation_criteria</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># Validate complete protocol</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">protocol</span><span class="o">.</span><span class="n">validate</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Protocol validation failed&quot;</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">protocol</span>
+    
+    <span class="k">def</span> <span class="nf">_validate_protocol_phases</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phases</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate protocol phase definitions&quot;&quot;&quot;</span>
+        <span class="n">required_phases</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;loading&quot;</span><span class="p">,</span> <span class="s2">&quot;maintenance&quot;</span><span class="p">}</span>
+        <span class="n">phase_types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">phases</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">phase</span> <span class="ow">in</span> <span class="n">phase_types</span> <span class="k">for</span> <span class="n">phase</span> <span class="ow">in</span> <span class="n">required_phases</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">ConfigurationError</span><span class="p">(</span><span class="s2">&quot;protocol_definition&quot;</span><span class="p">,</span> 
+                                 <span class="sa">f</span><span class="s2">&quot;Missing required phases: </span><span class="si">{</span><span class="n">required_phases</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">phase_types</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+            
+        <span class="c1"># Validate each phase</span>
+        <span class="k">for</span> <span class="n">phase_name</span><span class="p">,</span> <span class="n">phase_data</span> <span class="ow">in</span> <span class="n">phases</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_phase_definition</span><span class="p">(</span><span class="n">phase_name</span><span class="p">,</span> <span class="n">phase_data</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">False</span>
+                
+        <span class="k">return</span> <span class="kc">True</span>
+        
+    <span class="k">def</span> <span class="nf">_validate_phase_definition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phase_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">phase_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate individual phase definition&quot;&quot;&quot;</span>
+        <span class="n">required_fields</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;loading&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;duration_weeks&quot;</span><span class="p">,</span> <span class="s2">&quot;visit_interval_weeks&quot;</span><span class="p">,</span> <span class="s2">&quot;required_treatments&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;maintenance&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;visit_interval_weeks&quot;</span><span class="p">,</span> <span class="s2">&quot;min_interval_weeks&quot;</span><span class="p">,</span> <span class="s2">&quot;max_interval_weeks&quot;</span><span class="p">}</span>
+        <span class="p">}</span>
+        
+        <span class="k">if</span> <span class="n">phase_name</span> <span class="ow">in</span> <span class="n">required_fields</span><span class="p">:</span>
+            <span class="n">missing_fields</span> <span class="o">=</span> <span class="n">required_fields</span><span class="p">[</span><span class="n">phase_name</span><span class="p">]</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">phase_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">missing_fields</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">ConfigurationError</span><span class="p">(</span><span class="s2">&quot;protocol_definition&quot;</span><span class="p">,</span>
+                                     <span class="sa">f</span><span class="s2">&quot;Phase </span><span class="si">{</span><span class="n">phase_name</span><span class="si">}</span><span class="s2"> missing fields: </span><span class="si">{</span><span class="n">missing_fields</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+                
+        <span class="k">return</span> <span class="kc">True</span>
+        
+    <span class="k">def</span> <span class="nf">_load_parameter_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parameter_set</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load and validate parameter set and merge with base parameters&quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_path</span> <span class="o">/</span> <span class="s2">&quot;parameter_sets&quot;</span> <span class="o">/</span> <span class="n">agent</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter_set</span><span class="si">}</span><span class="s2">.yaml&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">validate_parameter_set</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid parameter set: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">errors</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Deep copy base parameters to avoid modifying original</span>
+        <span class="n">merged</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_parameters</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        
+        <span class="c1"># Merge protocol specific parameters with validation</span>
+        <span class="n">protocol_params</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;protocol_specific&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">for</span> <span class="n">category</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">protocol_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid parameter format for </span><span class="si">{</span><span class="n">category</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                
+            <span class="k">if</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">merged</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">merged</span><span class="p">[</span><span class="n">category</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="n">merged</span><span class="p">[</span><span class="n">category</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">merged</span><span class="p">[</span><span class="n">category</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">merged</span><span class="p">[</span><span class="n">category</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
+                
+        <span class="k">return</span> <span class="n">merged</span>
+    
+<div class="viewcode-block" id="ProtocolParser.load_simulation_config">
+<a class="viewcode-back" href="../../protocols/index.html#protocols.protocol_parser.ProtocolParser.load_simulation_config">[docs]</a>
+    <span class="k">def</span> <span class="nf">load_simulation_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationConfig</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load and validate a simulation configuration from YAML file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config_name : str</span>
+<span class="sd">            Name of configuration file (without .yaml extension)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        SimulationConfig</span>
+<span class="sd">            Configured simulation settings with loaded protocol</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If configuration is invalid or validation fails</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; parser = ProtocolParser()</span>
+<span class="sd">        &gt;&gt;&gt; config = parser.load_simulation_config(&quot;test_simulation&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; print(config.protocol.protocol_name)</span>
+<span class="sd">        &quot;Test Protocol&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_path</span> <span class="o">/</span> <span class="s2">&quot;simulation_configs&quot;</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config_name</span><span class="si">}</span><span class="s2">.yaml&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">validate_simulation_config</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid simulation config: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">validator</span><span class="o">.</span><span class="n">errors</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+        <span class="c1"># Load and create protocol object with validation</span>
+        <span class="n">protocol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_protocol_definition</span><span class="p">(</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;protocol&quot;</span><span class="p">][</span><span class="s2">&quot;agent&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;protocol&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">protocol</span><span class="o">.</span><span class="n">validate</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid protocol configuration&quot;</span><span class="p">)</span>
+            
+        <span class="c1"># Load and merge parameters with validation</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_parameter_set</span><span class="p">(</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;protocol&quot;</span><span class="p">][</span><span class="s2">&quot;agent&quot;</span><span class="p">],</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;protocol&quot;</span><span class="p">][</span><span class="s2">&quot;parameter_set&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">SimulationConfig</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">],</span>
+            <span class="n">protocol_agent</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;protocol&quot;</span><span class="p">][</span><span class="s2">&quot;agent&quot;</span><span class="p">],</span>
+            <span class="n">protocol_type</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;protocol&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
+            <span class="n">parameter_set</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;protocol&quot;</span><span class="p">][</span><span class="s2">&quot;parameter_set&quot;</span><span class="p">],</span>
+            <span class="n">simulation_type</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;simulation&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
+            <span class="n">duration_days</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;simulation&quot;</span><span class="p">][</span><span class="s2">&quot;duration_days&quot;</span><span class="p">],</span>
+            <span class="n">num_patients</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;simulation&quot;</span><span class="p">][</span><span class="s2">&quot;num_patients&quot;</span><span class="p">],</span>
+            <span class="n">random_seed</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;simulation&quot;</span><span class="p">][</span><span class="s2">&quot;random_seed&quot;</span><span class="p">],</span>
+            <span class="n">save_results</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">][</span><span class="s2">&quot;save_results&quot;</span><span class="p">],</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">][</span><span class="s2">&quot;database&quot;</span><span class="p">],</span>
+            <span class="n">plots</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">][</span><span class="s2">&quot;plots&quot;</span><span class="p">],</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">][</span><span class="s2">&quot;verbose&quot;</span><span class="p">],</span>
+            <span class="n">start_date</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;simulation&quot;</span><span class="p">][</span><span class="s2">&quot;start_date&quot;</span><span class="p">],</span>
+            <span class="n">protocol</span><span class="o">=</span><span class="n">protocol</span><span class="p">,</span>  <span class="c1"># Now passing protocol object</span>
+            <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span>  <span class="c1"># Now passing merged parameters</span>
+        <span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="ProtocolParser.get_full_configuration">
+<a class="viewcode-back" href="../../protocols/index.html#protocols.protocol_parser.ProtocolParser.get_full_configuration">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_full_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get complete validated configuration including protocol objects and parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config_name : str</span>
+<span class="sd">            Name of configuration file (without .yaml extension)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            Dictionary containing:</span>
+<span class="sd">            - &quot;config&quot;: SimulationConfig object</span>
+<span class="sd">            - &quot;protocol&quot;: TreatmentProtocol object</span>
+<span class="sd">            - &quot;parameters&quot;: Merged parameter dictionary</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If configuration is invalid or validation fails</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; parser = ProtocolParser()</span>
+<span class="sd">        &gt;&gt;&gt; full_config = parser.get_full_configuration(&quot;test_simulation&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; print(full_config[&quot;protocol&quot;].phases[&quot;loading&quot;].duration_weeks)</span>
+<span class="sd">        12</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_simulation_config</span><span class="p">(</span><span class="n">config_name</span><span class="p">)</span>
+        
+        <span class="c1"># Load the full simulation configuration to get clinical model parameters</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_path</span> <span class="o">/</span> <span class="s2">&quot;simulation_configs&quot;</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config_name</span><span class="si">}</span><span class="s2">.yaml&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading configuration from: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Absolute path: </span><span class="si">{</span><span class="n">path</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Config file exists at </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">full_config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File contents: </span><span class="si">{</span><span class="n">full_config</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Config file does not exist at </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Current working directory: </span><span class="si">{</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Contents of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">base_path</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="s1">&#39;simulation_configs&#39;</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">list</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">base_path</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="s1">&#39;simulation_configs&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Add clinical model parameters if present</span>
+        <span class="k">if</span> <span class="s2">&quot;simulation&quot;</span> <span class="ow">in</span> <span class="n">full_config</span> <span class="ow">and</span> <span class="s2">&quot;clinical_model&quot;</span> <span class="ow">in</span> <span class="n">full_config</span><span class="p">[</span><span class="s2">&quot;simulation&quot;</span><span class="p">]:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;clinical_model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">full_config</span><span class="p">[</span><span class="s2">&quot;simulation&quot;</span><span class="p">][</span><span class="s2">&quot;clinical_model&quot;</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Added clinical model parameters: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;clinical_model&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Clinical model parameters not found in simulation configuration&quot;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="n">config</span><span class="p">,</span>
+            <span class="s2">&quot;protocol&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">protocol</span><span class="p">,</span>  <span class="c1"># Already a TreatmentProtocol object</span>
+            <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">parameters</span>  <span class="c1"># Now includes clinical model parameters</span>
+        <span class="p">}</span></div>
+</div>
+
+
+<div class="viewcode-block" id="load_protocol">
+<a class="viewcode-back" href="../../protocols/index.html#protocols.protocol_parser.load_protocol">[docs]</a>
+<span class="k">def</span> <span class="nf">load_protocol</span><span class="p">(</span><span class="n">config_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legacy function to load protocol configuration (deprecated).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    config_name : str</span>
+<span class="sd">        Name of configuration file (without .yaml extension)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Dict[str, Any]</span>
+<span class="sd">        Same as get_full_configuration()</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    This exists for backwards compatibility. New code should use</span>
+<span class="sd">    ProtocolParser.get_full_configuration() directly.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">ProtocolParser</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">get_full_configuration</span><span class="p">(</span><span class="n">config_name</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Rose.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

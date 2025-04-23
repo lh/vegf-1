@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime
-from protocol_parser import ProtocolParser
+from protocols.protocol_parser import ProtocolParser
 from protocol_models import TreatmentProtocol, PhaseType
 from validation.config_validator import ConfigValidator, ConfigurationError
 from simulation.config import SimulationConfig

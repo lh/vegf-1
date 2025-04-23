@@ -177,6 +177,7 @@ class TestEventComparison:
         
         # Create a SimulationClock to test actual event ordering
         clock = SimulationClock(start_date)
+        clock.end_date = start_date + timedelta(days=365)  # Add 1 year end date
         clock.schedule_event(event3)
         clock.schedule_event(event1)
         

@@ -27,7 +27,7 @@ protocols:
       - step_type: maintenance_phase
         parameters:
           dose: 0.5mg
-          interval_weeks: 8
+          interval_weeks: 9
         reassess_interval: 12
         exit_criteria:
           - metric: vision
@@ -49,8 +49,8 @@ protocols:
       - step_type: dynamic_interval
         parameters:
           initial_interval: 8
-          min_interval: 4
-          max_interval: 12
+          min_interval: 8
+          max_interval: 16
           adjustment_weeks: 2
         conditions:
           - metric: disease_activity

@@ -1,3 +1,41 @@
+"""Analyze and visualize simulation results with statistical methods.
+
+This module provides tools for analyzing and visualizing the results of clinical
+simulations, with a focus on visual acuity outcomes and treatment patterns.
+
+Key Changes:
+- Renamed local 'stats' dictionary to 'summary_data' to avoid naming conflict
+- Explicitly use scipy.stats module for statistical functions
+- Added proper handling for confidence interval calculations with small sample sizes
+
+Classes
+-------
+SimulationResults
+    Main class containing simulation data and analysis methods
+
+Key Functionality
+----------------
+- Time-series analysis of visual acuity outcomes
+- Statistical comparison between patient groups
+- Survival analysis for treatment response
+- Regression modeling of outcome predictors
+- Comprehensive summary statistics
+
+Examples
+--------
+>>> results = SimulationResults(start_date, end_date, patient_histories)
+>>> stats = results.get_summary_statistics()
+>>> times, means, ci_lower, ci_upper = results.calculate_mean_vision_over_time()
+>>> results.plot_mean_vision()
+
+Notes
+-----
+- All visual acuity values should be in ETDRS letters
+- Time values are in weeks from simulation start
+- Statistical tests include t-tests, chi-square, and linear regression
+- Confidence intervals are calculated at 95% level
+"""
+
 from typing import List, Dict, Tuple, Optional
 from datetime import datetime, timedelta
 import numpy as np
@@ -55,6 +93,7 @@ class SimulationResults:
         """Plot mean vision with confidence intervals"""
         times, means, ci_lower, ci_upper = self.calculate_mean_vision_over_time()
         
+        
         plt.figure(figsize=(12, 6))
         plt.plot(times, means, 'b-', label='Mean Vision')
         plt.fill_between(times, ci_lower, ci_upper, color='b', alpha=0.2, 
@@ -68,10 +107,40 @@ class SimulationResults:
         plt.legend()
         plt.tight_layout()
         plt.show()
+
+    def get_mean_vision_over_time(self) -> List[float]:
+        """Get mean vision over time for comparison visualization"""
+        _, means, _, _ = self.calculate_mean_vision_over_time()
+        return means
     
     def get_summary_statistics(self) -> Dict:
-        """Calculate comprehensive summary statistics for the simulation"""
-        stats = {
+        """Calculate comprehensive summary statistics for the simulation
+        
+        Returns:
+            Dictionary containing:
+            - num_patients: Total number of patients
+            - mean_visits_per_patient: Average visits per patient
+            - mean_injections_per_patient: Average injections per patient
+            - mean_vision_change: Mean change in visual acuity (ETDRS letters)
+            - vision_improved_percent: % patients with >5 letter improvement
+            - vision_stable_percent: % patients with -5 to +5 letter change
+            - vision_declined_percent: % patients with >5 letter decline
+            - vision_baseline_mean: Mean baseline visual acuity
+            - vision_baseline_std: Std dev of baseline visual acuity
+            - vision_final_mean: Mean final visual acuity
+            - vision_final_std: Std dev of final visual acuity
+            - treatment_interval_mean: Mean interval between treatments (weeks)
+            - treatment_interval_std: Std dev of treatment intervals
+            - loading_phase_completion_rate: % completing loading phase (3+ injections)
+            - time_to_first_improvement: Median weeks to first >5 letter improvement
+            - vision_change_confidence_interval: 95% CI for mean vision change
+
+        Notes:
+            - Uses scipy.stats for all statistical calculations
+            - Handles edge cases for small sample sizes
+            - Returns None for confidence intervals when insufficient data exists
+        """
+        summary_data = {
             "num_patients": len(self.patient_histories),
             "mean_visits_per_patient": 0,
             "mean_injections_per_patient": 0,
@@ -91,33 +160,94 @@ class SimulationResults:
         }
         
         vision_changes = []
+        baseline_visions = []
+        final_visions = []
+        treatment_intervals = []
+        improvement_times = []
+        loading_phase_completed = 0
         
         for history in self.patient_histories.values():
+            if not history:
+                continue
+                
             # Count visits and injections
-            stats["mean_visits_per_patient"] += len(history)
+            summary_data["mean_visits_per_patient"] += len(history)
             injections = sum(1 for v in history if 'injection' in v.get('actions', []))
-            stats["mean_injections_per_patient"] += injections
+            summary_data["mean_injections_per_patient"] += injections
             
-            # Calculate vision change
+            # Track loading phase completion (3+ injections)
+            if injections >= 3:
+                loading_phase_completed += 1
+                
+            # Get injection dates for interval calculation
+            injection_dates = [v['date'] for v in history 
+                             if 'injection' in v.get('actions', []) and 'date' in v]
+            
+            # Calculate treatment intervals
+            for i in range(1, len(injection_dates)):
+                interval = (injection_dates[i] - injection_dates[i-1]).days / 7
+                treatment_intervals.append(interval)
+                
+            # Get vision data
             first_vision = next((v['vision'] for v in history if 'vision' in v), None)
             last_vision = next((v['vision'] for v in reversed(history) if 'vision' in v), None)
             
+            if first_vision is not None:
+                baseline_visions.append(first_vision)
+            if last_vision is not None:
+                final_visions.append(last_vision)
+                
             if first_vision is not None and last_vision is not None:
                 change = last_vision - first_vision
                 vision_changes.append(change)
+                
+                # Track time to first improvement
+                for visit in history:
+                    if 'vision' in visit and 'date' in visit:
+                        weeks = (visit['date'] - history[0]['date']).days / 7
+                        if visit['vision'] - first_vision > 5:
+                            improvement_times.append(weeks)
+                            break
         
-        # Calculate means
-        stats["mean_visits_per_patient"] /= stats["num_patients"]
-        stats["mean_injections_per_patient"] /= stats["num_patients"]
+        # Calculate means and standard deviations
+        summary_data["mean_visits_per_patient"] /= summary_data["num_patients"]
+        summary_data["mean_injections_per_patient"] /= summary_data["num_patients"]
+        summary_data["loading_phase_completion_rate"] = (loading_phase_completed / summary_data["num_patients"]) * 100
         
         if vision_changes:
-            stats["mean_vision_change"] = np.mean(vision_changes)
+            summary_data["mean_vision_change"] = np.mean(vision_changes)
             total = len(vision_changes)
-            stats["vision_improved_percent"] = sum(1 for c in vision_changes if c > 5) / total * 100
-            stats["vision_stable_percent"] = sum(1 for c in vision_changes if -5 <= c <= 5) / total * 100
-            stats["vision_declined_percent"] = sum(1 for c in vision_changes if c < -5) / total * 100
+            summary_data["vision_improved_percent"] = sum(1 for c in vision_changes if c > 5) / total * 100
+            summary_data["vision_stable_percent"] = sum(1 for c in vision_changes if -5 <= c <= 5) / total * 100
+            summary_data["vision_declined_percent"] = sum(1 for c in vision_changes if c < -5) / total * 100
+            
+            # Calculate confidence interval for mean vision change
+            if len(vision_changes) > 1:
+                sem = stats.sem(vision_changes)
+                ci = stats.t.interval(0.95, len(vision_changes)-1, 
+                                    loc=np.mean(vision_changes), 
+                                    scale=sem)
+                summary_data["vision_change_confidence_interval"] = (ci[0], ci[1])
+            else:
+                # With one or zero samples, we can't calculate SEM/CI - use None to indicate missing data
+                summary_data["vision_change_confidence_interval"] = (None, None)
         
-        return stats
+        if baseline_visions:
+            summary_data["vision_baseline_mean"] = np.mean(baseline_visions)
+            summary_data["vision_baseline_std"] = np.std(baseline_visions)
+            
+        if final_visions:
+            summary_data["vision_final_mean"] = np.mean(final_visions)
+            summary_data["vision_final_std"] = np.std(final_visions)
+            
+        if treatment_intervals:
+            summary_data["treatment_interval_mean"] = np.mean(treatment_intervals)
+            summary_data["treatment_interval_std"] = np.std(treatment_intervals)
+            
+        if improvement_times:
+            summary_data["time_to_first_improvement"] = np.median(improvement_times)
+        
+        return summary_data
 
     def analyze_treatment_response(self, min_followup_weeks: int = 12) -> Dict:
         """Analyze treatment response patterns

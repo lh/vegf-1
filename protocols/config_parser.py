@@ -4,12 +4,12 @@ This module handles loading and merging configuration files for simulation runs,
 including protocol definitions, parameter sets, and simulation settings.
 
 Key Components
--------------
+--------------
 SimulationConfig : Dataclass for storing simulation configuration
 ConfigurationManager : Main class for loading and merging configurations
 
 Configuration Files
-------------------
+-------------------
 - base_parameters.yaml : Common parameters for all protocols
 - protocol_definitions/ : Protocol-specific definitions
 - parameter_sets/ : Protocol-specific parameters

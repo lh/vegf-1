@@ -1,3 +1,42 @@
+"""Manage agent state and behavior for Agent-Based Simulation (ABS).
+
+This module provides the AgentState class which extends PatientState with:
+- Risk factor tracking and impact modeling
+- Treatment adherence and decision making
+- Outcome tracking and quality of life metrics
+- Comprehensive state management
+
+Classes
+-------
+AgentState
+    Tracks agent state and handles decision making for ABS
+
+Key Features
+------------
+- Risk factor impact on disease progression
+- Dynamic treatment adherence modeling
+- Quality of life calculations
+- Treatment decision making logic
+- Comprehensive outcome tracking
+
+Examples
+--------
+>>> agent = AgentState(
+...     patient_id="P001",
+...     protocol_name="treat_and_extend",
+...     initial_vision=65,
+...     start_time=datetime(2023,1,1),
+...     risk_factors={"age": 72, "smoking": True}
+... )
+>>> will_attend, actions = agent.make_treatment_decision(datetime(2023,2,1))
+
+Notes
+-----
+- Vision values are in ETDRS letters (higher is better)
+- Quality of life is on 0-1 scale (higher is better)
+- Disease progression rate is in letters lost per week
+"""
+
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple
 import numpy as np
@@ -112,7 +151,11 @@ class AgentState(PatientState):
             "actions": actions
         })
         
-        return (True, actions)
+        # Return basic visit data (OCT results not currently available)
+        return {
+            "actions_performed": actions,
+            "vision_change": self.state["current_vision"] - self.state["baseline_vision"]
+        }
     
     def _needs_injection(self, current_time: datetime) -> bool:
         """Determine if patient needs injection based on clinical factors"""

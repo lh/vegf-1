@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>analysis.visualize_va_by_pca_cluster &mdash; Macular Simulation  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Macular Simulation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../PROJECT_OVERVIEW.html">Macular Degeneration Treatment Simulation Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/index.html">Simulation Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/index.html">Analysis Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/index.html">Protocol Modules</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/patient_state.html">Patient State Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/scheduler.html">Scheduler Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/config.html">Simulation Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/clinical_model.html">Clinical Model Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/eylea_data_analysis.html">Eylea Data Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/eylea_intervals_analysis.html">Eylea Intervals Analysis Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/visit_types.html">Visit Types Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/config_parser.html">Config Parser Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../visualization/acuity_viz.html">Visual Acuity Visualization Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Macular Simulation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">analysis.visualize_va_by_pca_cluster</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for analysis.visualize_va_by_pca_cluster</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Visualize Visual Acuity Trajectories by PCA Cluster</span>
+
+<span class="sd">This script creates visualizations of visual acuity trajectories over time</span>
+<span class="sd">for patients in each of the 4 clusters identified by PCA analysis.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">polars</span> <span class="k">as</span> <span class="nn">pl</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">sqlite3</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span>
+
+<span class="c1"># Set up output directory</span>
+<span class="n">output_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;output/analysis_results&quot;</span><span class="p">)</span>
+<span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Database path</span>
+<span class="n">DB_PATH</span> <span class="o">=</span> <span class="s2">&quot;output/eylea_intervals.db&quot;</span>
+
+<div class="viewcode-block" id="connect_to_db">
+<a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_va_by_pca_cluster.connect_to_db">[docs]</a>
+<span class="k">def</span> <span class="nf">connect_to_db</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">Connection</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Connect to the SQLite database.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">DB_PATH</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="load_interval_data">
+<a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_va_by_pca_cluster.load_interval_data">[docs]</a>
+<span class="k">def</span> <span class="nf">load_interval_data</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load the interval_va_data table into a Polars DataFrame.&quot;&quot;&quot;</span>
+    <span class="n">conn</span> <span class="o">=</span> <span class="n">connect_to_db</span><span class="p">()</span>
+    
+    <span class="c1"># Use Polars to read from SQLite</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;SELECT * FROM interval_va_data&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">read_database</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span> <span class="n">connection</span><span class="o">=</span><span class="n">conn</span><span class="p">)</span>
+    
+    <span class="c1"># Convert date strings to datetime objects</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">with_columns</span><span class="p">([</span>
+        <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;previous_date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">),</span>
+        <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;current_date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="p">])</span>
+    
+    <span class="n">conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+<div class="viewcode-block" id="load_cluster_assignments">
+<a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_va_by_pca_cluster.load_cluster_assignments">[docs]</a>
+<span class="k">def</span> <span class="nf">load_cluster_assignments</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load the cluster assignments from the PCA analysis.&quot;&quot;&quot;</span>
+    <span class="c1"># Load the 4-cluster assignments</span>
+    <span class="n">cluster_df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">&quot;va_interval_clusters_4.csv&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cluster_df</span></div>
+
+
+<div class="viewcode-block" id="visualize_va_trajectories_by_cluster">
+<a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_va_by_pca_cluster.visualize_va_trajectories_by_cluster">[docs]</a>
+<span class="k">def</span> <span class="nf">visualize_va_trajectories_by_cluster</span><span class="p">(</span><span class="n">interval_data</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">cluster_df</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Visualize visual acuity trajectories by PCA cluster.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        interval_data: Raw interval data</span>
+<span class="sd">        cluster_df: DataFrame with cluster assignments</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Create a unique identifier for each patient-eye combination in both dataframes</span>
+    <span class="n">interval_data</span> <span class="o">=</span> <span class="n">interval_data</span><span class="o">.</span><span class="n">with_columns</span><span class="p">([</span>
+        <span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;uuid&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;eye&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;patient_eye_id&quot;</span><span class="p">)</span>
+    <span class="p">])</span>
+    
+    <span class="c1"># Get unique patient-eye combinations from cluster_df</span>
+    <span class="n">cluster_df</span> <span class="o">=</span> <span class="n">cluster_df</span><span class="o">.</span><span class="n">with_columns</span><span class="p">([</span>
+        <span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;uuid&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;eye&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;patient_eye_id&quot;</span><span class="p">)</span>
+    <span class="p">])</span>
+    
+    <span class="c1"># Create a mapping of patient_eye_id to cluster</span>
+    <span class="n">patient_cluster_map</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cluster_df</span><span class="o">.</span><span class="n">iter_rows</span><span class="p">(</span><span class="n">named</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">patient_cluster_map</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;patient_eye_id&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;cluster&quot;</span><span class="p">]</span>
+    
+    <span class="c1"># Add cluster information to interval_data</span>
+    <span class="n">clusters</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">interval_data</span><span class="o">.</span><span class="n">iter_rows</span><span class="p">(</span><span class="n">named</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">patient_eye_id</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;patient_eye_id&quot;</span><span class="p">]</span>
+        <span class="n">clusters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">patient_cluster_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">patient_eye_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+    
+    <span class="n">interval_data</span> <span class="o">=</span> <span class="n">interval_data</span><span class="o">.</span><span class="n">with_columns</span><span class="p">([</span>
+        <span class="n">pl</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="s2">&quot;cluster&quot;</span><span class="p">,</span> <span class="n">clusters</span><span class="p">)</span>
+    <span class="p">])</span>
+    
+    <span class="c1"># Filter to records with cluster assignments</span>
+    <span class="n">clustered_data</span> <span class="o">=</span> <span class="n">interval_data</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;cluster&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">is_not_null</span><span class="p">())</span>
+    
+    <span class="c1"># Convert cluster to integer</span>
+    <span class="n">clustered_data</span> <span class="o">=</span> <span class="n">clustered_data</span><span class="o">.</span><span class="n">with_columns</span><span class="p">([</span>
+        <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;cluster&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">Int64</span><span class="p">)</span>
+    <span class="p">])</span>
+    
+    <span class="c1"># Plot VA trajectories by cluster</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+    
+    <span class="c1"># Define cluster names</span>
+    <span class="n">cluster_names</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;Cluster 1: Moderate VA, Moderate Interval&quot;</span><span class="p">,</span>
+        <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;Cluster 2: Low VA, Moderate Interval&quot;</span><span class="p">,</span>
+        <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;Cluster 3: High VA, Short Interval&quot;</span><span class="p">,</span>
+        <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;Cluster 4: Long Gap Patients&quot;</span>
+    <span class="p">}</span>
+    
+    <span class="c1"># Sample patients from each cluster</span>
+    <span class="k">for</span> <span class="n">cluster_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="c1"># Get patients in this cluster</span>
+        <span class="n">cluster_patients</span> <span class="o">=</span> <span class="n">clustered_data</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;cluster&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">cluster_id</span><span class="p">)</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;uuid&quot;</span><span class="p">,</span> <span class="s2">&quot;eye&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+        
+        <span class="c1"># Sample up to 10 patients from each cluster</span>
+        <span class="n">sample_size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster_patients</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">sample_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Convert to numpy array for sampling</span>
+            <span class="n">cluster_patients_array</span> <span class="o">=</span> <span class="n">cluster_patients</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            
+            <span class="c1"># Get random sample of patient_eye_ids</span>
+            <span class="n">sample_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster_patients_array</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="n">sample_size</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">sample_patients</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">cluster_patients_array</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">cluster_patients_array</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> 
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sample_indices</span>
+            <span class="p">]</span>
+            
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">uuid</span><span class="p">,</span> <span class="n">eye</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sample_patients</span><span class="p">):</span>
+                <span class="c1"># Get data for this patient eye</span>
+                <span class="n">patient_data</span> <span class="o">=</span> <span class="n">clustered_data</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;uuid&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">uuid</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;eye&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">eye</span><span class="p">)</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;previous_date&quot;</span><span class="p">)</span>
+                
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">patient_data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                
+                <span class="c1"># Calculate days from first injection</span>
+                <span class="n">first_date</span> <span class="o">=</span> <span class="n">patient_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;previous_date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                
+                <span class="c1"># Create a time series of VA measurements</span>
+                <span class="n">days_from_first</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># First injection at day 0</span>
+                <span class="n">va_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">patient_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;prev_va&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>  <span class="c1"># First VA</span>
+                
+                <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">patient_data</span><span class="o">.</span><span class="n">iter_rows</span><span class="p">(</span><span class="n">named</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                    <span class="n">days_from_first</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;current_date&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">first_date</span><span class="p">)</span><span class="o">.</span><span class="n">days</span><span class="p">)</span>
+                    <span class="n">va_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;current_va&quot;</span><span class="p">])</span>
+                
+                <span class="c1"># Plot VA trajectory with low alpha</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                    <span class="n">days_from_first</span><span class="p">,</span> 
+                    <span class="n">va_values</span><span class="p">,</span> 
+                    <span class="s2">&quot;o-&quot;</span><span class="p">,</span> 
+                    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> 
+                    <span class="n">color</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;C</span><span class="si">{</span><span class="n">cluster_id</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+    
+    <span class="c1"># Add cluster averages</span>
+    <span class="k">for</span> <span class="n">cluster_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="c1"># Get data for this cluster</span>
+        <span class="n">cluster_data</span> <span class="o">=</span> <span class="n">clustered_data</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;cluster&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">cluster_id</span><span class="p">)</span>
+        
+        <span class="c1"># Group by days from first injection (binned) and calculate average VA</span>
+        <span class="n">max_days</span> <span class="o">=</span> <span class="mi">1000</span>  <span class="c1"># Limit to first 1000 days for clarity</span>
+        <span class="n">bin_size</span> <span class="o">=</span> <span class="mi">60</span>  <span class="c1"># 60-day bins</span>
+        
+        <span class="n">avg_va</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">days_bins</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">bin_start</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_days</span><span class="p">,</span> <span class="n">bin_size</span><span class="p">):</span>
+            <span class="n">bin_end</span> <span class="o">=</span> <span class="n">bin_start</span> <span class="o">+</span> <span class="n">bin_size</span>
+            
+            <span class="c1"># For each bin, we need to work with a fresh copy of the data</span>
+            <span class="n">bin_cluster_data</span> <span class="o">=</span> <span class="n">cluster_data</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+            
+            <span class="c1"># Get the first injection date for each patient</span>
+            <span class="n">first_dates</span> <span class="o">=</span> <span class="n">bin_cluster_data</span><span class="o">.</span><span class="n">group_by</span><span class="p">([</span><span class="s2">&quot;uuid&quot;</span><span class="p">,</span> <span class="s2">&quot;eye&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">agg</span><span class="p">([</span>
+                <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;previous_date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;first_date&quot;</span><span class="p">)</span>
+            <span class="p">])</span>
+            
+            <span class="c1"># Join with the cluster data</span>
+            <span class="n">bin_cluster_data_with_first</span> <span class="o">=</span> <span class="n">bin_cluster_data</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">first_dates</span><span class="p">,</span>
+                <span class="n">on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;uuid&quot;</span><span class="p">,</span> <span class="s2">&quot;eye&quot;</span><span class="p">],</span>
+                <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span>
+            <span class="p">)</span>
+            
+            <span class="c1"># Calculate days from first injection</span>
+            <span class="n">bin_cluster_data_with_days</span> <span class="o">=</span> <span class="n">bin_cluster_data_with_first</span><span class="o">.</span><span class="n">with_columns</span><span class="p">([</span>
+                <span class="p">((</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;current_date&quot;</span><span class="p">)</span> <span class="o">-</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;first_date&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">total_days</span><span class="p">())</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;days_from_first&quot;</span><span class="p">)</span>
+            <span class="p">])</span>
+            
+            <span class="n">bin_data</span> <span class="o">=</span> <span class="n">bin_cluster_data_with_days</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;days_from_first&quot;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">bin_start</span><span class="p">)</span> <span class="o">&amp;</span> 
+                <span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;days_from_first&quot;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">bin_end</span><span class="p">)</span>
+            <span class="p">)</span>
+            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>  <span class="c1"># Only include if we have enough data points</span>
+                <span class="n">avg_va_value</span> <span class="o">=</span> <span class="n">bin_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;current_va&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="n">avg_va</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">avg_va_value</span><span class="p">)</span>
+                <span class="n">days_bins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bin_start</span> <span class="o">+</span> <span class="n">bin_size</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Use bin midpoint</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">days_bins</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                <span class="n">days_bins</span><span class="p">,</span> 
+                <span class="n">avg_va</span><span class="p">,</span> 
+                <span class="s2">&quot;o-&quot;</span><span class="p">,</span> 
+                <span class="n">linewidth</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> 
+                <span class="n">color</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;C</span><span class="si">{</span><span class="n">cluster_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> 
+                <span class="n">label</span><span class="o">=</span><span class="n">cluster_names</span><span class="p">[</span><span class="n">cluster_id</span><span class="p">]</span>
+            <span class="p">)</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Visual Acuity Trajectories by PCA Cluster&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Days from First Injection&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Visual Acuity (letters)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">&quot;va_trajectories_by_pca_cluster.png&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1"># Plot VA change from baseline by cluster</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+    
+    <span class="k">for</span> <span class="n">cluster_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="c1"># Get data for this cluster</span>
+        <span class="n">cluster_data</span> <span class="o">=</span> <span class="n">clustered_data</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;cluster&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">cluster_id</span><span class="p">)</span>
+        
+        <span class="c1"># Calculate baseline VA for each patient (first VA measurement)</span>
+        <span class="n">baseline_va</span> <span class="o">=</span> <span class="n">cluster_data</span><span class="o">.</span><span class="n">group_by</span><span class="p">([</span><span class="s2">&quot;uuid&quot;</span><span class="p">,</span> <span class="s2">&quot;eye&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">agg</span><span class="p">([</span>
+            <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;prev_va&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;baseline_va&quot;</span><span class="p">)</span>
+        <span class="p">])</span>
+        
+        <span class="c1"># Join baseline VA with cluster data</span>
+        <span class="n">cluster_data_with_baseline</span> <span class="o">=</span> <span class="n">cluster_data</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">baseline_va</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;uuid&quot;</span><span class="p">,</span> <span class="s2">&quot;eye&quot;</span><span class="p">],</span>
+            <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># Calculate VA change from baseline</span>
+        <span class="n">cluster_data_with_baseline</span> <span class="o">=</span> <span class="n">cluster_data_with_baseline</span><span class="o">.</span><span class="n">with_columns</span><span class="p">([</span>
+            <span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;current_va&quot;</span><span class="p">)</span> <span class="o">-</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;baseline_va&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;va_change&quot;</span><span class="p">)</span>
+        <span class="p">])</span>
+        
+        <span class="c1"># Group by days from first injection (binned) and calculate average VA change</span>
+        <span class="n">max_days</span> <span class="o">=</span> <span class="mi">1000</span>  <span class="c1"># Limit to first 1000 days for clarity</span>
+        <span class="n">bin_size</span> <span class="o">=</span> <span class="mi">60</span>  <span class="c1"># 60-day bins</span>
+        
+        <span class="n">avg_va_change</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">std_va_change</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">days_bins</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">bin_start</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_days</span><span class="p">,</span> <span class="n">bin_size</span><span class="p">):</span>
+            <span class="n">bin_end</span> <span class="o">=</span> <span class="n">bin_start</span> <span class="o">+</span> <span class="n">bin_size</span>
+            
+            <span class="c1"># Calculate days from first injection for each patient</span>
+            <span class="c1"># For each bin, we need to work with a fresh copy of the data</span>
+            <span class="n">bin_baseline_data</span> <span class="o">=</span> <span class="n">cluster_data_with_baseline</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+            
+            <span class="c1"># Get the first injection date for each patient</span>
+            <span class="n">baseline_first_dates</span> <span class="o">=</span> <span class="n">bin_baseline_data</span><span class="o">.</span><span class="n">group_by</span><span class="p">([</span><span class="s2">&quot;uuid&quot;</span><span class="p">,</span> <span class="s2">&quot;eye&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">agg</span><span class="p">([</span>
+                <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;previous_date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;baseline_first_date&quot;</span><span class="p">)</span>
+            <span class="p">])</span>
+            
+            <span class="c1"># Join with the cluster data</span>
+            <span class="n">bin_baseline_data_with_first</span> <span class="o">=</span> <span class="n">bin_baseline_data</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">baseline_first_dates</span><span class="p">,</span>
+                <span class="n">on</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;uuid&quot;</span><span class="p">,</span> <span class="s2">&quot;eye&quot;</span><span class="p">],</span>
+                <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span>
+            <span class="p">)</span>
+            
+            <span class="c1"># Calculate days from first injection</span>
+            <span class="n">bin_baseline_data_with_days</span> <span class="o">=</span> <span class="n">bin_baseline_data_with_first</span><span class="o">.</span><span class="n">with_columns</span><span class="p">([</span>
+                <span class="p">((</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;current_date&quot;</span><span class="p">)</span> <span class="o">-</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;baseline_first_date&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">total_days</span><span class="p">())</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;days_from_first&quot;</span><span class="p">)</span>
+            <span class="p">])</span>
+            
+            <span class="c1"># Use the new DataFrame for filtering</span>
+            <span class="n">bin_data</span> <span class="o">=</span> <span class="n">bin_baseline_data_with_days</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;days_from_first&quot;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">bin_start</span><span class="p">)</span> <span class="o">&amp;</span> 
+                <span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;days_from_first&quot;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">bin_end</span><span class="p">)</span>
+            <span class="p">)</span>
+            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bin_data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>  <span class="c1"># Only include if we have enough data points</span>
+                <span class="n">avg_change</span> <span class="o">=</span> <span class="n">bin_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;va_change&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="n">std_change</span> <span class="o">=</span> <span class="n">bin_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;va_change&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">std</span><span class="p">()[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                
+                <span class="n">avg_va_change</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">avg_change</span><span class="p">)</span>
+                <span class="n">std_va_change</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">std_change</span><span class="p">)</span>
+                <span class="n">days_bins</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bin_start</span> <span class="o">+</span> <span class="n">bin_size</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Use bin midpoint</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">days_bins</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span>
+                <span class="n">days_bins</span><span class="p">,</span> 
+                <span class="n">avg_va_change</span><span class="p">,</span> 
+                <span class="n">yerr</span><span class="o">=</span><span class="n">std_va_change</span><span class="p">,</span> 
+                <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;o-&quot;</span><span class="p">,</span> 
+                <span class="n">capsize</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> 
+                <span class="n">color</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;C</span><span class="si">{</span><span class="n">cluster_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="n">cluster_names</span><span class="p">[</span><span class="n">cluster_id</span><span class="p">]</span>
+            <span class="p">)</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Visual Acuity Change from Baseline by PCA Cluster&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Days from First Injection&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;VA Change from Baseline (letters)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">&quot;va_change_by_pca_cluster.png&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_va_by_pca_cluster.main">[docs]</a>
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Main function.&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading data...&quot;</span><span class="p">)</span>
+    <span class="n">interval_data</span> <span class="o">=</span> <span class="n">load_interval_data</span><span class="p">()</span>
+    <span class="n">cluster_df</span> <span class="o">=</span> <span class="n">load_cluster_assignments</span><span class="p">()</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Visualizing VA trajectories by PCA cluster...&quot;</span><span class="p">)</span>
+    <span class="n">visualize_va_trajectories_by_cluster</span><span class="p">(</span><span class="n">interval_data</span><span class="p">,</span> <span class="n">cluster_df</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Visualization complete.&quot;</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Rose.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
