@@ -92,19 +92,35 @@ class PatientState:
     Attributes
     ----------
     MAX_TREATMENTS_IN_PHASE : int
-        Maximum allowed treatments in a phase
+        Maximum allowed treatments in a phase (default: 1000)
     patient_id : str
         Unique identifier for the patient
     state : Dict
         Dictionary containing all patient state information including:
-        - protocol: Treatment protocol name
-        - current_step: Current treatment phase
-        - visits: Total number of visits
-        - injections: Total number of injections
-        - baseline_vision: Initial visual acuity
-        - current_vision: Current visual acuity
-        - disease_state: Current disease state
-        And various other tracking variables
+            - protocol: Treatment protocol name
+            - current_step: Current treatment phase
+            - visits: Total number of visits
+            - injections: Total number of injections
+            - baseline_vision: Initial visual acuity
+            - current_vision: Current visual acuity
+            - disease_state: Current disease state
+            - last_visit_date: Date of last visit
+            - next_visit_interval: Weeks until next visit
+            - treatment_start: Date treatment began
+            - visit_history: List of all visits
+            - best_vision_achieved: Highest vision recorded
+            - last_treatment_response: Most recent treatment response
+            - treatment_response_history: List of all responses
+            - weeks_since_last_injection: Weeks since last injection
+            - last_injection_date: Date of last injection
+
+    Notes
+    -----
+    The state dictionary maintains a complete record of the patient's:
+    - Treatment history and responses
+    - Vision measurements over time
+    - Disease progression
+    - Visit schedule and history
     """
     
     def __init__(self, patient_id: str, protocol_name: str, initial_vision: float, 

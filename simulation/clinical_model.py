@@ -24,7 +24,7 @@ Key Features
 - Injection vs non-injection visit differentiation
 
 Mathematical Model
------------------
+------------------
 Vision change is calculated as:
     ΔV = (B × T × C) + N
 Where:
@@ -35,7 +35,7 @@ Where:
     N: Measurement noise (normally distributed)
 
 State Transitions
-----------------
+-----------------
 NAIVE → STABLE: 30%
 NAIVE → ACTIVE: 60% 
 NAIVE → HIGHLY_ACTIVE: 10%
@@ -64,7 +64,7 @@ class DiseaseState(Enum):
     """:no-index:
     Disease states for AMD progression.
 
-    Enumeration of possible disease states in the AMD progression model:
+    Enumeration of possible disease states in the AMD progression model.
 
     Attributes
     ----------
@@ -134,6 +134,14 @@ class ClinicalModel:
             - time_factor: Effect of time since last injection
             - ceiling_factor: Vision ceiling effect
             - measurement_noise: Random variability
+
+    Notes
+    -----
+    The model captures key clinical aspects of AMD progression:
+    1. State-dependent response to treatment
+    2. Waning of treatment effect over time
+    3. Diminishing returns at higher vision levels
+    4. Realistic measurement variability
     """
     
     def __init__(self, config: SimulationConfig):

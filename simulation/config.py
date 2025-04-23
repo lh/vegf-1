@@ -18,7 +18,7 @@ Key Features
 - Type checking and range validation
 
 Configuration Structure
-----------------------
+----------------------- 
 Example YAML configuration structure:
 ```yaml
 simulation:

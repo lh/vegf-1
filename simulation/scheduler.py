@@ -133,7 +133,7 @@ class ClinicScheduler:
     
     def schedule_next_visit(self, event_factory: Callable, patient_id: str, 
                           last_visit: datetime, next_visit_interval: int) -> Optional[Event]:
-        """
+        """:no-index:
         Schedule the next visit for a patient.
 
         Creates a new visit event for a patient based on their last visit and
