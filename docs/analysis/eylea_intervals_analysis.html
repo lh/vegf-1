@@ -59,20 +59,7 @@
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="eylea_data_analysis.html">Eylea Data Analysis Module</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Eylea Intervals Analysis Module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.connect_to_db"><code class="docutils literal notranslate"><span class="pre">connect_to_db()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.load_interval_data"><code class="docutils literal notranslate"><span class="pre">load_interval_data()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.load_interval_summary"><code class="docutils literal notranslate"><span class="pre">load_interval_summary()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.analyze_first_year_injections"><code class="docutils literal notranslate"><span class="pre">analyze_first_year_injections()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.identify_treatment_groups"><code class="docutils literal notranslate"><span class="pre">identify_treatment_groups()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.cluster_treatment_patterns"><code class="docutils literal notranslate"><span class="pre">cluster_treatment_patterns()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.analyze_intervals_by_group"><code class="docutils literal notranslate"><span class="pre">analyze_intervals_by_group()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.prepare_va_interval_data_for_pca"><code class="docutils literal notranslate"><span class="pre">prepare_va_interval_data_for_pca()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.perform_va_interval_pca"><code class="docutils literal notranslate"><span class="pre">perform_va_interval_pca()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.analyze_va_by_group"><code class="docutils literal notranslate"><span class="pre">analyze_va_by_group()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Eylea Intervals Analysis Module</a></li>
 </ul>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../protocols/visit_types.html">Visit Types Configuration</a></li>
@@ -108,7 +95,7 @@
              
   <section id="eylea-intervals-analysis-module">
 <h1>Eylea Intervals Analysis Module<a class="headerlink" href="#eylea-intervals-analysis-module" title="Link to this heading"></a></h1>
-<p id="module-analysis.eylea_intervals_analysis">Eylea Injection Intervals Analysis</p>
+<p>Eylea Injection Intervals Analysis</p>
 <p>This script analyzes the injection intervals data from the SQLite database
 to identify patterns in treatment, specifically looking for two groups:
 - Group LH: 7 injections in first year, then continuing with injections every ~2 months
@@ -116,8 +103,8 @@ to identify patterns in treatment, specifically looking for two groups:
 <p>The script also performs Principal Component Analysis (PCA) to identify patterns
 in treatment intervals and visual acuity measures (previous VA, current VA, next VA).</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.connect_to_db">
-<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">connect_to_db</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#connect_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.connect_to_db" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">connect_to_db</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#connect_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Connect to the SQLite database.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -127,8 +114,8 @@ in treatment intervals and visual acuity measures (previous VA, current VA, next
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.load_interval_data">
-<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">load_interval_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#load_interval_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.load_interval_data" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">load_interval_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#load_interval_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Load the interval_va_data table into a Polars DataFrame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -138,8 +125,8 @@ in treatment intervals and visual acuity measures (previous VA, current VA, next
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.load_interval_summary">
-<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">load_interval_summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#load_interval_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.load_interval_summary" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">load_interval_summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#load_interval_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Load the interval_summary table into a Polars DataFrame.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -149,8 +136,8 @@ in treatment intervals and visual acuity measures (previous VA, current VA, next
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.analyze_first_year_injections">
-<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">analyze_first_year_injections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#analyze_first_year_injections"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.analyze_first_year_injections" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">analyze_first_year_injections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#analyze_first_year_injections"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Analyze the first year of injections for each patient.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -169,8 +156,8 @@ in treatment intervals and visual acuity measures (previous VA, current VA, next
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.identify_treatment_groups">
-<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">identify_treatment_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#identify_treatment_groups"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.identify_treatment_groups" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">identify_treatment_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#identify_treatment_groups"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Identify the two treatment groups:
 - Group LH: 7 injections in first year, then continuing with injections every ~2 months
 - Group MR: 7 injections in first year, then a pause before resumption of treatment</p>
@@ -191,8 +178,8 @@ in treatment intervals and visual acuity measures (previous VA, current VA, next
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.cluster_treatment_patterns">
-<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">cluster_treatment_patterns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#cluster_treatment_patterns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.cluster_treatment_patterns" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">cluster_treatment_patterns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#cluster_treatment_patterns"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Use K-means clustering to identify treatment pattern groups.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -211,8 +198,8 @@ in treatment intervals and visual acuity measures (previous VA, current VA, next
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.analyze_intervals_by_group">
-<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">analyze_intervals_by_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#analyze_intervals_by_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.analyze_intervals_by_group" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">analyze_intervals_by_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#analyze_intervals_by_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Analyze and visualize injection intervals by treatment group.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -233,8 +220,8 @@ interval_data: Raw interval data</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.prepare_va_interval_data_for_pca">
-<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">prepare_va_interval_data_for_pca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#prepare_va_interval_data_for_pca"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.prepare_va_interval_data_for_pca" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">prepare_va_interval_data_for_pca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#prepare_va_interval_data_for_pca"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Prepare data for PCA analysis by calculating next VA for each record.</p>
 <p>This function processes the interval data to create a dataset with:
 - treatment_interval (interval_days)
@@ -258,8 +245,8 @@ interval_data: Raw interval data</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.perform_va_interval_pca">
-<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">perform_va_interval_pca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#perform_va_interval_pca"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.perform_va_interval_pca" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">perform_va_interval_pca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#perform_va_interval_pca"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Perform PCA analysis on treatment intervals and visual acuity measures.</p>
 <p>This function identifies patterns in:
 - Treatment interval
@@ -281,8 +268,8 @@ interval_data: Raw interval data</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.analyze_va_by_group">
-<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">analyze_va_by_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#analyze_va_by_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.analyze_va_by_group" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">analyze_va_by_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#analyze_va_by_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Analyze and visualize visual acuity by treatment group.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -303,8 +290,8 @@ interval_data: Raw interval data</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.main">
-<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.main" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Main analysis function.</p>
 </dd></dl>
 

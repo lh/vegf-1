@@ -187,19 +187,35 @@
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    MAX_TREATMENTS_IN_PHASE : int</span>
-<span class="sd">        Maximum allowed treatments in a phase</span>
+<span class="sd">        Maximum allowed treatments in a phase (default: 1000)</span>
 <span class="sd">    patient_id : str</span>
 <span class="sd">        Unique identifier for the patient</span>
 <span class="sd">    state : Dict</span>
 <span class="sd">        Dictionary containing all patient state information including:</span>
-<span class="sd">        - protocol: Treatment protocol name</span>
-<span class="sd">        - current_step: Current treatment phase</span>
-<span class="sd">        - visits: Total number of visits</span>
-<span class="sd">        - injections: Total number of injections</span>
-<span class="sd">        - baseline_vision: Initial visual acuity</span>
-<span class="sd">        - current_vision: Current visual acuity</span>
-<span class="sd">        - disease_state: Current disease state</span>
-<span class="sd">        And various other tracking variables</span>
+<span class="sd">            - protocol: Treatment protocol name</span>
+<span class="sd">            - current_step: Current treatment phase</span>
+<span class="sd">            - visits: Total number of visits</span>
+<span class="sd">            - injections: Total number of injections</span>
+<span class="sd">            - baseline_vision: Initial visual acuity</span>
+<span class="sd">            - current_vision: Current visual acuity</span>
+<span class="sd">            - disease_state: Current disease state</span>
+<span class="sd">            - last_visit_date: Date of last visit</span>
+<span class="sd">            - next_visit_interval: Weeks until next visit</span>
+<span class="sd">            - treatment_start: Date treatment began</span>
+<span class="sd">            - visit_history: List of all visits</span>
+<span class="sd">            - best_vision_achieved: Highest vision recorded</span>
+<span class="sd">            - last_treatment_response: Most recent treatment response</span>
+<span class="sd">            - treatment_response_history: List of all responses</span>
+<span class="sd">            - weeks_since_last_injection: Weeks since last injection</span>
+<span class="sd">            - last_injection_date: Date of last injection</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The state dictionary maintains a complete record of the patient&#39;s:</span>
+<span class="sd">    - Treatment history and responses</span>
+<span class="sd">    - Vision measurements over time</span>
+<span class="sd">    - Disease progression</span>
+<span class="sd">    - Visit schedule and history</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
 <div class="viewcode-block" id="PatientState.__init__">

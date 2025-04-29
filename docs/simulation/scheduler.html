@@ -232,7 +232,22 @@ considering both clinic working days and daily capacity constraints.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="simulation.scheduler.ClinicScheduler.schedule_next_visit">
 <span class="sig-name descname"><span class="pre">schedule_next_visit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_factory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patient_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_visit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next_visit_interval</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/scheduler.html#ClinicScheduler.schedule_next_visit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.scheduler.ClinicScheduler.schedule_next_visit" title="Link to this definition"></a></dt>
-<dd><p>Schedule the next visit for a patient.</p>
+<dd><dl class="field-list simple">
+<dt class="field-odd">No-index<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>event_factory</strong> (<em>Callable</em>)</p></li>
+<li><p><strong>patient_id</strong> (<em>str</em>)</p></li>
+<li><p><strong>last_visit</strong> (<em>datetime</em>)</p></li>
+<li><p><strong>next_visit_interval</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="index.html#simulation.base.Event" title="simulation.base.Event"><em>Event</em></a> | None</p>
+</dd>
+</dl>
+<p>Schedule the next visit for a patient.</p>
 <p>Creates a new visit event for a patient based on their last visit and
 the specified interval.</p>
 <dl class="field-list simple">

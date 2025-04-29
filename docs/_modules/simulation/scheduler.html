@@ -236,7 +236,7 @@
 <a class="viewcode-back" href="../../simulation/scheduler.html#simulation.scheduler.ClinicScheduler.schedule_next_visit">[docs]</a>
     <span class="k">def</span> <span class="nf">schedule_next_visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_factory</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">patient_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> 
                           <span class="n">last_visit</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">next_visit_interval</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;:no-index:</span>
 <span class="sd">        Schedule the next visit for a patient.</span>
 
 <span class="sd">        Creates a new visit event for a patient based on their last visit and</span>
@@ -279,6 +279,7 @@
 <span class="sd">        - Handles week-to-day conversion automatically</span>
 <span class="sd">        - Returns None if calculated visit would be after simulation end</span>
 <span class="sd">        - Visit intervals must be positive integers</span>
+<span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Calculate next visit time based on last visit</span>
         <span class="n">next_time</span> <span class="o">=</span> <span class="n">last_visit</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">weeks</span><span class="o">=</span><span class="n">next_visit_interval</span><span class="p">)</span>

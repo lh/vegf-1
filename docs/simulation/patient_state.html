@@ -214,7 +214,7 @@ progression.</p>
 </dd>
 <dt class="field-even">Variables<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>MAX_TREATMENTS_IN_PHASE</strong> (<em>int</em>) – Maximum allowed treatments in a phase</p></li>
+<li><p><strong>MAX_TREATMENTS_IN_PHASE</strong> (<em>int</em>) – Maximum allowed treatments in a phase (default: 1000)</p></li>
 <li><p><strong>patient_id</strong> (<em>str</em>) – Unique identifier for the patient</p></li>
 <li><p><strong>state</strong> (<em>Dict</em>) – Dictionary containing all patient state information including:
 - protocol: Treatment protocol name
@@ -224,10 +224,26 @@ progression.</p>
 - baseline_vision: Initial visual acuity
 - current_vision: Current visual acuity
 - disease_state: Current disease state
-And various other tracking variables</p></li>
+- last_visit_date: Date of last visit
+- next_visit_interval: Weeks until next visit
+- treatment_start: Date treatment began
+- visit_history: List of all visits
+- best_vision_achieved: Highest vision recorded
+- last_treatment_response: Most recent treatment response
+- treatment_response_history: List of all responses
+- weeks_since_last_injection: Weeks since last injection
+- last_injection_date: Date of last injection</p></li>
 </ul>
 </dd>
 </dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>The state dictionary maintains a complete record of the patient’s:
+- Treatment history and responses
+- Vision measurements over time
+- Disease progression
+- Visit schedule and history</p>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="simulation.patient_state.PatientState.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">patient_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_vision</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/patient_state.html#PatientState.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.patient_state.PatientState.__init__" title="Link to this definition"></a></dt>

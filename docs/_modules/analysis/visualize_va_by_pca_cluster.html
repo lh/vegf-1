@@ -91,11 +91,29 @@
            <div itemprop="articleBody">
              
   <h1>Source code for analysis.visualize_va_by_pca_cluster</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Visualize Visual Acuity Trajectories by PCA Cluster</span>
+<span></span><span class="sd">&quot;&quot;&quot;Visualize Visual Acuity Trajectories by PCA Cluster.</span>
 
-<span class="sd">This script creates visualizations of visual acuity trajectories over time</span>
-<span class="sd">for patients in each of the 4 clusters identified by PCA analysis.</span>
+<span class="sd">This module creates visualizations of visual acuity (VA) trajectories over time</span>
+<span class="sd">for patients grouped by clusters identified through PCA analysis.</span>
+
+<span class="sd">The visualizations include:</span>
+<span class="sd">- Individual VA trajectories for sampled patients from each cluster</span>
+<span class="sd">- Average VA trajectories with standard deviation bands</span>
+<span class="sd">- VA change from baseline plots</span>
+
+<span class="sd">Notes</span>
+<span class="sd">-----</span>
+<span class="sd">The analysis expects:</span>
+<span class="sd">1. A SQLite database with interval VA data</span>
+<span class="sd">2. A CSV file with cluster assignments from PCA analysis</span>
+<span class="sd">3. Output directory for saving plots</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; python visualize_va_by_pca_cluster.py</span>
+<span class="sd">Generates plots in output/analysis_results directory:</span>
+<span class="sd">- va_trajectories_by_pca_cluster.png</span>
+<span class="sd">- va_change_by_pca_cluster.png</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">polars</span> <span class="k">as</span> <span class="nn">pl</span>
@@ -115,14 +133,43 @@
 <div class="viewcode-block" id="connect_to_db">
 <a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_va_by_pca_cluster.connect_to_db">[docs]</a>
 <span class="k">def</span> <span class="nf">connect_to_db</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">Connection</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Connect to the SQLite database.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Establish connection to the SQLite database containing VA data.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sqlite3.Connection</span>
+<span class="sd">        Active database connection object</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The database path is defined by the DB_PATH constant.</span>
+<span class="sd">    Connection should be closed by the caller when done.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">DB_PATH</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="load_interval_data">
 <a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_va_by_pca_cluster.load_interval_data">[docs]</a>
 <span class="k">def</span> <span class="nf">load_interval_data</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load the interval_va_data table into a Polars DataFrame.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load interval VA data from SQLite database into Polars DataFrame.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pl.DataFrame</span>
+<span class="sd">        DataFrame containing:</span>
+<span class="sd">        - uuid: Patient identifier</span>
+<span class="sd">        - eye: Eye (left/right)</span>
+<span class="sd">        - previous_date: Previous visit date</span>
+<span class="sd">        - current_date: Current visit date  </span>
+<span class="sd">        - prev_va: Previous visual acuity</span>
+<span class="sd">        - current_va: Current visual acuity</span>
+<span class="sd">        - interval_days: Days between visits</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Automatically converts date strings to datetime objects</span>
+<span class="sd">    - Closes database connection when done</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">conn</span> <span class="o">=</span> <span class="n">connect_to_db</span><span class="p">()</span>
     
     <span class="c1"># Use Polars to read from SQLite</span>
@@ -142,7 +189,25 @@
 <div class="viewcode-block" id="load_cluster_assignments">
 <a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_va_by_pca_cluster.load_cluster_assignments">[docs]</a>
 <span class="k">def</span> <span class="nf">load_cluster_assignments</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load the cluster assignments from the PCA analysis.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load patient cluster assignments from PCA analysis results.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pl.DataFrame</span>
+<span class="sd">        DataFrame containing:</span>
+<span class="sd">        - uuid: Patient identifier</span>
+<span class="sd">        - eye: Eye (left/right)</span>
+<span class="sd">        - cluster: PCA cluster assignment (0-3)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Reads from output/analysis_results/va_interval_clusters_4.csv</span>
+<span class="sd">    - Cluster meanings:</span>
+<span class="sd">      0: Moderate VA, Moderate Interval</span>
+<span class="sd">      1: Low VA, Moderate Interval</span>
+<span class="sd">      2: High VA, Short Interval</span>
+<span class="sd">      3: Long Gap Patients</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Load the 4-cluster assignments</span>
     <span class="n">cluster_df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">&quot;va_interval_clusters_4.csv&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">cluster_df</span></div>
@@ -151,12 +216,42 @@
 <div class="viewcode-block" id="visualize_va_trajectories_by_cluster">
 <a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_va_by_pca_cluster.visualize_va_trajectories_by_cluster">[docs]</a>
 <span class="k">def</span> <span class="nf">visualize_va_trajectories_by_cluster</span><span class="p">(</span><span class="n">interval_data</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">cluster_df</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Visualize visual acuity trajectories by PCA cluster.</span>
-<span class="sd">    </span>
-<span class="sd">    Args:</span>
-<span class="sd">        interval_data: Raw interval data</span>
-<span class="sd">        cluster_df: DataFrame with cluster assignments</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate visualizations of VA trajectories grouped by PCA clusters.</span>
+
+<span class="sd">    Creates two plots:</span>
+<span class="sd">    1. Individual VA trajectories with cluster averages</span>
+<span class="sd">    2. VA change from baseline with standard deviation bands</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    interval_data : pl.DataFrame</span>
+<span class="sd">        DataFrame containing interval VA data with columns:</span>
+<span class="sd">        - uuid: Patient identifier</span>
+<span class="sd">        - eye: Eye (left/right)</span>
+<span class="sd">        - previous_date: Previous visit date</span>
+<span class="sd">        - current_date: Current visit date</span>
+<span class="sd">        - prev_va: Previous visual acuity</span>
+<span class="sd">        - current_va: Current visual acuity</span>
+<span class="sd">        - interval_days: Days between visits</span>
+
+<span class="sd">    cluster_df : pl.DataFrame</span>
+<span class="sd">        DataFrame containing cluster assignments with columns:</span>
+<span class="sd">        - uuid: Patient identifier</span>
+<span class="sd">        - eye: Eye (left/right)</span>
+<span class="sd">        - cluster: PCA cluster assignment (0-3)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+<span class="sd">        Saves plots to output/analysis_results directory:</span>
+<span class="sd">        - va_trajectories_by_pca_cluster.png</span>
+<span class="sd">        - va_change_by_pca_cluster.png</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Samples up to 10 patients per cluster for individual trajectories</span>
+<span class="sd">    - Uses 60-day bins for calculating averages</span>
+<span class="sd">    - Limits visualization to first 1000 days for clarity</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Create a unique identifier for each patient-eye combination in both dataframes</span>
     <span class="n">interval_data</span> <span class="o">=</span> <span class="n">interval_data</span><span class="o">.</span><span class="n">with_columns</span><span class="p">([</span>
