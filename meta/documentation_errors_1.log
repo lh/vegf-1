@@ -1,0 +1,73 @@
+simulation/patient_state
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.DiseaseState:23: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel:2: WARNING: Field list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel:22: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel:25: WARNING: Block quote ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel.simulate_disease_progression:23: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel.simulate_disease_progression:26: WARNING: Block quote ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/docs/simulation/index.rst:2: WARNING: Title underline too short.
+
+Simulation Modules
+=================
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state:2: WARNING: Field list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state:1: WARNING: duplicate object description of simulation.patient_state, other instance in simulation/patient_state, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState:1: WARNING: duplicate object description of simulation.patient_state.PatientState, other instance in simulation/patient_state, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState:2: WARNING: Field list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.__init__:1: WARNING: duplicate object description of simulation.patient_state.PatientState.__init__, other instance in simulation/patient_state, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.process_visit:1: WARNING: duplicate object description of simulation.patient_state.PatientState.process_visit, other instance in simulation/patient_state, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.process_visit:17: WARNING: Definition list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.update_phase:1: WARNING: duplicate object description of simulation.patient_state.PatientState.update_phase, other instance in simulation/patient_state, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.set_next_visit_interval:1: WARNING: duplicate object description of simulation.patient_state.PatientState.set_next_visit_interval, other instance in simulation/patient_state, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.visit_history:1: WARNING: duplicate object description of simulation.patient_state.PatientState.visit_history, other instance in simulation/patient_state, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.current_vision:1: WARNING: duplicate object description of simulation.patient_state.PatientState.current_vision, other instance in simulation/patient_state, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.last_visit_date:1: WARNING: duplicate object description of simulation.patient_state.PatientState.last_visit_date, other instance in simulation/patient_state, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.next_visit_interval:1: WARNING: duplicate object description of simulation.patient_state.PatientState.next_visit_interval, other instance in simulation/patient_state, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/scheduler.py:docstring of simulation.scheduler.ClinicScheduler.request_slot:33: CRITICAL: Unexpected section title.
+
+Algorithm
+---------
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:25: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:22: WARNING: Inline literal start-string without end-string.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:22: WARNING: Inline interpreted text or phrase reference start-string without end-string.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:32: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:40: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:47: WARNING: Block quote ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:59: WARNING: Definition list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:60: WARNING: Definition list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:60: WARNING: Inline literal start-string without end-string.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:60: WARNING: Inline interpreted text or phrase reference start-string without end-string.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.get_des_params:7: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.DiseaseState:23: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel:2: WARNING: Field list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel:22: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel:25: WARNING: Block quote ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel.simulate_disease_progression:23: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel.simulate_disease_progression:26: WARNING: Block quote ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state:2: WARNING: Field list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state:1: WARNING: duplicate object description of simulation.patient_state, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState:1: WARNING: duplicate object description of simulation.patient_state.PatientState, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState:2: WARNING: Field list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.__init__:1: WARNING: duplicate object description of simulation.patient_state.PatientState.__init__, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.process_visit:1: WARNING: duplicate object description of simulation.patient_state.PatientState.process_visit, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.process_visit:17: WARNING: Definition list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.update_phase:1: WARNING: duplicate object description of simulation.patient_state.PatientState.update_phase, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.set_next_visit_interval:1: WARNING: duplicate object description of simulation.patient_state.PatientState.set_next_visit_interval, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.visit_history:1: WARNING: duplicate object description of simulation.patient_state.PatientState.visit_history, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.current_vision:1: WARNING: duplicate object description of simulation.patient_state.PatientState.current_vision, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.last_visit_date:1: WARNING: duplicate object description of simulation.patient_state.PatientState.last_visit_date, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.next_visit_interval:1: WARNING: duplicate object description of simulation.patient_state.PatientState.next_visit_interval, other instance in simulation/index, use :no-index: for one of them
+looking for now-outdated files... none found
+pickling environment... done
+checking consistency... done
+preparing documents... done
+copying assets... copying static files... done
+copying extra files... done
+done
+writing output... [100%] simulation/patient_state
+generating indices... genindex py-modindex done
+highlighting module code... [ 38%] analysis.visualize_va_change_by_clust
+highlighting module code... [100%] visualization.acuity_viz
+writing additional pages... search done
+dumping search index in English (code: en)... done
+dumping object inventory... done
+build succeeded, 51 warnings.

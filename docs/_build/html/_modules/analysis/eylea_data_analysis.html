@@ -92,6 +92,7 @@
              
   <h1>Source code for analysis.eylea_data_analysis</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Analysis of intravitreal Eylea injection treatment patterns and outcomes.</span>
+<span class="sd">============================================================================</span>
 
 <span class="sd">This module provides tools for analyzing real-world data from intravitreal Eylea</span>
 <span class="sd">injections to derive parameters for simulation models. The analysis includes:</span>
@@ -104,7 +105,7 @@
 <span class="sd">- Data visualization and export</span>
 
 <span class="sd">Key Features</span>
-<span class="sd">-----------</span>
+<span class="sd">------------</span>
 <span class="sd">- Robust data validation with flexible column name mapping</span>
 <span class="sd">- Comprehensive data quality reporting</span>
 <span class="sd">- Detailed analysis of treatment intervals and patterns</span>
@@ -1461,11 +1462,11 @@
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
 <span class="sd">        Plot 1 (Histogram):</span>
-<span class="sd">        - Shows distribution of all injection intervals</span>
-<span class="sd">        - Includes reference lines at:</span>
-<span class="sd">          * 28 days (monthly)</span>
-<span class="sd">          * 56 days (bi-monthly) </span>
-<span class="sd">          * 84 days (quarterly)</span>
+<span class="sd">            - Shows distribution of all injection intervals</span>
+<span class="sd">            - Includes reference lines at:</span>
+<span class="sd">                * 28 days (monthly)</span>
+<span class="sd">                * 56 days (bi-monthly) </span>
+<span class="sd">                * 84 days (quarterly)</span>
 
 <span class="sd">        Plot 2 (Sequence):</span>
 <span class="sd">        - Shows mean ± SD and median intervals by injection number</span>
@@ -1656,22 +1657,22 @@
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
 <span class="sd">        Plot 1 (Histogram):</span>
-<span class="sd">        - Shows distribution of final VA changes from baseline</span>
-<span class="sd">        - Includes reference lines at:</span>
-<span class="sd">          * 0 (no change)</span>
-<span class="sd">          * ±5 letters (gain/loss)</span>
-<span class="sd">          * ±15 letters (significant gain/loss)</span>
+<span class="sd">            - Shows distribution of final VA changes from baseline</span>
+<span class="sd">            - Includes reference lines at:</span>
+<span class="sd">                * 0 (no change)</span>
+<span class="sd">                * ±5 letters (gain/loss)</span>
+<span class="sd">                * ±15 letters (significant gain/loss)</span>
 
 <span class="sd">        Plot 2 (Categories):</span>
-<span class="sd">        - Groups outcomes into clinically relevant categories</span>
-<span class="sd">        - Shows counts and percentages for each category</span>
-<span class="sd">        - Categories:</span>
-<span class="sd">          * ≥15 letter gain</span>
-<span class="sd">          * 5-14 letter gain</span>
-<span class="sd">          * Stable (-4 to +4)</span>
-<span class="sd">          * 5-14 letter loss</span>
-<span class="sd">          * ≥15 letter loss</span>
-<span class="sd">          * Unknown</span>
+<span class="sd">            - Groups outcomes into clinically relevant categories</span>
+<span class="sd">            - Shows counts and percentages for each category</span>
+<span class="sd">            - Categories:</span>
+<span class="sd">                * ≥15 letter gain</span>
+<span class="sd">                * 5-14 letter gain</span>
+<span class="sd">                * Stable (-4 to +4)</span>
+<span class="sd">                * 5-14 letter loss</span>
+<span class="sd">                * ≥15 letter loss</span>
+<span class="sd">                * Unknown</span>
 
 <span class="sd">        Automatically calls analyze_va_trajectories() if needed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>

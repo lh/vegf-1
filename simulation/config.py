@@ -69,7 +69,7 @@ Notes
 
 from dataclasses import dataclass
 from typing import Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 from protocols.protocol_parser import ProtocolParser
 from protocol_models import TreatmentProtocol
 import logging
@@ -80,6 +80,8 @@ logger = logging.getLogger(__name__)
 class SimulationConfig:
     """
     Configuration for a simulation run with protocol objects.
+    
+    Added direct initialization support for testing purposes.
 
     This class encapsulates all configuration parameters needed to run a simulation,
     including treatment protocols, patient parameters, and resource constraints.
@@ -319,6 +321,19 @@ class SimulationConfig:
             "oct_machines": 5
         }
     
+    def get_simulation_params(self) -> Dict[str, Any]:
+        """Get general simulation parameters.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Simulation parameters including:
+            - end_date: datetime (calculated from start_date + duration_days)
+        """
+        return {
+            "end_date": self.start_date + timedelta(days=self.duration_days)
+        }
+
     def get_des_params(self) -> Dict[str, Any]:
         """Get DES-specific parameters.
 

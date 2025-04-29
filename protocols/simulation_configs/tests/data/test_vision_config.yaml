@@ -1,0 +1,70 @@
+name: Vision Recording Test
+description: Test configuration for vision data recording
+
+protocol:
+  agent: eylea
+  type: test_simulation
+  parameter_set: vision_test
+
+simulation:
+  type: agent_based
+  duration_days: 365
+  num_patients: 1
+  random_seed: 42
+  start_date: "2023-01-01"
+
+  # DES-specific settings
+  scheduling:
+    daily_capacity: 20
+    days_per_week: 5
+
+  # Clinical model settings
+  clinical_model:
+    disease_states:
+      - NAIVE
+      - STABLE
+      - ACTIVE
+      - HIGHLY_ACTIVE
+    transition_probabilities:
+      NAIVE:
+        NAIVE: 0.0
+        STABLE: 0.35
+        ACTIVE: 0.6
+        HIGHLY_ACTIVE: 0.05
+      STABLE:
+        STABLE: 0.88
+        ACTIVE: 0.12
+        HIGHLY_ACTIVE: 0.0
+      ACTIVE:
+        STABLE: 0.2
+        ACTIVE: 0.75
+        HIGHLY_ACTIVE: 0.05
+      HIGHLY_ACTIVE:
+        STABLE: 0.1
+        ACTIVE: 0.3
+        HIGHLY_ACTIVE: 0.6
+    vision_change:
+      base_change:
+        NAIVE:
+          injection: [5, 2]
+          no_injection: [0, 0.5]
+        ACTIVE:
+          injection: [3, 1.5]
+          no_injection: [-2, 1]
+        STABLE:
+          injection: [1, 0.5]
+          no_injection: [-0.5, 0.5]
+        HIGHLY_ACTIVE:
+          injection: [2, 1]
+          no_injection: [-3, 1]
+      time_factor:
+        max_weeks: 52
+      ceiling_factor:
+        max_vision: 85
+      measurement_noise: [0, 2]
+
+output:
+  save_results: false
+  database: "memory"
+  plots: false
+  verbose: false

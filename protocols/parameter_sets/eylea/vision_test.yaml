@@ -1,0 +1,89 @@
+name: Standard Eylea Parameters
+description: Default parameters for Eylea protocols
+version: 1.0
+
+protocol_specific:
+  clinical_model:
+    disease_states:
+      - NAIVE
+      - STABLE
+      - ACTIVE
+      - HIGHLY_ACTIVE
+    transition_probabilities:
+      NAIVE:
+        NAIVE: 0.0
+        STABLE: 0.35
+        ACTIVE: 0.6
+        HIGHLY_ACTIVE: 0.05
+      STABLE:
+        STABLE: 0.88
+        ACTIVE: 0.12
+        HIGHLY_ACTIVE: 0.0
+      ACTIVE:
+        STABLE: 0.2
+        ACTIVE: 0.75
+        HIGHLY_ACTIVE: 0.05
+      HIGHLY_ACTIVE:
+        STABLE: 0.1
+        ACTIVE: 0.3
+        HIGHLY_ACTIVE: 0.6
+    vision_change:
+      base_change:
+        NAIVE:
+          injection: [5, 2]
+          no_injection: [0, 0.5]
+        ACTIVE:
+          injection: [3, 1.5]
+          no_injection: [-2, 1]
+      time_factor:
+        max_weeks: 52
+      ceiling_factor:
+        max_vision: 85
+      measurement_noise: [0, 2]
+  treatment_response:
+    loading_phase:
+      vision_improvement_mean: 8
+      vision_improvement_sd: 3
+      treatment_response_factor: 1.2
+      improve_probability: 0.25
+      stable_probability: 0.70
+      decline_probability: 0.05
+      decline_mean: -3
+      decline_sd: 1
+    maintenance_phase:
+      vision_stability_threshold: 5
+      disease_recurrence_base_risk: 0.2
+      risk_increase_per_week: 0.05
+      decline_probability: 0.15
+      decline_effect_mean: -1.5
+      decline_effect_sd: 0.3
+      memory_factor: 0.7
+      base_effect_ceiling: 5
+      regression_factor: 0.8
+      random_effect_mean: 0.5
+      random_effect_sd: 0.4
+  oct_parameters:
+    baseline_thickness_mean: 250
+    baseline_thickness_sd: 30
+    treatment_effect_mean: 50
+    treatment_effect_sd: 10
+    change_thresholds:
+      high_risk: 50
+      medium_risk: 25
+    thickness_thresholds:
+      high_risk: 300
+      medium_risk: 275
+    fluid_risk:
+      beta_shape_a: 2
+      beta_shape_b: 5
+  vision:
+    baseline_mean: 65
+    measurement_noise_sd: 2
+    max_letters: 85
+    min_letters: 0
+    improvement_ceiling: 5
+    headroom_factor: 0.2
+  resources:
+    doctors: 2
+    nurses: 4
+    oct_machines: 2

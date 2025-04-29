@@ -420,7 +420,10 @@ class ProtocolParser:
         >>> print(config.protocol.protocol_name)
         "Test Protocol"
         """
-        path = self.base_path / "simulation_configs" / f"{config_name}.yaml"
+        # Handle config names with or without .yaml extension
+        if not config_name.endswith(".yaml"):
+            config_name += ".yaml"
+        path = self.base_path / "simulation_configs" / config_name
         with open(path) as f:
             config = yaml.safe_load(f)
             

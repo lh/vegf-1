@@ -75,6 +75,9 @@ def plot_mean_acuity_comparison(
     """
     # Validate and align data dimensions
     def align_data(data: List[float], target_length: int) -> List[float]:
+        if not data:
+            # Return empty list if data is empty
+            return []
         if len(data) == target_length:
             return data
         if len(data) > target_length:
@@ -87,19 +90,29 @@ def plot_mean_acuity_comparison(
             x_new = np.linspace(0, 1, target_length)
             return np.interp(x_new, x_old, data).tolist()
 
-    # Find the most common data length
-    all_lengths = [len(v) for v in list(des_data.values()) + list(abs_data.values())]
-    target_length = max(set(all_lengths), key=all_lengths.count)
+    # Find the maximum data length from non-empty lists
+    all_lengths = [len(v) for v in list(des_data.values()) + list(abs_data.values()) if v]
+    if all_lengths:
+        # Use the maximum length instead of the most common length
+        target_length = max(all_lengths)
+        print(f"Using target length of {target_length} for comparison visualization")
+        
+        # Align all data to target length
+        for subgroup in des_data:
+            if des_data[subgroup]:  # Only align if data exists
+                des_data[subgroup] = align_data(des_data[subgroup], target_length)
+        for subgroup in abs_data:
+            if abs_data[subgroup]:  # Only align if data exists
+                abs_data[subgroup] = align_data(abs_data[subgroup], target_length)
 
-    # Align all data to target length
-    for subgroup in des_data:
-        des_data[subgroup] = align_data(des_data[subgroup], target_length)
-    for subgroup in abs_data:
-        abs_data[subgroup] = align_data(abs_data[subgroup], target_length)
-
-    # Ensure time_points matches target length
-    if len(time_points) != target_length:
-        time_points = list(range(0, target_length))
+        # Ensure time_points matches target length
+        if len(time_points) != target_length:
+            # Generate new time points if needed
+            time_points = list(range(0, target_length))
+    else:
+        # No valid data to plot
+        print("Warning: No valid data to plot in comparison visualization")
+        return
     """Generate a comparison plot of mean acuity between DES and ABS models.
 
     Parameters

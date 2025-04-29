@@ -1,5 +1,8 @@
-""":no-index:
-Clinical model for AMD disease progression and vision changes.
+"""Clinical model for AMD disease progression and vision changes.
+
+This module implements the clinical aspects of AMD progression, including disease states,
+vision changes, and treatment effects. It uses a state-based model with probabilistic
+transitions and configurable parameters for vision changes.
 
 This module implements the clinical aspects of AMD progression, including disease states,
 vision changes, and treatment effects. It uses a state-based model with probabilistic
@@ -59,25 +62,28 @@ Notes
 from typing import Dict, List, Optional, Tuple
 from enum import Enum
 import numpy as np
+import logging
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 class DiseaseState(Enum):
-    """:no-index:
-    Disease states for AMD progression.
+    """Disease states for AMD progression.
 
     Enumeration of possible disease states in the AMD progression model.
 
     Attributes
     ----------
-    NAIVE : 
+    NAIVE : Enum
         Initial state for new patients with no prior treatment.
         Typically transitions to other states in first visit.
-    STABLE : 
+    STABLE : Enum
         Disease is under control with minimal activity.
         Patients typically maintain or slightly improve vision.
-    ACTIVE : 
+    ACTIVE : Enum
         Disease shows signs of activity with fluid accumulation.
         Patients typically experience vision decline without treatment.
-    HIGHLY_ACTIVE : 
+    HIGHLY_ACTIVE : Enum
         Disease shows high levels of activity with significant fluid.
         Patients experience rapid vision decline without treatment.
 
@@ -266,7 +272,7 @@ class ClinicalModel:
         - STABLE patients typically remain stable
         - ACTIVE patients may progress to HIGHLY_ACTIVE or regress to STABLE
         """
-        print(f"DEBUG: Simulating disease progression - Current state: {current_state}")
+        logger.debug(f"Simulating disease progression - Current state: {current_state}")
         
         if current_state == DiseaseState.NAIVE:
             # For NAIVE state, transition to other states based on predefined probabilities
@@ -274,7 +280,7 @@ class ClinicalModel:
             probs = [0.3, 0.6, 0.1]  # These should match the probabilities defined earlier
         else:
             if current_state not in self.transition_probabilities:
-                print(f"WARNING: No transition probabilities defined for state {current_state}")
+                logger.warning(f"No transition probabilities defined for state {current_state}")
                 return current_state
             transition_probs = self.transition_probabilities[current_state]
             states = list(DiseaseState)
@@ -283,12 +289,12 @@ class ClinicalModel:
         # Normalize probabilities
         total_prob = sum(probs)
         if total_prob == 0:
-            print(f"WARNING: All transition probabilities are zero for state {current_state}")
+            logger.warning(f"All transition probabilities are zero for state {current_state}")
             return current_state
         normalized_probs = [p / total_prob for p in probs]
         
         new_state = np.random.choice(states, p=normalized_probs)
-        print(f"DEBUG: Disease progression - From {current_state} to {new_state}")
+        logger.debug(f"Disease progression - From {current_state} to {new_state}")
         return new_state
 
     def get_initial_vision(self) -> int:

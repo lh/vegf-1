@@ -1,5 +1,5 @@
 Analysis Modules
-===============
+================
 
 .. automodule:: analysis.eylea_data_analysis
    :members:

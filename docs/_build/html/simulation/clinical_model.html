@@ -60,21 +60,6 @@
 <li class="toctree-l2"><a class="reference internal" href="#key-features">Key Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#mathematical-model">Mathematical Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#state-transitions">State Transitions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#simulation.clinical_model.DiseaseState"><code class="docutils literal notranslate"><span class="pre">DiseaseState</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.DiseaseState.NAIVE"><code class="docutils literal notranslate"><span class="pre">DiseaseState.NAIVE</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.DiseaseState.STABLE"><code class="docutils literal notranslate"><span class="pre">DiseaseState.STABLE</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.DiseaseState.ACTIVE"><code class="docutils literal notranslate"><span class="pre">DiseaseState.ACTIVE</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.DiseaseState.HIGHLY_ACTIVE"><code class="docutils literal notranslate"><span class="pre">DiseaseState.HIGHLY_ACTIVE</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel"><code class="docutils literal notranslate"><span class="pre">ClinicalModel</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel.__init__"><code class="docutils literal notranslate"><span class="pre">ClinicalModel.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel.get_transition_probabilities"><code class="docutils literal notranslate"><span class="pre">ClinicalModel.get_transition_probabilities()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel.simulate_disease_progression"><code class="docutils literal notranslate"><span class="pre">ClinicalModel.simulate_disease_progression()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel.get_initial_vision"><code class="docutils literal notranslate"><span class="pre">ClinicalModel.get_initial_vision()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel.simulate_vision_change"><code class="docutils literal notranslate"><span class="pre">ClinicalModel.simulate_vision_change()</span></code></a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>
@@ -116,11 +101,10 @@
              
   <section id="clinical-model-module">
 <h1>Clinical Model Module<a class="headerlink" href="#clinical-model-module" title="Link to this heading"></a></h1>
-<dl class="field-list simple" id="module-simulation.clinical_model">
-<dt class="field-odd">no-index<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
-</dl>
 <p>Clinical model for AMD disease progression and vision changes.</p>
+<p>This module implements the clinical aspects of AMD progression, including disease states,
+vision changes, and treatment effects. It uses a state-based model with probabilistic
+transitions and configurable parameters for vision changes.</p>
 <p>This module implements the clinical aspects of AMD progression, including disease states,
 vision changes, and treatment effects. It uses a state-based model with probabilistic
 transitions and configurable parameters for vision changes.</p>
@@ -190,25 +174,21 @@ Other transitions configurable via parameters</p>
 </div>
 </section>
 <dl class="py class">
-<dt class="sig sig-object py" id="simulation.clinical_model.DiseaseState">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulation.clinical_model.</span></span><span class="sig-name descname"><span class="pre">DiseaseState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names=&lt;not</span> <span class="pre">given&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#DiseaseState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.clinical_model.DiseaseState" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulation.clinical_model.</span></span><span class="sig-name descname"><span class="pre">DiseaseState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names=&lt;not</span> <span class="pre">given&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#DiseaseState"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">No-index<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
-</dl>
 <p>Disease states for AMD progression.</p>
-<p>Enumeration of possible disease states in the AMD progression model:</p>
+<p>Enumeration of possible disease states in the AMD progression model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Variables<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>NAIVE</strong> – Initial state for new patients with no prior treatment.
+<li><p><strong>NAIVE</strong> (<em>Enum</em>) – Initial state for new patients with no prior treatment.
 Typically transitions to other states in first visit.</p></li>
-<li><p><strong>STABLE</strong> – Disease is under control with minimal activity.
+<li><p><strong>STABLE</strong> (<em>Enum</em>) – Disease is under control with minimal activity.
 Patients typically maintain or slightly improve vision.</p></li>
-<li><p><strong>ACTIVE</strong> – Disease shows signs of activity with fluid accumulation.
+<li><p><strong>ACTIVE</strong> (<em>Enum</em>) – Disease shows signs of activity with fluid accumulation.
 Patients typically experience vision decline without treatment.</p></li>
-<li><p><strong>HIGHLY_ACTIVE</strong> – Disease shows high levels of activity with significant fluid.
+<li><p><strong>HIGHLY_ACTIVE</strong> (<em>Enum</em>) – Disease shows high levels of activity with significant fluid.
 Patients experience rapid vision decline without treatment.</p></li>
 </ul>
 </dd>
@@ -226,30 +206,30 @@ Default transition probabilities from NAIVE state:</p>
 </div></blockquote>
 </div>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="simulation.clinical_model.DiseaseState.NAIVE">
-<span class="sig-name descname"><span class="pre">NAIVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#simulation.clinical_model.DiseaseState.NAIVE" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">NAIVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="simulation.clinical_model.DiseaseState.STABLE">
-<span class="sig-name descname"><span class="pre">STABLE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#simulation.clinical_model.DiseaseState.STABLE" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">STABLE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="simulation.clinical_model.DiseaseState.ACTIVE">
-<span class="sig-name descname"><span class="pre">ACTIVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#simulation.clinical_model.DiseaseState.ACTIVE" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">ACTIVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="simulation.clinical_model.DiseaseState.HIGHLY_ACTIVE">
-<span class="sig-name descname"><span class="pre">HIGHLY_ACTIVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#simulation.clinical_model.DiseaseState.HIGHLY_ACTIVE" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">HIGHLY_ACTIVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="simulation.clinical_model.ClinicalModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulation.clinical_model.</span></span><span class="sig-name descname"><span class="pre">ClinicalModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#ClinicalModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.clinical_model.ClinicalModel" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulation.clinical_model.</span></span><span class="sig-name descname"><span class="pre">ClinicalModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#ClinicalModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">No-index<span class="colon">:</span></dt>
@@ -295,9 +275,17 @@ DiseaseState.STABLE: {DiseaseState.STABLE: 0.7, …},
 </ul>
 </dd>
 </dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>The model captures key clinical aspects of AMD progression:
+1. State-dependent response to treatment
+2. Waning of treatment effect over time
+3. Diminishing returns at higher vision levels
+4. Realistic measurement variability</p>
+</div>
 <dl class="py method">
-<dt class="sig sig-object py" id="simulation.clinical_model.ClinicalModel.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#ClinicalModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.clinical_model.ClinicalModel.__init__" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#ClinicalModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="index.html#simulation.config.SimulationConfig" title="simulation.config.SimulationConfig"><em>SimulationConfig</em></a>)</p>
@@ -306,8 +294,8 @@ DiseaseState.STABLE: {DiseaseState.STABLE: 0.7, …},
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="simulation.clinical_model.ClinicalModel.get_transition_probabilities">
-<span class="sig-name descname"><span class="pre">get_transition_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#ClinicalModel.get_transition_probabilities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.clinical_model.ClinicalModel.get_transition_probabilities" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get_transition_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#ClinicalModel.get_transition_probabilities"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Get transition probabilities for the current disease state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -326,8 +314,8 @@ DiseaseState.STABLE: {DiseaseState.STABLE: 0.7, …},
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="simulation.clinical_model.ClinicalModel.simulate_disease_progression">
-<span class="sig-name descname"><span class="pre">simulate_disease_progression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#ClinicalModel.simulate_disease_progression"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.clinical_model.ClinicalModel.simulate_disease_progression" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">simulate_disease_progression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#ClinicalModel.simulate_disease_progression"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Simulate disease state progression using configured transition probabilities.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -382,8 +370,8 @@ DiseaseState.STABLE: {DiseaseState.STABLE: 0.7, …},
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="simulation.clinical_model.ClinicalModel.get_initial_vision">
-<span class="sig-name descname"><span class="pre">get_initial_vision</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#ClinicalModel.get_initial_vision"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.clinical_model.ClinicalModel.get_initial_vision" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get_initial_vision</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#ClinicalModel.get_initial_vision"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Get initial vision for a new patient.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -401,8 +389,8 @@ Defaults to mean=70, sd=5 if not specified in configuration.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="simulation.clinical_model.ClinicalModel.simulate_vision_change">
-<span class="sig-name descname"><span class="pre">simulate_vision_change</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#ClinicalModel.simulate_vision_change"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.clinical_model.ClinicalModel.simulate_vision_change" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">simulate_vision_change</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#ClinicalModel.simulate_vision_change"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Calculate vision change and new disease state based on current state and treatment.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

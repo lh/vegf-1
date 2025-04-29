@@ -52,61 +52,125 @@ class SimulationResults:
     patient_histories: Dict[str, List[Dict]]
     
     def calculate_mean_vision_over_time(self, window_weeks: int = 4) -> tuple:
-        """Calculate mean vision over time with confidence intervals"""
-        # Create time bins
-        total_weeks = (self.end_date - self.start_date).days // 7
-        time_points = [self.start_date + timedelta(weeks=w) for w in range(total_weeks)]
+        """Calculate mean vision over time with confidence intervals
         
-        # Collect vision values for each time bin
-        vision_values = {t: [] for t in time_points}
+        Uses relative time from each patient's first visit to align treatment journeys.
+        """
+        import logging
+        logger = logging.getLogger(__name__)
         
-        for history in self.patient_histories.values():
+        # Create relative time bins (weeks from first visit)
+        max_weeks = 52  # One year of follow-up
+        week_points = list(range(max_weeks + 1))
+        
+        # Collect vision values for each week since first visit
+        vision_values = {w: [] for w in week_points}
+        
+        # Track how many patients have valid data
+        patients_with_data = 0
+        
+        for patient_id, history in self.patient_histories.items():
+            if not history:
+                logger.debug(f"Patient {patient_id} has no history")
+                continue
+                
+            # Check if history has the expected structure
+            if not isinstance(history[0], dict):
+                logger.warning(f"Patient {patient_id} has invalid history format: {type(history[0])}")
+                continue
+                
+            # Get first visit date - ensure it has a date field
+            if 'date' not in history[0]:
+                logger.warning(f"Patient {patient_id} first visit missing date field")
+                continue
+                
+            first_visit = history[0]['date']
+            has_vision_data = False
+            
+            # Record vision at each visit relative to first visit
             for visit in history:
                 if 'vision' in visit and 'date' in visit:
-                    # Find nearest time point
-                    visit_time = visit['date']
-                    nearest_point = min(time_points, 
-                                     key=lambda t: abs((visit_time - t).total_seconds()))
-                    vision_values[nearest_point].append(visit['vision'])
+                    has_vision_data = True
+                    # Calculate weeks since start, handling different date formats
+                    if isinstance(visit['date'], datetime) and isinstance(first_visit, datetime):
+                        weeks_since_start = (visit['date'] - first_visit).days // 7
+                    else:
+                        # Try to parse string dates if needed
+                        logger.warning(f"Date format issue: {type(visit['date'])} vs {type(first_visit)}")
+                        continue
+                        
+                    if weeks_since_start <= max_weeks:  # Only include up to max_weeks
+                        vision_values[weeks_since_start].append(visit['vision'])
+            
+            if has_vision_data:
+                patients_with_data += 1
         
-        # Calculate statistics
+        logger.debug(f"Found {patients_with_data} patients with valid vision data")
+        
+        # Calculate statistics for each week
         means = []
         ci_lower = []
         ci_upper = []
-        valid_times = []
+        valid_weeks = []
         
-        for t in time_points:
-            if vision_values[t]:
-                values = vision_values[t]
+        for week in week_points:
+            if vision_values[week]:  # If we have data for this week
+                values = vision_values[week]
                 mean = np.mean(values)
                 std = np.std(values)
-                ci = 1.96 * std / np.sqrt(len(values))  # 95% confidence interval
+                # Avoid division by zero for small samples
+                if len(values) > 1:
+                    ci = 1.96 * std / np.sqrt(len(values))  # 95% confidence interval
+                else:
+                    ci = 0  # No confidence interval for single data point
                 
                 means.append(mean)
                 ci_lower.append(mean - ci)
                 ci_upper.append(mean + ci)
-                valid_times.append(t)
+                valid_weeks.append(week)
         
-        return valid_times, means, ci_lower, ci_upper
+        logger.debug(f"Generated {len(valid_weeks)} valid data points for plotting")
+        
+        # If we have no valid data, create a dummy point to avoid empty plots
+        if not valid_weeks:
+            logger.warning("No valid vision data found for plotting")
+            # Create a single dummy point at week 0 with baseline vision
+            valid_weeks = [0]
+            means = [70]  # Default baseline vision
+            ci_lower = [70]
+            ci_upper = [70]
+        
+        return valid_weeks, means, ci_lower, ci_upper
     
     def plot_mean_vision(self, title: str = "Mean Visual Acuity Over Time"):
         """Plot mean vision with confidence intervals"""
-        times, means, ci_lower, ci_upper = self.calculate_mean_vision_over_time()
+        weeks, means, ci_lower, ci_upper = self.calculate_mean_vision_over_time()
+
+        # Use logging instead of print statements
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Plotting data points: {len(weeks)}")
+        if means:
+            logger.debug(f"Mean values range: {min(means)} to {max(means)}")
+        logger.debug(f"Number of patients with data: {len(self.patient_histories)}")
         
-        
-        plt.figure(figsize=(12, 6))
-        plt.plot(times, means, 'b-', label='Mean Vision')
-        plt.fill_between(times, ci_lower, ci_upper, color='b', alpha=0.2, 
+        if not weeks or not means:
+            logger.warning("No data points to plot!")
+            return None
+
+        fig = plt.figure(figsize=(12, 6))
+        plt.plot(weeks, means, 'b-', label='Mean Vision')
+        plt.fill_between(weeks, ci_lower, ci_upper, color='b', alpha=0.2,
                         label='95% Confidence Interval')
-        
+
         plt.title(title)
-        plt.xlabel('Date')
+        plt.xlabel('Weeks from First Visit')
         plt.ylabel('Visual Acuity (ETDRS letters)')
         plt.ylim(0, 85)
         plt.grid(True, linestyle='--', alpha=0.7)
         plt.legend()
         plt.tight_layout()
-        plt.show()
+        return fig
 
     def get_mean_vision_over_time(self) -> List[float]:
         """Get mean vision over time for comparison visualization"""

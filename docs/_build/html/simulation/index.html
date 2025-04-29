@@ -106,55 +106,50 @@
 <li class="toctree-l3"><a class="reference internal" href="#simulation.patient_state.PatientState.next_visit_interval"><code class="docutils literal notranslate"><span class="pre">PatientState.next_visit_interval</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id1">Classes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#key-features">Key Features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#simulation.scheduler.ClinicScheduler"><code class="docutils literal notranslate"><span class="pre">ClinicScheduler</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.scheduler.ClinicScheduler.__init__"><code class="docutils literal notranslate"><span class="pre">ClinicScheduler.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.scheduler.ClinicScheduler.request_slot"><code class="docutils literal notranslate"><span class="pre">ClinicScheduler.request_slot()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.scheduler.ClinicScheduler.schedule_next_visit"><code class="docutils literal notranslate"><span class="pre">ClinicScheduler.schedule_next_visit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clinic-scheduler">Clinic Scheduler</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#key-features">Key Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuration-structure">Configuration Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig"><code class="docutils literal notranslate"><span class="pre">SimulationConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.parameters"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.parameters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.protocol"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.protocol</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.simulation_type"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.simulation_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.num_patients"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.num_patients</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.duration_days"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.duration_days</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.random_seed"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.random_seed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.verbose"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.verbose</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.start_date"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.start_date</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.resources"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.resources</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_vision_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_vision_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_maintenance_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_maintenance_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_loading_phase_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_loading_phase_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_resource_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_resource_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_des_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_des_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_output_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_output_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_clinical_model_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_clinical_model_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.from_yaml"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.from_yaml()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.__init__"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.__init__()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id2">Classes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id3">Key Features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#configuration-structure">Configuration Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#simulation.config.SimulationConfig"><code class="docutils literal notranslate"><span class="pre">SimulationConfig</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.parameters"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.parameters</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.protocol"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.protocol</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.simulation_type"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.simulation_type</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.num_patients"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.num_patients</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.duration_days"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.duration_days</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.random_seed"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.random_seed</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.verbose"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.verbose</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.start_date"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.start_date</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.resources"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.resources</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_vision_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_vision_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_maintenance_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_maintenance_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_loading_phase_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_loading_phase_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_resource_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_resource_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_des_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_des_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_output_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_output_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_clinical_model_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_clinical_model_params()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.from_yaml"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.from_yaml()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.__init__"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id11">Key Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mathematical-model">Mathematical Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#state-transitions">State Transitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.DiseaseState"><code class="docutils literal notranslate"><span class="pre">DiseaseState</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.clinical_model.DiseaseState.NAIVE"><code class="docutils literal notranslate"><span class="pre">DiseaseState.NAIVE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.clinical_model.DiseaseState.STABLE"><code class="docutils literal notranslate"><span class="pre">DiseaseState.STABLE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.clinical_model.DiseaseState.ACTIVE"><code class="docutils literal notranslate"><span class="pre">DiseaseState.ACTIVE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.clinical_model.DiseaseState.HIGHLY_ACTIVE"><code class="docutils literal notranslate"><span class="pre">DiseaseState.HIGHLY_ACTIVE</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#id12">Classes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id13">Key Features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#mathematical-model">Mathematical Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#state-transitions">State Transitions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#simulation.clinical_model.DiseaseState"><code class="docutils literal notranslate"><span class="pre">DiseaseState</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.DiseaseState.NAIVE"><code class="docutils literal notranslate"><span class="pre">DiseaseState.NAIVE</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.DiseaseState.STABLE"><code class="docutils literal notranslate"><span class="pre">DiseaseState.STABLE</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.DiseaseState.ACTIVE"><code class="docutils literal notranslate"><span class="pre">DiseaseState.ACTIVE</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.DiseaseState.HIGHLY_ACTIVE"><code class="docutils literal notranslate"><span class="pre">DiseaseState.HIGHLY_ACTIVE</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel"><code class="docutils literal notranslate"><span class="pre">ClinicalModel</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel.__init__"><code class="docutils literal notranslate"><span class="pre">ClinicalModel.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel.get_transition_probabilities"><code class="docutils literal notranslate"><span class="pre">ClinicalModel.get_transition_probabilities()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel.simulate_disease_progression"><code class="docutils literal notranslate"><span class="pre">ClinicalModel.simulate_disease_progression()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel.get_initial_vision"><code class="docutils literal notranslate"><span class="pre">ClinicalModel.get_initial_vision()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel.simulate_vision_change"><code class="docutils literal notranslate"><span class="pre">ClinicalModel.simulate_vision_change()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel"><code class="docutils literal notranslate"><span class="pre">ClinicalModel</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel.__init__"><code class="docutils literal notranslate"><span class="pre">ClinicalModel.__init__()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel.get_transition_probabilities"><code class="docutils literal notranslate"><span class="pre">ClinicalModel.get_transition_probabilities()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel.simulate_disease_progression"><code class="docutils literal notranslate"><span class="pre">ClinicalModel.simulate_disease_progression()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel.get_initial_vision"><code class="docutils literal notranslate"><span class="pre">ClinicalModel.get_initial_vision()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#simulation.clinical_model.ClinicalModel.simulate_vision_change"><code class="docutils literal notranslate"><span class="pre">ClinicalModel.simulate_vision_change()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -797,7 +792,7 @@ progression.</p>
 </dd>
 <dt class="field-even">Variables<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>MAX_TREATMENTS_IN_PHASE</strong> (<em>int</em>) – Maximum allowed treatments in a phase</p></li>
+<li><p><strong>MAX_TREATMENTS_IN_PHASE</strong> (<em>int</em>) – Maximum allowed treatments in a phase (default: 1000)</p></li>
 <li><p><strong>patient_id</strong> (<em>str</em>) – Unique identifier for the patient</p></li>
 <li><p><strong>state</strong> (<em>Dict</em>) – Dictionary containing all patient state information including:
 - protocol: Treatment protocol name
@@ -807,10 +802,26 @@ progression.</p>
 - baseline_vision: Initial visual acuity
 - current_vision: Current visual acuity
 - disease_state: Current disease state
-And various other tracking variables</p></li>
+- last_visit_date: Date of last visit
+- next_visit_interval: Weeks until next visit
+- treatment_start: Date treatment began
+- visit_history: List of all visits
+- best_vision_achieved: Highest vision recorded
+- last_treatment_response: Most recent treatment response
+- treatment_response_history: List of all responses
+- weeks_since_last_injection: Weeks since last injection
+- last_injection_date: Date of last injection</p></li>
 </ul>
 </dd>
 </dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>The state dictionary maintains a complete record of the patient’s:
+- Treatment history and responses
+- Vision measurements over time
+- Disease progression
+- Visit schedule and history</p>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="simulation.patient_state.PatientState.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">patient_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_vision</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/patient_state.html#PatientState.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.patient_state.PatientState.__init__" title="Link to this definition"></a></dt>
@@ -997,47 +1008,11 @@ Must be initialized with appropriate parameters</p></li>
 
 </dd></dl>
 
-<p id="module-simulation.scheduler">Clinic scheduling and resource allocation management.</p>
-<p>This module implements a scheduler for managing clinic appointments with capacity
-constraints and automatic rescheduling. It supports configurable daily capacity
-and working days per week.</p>
-<section id="id1">
-<h2>Classes<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
-<dl class="simple">
-<dt>ClinicScheduler</dt><dd><p>Manages appointment scheduling with capacity constraints</p>
-</dd>
-</dl>
-</section>
-<section id="key-features">
-<h2>Key Features<a class="headerlink" href="#key-features" title="Link to this heading"></a></h2>
-<ul class="simple">
-<li><p>Daily capacity limits</p></li>
-<li><p>Configurable clinic days per week</p></li>
-<li><p>Automatic rescheduling when capacity exceeded</p></li>
-<li><p>Weekend/holiday handling</p></li>
-<li><p>Appointment tracking</p></li>
-</ul>
-<div class="admonition-examples admonition">
-<p class="admonition-title">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">scheduler</span> <span class="o">=</span> <span class="n">ClinicScheduler</span><span class="p">(</span><span class="n">daily_capacity</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">days_per_week</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">event</span> <span class="o">=</span> <span class="n">Event</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2023</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="o">...</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="ow">not</span> <span class="n">scheduler</span><span class="o">.</span><span class="n">request_slot</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2023</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">31</span><span class="p">)):</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Visit needs rescheduling&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="admonition-notes admonition">
-<p class="admonition-title">Notes</p>
-<ul class="simple">
-<li><p>Time values should be timezone-naive datetimes</p></li>
-<li><p>Capacity checks are performed per calendar day</p></li>
-<li><p>Rescheduling maintains original appointment details</p></li>
-</ul>
-</div>
-</section>
+<section id="clinic-scheduler">
+<h2>Clinic Scheduler<a class="headerlink" href="#clinic-scheduler" title="Link to this heading"></a></h2>
 <dl class="py class">
-<dt class="sig sig-object py" id="simulation.scheduler.ClinicScheduler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulation.scheduler.</span></span><span class="sig-name descname"><span class="pre">ClinicScheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">daily_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">days_per_week</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/scheduler.html#ClinicScheduler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.scheduler.ClinicScheduler" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulation.scheduler.</span></span><span class="sig-name descname"><span class="pre">ClinicScheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">daily_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">days_per_week</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/scheduler.html#ClinicScheduler"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Manages clinic scheduling and resource allocation.</p>
 <p>This class handles the scheduling of patient visits while respecting clinic
@@ -1060,8 +1035,8 @@ working days per week, with automatic rescheduling when capacity is exceeded.</p
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="simulation.scheduler.ClinicScheduler.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">daily_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">days_per_week</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/scheduler.html#ClinicScheduler.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.scheduler.ClinicScheduler.__init__" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">daily_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">days_per_week</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/scheduler.html#ClinicScheduler.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1073,8 +1048,8 @@ working days per week, with automatic rescheduling when capacity is exceeded.</p
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="simulation.scheduler.ClinicScheduler.request_slot">
-<span class="sig-name descname"><span class="pre">request_slot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/scheduler.html#ClinicScheduler.request_slot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.scheduler.ClinicScheduler.request_slot" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">request_slot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/scheduler.html#ClinicScheduler.request_slot"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Check if there’s capacity for a visit on the requested day.</p>
 <p>Verifies if the requested visit can be accommodated on the specified day,
 considering both clinic working days and daily capacity constraints.</p>
@@ -1121,69 +1096,21 @@ considering both clinic working days and daily capacity constraints.</p>
 </div>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="simulation.scheduler.ClinicScheduler.schedule_next_visit">
-<span class="sig-name descname"><span class="pre">schedule_next_visit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_factory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patient_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_visit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next_visit_interval</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/scheduler.html#ClinicScheduler.schedule_next_visit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.scheduler.ClinicScheduler.schedule_next_visit" title="Link to this definition"></a></dt>
-<dd><p>Schedule the next visit for a patient.</p>
-<p>Creates a new visit event for a patient based on their last visit and
-the specified interval.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>event_factory</strong> (<em>Callable</em>) – Function to create visit events with signature:
-(time: datetime, event_type: str, patient_id: str, data: dict) -&gt; Event</p></li>
-<li><p><strong>patient_id</strong> (<em>str</em>) – Patient identifier</p></li>
-<li><p><strong>last_visit</strong> (<em>datetime</em>) – Time of the last visit</p></li>
-<li><p><strong>next_visit_interval</strong> (<em>int</em>) – Number of weeks until the next visit (must be positive)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Scheduled visit event, or None if beyond simulation end</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Optional[<a class="reference internal" href="#simulation.base.Event" title="simulation.base.Event">Event</a>]</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If next_visit_interval is not positive</p>
-</dd>
-</dl>
-<div class="admonition-examples admonition">
-<p class="admonition-title">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">next_visit</span> <span class="o">=</span> <span class="n">scheduler</span><span class="o">.</span><span class="n">schedule_next_visit</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">event_factory</span><span class="o">=</span><span class="n">create_visit_event</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">patient_id</span><span class="o">=</span><span class="s2">&quot;123&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">last_visit</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2023</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
-<span class="gp">... </span>    <span class="n">next_visit_interval</span><span class="o">=</span><span class="mi">4</span>
-<span class="gp">... </span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="admonition-notes admonition">
-<p class="admonition-title">Notes</p>
-<ul class="simple">
-<li><p>Maintains the same time of day as the original appointment</p></li>
-<li><p>Handles week-to-day conversion automatically</p></li>
-<li><p>Returns None if calculated visit would be after simulation end</p></li>
-<li><p>Visit intervals must be positive integers</p></li>
-</ul>
-</div>
-</dd></dl>
-
 </dd></dl>
 
 <p id="module-simulation.config">Simulation configuration management.</p>
 <p>This module handles the configuration of simulation runs, including parameter validation,
 protocol integration, and resource management. It ensures all simulation parameters
 are properly validated before being used in a simulation run.</p>
-<section id="id2">
-<h2>Classes<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<section id="id1">
+<h3>Classes<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
 <dl class="simple">
 <dt>SimulationConfig</dt><dd><p>Main configuration class that encapsulates all simulation parameters</p>
 </dd>
 </dl>
 </section>
-<section id="id3">
-<h2>Key Features<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<section id="key-features">
+<h3>Key Features<a class="headerlink" href="#key-features" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Parameter validation for all configuration sections</p></li>
 <li><p>Protocol integration with validation</p></li>
@@ -1193,9 +1120,9 @@ are properly validated before being used in a simulation run.</p>
 </ul>
 </section>
 <section id="configuration-structure">
-<h2>Configuration Structure<a class="headerlink" href="#configuration-structure" title="Link to this heading"></a></h2>
+<h3>Configuration Structure<a class="headerlink" href="#configuration-structure" title="Link to this heading"></a></h3>
 <p>Example YAML configuration structure:
-<a href="#id4"><span class="problematic" id="id5">``</span></a><a href="#id6"><span class="problematic" id="id7">`</span></a>yaml
+<a href="#id2"><span class="problematic" id="id3">``</span></a><a href="#id4"><span class="problematic" id="id5">`</span></a>yaml
 simulation:</p>
 <blockquote>
 <div><p>type: “des”
@@ -1249,7 +1176,7 @@ no_injection: [-1, 0.5]</p>
 </dl>
 </dd>
 </dl>
-<p><a href="#id8"><span class="problematic" id="id9">``</span></a><a href="#id10"><span class="problematic" id="id11">`</span></a></p>
+<p><a href="#id6"><span class="problematic" id="id7">``</span></a><a href="#id8"><span class="problematic" id="id9">`</span></a></p>
 <div class="admonition-notes admonition">
 <p class="admonition-title">Notes</p>
 <ul class="simple">
@@ -1565,16 +1492,15 @@ including protocol definitions and parameter validation.</p>
 
 </dd></dl>
 
-<dl class="field-list simple" id="module-simulation.clinical_model">
-<dt class="field-odd">no-index<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
-</dl>
-<p>Clinical model for AMD disease progression and vision changes.</p>
+<p id="module-simulation.clinical_model">Clinical model for AMD disease progression and vision changes.</p>
 <p>This module implements the clinical aspects of AMD progression, including disease states,
 vision changes, and treatment effects. It uses a state-based model with probabilistic
 transitions and configurable parameters for vision changes.</p>
-<section id="id12">
-<h2>Classes<a class="headerlink" href="#id12" title="Link to this heading"></a></h2>
+<p>This module implements the clinical aspects of AMD progression, including disease states,
+vision changes, and treatment effects. It uses a state-based model with probabilistic
+transitions and configurable parameters for vision changes.</p>
+<section id="id10">
+<h3>Classes<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
 <dl class="simple">
 <dt>DiseaseState</dt><dd><p>Enumeration of possible AMD disease states</p>
 </dd>
@@ -1582,8 +1508,8 @@ transitions and configurable parameters for vision changes.</p>
 </dd>
 </dl>
 </section>
-<section id="id13">
-<h2>Key Features<a class="headerlink" href="#id13" title="Link to this heading"></a></h2>
+<section id="id11">
+<h3>Key Features<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Four disease states (NAIVE, STABLE, ACTIVE, HIGHLY_ACTIVE)</p></li>
 <li><p>Configurable transition probabilities between states</p></li>
@@ -1601,7 +1527,7 @@ transitions and configurable parameters for vision changes.</p>
 </ul>
 </section>
 <section id="mathematical-model">
-<h2>Mathematical Model<a class="headerlink" href="#mathematical-model" title="Link to this heading"></a></h2>
+<h3>Mathematical Model<a class="headerlink" href="#mathematical-model" title="Link to this heading"></a></h3>
 <dl class="simple">
 <dt>Vision change is calculated as:</dt><dd><p>ΔV = (B × T × C) + N</p>
 </dd>
@@ -1614,7 +1540,7 @@ N: Measurement noise (normally distributed)</p>
 </dl>
 </section>
 <section id="state-transitions">
-<h2>State Transitions<a class="headerlink" href="#state-transitions" title="Link to this heading"></a></h2>
+<h3>State Transitions<a class="headerlink" href="#state-transitions" title="Link to this heading"></a></h3>
 <p>NAIVE → STABLE: 30%
 NAIVE → ACTIVE: 60%
 NAIVE → HIGHLY_ACTIVE: 10%
@@ -1642,22 +1568,18 @@ Other transitions configurable via parameters</p>
 <dt class="sig sig-object py" id="simulation.clinical_model.DiseaseState">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulation.clinical_model.</span></span><span class="sig-name descname"><span class="pre">DiseaseState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names=&lt;not</span> <span class="pre">given&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#DiseaseState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.clinical_model.DiseaseState" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">No-index<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
-</dl>
 <p>Disease states for AMD progression.</p>
-<p>Enumeration of possible disease states in the AMD progression model:</p>
+<p>Enumeration of possible disease states in the AMD progression model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Variables<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>NAIVE</strong> – Initial state for new patients with no prior treatment.
+<li><p><strong>NAIVE</strong> (<em>Enum</em>) – Initial state for new patients with no prior treatment.
 Typically transitions to other states in first visit.</p></li>
-<li><p><strong>STABLE</strong> – Disease is under control with minimal activity.
+<li><p><strong>STABLE</strong> (<em>Enum</em>) – Disease is under control with minimal activity.
 Patients typically maintain or slightly improve vision.</p></li>
-<li><p><strong>ACTIVE</strong> – Disease shows signs of activity with fluid accumulation.
+<li><p><strong>ACTIVE</strong> (<em>Enum</em>) – Disease shows signs of activity with fluid accumulation.
 Patients typically experience vision decline without treatment.</p></li>
-<li><p><strong>HIGHLY_ACTIVE</strong> – Disease shows high levels of activity with significant fluid.
+<li><p><strong>HIGHLY_ACTIVE</strong> (<em>Enum</em>) – Disease shows high levels of activity with significant fluid.
 Patients experience rapid vision decline without treatment.</p></li>
 </ul>
 </dd>
@@ -1744,6 +1666,14 @@ DiseaseState.STABLE: {DiseaseState.STABLE: 0.7, …},
 </ul>
 </dd>
 </dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>The model captures key clinical aspects of AMD progression:
+1. State-dependent response to treatment
+2. Waning of treatment effect over time
+3. Diminishing returns at higher vision levels
+4. Realistic measurement variability</p>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="simulation.clinical_model.ClinicalModel.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#ClinicalModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.clinical_model.ClinicalModel.__init__" title="Link to this definition"></a></dt>
@@ -1983,6 +1913,7 @@ Non-injection: μ = -5 to +5 letters</p>
 
 </dd></dl>
 
+</section>
 </section>
 
 

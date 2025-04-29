@@ -296,9 +296,11 @@ class DiscreteEventSimulation(BaseSimulation):
                 self.global_stats["total_injections"] += 1
             if "oct_scan" in actions:
                 self.global_stats["total_oct_scans"] += 1
-            if visit_data["vision_change"] > 0:
+            # Calculate vision change from baseline and new vision
+            vision_change = visit_data["new_vision"] - visit_data["baseline_vision"]
+            if vision_change > 0:
                 self.global_stats["vision_improvements"] += 1
-            elif visit_data["vision_change"] < 0:
+            elif vision_change < 0:
                 self.global_stats["vision_declines"] += 1
             
             # Schedule treatment decision for same day

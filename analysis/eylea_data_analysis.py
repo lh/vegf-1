@@ -1,4 +1,5 @@
 """Analysis of intravitreal Eylea injection treatment patterns and outcomes.
+============================================================================
 
 This module provides tools for analyzing real-world data from intravitreal Eylea
 injections to derive parameters for simulation models. The analysis includes:
@@ -11,7 +12,7 @@ injections to derive parameters for simulation models. The analysis includes:
 - Data visualization and export
 
 Key Features
------------
+------------
 - Robust data validation with flexible column name mapping
 - Comprehensive data quality reporting
 - Detailed analysis of treatment intervals and patterns
@@ -1325,11 +1326,11 @@ class EyleaDataAnalyzer:
         Notes
         -----
         Plot 1 (Histogram):
-        - Shows distribution of all injection intervals
-        - Includes reference lines at:
-          * 28 days (monthly)
-          * 56 days (bi-monthly) 
-          * 84 days (quarterly)
+            - Shows distribution of all injection intervals
+            - Includes reference lines at:
+                * 28 days (monthly)
+                * 56 days (bi-monthly) 
+                * 84 days (quarterly)
 
         Plot 2 (Sequence):
         - Shows mean ± SD and median intervals by injection number
@@ -1514,22 +1515,22 @@ class EyleaDataAnalyzer:
         Notes
         -----
         Plot 1 (Histogram):
-        - Shows distribution of final VA changes from baseline
-        - Includes reference lines at:
-          * 0 (no change)
-          * ±5 letters (gain/loss)
-          * ±15 letters (significant gain/loss)
+            - Shows distribution of final VA changes from baseline
+            - Includes reference lines at:
+                * 0 (no change)
+                * ±5 letters (gain/loss)
+                * ±15 letters (significant gain/loss)
 
         Plot 2 (Categories):
-        - Groups outcomes into clinically relevant categories
-        - Shows counts and percentages for each category
-        - Categories:
-          * ≥15 letter gain
-          * 5-14 letter gain
-          * Stable (-4 to +4)
-          * 5-14 letter loss
-          * ≥15 letter loss
-          * Unknown
+            - Groups outcomes into clinically relevant categories
+            - Shows counts and percentages for each category
+            - Categories:
+                * ≥15 letter gain
+                * 5-14 letter gain
+                * Stable (-4 to +4)
+                * 5-14 letter loss
+                * ≥15 letter loss
+                * Unknown
 
         Automatically calls analyze_va_trajectories() if needed.
         """

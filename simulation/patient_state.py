@@ -158,76 +158,26 @@ class PatientState:
         ----------
         visit_time : datetime
             Time of the visit (must be timezone-naive UTC)
-            Example: datetime(2025, 4, 15)
         actions : List[str]
-            List of actions performed during the visit. Valid actions:
-                - "vision_test": Measures visual acuity
-                - "oct_scan": Performs OCT imaging
-                - "injection": Administers anti-VEGF treatment
-            Example: ["vision_test", "oct_scan", "injection"]
+            List of actions performed during the visit
         clinical_model : ClinicalModel
             ClinicalModel instance for simulating vision changes and disease progression
-            Must be initialized with appropriate parameters
 
         Returns
         -------
         Dict[str, Any]
             Dictionary containing detailed visit results:
-                - vision_change: float - Change in ETDRS letters
+                - baseline_vision: float - Vision before treatment
+                - new_vision: float - Vision after treatment
                 - actions_performed: List[str] - Completed actions
-                - disease_state: DiseaseState - Updated state
-                - treatment_response: Optional[Dict] - If injection given
+                - disease_state: str - Updated disease state
                 - visit_type: str - Classification of visit
-
-        Raises
-        ------
-        ValueError
-            If visit_time is timezone-aware
-            If actions contains invalid values
-            If clinical_model is not properly initialized
-
-        Examples
-        --------
-        Basic Visit:
-        >>> model = ClinicalModel(config)
-        >>> patient = PatientState("123", "treat_and_extend", 70, datetime.now())
-        >>> visit_data = patient.process_visit(
-        ...     datetime.now(),
-        ...     ["vision_test", "injection"], 
-        ...     model
-        ... )
-
-        Monitoring Visit:
-        >>> visit_data = patient.process_visit(
-        ...     datetime.now(),
-        ...     ["vision_test", "oct_scan"],
-        ...     model
-        ... )
-
-        Notes
-        -----
-        State Updates:
-        1. Increments visit counter
-        2. Updates last visit date
-        3. Calculates weeks since last injection
-        4. Simulates vision changes using clinical_model
-        5. Processes each action in sequence
-        6. Records complete visit details
-
-        The method handles:
-        - Validation of input parameters
-        - Coordination of state updates
-        - Error handling for invalid states
-        - Complete visit recording
-
-        Vision changes are simulated by the clinical_model which considers:
-        - Current disease state
-        - Treatment history
-        - Time since last injection
-        - Current vision level
         """
         self.state["visits"] += 1
         self.state["last_visit_date"] = visit_time
+        
+        # Capture baseline vision before any changes
+        baseline_vision = self.state["current_vision"]
         
         # Update weeks since last injection
         if self.state.get("last_injection_date"):
@@ -240,9 +190,11 @@ class PatientState:
         
         # Process actions
         visit_data = {
-            "vision_change": vision_change,
+            "baseline_vision": baseline_vision,
+            "new_vision": baseline_vision + vision_change,
             "actions_performed": [],
-            "disease_state": new_disease_state
+            "disease_state": new_disease_state,
+            "visit_type": "regular_visit"
         }
         
         for action in actions:
@@ -255,6 +207,9 @@ class PatientState:
                 self._process_injection(visit_time)
                 visit_data["actions_performed"].append("injection")
                 self._increment_treatments_in_phase()
+        
+        # Update current vision after all actions
+        self.state["current_vision"] = visit_data["new_vision"]
         
         # Record visit in history
         self._record_visit(visit_time, actions, visit_data)
@@ -362,6 +317,7 @@ class PatientState:
             'date': visit_time.replace(second=0, microsecond=0),
             'actions': actions,
             'vision': self.state['current_vision'],
+            'baseline_vision': visit_data.get('baseline_vision'),
             'phase': self.state.get('current_phase', 'loading'),
             'type': visit_data.get('visit_type', 'regular_visit'),
             'disease_state': str(self.state.get('disease_state', 'NAIVE'))

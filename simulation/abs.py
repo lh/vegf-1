@@ -241,12 +241,17 @@ class AgentBasedSimulation(BaseSimulation):
         treatment_start = patient.state.state['treatment_start']
         weeks_since_start = (current_date - treatment_start).days // 7
         
-        fixed_schedule = [0, 4, 9, 18, 27, 36, 44, 52]
+        fixed_schedule = [0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52]
         if weeks_since_start < 52:
-            next_week = next(week for week in fixed_schedule if week > weeks_since_start)
-            next_visit_date = treatment_start + timedelta(weeks=next_week)
+            try:
+                next_week = next(week for week in fixed_schedule if week > weeks_since_start)
+                next_visit_date = treatment_start + timedelta(weeks=next_week)
+            except StopIteration:
+                # If we've passed all fixed schedule points, use standard interval
+                next_visit_interval = 4  # Default to 4-week intervals
+                next_visit_date = current_date + timedelta(weeks=next_visit_interval)
         else:
-            next_visit_interval = patient.state.next_visit_interval
+            next_visit_interval = patient.state.next_visit_interval or 4  # Default to 4 weeks if not set
             next_visit_date = current_date + timedelta(weeks=next_visit_interval)
         
         return Event(

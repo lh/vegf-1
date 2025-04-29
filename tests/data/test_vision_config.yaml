@@ -1,0 +1,26 @@
+name: vision_recording_test
+description: Test configuration for vision data recording
+protocol:
+  agent: eylea
+  type: treat_and_extend
+  parameter_set: vision_test
+simulation:
+  type: abs
+  duration_days: 365
+  num_patients: 1
+  start_date: 2023-01-01
+  random_seed: 42
+output:
+  save_results: false
+  database: memory
+  plots: false
+  verbose: false
+
+protocol_specific:
+  clinical_model:
+    vision_change:
+      NAIVE: 
+        injection: [5, 2]
+      ACTIVE: 
+        injection: [3, 1.5]
+    measurement_noise: [0, 2]

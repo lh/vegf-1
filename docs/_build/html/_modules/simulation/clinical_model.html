@@ -91,8 +91,11 @@
            <div itemprop="articleBody">
              
   <h1>Source code for simulation.clinical_model</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;:no-index:</span>
-<span class="sd">Clinical model for AMD disease progression and vision changes.</span>
+<span></span><span class="sd">&quot;&quot;&quot;Clinical model for AMD disease progression and vision changes.</span>
+
+<span class="sd">This module implements the clinical aspects of AMD progression, including disease states,</span>
+<span class="sd">vision changes, and treatment effects. It uses a state-based model with probabilistic</span>
+<span class="sd">transitions and configurable parameters for vision changes.</span>
 
 <span class="sd">This module implements the clinical aspects of AMD progression, including disease states,</span>
 <span class="sd">vision changes, and treatment effects. It uses a state-based model with probabilistic</span>
@@ -117,7 +120,7 @@
 <span class="sd">- Injection vs non-injection visit differentiation</span>
 
 <span class="sd">Mathematical Model</span>
-<span class="sd">-----------------</span>
+<span class="sd">------------------</span>
 <span class="sd">Vision change is calculated as:</span>
 <span class="sd">    ΔV = (B × T × C) + N</span>
 <span class="sd">Where:</span>
@@ -128,7 +131,7 @@
 <span class="sd">    N: Measurement noise (normally distributed)</span>
 
 <span class="sd">State Transitions</span>
-<span class="sd">----------------</span>
+<span class="sd">-----------------</span>
 <span class="sd">NAIVE → STABLE: 30%</span>
 <span class="sd">NAIVE → ACTIVE: 60% </span>
 <span class="sd">NAIVE → HIGHLY_ACTIVE: 10%</span>
@@ -156,23 +159,22 @@
 <div class="viewcode-block" id="DiseaseState">
 <a class="viewcode-back" href="../../simulation/index.html#simulation.clinical_model.DiseaseState">[docs]</a>
 <span class="k">class</span> <span class="nc">DiseaseState</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;:no-index:</span>
-<span class="sd">    Disease states for AMD progression.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Disease states for AMD progression.</span>
 
-<span class="sd">    Enumeration of possible disease states in the AMD progression model:</span>
+<span class="sd">    Enumeration of possible disease states in the AMD progression model.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-<span class="sd">    NAIVE : </span>
+<span class="sd">    NAIVE : Enum</span>
 <span class="sd">        Initial state for new patients with no prior treatment.</span>
 <span class="sd">        Typically transitions to other states in first visit.</span>
-<span class="sd">    STABLE : </span>
+<span class="sd">    STABLE : Enum</span>
 <span class="sd">        Disease is under control with minimal activity.</span>
 <span class="sd">        Patients typically maintain or slightly improve vision.</span>
-<span class="sd">    ACTIVE : </span>
+<span class="sd">    ACTIVE : Enum</span>
 <span class="sd">        Disease shows signs of activity with fluid accumulation.</span>
 <span class="sd">        Patients typically experience vision decline without treatment.</span>
-<span class="sd">    HIGHLY_ACTIVE : </span>
+<span class="sd">    HIGHLY_ACTIVE : Enum</span>
 <span class="sd">        Disease shows high levels of activity with significant fluid.</span>
 <span class="sd">        Patients experience rapid vision decline without treatment.</span>
 
@@ -232,6 +234,14 @@
 <span class="sd">            - time_factor: Effect of time since last injection</span>
 <span class="sd">            - ceiling_factor: Vision ceiling effect</span>
 <span class="sd">            - measurement_noise: Random variability</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The model captures key clinical aspects of AMD progression:</span>
+<span class="sd">    1. State-dependent response to treatment</span>
+<span class="sd">    2. Waning of treatment effect over time</span>
+<span class="sd">    3. Diminishing returns at higher vision levels</span>
+<span class="sd">    4. Realistic measurement variability</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
 <div class="viewcode-block" id="ClinicalModel.__init__">

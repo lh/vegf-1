@@ -11,8 +11,12 @@ Simulation Modules
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: simulation.scheduler
+Clinic Scheduler
+----------------
+.. autoclass:: simulation.scheduler.ClinicScheduler
    :members:
+   :exclude-members: schedule_next_visit
+   :noindex:
    :undoc-members:
    :show-inheritance:
 

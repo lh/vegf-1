@@ -22,6 +22,13 @@ Example Usage:
 Note: The configuration file path can be modified in the main() function.
 """
 
+import logging
+# Configure logging to reduce debug output
+logging.basicConfig(level=logging.INFO)
+# Set specific loggers to higher levels to reduce noise
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
+logging.getLogger('PIL').setLevel(logging.WARNING)
+
 from datetime import datetime, timedelta
 from simulation.config import SimulationConfig
 from simulation.abs import AgentBasedSimulation
@@ -49,14 +56,15 @@ def run_abs(config, verbose=False):
     sim = AgentBasedSimulation(config, start_date)
     sim.clock.end_date = end_date  # Set end date before scheduling events
     
-    # Add patients
+    # Add patients and schedule their initial visits
     for i in range(1, config.num_patients + 1):
         patient_id = f"TEST{i:03d}"
         sim.add_patient(patient_id, "treat_and_extend")
         
-        # Schedule initial visit
+        # Schedule initial visit - spread patients across first week
+        initial_visit_time = start_date + timedelta(hours=i*2)  # Space patients out by 2 hours
         sim.clock.schedule_event(Event(
-            time=start_date + timedelta(minutes=30*(i-1)),
+            time=initial_visit_time,
             event_type="visit",
             patient_id=patient_id,
             data={
@@ -144,25 +152,103 @@ def main():
         patient_histories=des_results
     )
     
+    # Dump ABS data to a file for inspection
+    import json
+    import pandas as pd
+    
+    # First, convert the ABS data to a more readable format
+    abs_data_list = []
+    for patient_id, history in abs_results.items():
+        for visit in history:
+            visit_data = {
+                'patient_id': patient_id,
+                'date': str(visit.get('date', '')),
+                'vision': visit.get('vision', None),
+                'type': visit.get('type', ''),
+                'actions': str(visit.get('actions', [])),
+                'disease_state': visit.get('disease_state', '')
+            }
+            abs_data_list.append(visit_data)
+    
+    # Convert to DataFrame for easier viewing
+    if abs_data_list:
+        abs_df = pd.DataFrame(abs_data_list)
+        abs_df.to_csv('abs_data_dump.csv', index=False)
+        print("\nABS data dumped to abs_data_dump.csv")
+    else:
+        print("\nNo ABS data to dump")
+    
     # Create individual visualizations
-    plt.figure(figsize=(15, 5))
+    # Create separate figures for ABS and DES to avoid issues with subplot sharing
     
-    plt.subplot(121)
-    abs_sim_results.plot_mean_vision(title="Agent-Based Simulation Results")
-    
-    plt.subplot(122)
-    des_sim_results.plot_mean_vision(title="Discrete Event Simulation Results")
-    
-    plt.tight_layout()
-    plt.savefig('individual_simulation_results.png', dpi=300)
-    plt.show()  # Display plot for debugging
+    # ABS visualization
+    abs_fig = plt.figure(figsize=(8, 6))
+    abs_plot = abs_sim_results.plot_mean_vision(title="Agent-Based Simulation Results")
+    if abs_plot is None:
+        print("Warning: No data available for ABS visualization")
+        plt.close(abs_fig)
+    else:
+        plt.savefig('abs_mean_acuity.png', dpi=300)
+        print("Saved ABS visualization to abs_mean_acuity.png")
     plt.close()
     
-    # Create comparison visualization
-    time_points = list(range((end_date - start_date).days + 1))
-    des_data = {"All Patients": des_sim_results.get_mean_vision_over_time()}
-    abs_data = {"All Patients": abs_sim_results.get_mean_vision_over_time()}
+    # DES visualization
+    des_fig = plt.figure(figsize=(8, 6))
+    des_plot = des_sim_results.plot_mean_vision(title="Discrete Event Simulation Results")
+    if des_plot is None:
+        print("Warning: No data available for DES visualization")
+        plt.close(des_fig)
+    else:
+        plt.savefig('des_mean_acuity.png', dpi=300)
+        print("Saved DES visualization to des_mean_acuity.png")
+    plt.close()
     
+    # Now create a combined figure with both plots side by side
+    # Use the saved images to create a combined figure
+    import matplotlib.image as mpimg
+    
+    try:
+        # Load the saved images
+        abs_img = mpimg.imread('abs_mean_acuity.png')
+        des_img = mpimg.imread('des_mean_acuity.png')
+        
+        # Create a new figure for the combined plot
+        combined_fig = plt.figure(figsize=(16, 6))
+        
+        # Add the images as subplots
+        plt.subplot(121)
+        plt.imshow(abs_img)
+        plt.axis('off')
+        
+        plt.subplot(122)
+        plt.imshow(des_img)
+        plt.axis('off')
+        
+        plt.tight_layout()
+        plt.savefig('individual_simulation_results.png', dpi=300)
+        print("Saved combined visualization to individual_simulation_results.png")
+    except Exception as e:
+        print(f"Error creating combined visualization: {e}")
+    
+    plt.close('all')
+    
+    # Create comparison visualization
+    # Use weekly time points instead of daily to match the data structure
+    time_points = list(range(0, 53))  # Weekly points for a year (0-52 weeks)
+    
+    # Get the mean vision data
+    des_means = des_sim_results.get_mean_vision_over_time()
+    abs_means = abs_sim_results.get_mean_vision_over_time()
+    
+    # Debug output to understand the data
+    print("\nDES mean vision data length:", len(des_means) if des_means else 0)
+    print("ABS mean vision data length:", len(abs_means) if abs_means else 0)
+    
+    # Create data dictionaries for the comparison plot
+    des_data = {"All Patients": des_means}
+    abs_data = {"All Patients": abs_means}
+    
+    # Plot the comparison
     plot_mean_acuity_comparison(des_data, abs_data, time_points)
     
     # Print summary statistics

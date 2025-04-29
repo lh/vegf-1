@@ -133,7 +133,8 @@ class ClinicScheduler:
     
     def schedule_next_visit(self, event_factory: Callable, patient_id: str, 
                           last_visit: datetime, next_visit_interval: int) -> Optional[Event]:
-        """Schedule the next visit for a patient.
+        """:no-index:
+        Schedule the next visit for a patient.
 
         Creates a new visit event for a patient based on their last visit and
         the specified interval.
@@ -175,6 +176,7 @@ class ClinicScheduler:
         - Handles week-to-day conversion automatically
         - Returns None if calculated visit would be after simulation end
         - Visit intervals must be positive integers
+        
         """
         # Calculate next visit time based on last visit
         next_time = last_visit + timedelta(weeks=next_visit_interval)

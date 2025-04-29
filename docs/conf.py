@@ -60,8 +60,8 @@ See Also
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'Macular Simulation'
-copyright = '2025, Rose'
-author = 'Rose'
+copyright = '2025, Luke Herbert'
+author = 'Luke Herbert'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

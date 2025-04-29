@@ -49,8 +49,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../PROJECT_OVERVIEW.html">Macular Degeneration Treatment Simulation Project</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../simulation/index.html">Simulation Modules</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Analysis Modules</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#key-features">Key Features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis-of-intravitreal-eylea-injection-treatment-patterns-and-outcomes">Analysis of intravitreal Eylea injection treatment patterns and outcomes.</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#key-features">Key Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#classes">Classes</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.COLUMN_MAPPINGS"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.COLUMN_MAPPINGS</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.DATA_VALIDATION"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.DATA_VALIDATION</span></code></a></li>
@@ -150,9 +153,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="analysis-modules">
-<h1>Analysis Modules<a class="headerlink" href="#analysis-modules" title="Link to this heading"></a></h1>
-<p id="module-analysis.eylea_data_analysis">Analysis of intravitreal Eylea injection treatment patterns and outcomes.</p>
+  <section id="module-analysis.eylea_data_analysis">
+<span id="analysis-modules"></span><h1>Analysis Modules<a class="headerlink" href="#module-analysis.eylea_data_analysis" title="Link to this heading"></a></h1>
+<section id="analysis-of-intravitreal-eylea-injection-treatment-patterns-and-outcomes">
+<h2>Analysis of intravitreal Eylea injection treatment patterns and outcomes.<a class="headerlink" href="#analysis-of-intravitreal-eylea-injection-treatment-patterns-and-outcomes" title="Link to this heading"></a></h2>
 <p>This module provides tools for analyzing real-world data from intravitreal Eylea
 injections to derive parameters for simulation models. The analysis includes:</p>
 <ul class="simple">
@@ -164,7 +168,7 @@ injections to derive parameters for simulation models. The analysis includes:</p
 <li><p>Data visualization and export</p></li>
 </ul>
 <section id="key-features">
-<h2>Key Features<a class="headerlink" href="#key-features" title="Link to this heading"></a></h2>
+<h3>Key Features<a class="headerlink" href="#key-features" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Robust data validation with flexible column name mapping</p></li>
 <li><p>Comprehensive data quality reporting</p></li>
@@ -175,7 +179,7 @@ injections to derive parameters for simulation models. The analysis includes:</p
 </ul>
 </section>
 <section id="classes">
-<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<h3>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h3>
 <p>EyleaDataAnalyzer : Main analysis class implementing the full analysis pipeline</p>
 <div class="admonition-examples admonition">
 <p class="admonition-title">Examples</p>
@@ -185,6 +189,7 @@ injections to derive parameters for simulation models. The analysis includes:</p
 </pre></div>
 </div>
 </div>
+</section>
 </section>
 <dl class="py class">
 <dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer">
@@ -633,16 +638,21 @@ to a text file in the output directory.</p>
 </dl>
 <div class="admonition-notes admonition">
 <p class="admonition-title">Notes</p>
-<p>Plot 1 (Histogram):
-- Shows distribution of all injection intervals
-- Includes reference lines at:</p>
-<blockquote>
-<div><ul class="simple">
+<dl class="simple">
+<dt>Plot 1 (Histogram):</dt><dd><ul class="simple">
+<li><p>Shows distribution of all injection intervals</p></li>
+<li><dl class="simple">
+<dt>Includes reference lines at:</dt><dd><ul>
 <li><p>28 days (monthly)</p></li>
 <li><p>56 days (bi-monthly)</p></li>
 <li><p>84 days (quarterly)</p></li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
 <p>Plot 2 (Sequence):
 - Shows mean ± SD and median intervals by injection number
 - Helps identify interval patterns over treatment course</p>
@@ -694,22 +704,25 @@ to a text file in the output directory.</p>
 </dl>
 <div class="admonition-notes admonition">
 <p class="admonition-title">Notes</p>
-<p>Plot 1 (Histogram):
-- Shows distribution of final VA changes from baseline
-- Includes reference lines at:</p>
-<blockquote>
-<div><ul class="simple">
+<dl class="simple">
+<dt>Plot 1 (Histogram):</dt><dd><ul class="simple">
+<li><p>Shows distribution of final VA changes from baseline</p></li>
+<li><dl class="simple">
+<dt>Includes reference lines at:</dt><dd><ul>
 <li><p>0 (no change)</p></li>
 <li><p>±5 letters (gain/loss)</p></li>
 <li><p>±15 letters (significant gain/loss)</p></li>
 </ul>
-</div></blockquote>
-<p>Plot 2 (Categories):
-- Groups outcomes into clinically relevant categories
-- Shows counts and percentages for each category
-- Categories:</p>
-<blockquote>
-<div><ul class="simple">
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt>Plot 2 (Categories):</dt><dd><ul class="simple">
+<li><p>Groups outcomes into clinically relevant categories</p></li>
+<li><p>Shows counts and percentages for each category</p></li>
+<li><dl class="simple">
+<dt>Categories:</dt><dd><ul>
 <li><p>≥15 letter gain</p></li>
 <li><p>5-14 letter gain</p></li>
 <li><p>Stable (-4 to +4)</p></li>
@@ -717,7 +730,12 @@ to a text file in the output directory.</p>
 <li><p>≥15 letter loss</p></li>
 <li><p>Unknown</p></li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
 <p>Automatically calls analyze_va_trajectories() if needed.</p>
 </div>
 </dd></dl>
@@ -1100,62 +1118,145 @@ interval_data: Raw interval data</p>
 <dd><p>Main analysis function.</p>
 </dd></dl>
 
-<p id="module-analysis.visualize_va_by_pca_cluster">Visualize Visual Acuity Trajectories by PCA Cluster</p>
-<p>This script creates visualizations of visual acuity trajectories over time
-for patients in each of the 4 clusters identified by PCA analysis.</p>
+<p id="module-analysis.visualize_va_by_pca_cluster">Visualize Visual Acuity Trajectories by PCA Cluster.</p>
+<p>This module creates visualizations of visual acuity (VA) trajectories over time
+for patients grouped by clusters identified through PCA analysis.</p>
+<p>The visualizations include:
+- Individual VA trajectories for sampled patients from each cluster
+- Average VA trajectories with standard deviation bands
+- VA change from baseline plots</p>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>The analysis expects:
+1. A SQLite database with interval VA data
+2. A CSV file with cluster assignments from PCA analysis
+3. Output directory for saving plots</p>
+</div>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">python</span> <span class="n">visualize_va_by_pca_cluster</span><span class="o">.</span><span class="n">py</span>
+<span class="go">Generates plots in output/analysis_results directory:</span>
+<span class="go">- va_trajectories_by_pca_cluster.png</span>
+<span class="go">- va_change_by_pca_cluster.png</span>
+</pre></div>
+</div>
+</div>
 <dl class="py function">
 <dt class="sig sig-object py" id="analysis.visualize_va_by_pca_cluster.connect_to_db">
 <span class="sig-prename descclassname"><span class="pre">analysis.visualize_va_by_pca_cluster.</span></span><span class="sig-name descname"><span class="pre">connect_to_db</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_va_by_pca_cluster.html#connect_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_va_by_pca_cluster.connect_to_db" title="Link to this definition"></a></dt>
-<dd><p>Connect to the SQLite database.</p>
+<dd><p>Establish connection to the SQLite database containing VA data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connection</span></code></span></p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Active database connection object</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>sqlite3.Connection</p>
 </dd>
 </dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>The database path is defined by the DB_PATH constant.
+Connection should be closed by the caller when done.</p>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="analysis.visualize_va_by_pca_cluster.load_interval_data">
 <span class="sig-prename descclassname"><span class="pre">analysis.visualize_va_by_pca_cluster.</span></span><span class="sig-name descname"><span class="pre">load_interval_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_va_by_pca_cluster.html#load_interval_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_va_by_pca_cluster.load_interval_data" title="Link to this definition"></a></dt>
-<dd><p>Load the interval_va_data table into a Polars DataFrame.</p>
+<dd><p>Load interval VA data from SQLite database into Polars DataFrame.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame containing:
+- uuid: Patient identifier
+- eye: Eye (left/right)
+- previous_date: Previous visit date
+- current_date: Current visit date
+- prev_va: Previous visual acuity
+- current_va: Current visual acuity
+- interval_days: Days between visits</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>pl.DataFrame</p>
 </dd>
 </dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<ul class="simple">
+<li><p>Automatically converts date strings to datetime objects</p></li>
+<li><p>Closes database connection when done</p></li>
+</ul>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="analysis.visualize_va_by_pca_cluster.load_cluster_assignments">
 <span class="sig-prename descclassname"><span class="pre">analysis.visualize_va_by_pca_cluster.</span></span><span class="sig-name descname"><span class="pre">load_cluster_assignments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_va_by_pca_cluster.html#load_cluster_assignments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_va_by_pca_cluster.load_cluster_assignments" title="Link to this definition"></a></dt>
-<dd><p>Load the cluster assignments from the PCA analysis.</p>
+<dd><p>Load patient cluster assignments from PCA analysis results.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame containing:
+- uuid: Patient identifier
+- eye: Eye (left/right)
+- cluster: PCA cluster assignment (0-3)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>pl.DataFrame</p>
 </dd>
 </dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<ul class="simple">
+<li><p>Reads from output/analysis_results/va_interval_clusters_4.csv</p></li>
+<li><p>Cluster meanings:
+0: Moderate VA, Moderate Interval
+1: Low VA, Moderate Interval
+2: High VA, Short Interval
+3: Long Gap Patients</p></li>
+</ul>
+</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="analysis.visualize_va_by_pca_cluster.visualize_va_trajectories_by_cluster">
 <span class="sig-prename descclassname"><span class="pre">analysis.visualize_va_by_pca_cluster.</span></span><span class="sig-name descname"><span class="pre">visualize_va_trajectories_by_cluster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_va_by_pca_cluster.html#visualize_va_trajectories_by_cluster"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_va_by_pca_cluster.visualize_va_trajectories_by_cluster" title="Link to this definition"></a></dt>
-<dd><p>Visualize visual acuity trajectories by PCA cluster.</p>
+<dd><p>Generate visualizations of VA trajectories grouped by PCA clusters.</p>
+<p>Creates two plots:
+1. Individual VA trajectories with cluster averages
+2. VA change from baseline with standard deviation bands</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
-</dd>
-<dt class="field-even">Parameters<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>interval_data</strong> (<em>DataFrame</em>)</p></li>
-<li><p><strong>cluster_df</strong> (<em>DataFrame</em>)</p></li>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>interval_data</strong> (<em>pl.DataFrame</em>) – DataFrame containing interval VA data with columns:
+- uuid: Patient identifier
+- eye: Eye (left/right)
+- previous_date: Previous visit date
+- current_date: Current visit date
+- prev_va: Previous visual acuity
+- current_va: Current visual acuity
+- interval_days: Days between visits</p></li>
+<li><p><strong>cluster_df</strong> (<em>pl.DataFrame</em>) – DataFrame containing cluster assignments with columns:
+- uuid: Patient identifier
+- eye: Eye (left/right)
+- cluster: PCA cluster assignment (0-3)</p></li>
 </ul>
 </dd>
-</dl>
-<dl class="simple">
-<dt>Args:</dt><dd><p>interval_data: Raw interval data
-cluster_df: DataFrame with cluster assignments</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Saves plots to output/analysis_results directory:
+- va_trajectories_by_pca_cluster.png
+- va_change_by_pca_cluster.png</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
 </dd>
 </dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<ul class="simple">
+<li><p>Samples up to 10 patients per cluster for individual trajectories</p></li>
+<li><p>Uses 60-day bins for calculating averages</p></li>
+<li><p>Limits visualization to first 1000 days for clarity</p></li>
+</ul>
+</div>
 </dd></dl>
 
 <dl class="py function">

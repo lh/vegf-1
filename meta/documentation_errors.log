@@ -1,0 +1,187 @@
+/Users/rose/Code/aided/analysis/eylea_intervals_analysis.py:docstring of analysis.eylea_intervals_analysis:1: WARNING: duplicate object description of analysis.eylea_intervals_analysis, other instance in analysis/eylea_intervals_analysis, use :no-index: for one of them
+/Users/rose/Code/aided/analysis/eylea_intervals_analysis.py:docstring of analysis.eylea_intervals_analysis.connect_to_db:1: WARNING: duplicate object description of analysis.eylea_intervals_analysis.connect_to_db, other instance in analysis/eylea_intervals_analysis, use :no-index: for one of them
+/Users/rose/Code/aided/analysis/eylea_intervals_analysis.py:docstring of analysis.eylea_intervals_analysis.load_interval_data:1: WARNING: duplicate object description of analysis.eylea_intervals_analysis.load_interval_data, other instance in analysis/eylea_intervals_analysis, use :no-index: for one of them
+/Users/rose/Code/aided/analysis/eylea_intervals_analysis.py:docstring of analysis.eylea_intervals_analysis.load_interval_summary:1: WARNING: duplicate object description of analysis.eylea_intervals_analysis.load_interval_summary, other instance in analysis/eylea_intervals_analysis, use :no-index: for one of them
+/Users/rose/Code/aided/analysis/eylea_intervals_analysis.py:docstring of analysis.eylea_intervals_analysis.analyze_first_year_injections:1: WARNING: duplicate object description of analysis.eylea_intervals_analysis.analyze_first_year_injections, other instance in analysis/eylea_intervals_analysis, use :no-index: for one of them
+/Users/rose/Code/aided/analysis/eylea_intervals_analysis.py:docstring of analysis.eylea_intervals_analysis.identify_treatment_groups:1: WARNING: duplicate object description of analysis.eylea_intervals_analysis.identify_treatment_groups, other instance in analysis/eylea_intervals_analysis, use :no-index: for one of them
+/Users/rose/Code/aided/analysis/eylea_intervals_analysis.py:docstring of analysis.eylea_intervals_analysis.cluster_treatment_patterns:1: WARNING: duplicate object description of analysis.eylea_intervals_analysis.cluster_treatment_patterns, other instance in analysis/eylea_intervals_analysis, use :no-index: for one of them
+/Users/rose/Code/aided/analysis/eylea_intervals_analysis.py:docstring of analysis.eylea_intervals_analysis.analyze_intervals_by_group:1: WARNING: duplicate object description of analysis.eylea_intervals_analysis.analyze_intervals_by_group, other instance in analysis/eylea_intervals_analysis, use :no-index: for one of them
+/Users/rose/Code/aided/analysis/eylea_intervals_analysis.py:docstring of analysis.eylea_intervals_analysis.prepare_va_interval_data_for_pca:1: WARNING: duplicate object description of analysis.eylea_intervals_analysis.prepare_va_interval_data_for_pca, other instance in analysis/eylea_intervals_analysis, use :no-index: for one of them
+/Users/rose/Code/aided/analysis/eylea_intervals_analysis.py:docstring of analysis.eylea_intervals_analysis.perform_va_interval_pca:1: WARNING: duplicate object description of analysis.eylea_intervals_analysis.perform_va_interval_pca, other instance in analysis/eylea_intervals_analysis, use :no-index: for one of them
+/Users/rose/Code/aided/analysis/eylea_intervals_analysis.py:docstring of analysis.eylea_intervals_analysis.analyze_va_by_group:1: WARNING: duplicate object description of analysis.eylea_intervals_analysis.analyze_va_by_group, other instance in analysis/eylea_intervals_analysis, use :no-index: for one of them
+/Users/rose/Code/aided/analysis/eylea_intervals_analysis.py:docstring of analysis.eylea_intervals_analysis.main:1: WARNING: duplicate object description of analysis.eylea_intervals_analysis.main, other instance in analysis/eylea_intervals_analysis, use :no-index: for one of them
+/Users/rose/Code/aided/docs/index.rst:49: WARNING: Title underline too short.
+
+Visualization Modules
+--------------------
+/Users/rose/Code/aided/docs/index.rst:49: WARNING: Title underline too short.
+
+Visualization Modules
+--------------------
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser:1: WARNING: duplicate object description of protocols.config_parser, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.SimulationConfig:1: WARNING: duplicate object description of protocols.config_parser.SimulationConfig, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.SimulationConfig.name:1: WARNING: duplicate object description of protocols.config_parser.SimulationConfig.name, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.SimulationConfig.protocol_agent:1: WARNING: duplicate object description of protocols.config_parser.SimulationConfig.protocol_agent, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.SimulationConfig.protocol_type:1: WARNING: duplicate object description of protocols.config_parser.SimulationConfig.protocol_type, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.SimulationConfig.parameter_set:1: WARNING: duplicate object description of protocols.config_parser.SimulationConfig.parameter_set, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.SimulationConfig.simulation_type:1: WARNING: duplicate object description of protocols.config_parser.SimulationConfig.simulation_type, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.SimulationConfig.duration_days:1: WARNING: duplicate object description of protocols.config_parser.SimulationConfig.duration_days, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.SimulationConfig.num_patients:1: WARNING: duplicate object description of protocols.config_parser.SimulationConfig.num_patients, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.SimulationConfig.random_seed:1: WARNING: duplicate object description of protocols.config_parser.SimulationConfig.random_seed, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.SimulationConfig.save_results:1: WARNING: duplicate object description of protocols.config_parser.SimulationConfig.save_results, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.SimulationConfig.database:1: WARNING: duplicate object description of protocols.config_parser.SimulationConfig.database, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.SimulationConfig.plots:1: WARNING: duplicate object description of protocols.config_parser.SimulationConfig.plots, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.SimulationConfig.verbose:1: WARNING: duplicate object description of protocols.config_parser.SimulationConfig.verbose, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.SimulationConfig.resources:1: WARNING: duplicate object description of protocols.config_parser.SimulationConfig.resources, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.SimulationConfig.__init__:1: WARNING: duplicate object description of protocols.config_parser.SimulationConfig.__init__, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.ConfigurationManager:1: WARNING: duplicate object description of protocols.config_parser.ConfigurationManager, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.ConfigurationManager.__init__:1: WARNING: duplicate object description of protocols.config_parser.ConfigurationManager.__init__, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.ConfigurationManager.load_simulation_config:1: WARNING: duplicate object description of protocols.config_parser.ConfigurationManager.load_simulation_config, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/config_parser.py:docstring of protocols.config_parser.ConfigurationManager.get_full_configuration:1: WARNING: duplicate object description of protocols.config_parser.ConfigurationManager.get_full_configuration, other instance in protocols/config_parser, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/protocol_parser.py:docstring of protocols.protocol_parser:11: WARNING: Title underline too short.
+
+Key Classes
+----------
+/Users/rose/Code/aided/protocols/protocol_parser.py:docstring of protocols.protocol_parser.ProtocolParser.load_simulation_config:1: WARNING: duplicate object description of protocols.protocol_parser.ProtocolParser.load_simulation_config, other instance in protocols/index, use :no-index: for one of them
+/Users/rose/Code/aided/protocols/protocol_parser.py:docstring of protocols.protocol_parser.ProtocolParser.get_full_configuration:1: WARNING: duplicate object description of protocols.protocol_parser.ProtocolParser.get_full_configuration, other instance in protocols/index, use :no-index: for one of them
+/Users/rose/Code/aided/docs/protocols/visit_types.rst:2: WARNING: Title underline too short.
+
+Visit Types Configuration
+========================
+/Users/rose/Code/aided/docs/protocols/visit_types.rst:7: WARNING: Title underline too short.
+
+File Location
+------------
+/Users/rose/Code/aided/docs/protocols/visit_types.rst:18: WARNING: Title underline too short.
+
+File Structure
+-------------
+/Users/rose/Code/aided/docs/protocols/visit_types.rst:18: WARNING: Title underline too short.
+
+File Structure
+-------------
+/Users/rose/Code/aided/docs/simulation/clinical_model.rst:2: WARNING: Title underline too short.
+
+Clinical Model Module
+====================
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model:2: WARNING: Field list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.DiseaseState:2: WARNING: Field list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.DiseaseState:20: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel:2: WARNING: Field list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel:22: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel:25: WARNING: Block quote ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel.simulate_disease_progression:23: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel.simulate_disease_progression:26: WARNING: Block quote ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/docs/simulation/config.rst:2: WARNING: Title underline too short.
+
+Simulation Config Module
+=======================
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:25: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:22: WARNING: Inline literal start-string without end-string.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:22: WARNING: Inline interpreted text or phrase reference start-string without end-string.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:32: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:40: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:47: WARNING: Block quote ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:59: WARNING: Definition list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:60: WARNING: Definition list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:60: WARNING: Inline literal start-string without end-string.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:60: WARNING: Inline interpreted text or phrase reference start-string without end-string.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.get_des_params:7: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/docs/simulation/index.rst:2: WARNING: Title underline too short.
+
+Simulation Modules
+=================
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state:2: WARNING: Field list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState:2: WARNING: Field list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.process_visit:17: WARNING: Definition list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/scheduler.py:docstring of simulation.scheduler.ClinicScheduler.request_slot:33: CRITICAL: Unexpected section title.
+
+Algorithm
+---------
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:25: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:22: WARNING: Inline literal start-string without end-string.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:22: WARNING: Inline interpreted text or phrase reference start-string without end-string.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:32: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:40: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:47: WARNING: Block quote ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:59: WARNING: Definition list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:60: WARNING: Definition list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:60: WARNING: Inline literal start-string without end-string.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:60: WARNING: Inline interpreted text or phrase reference start-string without end-string.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config:1: WARNING: duplicate object description of simulation.config, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig:1: WARNING: duplicate object description of simulation.config.SimulationConfig, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.parameters:1: WARNING: duplicate object description of simulation.config.SimulationConfig.parameters, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.protocol:1: WARNING: duplicate object description of simulation.config.SimulationConfig.protocol, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.simulation_type:1: WARNING: duplicate object description of simulation.config.SimulationConfig.simulation_type, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.num_patients:1: WARNING: duplicate object description of simulation.config.SimulationConfig.num_patients, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.duration_days:1: WARNING: duplicate object description of simulation.config.SimulationConfig.duration_days, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.random_seed:1: WARNING: duplicate object description of simulation.config.SimulationConfig.random_seed, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.verbose:1: WARNING: duplicate object description of simulation.config.SimulationConfig.verbose, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.start_date:1: WARNING: duplicate object description of simulation.config.SimulationConfig.start_date, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.resources:1: WARNING: duplicate object description of simulation.config.SimulationConfig.resources, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.get_vision_params:1: WARNING: duplicate object description of simulation.config.SimulationConfig.get_vision_params, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.get_maintenance_params:1: WARNING: duplicate object description of simulation.config.SimulationConfig.get_maintenance_params, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.get_loading_phase_params:1: WARNING: duplicate object description of simulation.config.SimulationConfig.get_loading_phase_params, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.get_resource_params:1: WARNING: duplicate object description of simulation.config.SimulationConfig.get_resource_params, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.get_des_params:1: WARNING: duplicate object description of simulation.config.SimulationConfig.get_des_params, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.get_des_params:7: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.get_output_params:1: WARNING: duplicate object description of simulation.config.SimulationConfig.get_output_params, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.get_clinical_model_params:1: WARNING: duplicate object description of simulation.config.SimulationConfig.get_clinical_model_params, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.from_yaml:1: WARNING: duplicate object description of simulation.config.SimulationConfig.from_yaml, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/config.py:docstring of simulation.config.SimulationConfig.__init__:1: WARNING: duplicate object description of simulation.config.SimulationConfig.__init__, other instance in simulation/config, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model:2: WARNING: Field list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model:1: WARNING: duplicate object description of simulation.clinical_model, other instance in simulation/clinical_model, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.DiseaseState:1: WARNING: duplicate object description of simulation.clinical_model.DiseaseState, other instance in simulation/clinical_model, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.DiseaseState:2: WARNING: Field list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.DiseaseState:20: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.DiseaseState.NAIVE:1: WARNING: duplicate object description of simulation.clinical_model.DiseaseState.NAIVE, other instance in simulation/clinical_model, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.DiseaseState.STABLE:1: WARNING: duplicate object description of simulation.clinical_model.DiseaseState.STABLE, other instance in simulation/clinical_model, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.DiseaseState.ACTIVE:1: WARNING: duplicate object description of simulation.clinical_model.DiseaseState.ACTIVE, other instance in simulation/clinical_model, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.DiseaseState.HIGHLY_ACTIVE:1: WARNING: duplicate object description of simulation.clinical_model.DiseaseState.HIGHLY_ACTIVE, other instance in simulation/clinical_model, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel:1: WARNING: duplicate object description of simulation.clinical_model.ClinicalModel, other instance in simulation/clinical_model, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel:2: WARNING: Field list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel:22: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel:25: WARNING: Block quote ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel.__init__:1: WARNING: duplicate object description of simulation.clinical_model.ClinicalModel.__init__, other instance in simulation/clinical_model, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel.get_transition_probabilities:1: WARNING: duplicate object description of simulation.clinical_model.ClinicalModel.get_transition_probabilities, other instance in simulation/clinical_model, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel.simulate_disease_progression:1: WARNING: duplicate object description of simulation.clinical_model.ClinicalModel.simulate_disease_progression, other instance in simulation/clinical_model, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel.simulate_disease_progression:23: ERROR: Unexpected indentation.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel.simulate_disease_progression:26: WARNING: Block quote ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel.get_initial_vision:1: WARNING: duplicate object description of simulation.clinical_model.ClinicalModel.get_initial_vision, other instance in simulation/clinical_model, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/clinical_model.py:docstring of simulation.clinical_model.ClinicalModel.simulate_vision_change:1: WARNING: duplicate object description of simulation.clinical_model.ClinicalModel.simulate_vision_change, other instance in simulation/clinical_model, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state:2: WARNING: Field list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state:1: WARNING: duplicate object description of simulation.patient_state, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState:1: WARNING: duplicate object description of simulation.patient_state.PatientState, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState:2: WARNING: Field list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.__init__:1: WARNING: duplicate object description of simulation.patient_state.PatientState.__init__, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.process_visit:1: WARNING: duplicate object description of simulation.patient_state.PatientState.process_visit, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.process_visit:17: WARNING: Definition list ends without a blank line; unexpected unindent.
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.update_phase:1: WARNING: duplicate object description of simulation.patient_state.PatientState.update_phase, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.set_next_visit_interval:1: WARNING: duplicate object description of simulation.patient_state.PatientState.set_next_visit_interval, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.visit_history:1: WARNING: duplicate object description of simulation.patient_state.PatientState.visit_history, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.current_vision:1: WARNING: duplicate object description of simulation.patient_state.PatientState.current_vision, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.last_visit_date:1: WARNING: duplicate object description of simulation.patient_state.PatientState.last_visit_date, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/patient_state.py:docstring of simulation.patient_state.PatientState.next_visit_interval:1: WARNING: duplicate object description of simulation.patient_state.PatientState.next_visit_interval, other instance in simulation/index, use :no-index: for one of them
+/Users/rose/Code/aided/simulation/scheduler.py:docstring of simulation.scheduler.ClinicScheduler.request_slot:33: CRITICAL: Unexpected section title.
+
+Algorithm
+---------
+/Users/rose/Code/aided/simulation/scheduler.py:docstring of simulation.scheduler.ClinicScheduler.schedule_next_visit:2: WARNING: Field list ends without a blank line; unexpected unindent.
+looking for now-outdated files... none found
+pickling environment... done
+checking consistency... done
+preparing documents... done
+copying assets... copying static files... done
+copying extra files... done
+done
+writing output... [100%] visualization/acuity_viz
+/Users/rose/Code/aided/docs/PROJECT_OVERVIEW.md:50: WARNING: 'myst' cross-reference target not found: 'docs/_build/html/index.html'
+generating indices... genindex py-modindex done
+highlighting module code... [ 38%] analysis.visualize_va_change_by_clust
+highlighting module code... [100%] visualization.acuity_viz
+writing additional pages... search done
+dumping search index in English (code: en)... done
+dumping object inventory... done
+build succeeded, 134 warnings.
+
+The HTML pages are in _build/html.
