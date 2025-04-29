@@ -1,8 +1,26 @@
-"""
-Visualize Visual Acuity Trajectories by PCA Cluster
+"""Visualize Visual Acuity Trajectories by PCA Cluster.
 
-This script creates visualizations of visual acuity trajectories over time
-for patients in each of the 4 clusters identified by PCA analysis.
+This module creates visualizations of visual acuity (VA) trajectories over time
+for patients grouped by clusters identified through PCA analysis.
+
+The visualizations include:
+- Individual VA trajectories for sampled patients from each cluster
+- Average VA trajectories with standard deviation bands
+- VA change from baseline plots
+
+Notes
+-----
+The analysis expects:
+1. A SQLite database with interval VA data
+2. A CSV file with cluster assignments from PCA analysis
+3. Output directory for saving plots
+
+Examples
+--------
+>>> python visualize_va_by_pca_cluster.py
+Generates plots in output/analysis_results directory:
+- va_trajectories_by_pca_cluster.png
+- va_change_by_pca_cluster.png
 """
 
 import polars as pl
@@ -20,11 +38,40 @@ output_dir.mkdir(exist_ok=True, parents=True)
 DB_PATH = "output/eylea_intervals.db"
 
 def connect_to_db() -> sqlite3.Connection:
-    """Connect to the SQLite database."""
+    """Establish connection to the SQLite database containing VA data.
+
+    Returns
+    -------
+    sqlite3.Connection
+        Active database connection object
+
+    Notes
+    -----
+    The database path is defined by the DB_PATH constant.
+    Connection should be closed by the caller when done.
+    """
     return sqlite3.connect(DB_PATH)
 
 def load_interval_data() -> pl.DataFrame:
-    """Load the interval_va_data table into a Polars DataFrame."""
+    """Load interval VA data from SQLite database into Polars DataFrame.
+
+    Returns
+    -------
+    pl.DataFrame
+        DataFrame containing:
+        - uuid: Patient identifier
+        - eye: Eye (left/right)
+        - previous_date: Previous visit date
+        - current_date: Current visit date  
+        - prev_va: Previous visual acuity
+        - current_va: Current visual acuity
+        - interval_days: Days between visits
+
+    Notes
+    -----
+    - Automatically converts date strings to datetime objects
+    - Closes database connection when done
+    """
     conn = connect_to_db()
     
     # Use Polars to read from SQLite
@@ -41,18 +88,66 @@ def load_interval_data() -> pl.DataFrame:
     return df
 
 def load_cluster_assignments() -> pl.DataFrame:
-    """Load the cluster assignments from the PCA analysis."""
+    """Load patient cluster assignments from PCA analysis results.
+
+    Returns
+    -------
+    pl.DataFrame
+        DataFrame containing:
+        - uuid: Patient identifier
+        - eye: Eye (left/right)
+        - cluster: PCA cluster assignment (0-3)
+
+    Notes
+    -----
+    - Reads from output/analysis_results/va_interval_clusters_4.csv
+    - Cluster meanings:
+      0: Moderate VA, Moderate Interval
+      1: Low VA, Moderate Interval
+      2: High VA, Short Interval
+      3: Long Gap Patients
+    """
     # Load the 4-cluster assignments
     cluster_df = pl.read_csv(output_dir / "va_interval_clusters_4.csv")
     return cluster_df
 
 def visualize_va_trajectories_by_cluster(interval_data: pl.DataFrame, cluster_df: pl.DataFrame) -> None:
-    """
-    Visualize visual acuity trajectories by PCA cluster.
-    
-    Args:
-        interval_data: Raw interval data
-        cluster_df: DataFrame with cluster assignments
+    """Generate visualizations of VA trajectories grouped by PCA clusters.
+
+    Creates two plots:
+    1. Individual VA trajectories with cluster averages
+    2. VA change from baseline with standard deviation bands
+
+    Parameters
+    ----------
+    interval_data : pl.DataFrame
+        DataFrame containing interval VA data with columns:
+        - uuid: Patient identifier
+        - eye: Eye (left/right)
+        - previous_date: Previous visit date
+        - current_date: Current visit date
+        - prev_va: Previous visual acuity
+        - current_va: Current visual acuity
+        - interval_days: Days between visits
+
+    cluster_df : pl.DataFrame
+        DataFrame containing cluster assignments with columns:
+        - uuid: Patient identifier
+        - eye: Eye (left/right)
+        - cluster: PCA cluster assignment (0-3)
+
+    Returns
+    -------
+    None
+        Saves plots to output/analysis_results directory:
+        - va_trajectories_by_pca_cluster.png
+        - va_change_by_pca_cluster.png
+
+    Notes
+    -----
+    - Samples up to 10 patients per cluster for individual trajectories
+    - Uses 60-day bins for calculating averages
+    - Limits visualization to first 1000 days for clarity
     """
     # Create a unique identifier for each patient-eye combination in both dataframes
     interval_data = interval_data.with_columns([
