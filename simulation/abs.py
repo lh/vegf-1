@@ -138,9 +138,12 @@ class AgentBasedSimulation(BaseSimulation):
         self.start_date = start_date
         self.agents: Dict[str, Patient] = {}
         self.clinical_model = ClinicalModel(config)
-        des_params = config.get_des_params()
-        self.scheduler = ClinicScheduler(des_params['daily_capacity'], des_params['days_per_week'])
+        # Default scheduler parameters for ABS
+        self.scheduler = ClinicScheduler(20, 5)  # 20 patients per day, 5 days per week
         self.clock = SimulationClock(start_date)
+        sim_params = config.get_simulation_params()
+        if 'end_date' in sim_params:
+            self.clock.end_date = sim_params['end_date']
 
     def add_patient(self, patient_id: str, protocol_name: str):
         """
@@ -197,14 +200,17 @@ class AgentBasedSimulation(BaseSimulation):
         if event.event_type == "visit":
             patient = self.agents[event.patient_id]
             visit_data = patient.state.process_visit(event.time, event.data['actions'], self.clinical_model)
+            
             visit_record = {
                 'date': event.time,
-                'type': event.data.get('visit_type', 'regular_visit'),
+                'type': visit_data['visit_type'],
                 'actions': event.data['actions'],
-                'vision': patient.state.current_vision,
-                'disease_state': patient.state.state['disease_state']
+                'baseline_vision': visit_data['baseline_vision'],
+                'vision': visit_data['new_vision'],
+                'disease_state': visit_data['disease_state']
             }
             patient.history.append(visit_record)
+            
             # Schedule next visit based on protocol
             next_visit = self.schedule_next_visit(event.patient_id, event.time)
             if next_visit:
