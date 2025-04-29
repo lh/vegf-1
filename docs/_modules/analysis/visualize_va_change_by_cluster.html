@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>analysis.visualize_va_change_by_cluster &mdash; Macular Simulation  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Macular Simulation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../PROJECT_OVERVIEW.html">Macular Degeneration Treatment Simulation Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/index.html">Simulation Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/index.html">Analysis Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/index.html">Protocol Modules</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/patient_state.html">Patient State Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/scheduler.html">Scheduler Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/config.html">Simulation Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/clinical_model.html">Clinical Model Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/eylea_data_analysis.html">Eylea Data Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/eylea_intervals_analysis.html">Eylea Intervals Analysis Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/visit_types.html">Visit Types Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/config_parser.html">Config Parser Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../visualization/acuity_viz.html">Visual Acuity Visualization Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Macular Simulation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">analysis.visualize_va_change_by_cluster</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for analysis.visualize_va_change_by_cluster</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Visualize VA Change by Interval with PCA Cluster Information</span>
+
+<span class="sd">This script creates an enhanced visualization of VA change by interval length,</span>
+<span class="sd">using different marker shapes to indicate which PCA cluster each data point belongs to.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">polars</span> <span class="k">as</span> <span class="nn">pl</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">sqlite3</span>
+<span class="kn">from</span> <span class="nn">matplotlib.lines</span> <span class="kn">import</span> <span class="n">Line2D</span>
+
+<span class="c1"># Set up output directory</span>
+<span class="n">output_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;output/analysis_results&quot;</span><span class="p">)</span>
+<span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Database path</span>
+<span class="n">DB_PATH</span> <span class="o">=</span> <span class="s2">&quot;output/eylea_intervals.db&quot;</span>
+
+<span class="c1"># Natural threshold from PCA clustering (rounded to nearest 50)</span>
+<span class="n">NATURAL_THRESHOLD</span> <span class="o">=</span> <span class="mi">800</span>  <span class="c1"># ~794 days from PCA</span>
+
+<div class="viewcode-block" id="connect_to_db">
+<a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_va_change_by_cluster.connect_to_db">[docs]</a>
+<span class="k">def</span> <span class="nf">connect_to_db</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">Connection</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Connect to the SQLite database.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">DB_PATH</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="load_interval_data">
+<a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_va_change_by_cluster.load_interval_data">[docs]</a>
+<span class="k">def</span> <span class="nf">load_interval_data</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load the interval_va_data table into a Polars DataFrame.&quot;&quot;&quot;</span>
+    <span class="n">conn</span> <span class="o">=</span> <span class="n">connect_to_db</span><span class="p">()</span>
+    
+    <span class="c1"># Use Polars to read from SQLite</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;SELECT * FROM interval_va_data&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">read_database</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span> <span class="n">connection</span><span class="o">=</span><span class="n">conn</span><span class="p">)</span>
+    
+    <span class="c1"># Convert date strings to datetime objects</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">with_columns</span><span class="p">([</span>
+        <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;previous_date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">),</span>
+        <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;current_date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="p">])</span>
+    
+    <span class="n">conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+<div class="viewcode-block" id="load_cluster_assignments">
+<a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_va_change_by_cluster.load_cluster_assignments">[docs]</a>
+<span class="k">def</span> <span class="nf">load_cluster_assignments</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load the cluster assignments from the PCA analysis.&quot;&quot;&quot;</span>
+    <span class="c1"># Load the 4-cluster assignments</span>
+    <span class="n">cluster_df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">&quot;va_interval_clusters_4.csv&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cluster_df</span></div>
+
+
+<div class="viewcode-block" id="visualize_va_change_by_cluster">
+<a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_va_change_by_cluster.visualize_va_change_by_cluster">[docs]</a>
+<span class="k">def</span> <span class="nf">visualize_va_change_by_cluster</span><span class="p">(</span><span class="n">interval_data</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">cluster_df</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create an enhanced visualization of VA change by interval with cluster information.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        interval_data: Raw interval data</span>
+<span class="sd">        cluster_df: DataFrame with cluster assignments</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Create a unique identifier for each patient-eye combination in both dataframes</span>
+    <span class="n">interval_data</span> <span class="o">=</span> <span class="n">interval_data</span><span class="o">.</span><span class="n">with_columns</span><span class="p">([</span>
+        <span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;uuid&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;eye&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;patient_eye_id&quot;</span><span class="p">)</span>
+    <span class="p">])</span>
+    
+    <span class="c1"># Get unique patient-eye combinations from cluster_df</span>
+    <span class="n">cluster_df</span> <span class="o">=</span> <span class="n">cluster_df</span><span class="o">.</span><span class="n">with_columns</span><span class="p">([</span>
+        <span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;uuid&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;eye&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;patient_eye_id&quot;</span><span class="p">)</span>
+    <span class="p">])</span>
+    
+    <span class="c1"># Create a mapping of patient_eye_id to cluster</span>
+    <span class="n">patient_cluster_map</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cluster_df</span><span class="o">.</span><span class="n">iter_rows</span><span class="p">(</span><span class="n">named</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">patient_cluster_map</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;patient_eye_id&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;cluster&quot;</span><span class="p">]</span>
+    
+    <span class="c1"># Find all intervals and their associated VA changes, along with cluster info</span>
+    <span class="n">all_intervals</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_va_changes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_clusters</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="c1"># Process each patient-eye combination</span>
+    <span class="k">for</span> <span class="n">patient_eye_id</span> <span class="ow">in</span> <span class="n">interval_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;patient_eye_id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">to_series</span><span class="p">():</span>
+        <span class="c1"># Get data for this patient eye</span>
+        <span class="n">patient_data</span> <span class="o">=</span> <span class="n">interval_data</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;patient_eye_id&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">patient_eye_id</span><span class="p">)</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;previous_date&quot;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">patient_data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">continue</span>
+        
+        <span class="c1"># Get cluster for this patient-eye</span>
+        <span class="n">cluster</span> <span class="o">=</span> <span class="n">patient_cluster_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">patient_eye_id</span><span class="p">)</span>
+        
+        <span class="c1"># Skip if no cluster assignment</span>
+        <span class="k">if</span> <span class="n">cluster</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        
+        <span class="c1"># Get intervals and VA changes</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">patient_data</span><span class="p">)):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">interval</span> <span class="o">=</span> <span class="n">patient_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;interval_days&quot;</span><span class="p">)[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="n">va_before</span> <span class="o">=</span> <span class="n">patient_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;prev_va&quot;</span><span class="p">)[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="n">va_after</span> <span class="o">=</span> <span class="n">patient_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;current_va&quot;</span><span class="p">)[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                
+                <span class="c1"># Skip if any value is None</span>
+                <span class="k">if</span> <span class="n">interval</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">va_before</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">va_after</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                    
+                <span class="n">va_change</span> <span class="o">=</span> <span class="n">va_after</span> <span class="o">-</span> <span class="n">va_before</span>
+                
+                <span class="n">all_intervals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+                <span class="n">all_va_changes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">va_change</span><span class="p">)</span>
+                <span class="n">all_clusters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">continue</span>
+    
+    <span class="c1"># Convert to numpy arrays</span>
+    <span class="n">all_intervals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">all_intervals</span><span class="p">)</span>
+    <span class="n">all_va_changes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">all_va_changes</span><span class="p">)</span>
+    <span class="n">all_clusters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">all_clusters</span><span class="p">)</span>
+    
+    <span class="c1"># Create scatter plot with cluster information</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+    
+    <span class="c1"># Define marker shapes for each cluster</span>
+    <span class="n">markers</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;^&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">]</span>  <span class="c1"># circle, square, triangle, diamond</span>
+    
+    <span class="c1"># Define cluster names</span>
+    <span class="n">cluster_names</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;Cluster 1: Moderate VA, Moderate Interval&quot;</span><span class="p">,</span>
+        <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;Cluster 2: Low VA, Moderate Interval&quot;</span><span class="p">,</span>
+        <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;Cluster 3: High VA, Short Interval&quot;</span><span class="p">,</span>
+        <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;Cluster 4: Long Gap Patients&quot;</span>
+    <span class="p">}</span>
+    
+    <span class="c1"># Plot points for each cluster</span>
+    <span class="k">for</span> <span class="n">cluster_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">all_clusters</span> <span class="o">==</span> <span class="n">cluster_id</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+                <span class="n">all_intervals</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> 
+                <span class="n">all_va_changes</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span>
+                <span class="n">marker</span><span class="o">=</span><span class="n">markers</span><span class="p">[</span><span class="n">cluster_id</span><span class="p">],</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+                <span class="n">s</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="n">cluster_names</span><span class="p">[</span><span class="n">cluster_id</span><span class="p">]</span>
+            <span class="p">)</span>
+    
+    <span class="c1"># Add a horizontal line at y=0</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    
+    <span class="c1"># Add vertical lines for thresholds</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">365</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;1 Year (365 days)&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">NATURAL_THRESHOLD</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;PCA Threshold (</span><span class="si">{</span><span class="n">NATURAL_THRESHOLD</span><span class="si">}</span><span class="s1"> days)&#39;</span><span class="p">)</span>
+    
+    <span class="c1"># Calculate and add trend lines for each cluster</span>
+    <span class="k">for</span> <span class="n">cluster_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">all_clusters</span> <span class="o">==</span> <span class="n">cluster_id</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">all_intervals</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="n">all_va_changes</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">poly1d</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                <span class="nb">sorted</span><span class="p">(</span><span class="n">all_intervals</span><span class="p">[</span><span class="n">mask</span><span class="p">]),</span> 
+                <span class="n">p</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">all_intervals</span><span class="p">[</span><span class="n">mask</span><span class="p">])),</span> 
+                <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> 
+                <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Cluster </span><span class="si">{</span><span class="n">cluster_id</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2"> trend: y=</span><span class="si">{</span><span class="n">z</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">z</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">+.1f</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Visual Acuity Change by Interval Length and PCA Cluster&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Interval (days)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;VA Change (letters)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>  <span class="c1"># Use log scale for better visualization</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper center&#39;</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.15</span><span class="p">),</span> <span class="n">ncol</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">&quot;va_change_by_interval_and_cluster.png&quot;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1"># Create a version focusing on the long intervals</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+    
+    <span class="c1"># Filter to intervals &gt; 180 days</span>
+    <span class="n">long_interval_mask</span> <span class="o">=</span> <span class="n">all_intervals</span> <span class="o">&gt;</span> <span class="mi">180</span>
+    
+    <span class="c1"># Plot points for each cluster</span>
+    <span class="k">for</span> <span class="n">cluster_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">all_clusters</span> <span class="o">==</span> <span class="n">cluster_id</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">long_interval_mask</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span>
+                <span class="n">all_intervals</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> 
+                <span class="n">all_va_changes</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span>
+                <span class="n">marker</span><span class="o">=</span><span class="n">markers</span><span class="p">[</span><span class="n">cluster_id</span><span class="p">],</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+                <span class="n">s</span><span class="o">=</span><span class="mi">70</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="n">cluster_names</span><span class="p">[</span><span class="n">cluster_id</span><span class="p">]</span>
+            <span class="p">)</span>
+    
+    <span class="c1"># Add a horizontal line at y=0</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    
+    <span class="c1"># Add vertical lines for thresholds</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">365</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;1 Year (365 days)&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">NATURAL_THRESHOLD</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;PCA Threshold (</span><span class="si">{</span><span class="n">NATURAL_THRESHOLD</span><span class="si">}</span><span class="s1"> days)&#39;</span><span class="p">)</span>
+    
+    <span class="c1"># Calculate and add trend lines for each cluster (for long intervals only)</span>
+    <span class="k">for</span> <span class="n">cluster_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">all_clusters</span> <span class="o">==</span> <span class="n">cluster_id</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">long_interval_mask</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">all_intervals</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="n">all_va_changes</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">poly1d</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                <span class="nb">sorted</span><span class="p">(</span><span class="n">all_intervals</span><span class="p">[</span><span class="n">mask</span><span class="p">]),</span> 
+                <span class="n">p</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">all_intervals</span><span class="p">[</span><span class="n">mask</span><span class="p">])),</span> 
+                <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> 
+                <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Cluster </span><span class="si">{</span><span class="n">cluster_id</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2"> trend: y=</span><span class="si">{</span><span class="n">z</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">z</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">+.1f</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Visual Acuity Change for Long Intervals (&gt;180 days) by PCA Cluster&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Interval (days)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;VA Change (letters)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>  <span class="c1"># Use log scale for better visualization</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper center&#39;</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.15</span><span class="p">),</span> <span class="n">ncol</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">&quot;va_change_by_long_interval_and_cluster.png&quot;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1"># Calculate statistics for each cluster</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">cluster_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">all_clusters</span> <span class="o">==</span> <span class="n">cluster_id</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Convert numpy types to Python native types for JSON serialization</span>
+            <span class="n">cluster_stats</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;cluster_id&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">cluster_id</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="s2">&quot;cluster_name&quot;</span><span class="p">:</span> <span class="n">cluster_names</span><span class="p">[</span><span class="n">cluster_id</span><span class="p">],</span>
+                <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask</span><span class="p">)),</span>
+                <span class="s2">&quot;avg_interval&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">all_intervals</span><span class="p">[</span><span class="n">mask</span><span class="p">])),</span>
+                <span class="s2">&quot;avg_va_change&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">all_va_changes</span><span class="p">[</span><span class="n">mask</span><span class="p">])),</span>
+                <span class="s2">&quot;std_va_change&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">all_va_changes</span><span class="p">[</span><span class="n">mask</span><span class="p">])),</span>
+                <span class="s2">&quot;median_va_change&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">all_va_changes</span><span class="p">[</span><span class="n">mask</span><span class="p">])),</span>
+                <span class="s2">&quot;intervals_over_365&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">all_intervals</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">365</span><span class="p">)),</span>
+                <span class="s2">&quot;intervals_over_natural&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">all_intervals</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">NATURAL_THRESHOLD</span><span class="p">))</span>
+            <span class="p">}</span>
+            <span class="n">stats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cluster_stats</span><span class="p">)</span>
+    
+    <span class="c1"># Save statistics</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">&quot;va_change_by_cluster_stats.json&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">json</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    
+    <span class="c1"># Print statistics</span>
+    <span class="k">for</span> <span class="n">stat</span> <span class="ow">in</span> <span class="n">stats</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cluster </span><span class="si">{</span><span class="n">stat</span><span class="p">[</span><span class="s1">&#39;cluster_id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">stat</span><span class="p">[</span><span class="s1">&#39;cluster_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">):&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Count: </span><span class="si">{</span><span class="n">stat</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Average interval: </span><span class="si">{</span><span class="n">stat</span><span class="p">[</span><span class="s1">&#39;avg_interval&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> days&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Average VA change: </span><span class="si">{</span><span class="n">stat</span><span class="p">[</span><span class="s1">&#39;avg_va_change&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> letters&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Intervals &gt; 365 days: </span><span class="si">{</span><span class="n">stat</span><span class="p">[</span><span class="s1">&#39;intervals_over_365&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">stat</span><span class="p">[</span><span class="s1">&#39;intervals_over_365&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">stat</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%)&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Intervals &gt; </span><span class="si">{</span><span class="n">NATURAL_THRESHOLD</span><span class="si">}</span><span class="s2"> days: </span><span class="si">{</span><span class="n">stat</span><span class="p">[</span><span class="s1">&#39;intervals_over_natural&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">stat</span><span class="p">[</span><span class="s1">&#39;intervals_over_natural&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">stat</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%)&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_va_change_by_cluster.main">[docs]</a>
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Main function.&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading data...&quot;</span><span class="p">)</span>
+    <span class="n">interval_data</span> <span class="o">=</span> <span class="n">load_interval_data</span><span class="p">()</span>
+    <span class="n">cluster_df</span> <span class="o">=</span> <span class="n">load_cluster_assignments</span><span class="p">()</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Creating enhanced visualization...&quot;</span><span class="p">)</span>
+    <span class="n">visualize_va_change_by_cluster</span><span class="p">(</span><span class="n">interval_data</span><span class="p">,</span> <span class="n">cluster_df</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Visualization complete.&quot;</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Rose.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

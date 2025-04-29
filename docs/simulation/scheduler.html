@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scheduler Module &mdash; Macular Simulation  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Simulation Config Module" href="config.html" />
+    <link rel="prev" title="Patient State Module" href="patient_state.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Macular Simulation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../PROJECT_OVERVIEW.html">Macular Degeneration Treatment Simulation Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Simulation Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis/index.html">Analysis Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../protocols/index.html">Protocol Modules</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="patient_state.html">Patient State Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Scheduler Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#key-features">Key Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simulation.scheduler.ClinicScheduler"><code class="docutils literal notranslate"><span class="pre">ClinicScheduler</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.scheduler.ClinicScheduler.__init__"><code class="docutils literal notranslate"><span class="pre">ClinicScheduler.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.scheduler.ClinicScheduler.request_slot"><code class="docutils literal notranslate"><span class="pre">ClinicScheduler.request_slot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.scheduler.ClinicScheduler.schedule_next_visit"><code class="docutils literal notranslate"><span class="pre">ClinicScheduler.schedule_next_visit()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Simulation Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="clinical_model.html">Clinical Model Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../analysis/eylea_data_analysis.html">Eylea Data Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis/eylea_intervals_analysis.html">Eylea Intervals Analysis Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../protocols/visit_types.html">Visit Types Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../protocols/config_parser.html">Config Parser Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../visualization/acuity_viz.html">Visual Acuity Visualization Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Macular Simulation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Scheduler Module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/simulation/scheduler.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-simulation.scheduler">
+<span id="scheduler-module"></span><h1>Scheduler Module<a class="headerlink" href="#module-simulation.scheduler" title="Link to this heading"></a></h1>
+<p>Clinic scheduling and resource allocation management.</p>
+<p>This module implements a scheduler for managing clinic appointments with capacity
+constraints and automatic rescheduling. It supports configurable daily capacity
+and working days per week.</p>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>ClinicScheduler</dt><dd><p>Manages appointment scheduling with capacity constraints</p>
+</dd>
+</dl>
+</section>
+<section id="key-features">
+<h2>Key Features<a class="headerlink" href="#key-features" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Daily capacity limits</p></li>
+<li><p>Configurable clinic days per week</p></li>
+<li><p>Automatic rescheduling when capacity exceeded</p></li>
+<li><p>Weekend/holiday handling</p></li>
+<li><p>Appointment tracking</p></li>
+</ul>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">scheduler</span> <span class="o">=</span> <span class="n">ClinicScheduler</span><span class="p">(</span><span class="n">daily_capacity</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">days_per_week</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">event</span> <span class="o">=</span> <span class="n">Event</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2023</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="ow">not</span> <span class="n">scheduler</span><span class="o">.</span><span class="n">request_slot</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2023</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">31</span><span class="p">)):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Visit needs rescheduling&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<ul class="simple">
+<li><p>Time values should be timezone-naive datetimes</p></li>
+<li><p>Capacity checks are performed per calendar day</p></li>
+<li><p>Rescheduling maintains original appointment details</p></li>
+</ul>
+</div>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulation.scheduler.ClinicScheduler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulation.scheduler.</span></span><span class="sig-name descname"><span class="pre">ClinicScheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">daily_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">days_per_week</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/scheduler.html#ClinicScheduler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.scheduler.ClinicScheduler" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Manages clinic scheduling and resource allocation.</p>
+<p>This class handles the scheduling of patient visits while respecting clinic
+capacity constraints. It supports configurable daily patient capacity and
+working days per week, with automatic rescheduling when capacity is exceeded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>daily_capacity</strong> (<em>int</em>) – Maximum number of patients that can be seen per day</p></li>
+<li><p><strong>days_per_week</strong> (<em>int</em>) – Number of clinic days per week (e.g., 5 for Mon-Fri)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Variables<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>daily_capacity</strong> (<em>int</em>) – Maximum patients per day</p></li>
+<li><p><strong>days_per_week</strong> (<em>int</em>) – Working days per week</p></li>
+<li><p><strong>daily_slots</strong> (<em>Dict</em><em>[</em><em>datetime</em><em>, </em><em>int</em><em>]</em>) – Tracks number of appointments for each date</p></li>
+<li><p><strong>rescheduled_visits</strong> (<em>int</em>) – Counter for number of rescheduled appointments</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.scheduler.ClinicScheduler.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">daily_capacity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">days_per_week</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/scheduler.html#ClinicScheduler.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.scheduler.ClinicScheduler.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>daily_capacity</strong> (<em>int</em>)</p></li>
+<li><p><strong>days_per_week</strong> (<em>int</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.scheduler.ClinicScheduler.request_slot">
+<span class="sig-name descname"><span class="pre">request_slot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/scheduler.html#ClinicScheduler.request_slot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.scheduler.ClinicScheduler.request_slot" title="Link to this definition"></a></dt>
+<dd><p>Check if there’s capacity for a visit on the requested day.</p>
+<p>Verifies if the requested visit can be accommodated on the specified day,
+considering both clinic working days and daily capacity constraints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event</strong> (<a class="reference internal" href="index.html#simulation.base.Event" title="simulation.base.Event"><em>Event</em></a>) – Event containing visit details including requested time</p></li>
+<li><p><strong>end_date</strong> (<em>datetime</em>) – Simulation end date for rescheduling bounds</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if slot is available, False if needs rescheduling</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">event</span> <span class="o">=</span> <span class="n">Event</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2023</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">scheduler</span><span class="o">.</span><span class="n">request_slot</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2023</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">31</span><span class="p">)):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Slot available&quot;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">else</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Visit needs rescheduling&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<ul class="simple">
+<li><p>Automatically initializes tracking for new dates</p></li>
+<li><p>Handles non-clinic days (e.g., weekends) by rescheduling</p></li>
+<li><p>Updates appointment counts when slot is granted</p></li>
+<li><p>Rescheduling maintains original appointment details</p></li>
+<li><p>Time values should be timezone-naive datetimes</p></li>
+</ul>
+<ol class="arabic simple">
+<li><p>Check if requested date is a clinic day</p></li>
+<li><p>Initialize slot count if new date</p></li>
+<li><p>Check daily capacity</p></li>
+<li><p>If no capacity or non-clinic day, trigger rescheduling</p></li>
+<li><p>If capacity available, increment count and return True</p></li>
+</ol>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.scheduler.ClinicScheduler.schedule_next_visit">
+<span class="sig-name descname"><span class="pre">schedule_next_visit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event_factory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patient_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_visit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">next_visit_interval</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/scheduler.html#ClinicScheduler.schedule_next_visit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.scheduler.ClinicScheduler.schedule_next_visit" title="Link to this definition"></a></dt>
+<dd><p>Schedule the next visit for a patient.</p>
+<p>Creates a new visit event for a patient based on their last visit and
+the specified interval.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event_factory</strong> (<em>Callable</em>) – Function to create visit events with signature:
+(time: datetime, event_type: str, patient_id: str, data: dict) -&gt; Event</p></li>
+<li><p><strong>patient_id</strong> (<em>str</em>) – Patient identifier</p></li>
+<li><p><strong>last_visit</strong> (<em>datetime</em>) – Time of the last visit</p></li>
+<li><p><strong>next_visit_interval</strong> (<em>int</em>) – Number of weeks until the next visit (must be positive)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Scheduled visit event, or None if beyond simulation end</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="index.html#simulation.base.Event" title="simulation.base.Event">Event</a>]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If next_visit_interval is not positive</p>
+</dd>
+</dl>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">next_visit</span> <span class="o">=</span> <span class="n">scheduler</span><span class="o">.</span><span class="n">schedule_next_visit</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">event_factory</span><span class="o">=</span><span class="n">create_visit_event</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">patient_id</span><span class="o">=</span><span class="s2">&quot;123&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">last_visit</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2023</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">next_visit_interval</span><span class="o">=</span><span class="mi">4</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<ul class="simple">
+<li><p>Maintains the same time of day as the original appointment</p></li>
+<li><p>Handles week-to-day conversion automatically</p></li>
+<li><p>Returns None if calculated visit would be after simulation end</p></li>
+<li><p>Visit intervals must be positive integers</p></li>
+</ul>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="patient_state.html" class="btn btn-neutral float-left" title="Patient State Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="config.html" class="btn btn-neutral float-right" title="Simulation Config Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Rose.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

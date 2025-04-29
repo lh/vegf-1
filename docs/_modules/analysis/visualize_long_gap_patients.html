@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>analysis.visualize_long_gap_patients &mdash; Macular Simulation  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Macular Simulation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../PROJECT_OVERVIEW.html">Macular Degeneration Treatment Simulation Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/index.html">Simulation Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/index.html">Analysis Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/index.html">Protocol Modules</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/patient_state.html">Patient State Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/scheduler.html">Scheduler Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/config.html">Simulation Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/clinical_model.html">Clinical Model Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/eylea_data_analysis.html">Eylea Data Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/eylea_intervals_analysis.html">Eylea Intervals Analysis Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/visit_types.html">Visit Types Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/config_parser.html">Config Parser Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../visualization/acuity_viz.html">Visual Acuity Visualization Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Macular Simulation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">analysis.visualize_long_gap_patients</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for analysis.visualize_long_gap_patients</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Visualize Long Gap Patients (Cluster 4)</span>
+
+<span class="sd">This script creates visualizations specifically focused on the long-gap patients</span>
+<span class="sd">(Cluster 4) identified in the PCA analysis, to better illustrate what happens</span>
+<span class="sd">to visual acuity before, during, and after the long treatment gaps.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">polars</span> <span class="k">as</span> <span class="nn">pl</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">sqlite3</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span>
+
+<span class="c1"># Set up output directory</span>
+<span class="n">output_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;output/analysis_results&quot;</span><span class="p">)</span>
+<span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Database path</span>
+<span class="n">DB_PATH</span> <span class="o">=</span> <span class="s2">&quot;output/eylea_intervals.db&quot;</span>
+
+<div class="viewcode-block" id="connect_to_db">
+<a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_long_gap_patients.connect_to_db">[docs]</a>
+<span class="k">def</span> <span class="nf">connect_to_db</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">Connection</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Connect to the SQLite database.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">DB_PATH</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="load_interval_data">
+<a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_long_gap_patients.load_interval_data">[docs]</a>
+<span class="k">def</span> <span class="nf">load_interval_data</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load the interval_va_data table into a Polars DataFrame.&quot;&quot;&quot;</span>
+    <span class="n">conn</span> <span class="o">=</span> <span class="n">connect_to_db</span><span class="p">()</span>
+    
+    <span class="c1"># Use Polars to read from SQLite</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;SELECT * FROM interval_va_data&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">read_database</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,</span> <span class="n">connection</span><span class="o">=</span><span class="n">conn</span><span class="p">)</span>
+    
+    <span class="c1"># Convert date strings to datetime objects</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">with_columns</span><span class="p">([</span>
+        <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;previous_date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">),</span>
+        <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;current_date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="p">])</span>
+    
+    <span class="n">conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+<div class="viewcode-block" id="load_cluster_assignments">
+<a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_long_gap_patients.load_cluster_assignments">[docs]</a>
+<span class="k">def</span> <span class="nf">load_cluster_assignments</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load the cluster assignments from the PCA analysis.&quot;&quot;&quot;</span>
+    <span class="c1"># Load the 4-cluster assignments</span>
+    <span class="n">cluster_df</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">&quot;va_interval_clusters_4.csv&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cluster_df</span></div>
+
+
+<div class="viewcode-block" id="get_long_gap_patients">
+<a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_long_gap_patients.get_long_gap_patients">[docs]</a>
+<span class="k">def</span> <span class="nf">get_long_gap_patients</span><span class="p">(</span><span class="n">interval_data</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">cluster_df</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Identify and prepare data for long-gap patients (Cluster 4).</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        interval_data: Raw interval data</span>
+<span class="sd">        cluster_df: DataFrame with cluster assignments</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        DataFrame with long-gap patient data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Create a unique identifier for each patient-eye combination in both dataframes</span>
+    <span class="n">interval_data</span> <span class="o">=</span> <span class="n">interval_data</span><span class="o">.</span><span class="n">with_columns</span><span class="p">([</span>
+        <span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;uuid&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;eye&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;patient_eye_id&quot;</span><span class="p">)</span>
+    <span class="p">])</span>
+    
+    <span class="c1"># Get unique patient-eye combinations from cluster_df</span>
+    <span class="n">cluster_df</span> <span class="o">=</span> <span class="n">cluster_df</span><span class="o">.</span><span class="n">with_columns</span><span class="p">([</span>
+        <span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;uuid&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;eye&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;patient_eye_id&quot;</span><span class="p">)</span>
+    <span class="p">])</span>
+    
+    <span class="c1"># Filter to Cluster 4 (long-gap patients)</span>
+    <span class="n">long_gap_cluster_df</span> <span class="o">=</span> <span class="n">cluster_df</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;cluster&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span>
+    
+    <span class="c1"># Get the list of patient_eye_ids in Cluster 4</span>
+    <span class="n">long_gap_patient_ids</span> <span class="o">=</span> <span class="n">long_gap_cluster_df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;patient_eye_id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+    
+    <span class="c1"># Filter interval_data to only include long-gap patients</span>
+    <span class="n">long_gap_data</span> <span class="o">=</span> <span class="n">interval_data</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;patient_eye_id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">is_in</span><span class="p">(</span><span class="n">long_gap_patient_ids</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">long_gap_data</span></div>
+
+
+<div class="viewcode-block" id="visualize_long_gap_patients">
+<a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_long_gap_patients.visualize_long_gap_patients">[docs]</a>
+<span class="k">def</span> <span class="nf">visualize_long_gap_patients</span><span class="p">(</span><span class="n">long_gap_data</span><span class="p">:</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create visualizations focused on long-gap patients.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        long_gap_data: DataFrame with long-gap patient data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Get unique patient-eye combinations</span>
+    <span class="n">patient_eyes</span> <span class="o">=</span> <span class="n">long_gap_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;patient_eye_id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+    
+    <span class="c1"># Count the number of unique patients</span>
+    <span class="n">num_patients</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">patient_eyes</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of unique long-gap patients: </span><span class="si">{</span><span class="n">num_patients</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># 1. Visualize individual patient trajectories</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+    
+    <span class="c1"># Sample up to 20 patients to visualize</span>
+    <span class="n">sample_size</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">num_patients</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sample_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Convert to numpy array for sampling</span>
+        <span class="n">patient_eyes_array</span> <span class="o">=</span> <span class="n">patient_eyes</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        
+        <span class="c1"># Get random sample of patient_eye_ids</span>
+        <span class="n">sample_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">patient_eyes_array</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="n">sample_size</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">sample_patients</span> <span class="o">=</span> <span class="p">[</span><span class="n">patient_eyes_array</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sample_indices</span><span class="p">]</span>
+        
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">patient_eye_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sample_patients</span><span class="p">):</span>
+            <span class="c1"># Get data for this patient eye</span>
+            <span class="n">patient_data</span> <span class="o">=</span> <span class="n">long_gap_data</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;patient_eye_id&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">patient_eye_id</span><span class="p">)</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;previous_date&quot;</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">patient_data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            
+            <span class="c1"># Calculate days from first injection</span>
+            <span class="n">first_date</span> <span class="o">=</span> <span class="n">patient_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;previous_date&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+            
+            <span class="c1"># Create a time series of VA measurements and intervals</span>
+            <span class="n">days_from_first</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># First injection at day 0</span>
+            <span class="n">va_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">patient_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;prev_va&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span>  <span class="c1"># First VA</span>
+            <span class="n">intervals</span> <span class="o">=</span> <span class="p">[]</span>
+            
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">patient_data</span><span class="o">.</span><span class="n">iter_rows</span><span class="p">(</span><span class="n">named</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="n">days_from_first</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;current_date&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">first_date</span><span class="p">)</span><span class="o">.</span><span class="n">days</span><span class="p">)</span>
+                <span class="n">va_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;current_va&quot;</span><span class="p">])</span>
+                <span class="n">intervals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;interval_days&quot;</span><span class="p">])</span>
+            
+            <span class="c1"># Find the longest interval (gap)</span>
+            <span class="k">if</span> <span class="n">intervals</span><span class="p">:</span>
+                <span class="n">max_interval_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">intervals</span><span class="p">)</span>
+                <span class="n">max_interval</span> <span class="o">=</span> <span class="n">intervals</span><span class="p">[</span><span class="n">max_interval_idx</span><span class="p">]</span>
+                
+                <span class="c1"># Get VA before and after the gap</span>
+                <span class="n">va_before_gap</span> <span class="o">=</span> <span class="n">va_values</span><span class="p">[</span><span class="n">max_interval_idx</span><span class="p">]</span>
+                <span class="n">va_after_gap</span> <span class="o">=</span> <span class="n">va_values</span><span class="p">[</span><span class="n">max_interval_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="n">va_change</span> <span class="o">=</span> <span class="n">va_after_gap</span> <span class="o">-</span> <span class="n">va_before_gap</span>
+                
+                <span class="c1"># Plot VA trajectory</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">days_from_first</span><span class="p">,</span> <span class="n">va_values</span><span class="p">,</span> <span class="s2">&quot;o-&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Patient </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                
+                <span class="c1"># Highlight the gap</span>
+                <span class="n">gap_start_day</span> <span class="o">=</span> <span class="n">days_from_first</span><span class="p">[</span><span class="n">max_interval_idx</span><span class="p">]</span>
+                <span class="n">gap_end_day</span> <span class="o">=</span> <span class="n">days_from_first</span><span class="p">[</span><span class="n">max_interval_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                
+                <span class="c1"># Add annotation for the gap</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">max_interval</span><span class="si">}</span><span class="s2"> days</span><span class="se">\n</span><span class="s2">VA change: </span><span class="si">{</span><span class="n">va_change</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">xy</span><span class="o">=</span><span class="p">((</span><span class="n">gap_start_day</span> <span class="o">+</span> <span class="n">gap_end_day</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">va_before_gap</span> <span class="o">+</span> <span class="n">va_after_gap</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span>
+                    <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span>
+                    <span class="n">textcoords</span><span class="o">=</span><span class="s2">&quot;offset points&quot;</span><span class="p">,</span>
+                    <span class="n">arrowprops</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arrowstyle</span><span class="o">=</span><span class="s2">&quot;-&gt;&quot;</span><span class="p">,</span> <span class="n">connectionstyle</span><span class="o">=</span><span class="s2">&quot;arc3,rad=.2&quot;</span><span class="p">),</span>
+                    <span class="n">bbox</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">boxstyle</span><span class="o">=</span><span class="s2">&quot;round,pad=0.3&quot;</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="s2">&quot;yellow&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">),</span>
+                    <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span>
+                <span class="p">)</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Visual Acuity Trajectories for Long-Gap Patients (Cluster 4)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Days from First Injection&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Visual Acuity (letters)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">&quot;long_gap_patient_trajectories.png&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1"># 2. Analyze and visualize VA change during long gaps</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    
+    <span class="c1"># Find all gaps &gt; 365 days</span>
+    <span class="n">long_gaps</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">va_before_gaps</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">va_after_gaps</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">va_changes</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">patient_eye_id</span> <span class="ow">in</span> <span class="n">long_gap_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;patient_eye_id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">to_series</span><span class="p">():</span>
+        <span class="c1"># Get data for this patient eye</span>
+        <span class="n">patient_data</span> <span class="o">=</span> <span class="n">long_gap_data</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">&quot;patient_eye_id&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="n">patient_eye_id</span><span class="p">)</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s2">&quot;previous_date&quot;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">patient_data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">continue</span>
+        
+        <span class="c1"># Get intervals and find long gaps</span>
+        <span class="n">intervals</span> <span class="o">=</span> <span class="n">patient_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;interval_days&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">interval</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">intervals</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">interval</span> <span class="o">&gt;</span> <span class="mi">365</span><span class="p">:</span>  <span class="c1"># More than 1 year</span>
+                <span class="c1"># Get VA before and after the gap</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">va_before</span> <span class="o">=</span> <span class="n">patient_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;prev_va&quot;</span><span class="p">)[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                    <span class="n">va_after</span> <span class="o">=</span> <span class="n">patient_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;current_va&quot;</span><span class="p">)[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                    
+                    <span class="c1"># Skip if either value is None</span>
+                    <span class="k">if</span> <span class="n">va_before</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">va_after</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                        
+                    <span class="n">va_change</span> <span class="o">=</span> <span class="n">va_after</span> <span class="o">-</span> <span class="n">va_before</span>
+                    
+                    <span class="n">long_gaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+                    <span class="n">va_before_gaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">va_before</span><span class="p">)</span>
+                    <span class="n">va_after_gaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">va_after</span><span class="p">)</span>
+                    <span class="n">va_changes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">va_change</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error processing interval </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+    
+    <span class="c1"># Create a scatter plot of gap duration vs. VA change</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">long_gaps</span><span class="p">,</span> <span class="n">va_changes</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    
+    <span class="c1"># Add a horizontal line at y=0</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    
+    <span class="c1"># Add a trend line</span>
+    <span class="k">if</span> <span class="n">long_gaps</span><span class="p">:</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">long_gaps</span><span class="p">,</span> <span class="n">va_changes</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">poly1d</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="nb">sorted</span><span class="p">(</span><span class="n">long_gaps</span><span class="p">),</span> 
+            <span class="n">p</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">long_gaps</span><span class="p">)),</span> 
+            <span class="s2">&quot;r--&quot;</span><span class="p">,</span> 
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+            <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Trend: y=</span><span class="si">{</span><span class="n">z</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">z</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">+.1f</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Visual Acuity Change During Long Gaps (&gt;365 days)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Gap Duration (days)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;VA Change (letters)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">&quot;va_change_during_long_gaps.png&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1"># 3. Create a before/after comparison for long gaps</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    
+    <span class="c1"># Create paired data for before/after comparison</span>
+    <span class="k">if</span> <span class="n">va_before_gaps</span> <span class="ow">and</span> <span class="n">va_after_gaps</span><span class="p">:</span>
+        <span class="c1"># Calculate statistics</span>
+        <span class="n">mean_before</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">va_before_gaps</span><span class="p">)</span>
+        <span class="n">mean_after</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">va_after_gaps</span><span class="p">)</span>
+        <span class="n">std_before</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">va_before_gaps</span><span class="p">)</span>
+        <span class="n">std_after</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">va_after_gaps</span><span class="p">)</span>
+        <span class="n">mean_change</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">va_changes</span><span class="p">)</span>
+        
+        <span class="c1"># Create bar chart</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;Before Gap&quot;</span><span class="p">,</span> <span class="s2">&quot;After Gap&quot;</span><span class="p">],</span> 
+            <span class="p">[</span><span class="n">mean_before</span><span class="p">,</span> <span class="n">mean_after</span><span class="p">],</span>
+            <span class="n">yerr</span><span class="o">=</span><span class="p">[</span><span class="n">std_before</span><span class="p">,</span> <span class="n">std_after</span><span class="p">],</span>
+            <span class="n">capsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># Add text labels</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mean_before</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mean_before</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> ± </span><span class="si">{</span><span class="n">std_before</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">mean_after</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mean_after</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> ± </span><span class="si">{</span><span class="n">std_after</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Add arrow showing change</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Change: </span><span class="si">{</span><span class="n">mean_change</span><span class="si">:</span><span class="s2">+.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">mean_after</span><span class="p">),</span>
+            <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mean_before</span><span class="p">),</span>
+            <span class="n">arrowprops</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arrowstyle</span><span class="o">=</span><span class="s2">&quot;-&gt;&quot;</span><span class="p">,</span> <span class="n">connectionstyle</span><span class="o">=</span><span class="s2">&quot;arc3,rad=.2&quot;</span><span class="p">),</span>
+            <span class="n">bbox</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">boxstyle</span><span class="o">=</span><span class="s2">&quot;round,pad=0.3&quot;</span><span class="p">,</span> <span class="n">fc</span><span class="o">=</span><span class="s2">&quot;yellow&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">),</span>
+            <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+            <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span>
+        <span class="p">)</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Visual Acuity Before and After Long Gaps (&gt;365 days)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Visual Acuity (letters)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_dir</span> <span class="o">/</span> <span class="s2">&quot;va_before_after_long_gaps.png&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="main">
+<a class="viewcode-back" href="../../analysis/index.html#analysis.visualize_long_gap_patients.main">[docs]</a>
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Main function.&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading data...&quot;</span><span class="p">)</span>
+    <span class="n">interval_data</span> <span class="o">=</span> <span class="n">load_interval_data</span><span class="p">()</span>
+    <span class="n">cluster_df</span> <span class="o">=</span> <span class="n">load_cluster_assignments</span><span class="p">()</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Identifying long-gap patients (Cluster 4)...&quot;</span><span class="p">)</span>
+    <span class="n">long_gap_data</span> <span class="o">=</span> <span class="n">get_long_gap_patients</span><span class="p">(</span><span class="n">interval_data</span><span class="p">,</span> <span class="n">cluster_df</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Creating visualizations for long-gap patients...&quot;</span><span class="p">)</span>
+    <span class="n">visualize_long_gap_patients</span><span class="p">(</span><span class="n">long_gap_data</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Visualization complete.&quot;</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Rose.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

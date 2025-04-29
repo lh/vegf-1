@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analysis Modules &mdash; Macular Simulation  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Protocol Modules" href="../protocols/index.html" />
+    <link rel="prev" title="Simulation Modules" href="../simulation/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Macular Simulation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../PROJECT_OVERVIEW.html">Macular Degeneration Treatment Simulation Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simulation/index.html">Simulation Modules</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Analysis Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#key-features">Key Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.COLUMN_MAPPINGS"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.COLUMN_MAPPINGS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.DATA_VALIDATION"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.DATA_VALIDATION</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.__init__"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.load_data"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.load_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.map_column_names"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.map_column_names()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.validate_data_structure"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.validate_data_structure()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.clean_data"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.clean_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.handle_missing_values"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.handle_missing_values()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.clean_va_measurements"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.clean_va_measurements()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.handle_temporal_anomalies"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.handle_temporal_anomalies()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.create_patient_id"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.create_patient_id()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.generate_data_quality_report"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.generate_data_quality_report()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.analyze_patient_cohort"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.analyze_patient_cohort()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.analyze_injection_intervals"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.analyze_injection_intervals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.analyze_va_trajectories"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.analyze_va_trajectories()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.plot_injection_intervals"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.plot_injection_intervals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.plot_va_trajectories"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.plot_va_trajectories()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.plot_va_change_distribution"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.plot_va_change_distribution()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.analyze_treatment_courses"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.analyze_treatment_courses()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.plot_treatment_courses"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.plot_treatment_courses()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.export_interval_va_data"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.export_interval_va_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.run_analysis"><code class="docutils literal notranslate"><span class="pre">EyleaDataAnalyzer.run_analysis()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_data_analysis.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.connect_to_db"><code class="docutils literal notranslate"><span class="pre">connect_to_db()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.load_interval_data"><code class="docutils literal notranslate"><span class="pre">load_interval_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.load_interval_summary"><code class="docutils literal notranslate"><span class="pre">load_interval_summary()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.analyze_first_year_injections"><code class="docutils literal notranslate"><span class="pre">analyze_first_year_injections()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.identify_treatment_groups"><code class="docutils literal notranslate"><span class="pre">identify_treatment_groups()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.cluster_treatment_patterns"><code class="docutils literal notranslate"><span class="pre">cluster_treatment_patterns()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.analyze_intervals_by_group"><code class="docutils literal notranslate"><span class="pre">analyze_intervals_by_group()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.prepare_va_interval_data_for_pca"><code class="docutils literal notranslate"><span class="pre">prepare_va_interval_data_for_pca()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.perform_va_interval_pca"><code class="docutils literal notranslate"><span class="pre">perform_va_interval_pca()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.analyze_va_by_group"><code class="docutils literal notranslate"><span class="pre">analyze_va_by_group()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.eylea_intervals_analysis.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.visualize_va_by_pca_cluster.connect_to_db"><code class="docutils literal notranslate"><span class="pre">connect_to_db()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.visualize_va_by_pca_cluster.load_interval_data"><code class="docutils literal notranslate"><span class="pre">load_interval_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.visualize_va_by_pca_cluster.load_cluster_assignments"><code class="docutils literal notranslate"><span class="pre">load_cluster_assignments()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.visualize_va_by_pca_cluster.visualize_va_trajectories_by_cluster"><code class="docutils literal notranslate"><span class="pre">visualize_va_trajectories_by_cluster()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.visualize_va_by_pca_cluster.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.visualize_long_gap_patients.connect_to_db"><code class="docutils literal notranslate"><span class="pre">connect_to_db()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.visualize_long_gap_patients.load_interval_data"><code class="docutils literal notranslate"><span class="pre">load_interval_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.visualize_long_gap_patients.load_cluster_assignments"><code class="docutils literal notranslate"><span class="pre">load_cluster_assignments()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.visualize_long_gap_patients.get_long_gap_patients"><code class="docutils literal notranslate"><span class="pre">get_long_gap_patients()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.visualize_long_gap_patients.visualize_long_gap_patients"><code class="docutils literal notranslate"><span class="pre">visualize_long_gap_patients()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.visualize_long_gap_patients.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.visualize_va_change_by_cluster.connect_to_db"><code class="docutils literal notranslate"><span class="pre">connect_to_db()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.visualize_va_change_by_cluster.load_interval_data"><code class="docutils literal notranslate"><span class="pre">load_interval_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.visualize_va_change_by_cluster.load_cluster_assignments"><code class="docutils literal notranslate"><span class="pre">load_cluster_assignments()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.visualize_va_change_by_cluster.visualize_va_change_by_cluster"><code class="docutils literal notranslate"><span class="pre">visualize_va_change_by_cluster()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysis.visualize_va_change_by_cluster.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../protocols/index.html">Protocol Modules</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../simulation/patient_state.html">Patient State Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simulation/scheduler.html">Scheduler Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simulation/config.html">Simulation Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../simulation/clinical_model.html">Clinical Model Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="eylea_data_analysis.html">Eylea Data Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="eylea_intervals_analysis.html">Eylea Intervals Analysis Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../protocols/visit_types.html">Visit Types Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../protocols/config_parser.html">Config Parser Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../visualization/acuity_viz.html">Visual Acuity Visualization Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Macular Simulation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Analysis Modules</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/analysis/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="analysis-modules">
+<h1>Analysis Modules<a class="headerlink" href="#analysis-modules" title="Link to this heading"></a></h1>
+<p id="module-analysis.eylea_data_analysis">Analysis of intravitreal Eylea injection treatment patterns and outcomes.</p>
+<p>This module provides tools for analyzing real-world data from intravitreal Eylea
+injections to derive parameters for simulation models. The analysis includes:</p>
+<ul class="simple">
+<li><p>Data loading, cleaning and validation</p></li>
+<li><p>Patient cohort characterization</p></li>
+<li><p>Injection interval analysis</p></li>
+<li><p>Visual acuity trajectory analysis</p></li>
+<li><p>Treatment course identification</p></li>
+<li><p>Data visualization and export</p></li>
+</ul>
+<section id="key-features">
+<h2>Key Features<a class="headerlink" href="#key-features" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Robust data validation with flexible column name mapping</p></li>
+<li><p>Comprehensive data quality reporting</p></li>
+<li><p>Detailed analysis of treatment intervals and patterns</p></li>
+<li><p>Visual acuity trajectory modeling</p></li>
+<li><p>Automated visualization generation</p></li>
+<li><p>Multiple export formats (CSV, SQLite)</p></li>
+</ul>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
+<p>EyleaDataAnalyzer : Main analysis class implementing the full analysis pipeline</p>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">analyzer</span> <span class="o">=</span> <span class="n">EyleaDataAnalyzer</span><span class="p">(</span><span class="s1">&#39;input_data.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">run_analysis</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Analyzed </span><span class="si">{</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;patient_count&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> patients&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">analysis.eylea_data_analysis.</span></span><span class="sig-name descname"><span class="pre">EyleaDataAnalyzer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Analyze Eylea treatment data to derive simulation parameters.</p>
+<p>This class implements a comprehensive analysis pipeline for real-world
+Eylea treatment data, including data loading, cleaning, analysis,
+visualization and export.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_path</strong> (<em>str</em>) – Path to CSV file containing Eylea treatment records</p></li>
+<li><p><strong>output_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – Directory to save analysis outputs (default creates ‘output’ directory)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Variables<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>data</strong> (<em>pandas.DataFrame</em>) – The loaded and processed treatment data</p></li>
+<li><p><strong>patient_data</strong> (<em>pandas.DataFrame</em>) – Patient-level analysis results</p></li>
+<li><p><strong>injection_intervals</strong> (<em>pandas.DataFrame</em>) – Injection interval analysis results</p></li>
+<li><p><strong>va_trajectories</strong> (<em>pandas.DataFrame</em>) – Visual acuity trajectory analysis results</p></li>
+<li><p><strong>treatment_courses</strong> (<em>pandas.DataFrame</em>) – Treatment course analysis results</p></li>
+<li><p><strong>data_quality_report</strong> (<em>dict</em>) – Comprehensive data quality assessment</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">analyzer</span> <span class="o">=</span> <span class="n">EyleaDataAnalyzer</span><span class="p">(</span><span class="s1">&#39;treatment_data.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">analyzer</span><span class="o">.</span><span class="n">load_data</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">analyzer</span><span class="o">.</span><span class="n">analyze_injection_intervals</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">analyzer</span><span class="o">.</span><span class="n">plot_injection_intervals</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.COLUMN_MAPPINGS">
+<span class="sig-name descname"><span class="pre">COLUMN_MAPPINGS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'Age</span> <span class="pre">at</span> <span class="pre">Death':</span> <span class="pre">['Age</span> <span class="pre">at</span> <span class="pre">Death',</span> <span class="pre">'Death</span> <span class="pre">Age',</span> <span class="pre">'Age</span> <span class="pre">When</span> <span class="pre">Deceased',</span> <span class="pre">'Deceased</span> <span class="pre">Age'],</span> <span class="pre">'Baseline</span> <span class="pre">CRT':</span> <span class="pre">['Baseline</span> <span class="pre">CRT',</span> <span class="pre">'BaselineCRT',</span> <span class="pre">'Initial</span> <span class="pre">CRT',</span> <span class="pre">'Starting</span> <span class="pre">CRT'],</span> <span class="pre">'Baseline</span> <span class="pre">VA</span> <span class="pre">Letter</span> <span class="pre">Score':</span> <span class="pre">['Baseline</span> <span class="pre">VA</span> <span class="pre">Letter</span> <span class="pre">Score',</span> <span class="pre">'Baseline</span> <span class="pre">VA',</span> <span class="pre">'BaselineVA',</span> <span class="pre">'Initial</span> <span class="pre">VA',</span> <span class="pre">'Starting</span> <span class="pre">VA'],</span> <span class="pre">'CRT</span> <span class="pre">at</span> <span class="pre">Injection':</span> <span class="pre">['CRT</span> <span class="pre">at</span> <span class="pre">Injection',</span> <span class="pre">'CRT',</span> <span class="pre">'Central</span> <span class="pre">Retinal</span> <span class="pre">Thickness'],</span> <span class="pre">'Current</span> <span class="pre">Age':</span> <span class="pre">['Current</span> <span class="pre">Age',</span> <span class="pre">'Age',</span> <span class="pre">'Patient</span> <span class="pre">Age'],</span> <span class="pre">'Date</span> <span class="pre">of</span> <span class="pre">1st</span> <span class="pre">Injection':</span> <span class="pre">['Date</span> <span class="pre">of</span> <span class="pre">1st</span> <span class="pre">Injection',</span> <span class="pre">'First</span> <span class="pre">Injection</span> <span class="pre">Date',</span> <span class="pre">'Initial</span> <span class="pre">Treatment</span> <span class="pre">Date',</span> <span class="pre">'First</span> <span class="pre">Treatment</span> <span class="pre">Date'],</span> <span class="pre">'Days</span> <span class="pre">Since</span> <span class="pre">Last</span> <span class="pre">Injection':</span> <span class="pre">['Days</span> <span class="pre">Since</span> <span class="pre">Last</span> <span class="pre">Injection',</span> <span class="pre">'Interval',</span> <span class="pre">'Treatment</span> <span class="pre">Interval',</span> <span class="pre">'Days_Since_Last',</span> <span class="pre">'Injection</span> <span class="pre">Interval'],</span> <span class="pre">'Deceased':</span> <span class="pre">['Deceased',</span> <span class="pre">'Death',</span> <span class="pre">'Mortality'],</span> <span class="pre">'Eye':</span> <span class="pre">['Eye',</span> <span class="pre">'Treated</span> <span class="pre">Eye'],</span> <span class="pre">'Gender':</span> <span class="pre">['Gender',</span> <span class="pre">'Sex'],</span> <span class="pre">'Injection</span> <span class="pre">Date':</span> <span class="pre">['Injection</span> <span class="pre">Date',</span> <span class="pre">'InjectionDate',</span> <span class="pre">'Date</span> <span class="pre">of</span> <span class="pre">Injection',</span> <span class="pre">'Treatment</span> <span class="pre">Date'],</span> <span class="pre">'UUID':</span> <span class="pre">['UUID',</span> <span class="pre">'Patient</span> <span class="pre">ID',</span> <span class="pre">'PatientID',</span> <span class="pre">'Patient_ID',</span> <span class="pre">'ID'],</span> <span class="pre">'VA</span> <span class="pre">Letter</span> <span class="pre">Score</span> <span class="pre">at</span> <span class="pre">Injection':</span> <span class="pre">['VA</span> <span class="pre">Letter</span> <span class="pre">Score</span> <span class="pre">at</span> <span class="pre">Injection',</span> <span class="pre">'VA</span> <span class="pre">Score',</span> <span class="pre">'ETDRS</span> <span class="pre">Score',</span> <span class="pre">'Visual</span> <span class="pre">Acuity',</span> <span class="pre">'VA_Score',</span> <span class="pre">'Letter</span> <span class="pre">Score']}</span></em><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.COLUMN_MAPPINGS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.DATA_VALIDATION">
+<span class="sig-name descname"><span class="pre">DATA_VALIDATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'Age</span> <span class="pre">at</span> <span class="pre">Death':</span> <span class="pre">{'max':</span> <span class="pre">120,</span> <span class="pre">'min':</span> <span class="pre">0,</span> <span class="pre">'required':</span> <span class="pre">False,</span> <span class="pre">'type':</span> <span class="pre">&lt;class</span> <span class="pre">'float'&gt;},</span> <span class="pre">'Baseline</span> <span class="pre">CRT':</span> <span class="pre">{'max':</span> <span class="pre">1000,</span> <span class="pre">'min':</span> <span class="pre">0,</span> <span class="pre">'required':</span> <span class="pre">False,</span> <span class="pre">'type':</span> <span class="pre">&lt;class</span> <span class="pre">'float'&gt;},</span> <span class="pre">'Baseline</span> <span class="pre">VA</span> <span class="pre">Letter</span> <span class="pre">Score':</span> <span class="pre">{'max':</span> <span class="pre">100,</span> <span class="pre">'min':</span> <span class="pre">0,</span> <span class="pre">'required':</span> <span class="pre">False,</span> <span class="pre">'type':</span> <span class="pre">&lt;class</span> <span class="pre">'float'&gt;},</span> <span class="pre">'CRT</span> <span class="pre">at</span> <span class="pre">Injection':</span> <span class="pre">{'max':</span> <span class="pre">1000,</span> <span class="pre">'min':</span> <span class="pre">0,</span> <span class="pre">'required':</span> <span class="pre">False,</span> <span class="pre">'type':</span> <span class="pre">&lt;class</span> <span class="pre">'float'&gt;},</span> <span class="pre">'Current</span> <span class="pre">Age':</span> <span class="pre">{'max':</span> <span class="pre">120,</span> <span class="pre">'min':</span> <span class="pre">0,</span> <span class="pre">'required':</span> <span class="pre">False,</span> <span class="pre">'type':</span> <span class="pre">&lt;class</span> <span class="pre">'float'&gt;},</span> <span class="pre">'Date</span> <span class="pre">of</span> <span class="pre">1st</span> <span class="pre">Injection':</span> <span class="pre">{'required':</span> <span class="pre">False,</span> <span class="pre">'type':</span> <span class="pre">'datetime'},</span> <span class="pre">'Days</span> <span class="pre">Since</span> <span class="pre">Last</span> <span class="pre">Injection':</span> <span class="pre">{'max':</span> <span class="pre">365,</span> <span class="pre">'min':</span> <span class="pre">0,</span> <span class="pre">'required':</span> <span class="pre">False,</span> <span class="pre">'type':</span> <span class="pre">&lt;class</span> <span class="pre">'float'&gt;},</span> <span class="pre">'Deceased':</span> <span class="pre">{'max':</span> <span class="pre">1,</span> <span class="pre">'min':</span> <span class="pre">0,</span> <span class="pre">'required':</span> <span class="pre">False,</span> <span class="pre">'type':</span> <span class="pre">&lt;class</span> <span class="pre">'int'&gt;},</span> <span class="pre">'Injection</span> <span class="pre">Date':</span> <span class="pre">{'required':</span> <span class="pre">True,</span> <span class="pre">'type':</span> <span class="pre">'datetime'},</span> <span class="pre">'UUID':</span> <span class="pre">{'required':</span> <span class="pre">True,</span> <span class="pre">'type':</span> <span class="pre">&lt;class</span> <span class="pre">'str'&gt;},</span> <span class="pre">'VA</span> <span class="pre">Letter</span> <span class="pre">Score</span> <span class="pre">at</span> <span class="pre">Injection':</span> <span class="pre">{'max':</span> <span class="pre">100,</span> <span class="pre">'min':</span> <span class="pre">0,</span> <span class="pre">'required':</span> <span class="pre">True,</span> <span class="pre">'type':</span> <span class="pre">&lt;class</span> <span class="pre">'float'&gt;}}</span></em><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.DATA_VALIDATION" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize analyzer with data path and output directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_path</strong> (<em>str</em>) – Path to CSV file containing Eylea treatment records. Expected columns:
+- Patient identifiers (UUID or similar)
+- Injection dates
+- Visual acuity measurements
+- Other treatment parameters</p></li>
+<li><p><strong>output_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – Directory to save analysis outputs. If None, creates ‘output’ directory
+in current working directory.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>The analyzer is initialized but no data is loaded until <cite>load_data()</cite> is called.
+For a complete analysis pipeline, use <cite>run_analysis()</cite> which handles all steps.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.load_data">
+<span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.load_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.load_data" title="Link to this definition"></a></dt>
+<dd><p>Load, validate and clean Eylea treatment data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The loaded, validated and cleaned data</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>pandas.DataFrame</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong> – If required columns are missing or data validation fails</p></li>
+<li><p><strong>IOError</strong> – If the data file cannot be read</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Processing steps:
+1. Load CSV file from data_path
+2. Map column names to standardized format
+3. Validate data types and ranges
+4. Clean missing values and outliers
+5. Generate comprehensive data quality report</p>
+</div>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">analyzer</span> <span class="o">=</span> <span class="n">EyleaDataAnalyzer</span><span class="p">(</span><span class="s1">&#39;data.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">load_data</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="s2"> records&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.map_column_names">
+<span class="sig-name descname"><span class="pre">map_column_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.map_column_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.map_column_names" title="Link to this definition"></a></dt>
+<dd><p>Map variant column names to standardized names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Modifies the data attribute in-place with standardized column names</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Uses both exact and fuzzy matching to handle common column name variations.
+Mappings are defined in the COLUMN_MAPPINGS class attribute.</p>
+<p>The mapping process:
+1. Attempts exact matches for each standard column name
+2. Falls back to fuzzy matching (case/space insensitive)
+3. Preserves unmapped columns unchanged</p>
+<p>Results are stored in:
+- column_mapping_used attribute
+- data_quality_report[‘column_mapping’]</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.validate_data_structure">
+<span class="sig-name descname"><span class="pre">validate_data_structure</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.validate_data_structure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.validate_data_structure" title="Link to this definition"></a></dt>
+<dd><p>Validate data structure, types and integrity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Modifies data in-place with validated/converted values</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If required columns are missing or critical validation fails</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Validation checks:
+1. Required columns (per DATA_VALIDATION)
+2. Date format conversion
+3. Numeric value ranges
+4. Temporal sequence integrity
+5. Deceased status consistency
+6. Duplicate records</p>
+<p>Stores results in data_quality_report including:
+- validation_errors: Critical issues
+- validation_warnings: Non-critical issues
+- temporal_anomalies: Sequence errors
+- outliers: Values outside expected ranges</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.clean_data">
+<span class="sig-name descname"><span class="pre">clean_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.clean_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.clean_data" title="Link to this definition"></a></dt>
+<dd><p>Clean and preprocess the Eylea treatment data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Modifies the data attribute in-place with cleaned/preprocessed values</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Performs the following cleaning operations:
+1. Handles missing values in critical fields
+2. Cleans Visual Acuity measurements (clipping, outlier detection)
+3. Handles temporal anomalies (out-of-sequence dates, long gaps)
+4. Creates unique patient and eye identifiers
+5. Calculates derived fields (adjusted age, days since last injection)</p>
+<p>Results are tracked in:
+- data_quality_report[‘missing_values’]
+- data_quality_report[‘outliers’]
+- data_quality_report[‘temporal_anomalies’]</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.handle_missing_values">
+<span class="sig-name descname"><span class="pre">handle_missing_values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.handle_missing_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.handle_missing_values" title="Link to this definition"></a></dt>
+<dd><p>Handle missing values in the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Modifies data in-place with imputed values where appropriate</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Missing value handling strategies:
+1. Baseline VA: Uses first available VA measurement if missing
+2. Age data: Different handling for deceased vs living patients
+3. Current age: Adds 0.5 years to account for temporal alignment
+4. Injection intervals: Calculates from dates if missing</p>
+<p>Tracks missing values in:
+- data_quality_report[‘missing_values_before’]
+- data_quality_report[‘missing_values_after’]</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.clean_va_measurements">
+<span class="sig-name descname"><span class="pre">clean_va_measurements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.clean_va_measurements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.clean_va_measurements" title="Link to this definition"></a></dt>
+<dd><p>Clean and validate Visual Acuity measurements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Modifies VA measurements in-place with cleaned values</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Cleaning steps:
+1. Clips VA values to valid range [0, 100]
+2. Identifies implausible changes (&gt;30 letters between consecutive measurements)</p>
+<p>Tracks cleaning results in:
+- data_quality_report[‘va_outliers_before’]
+- data_quality_report[‘va_implausible_changes’]</p>
+<p>Saves details of implausible changes to:
+- output/implausible_va_changes.csv</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.handle_temporal_anomalies">
+<span class="sig-name descname"><span class="pre">handle_temporal_anomalies</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.handle_temporal_anomalies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.handle_temporal_anomalies" title="Link to this definition"></a></dt>
+<dd><p>Handle temporal anomalies in the data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Modifies data in-place with corrected temporal sequences</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Handles these temporal anomalies:
+1. Out-of-sequence injection dates (fixes by sorting)
+2. Long treatment gaps (&gt;180 days)
+3. Single injection patients</p>
+<p>Tracks anomalies in:
+- data_quality_report[‘single_injection_patients’]
+- data_quality_report[‘sequence_fixes’]
+- data_quality_report[‘long_treatment_gaps’]</p>
+<p>Saves details of sequence fixes to:
+- output/sequence_fixes.csv</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.create_patient_id">
+<span class="sig-name descname"><span class="pre">create_patient_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.create_patient_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.create_patient_id" title="Link to this definition"></a></dt>
+<dd><p>Create unique patient and eye identifiers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Modifies data in-place by adding:
+- patient_id
+- eye_key
+- eye_standardized</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Identifier creation logic:
+1. Uses existing UUID if available
+2. Creates composite ID from available fields if UUID missing
+3. Creates eye-specific key (patient_id + eye)
+4. Standardizes eye values (uppercase, no spaces)</p>
+<p>Finally sorts data by eye_key and injection date.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.generate_data_quality_report">
+<span class="sig-name descname"><span class="pre">generate_data_quality_report</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.generate_data_quality_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.generate_data_quality_report" title="Link to this definition"></a></dt>
+<dd><p>Generate a comprehensive data quality report.</p>
+<p>This method calculates various data quality metrics and saves them
+to a text file in the output directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The data quality report as a dictionary</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>The report includes:
+1. Summary metrics (rows, columns, missing data percentage)
+2. Column mapping information
+3. Validation errors and warnings
+4. Missing values by column
+5. Age data processing details
+6. Temporal anomalies
+7. VA measurement anomalies</p>
+<p>The report is saved to ‘data_quality_report.txt’ in the output directory.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.analyze_patient_cohort">
+<span class="sig-name descname"><span class="pre">analyze_patient_cohort</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.analyze_patient_cohort"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.analyze_patient_cohort" title="Link to this definition"></a></dt>
+<dd><p>Analyze patient cohort demographics and treatment characteristics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame with one row per patient containing:
+- Demographics (age, gender)
+- Eye information
+- Baseline measurements (VA, CRT)
+- Treatment information (injection count, dates)
+- Mortality information (deceased status, age at death)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Key processing steps:
+1. Groups data by patient_id
+2. Extracts first row for each patient to get baseline characteristics
+3. Calculates treatment duration from first to last injection
+4. Handles missing values in baseline measurements</p>
+</div>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">analyzer</span> <span class="o">=</span> <span class="n">EyleaDataAnalyzer</span><span class="p">(</span><span class="s1">&#39;data.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">patient_data</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">analyze_patient_cohort</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">patient_data</span><span class="p">[[</span><span class="s1">&#39;patient_id&#39;</span><span class="p">,</span> <span class="s1">&#39;injection_count&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.analyze_injection_intervals">
+<span class="sig-name descname"><span class="pre">analyze_injection_intervals</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.analyze_injection_intervals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.analyze_injection_intervals" title="Link to this definition"></a></dt>
+<dd><p>Analyze time intervals between consecutive injections by eye.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame with interval information containing:
+- Patient and eye identifiers
+- Injection sequence numbers
+- Dates of consecutive injections
+- Interval in days between injections
+- VA measurements at each injection
+- Flags for long (&gt;180d) and very long (&gt;365d) gaps</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Processing steps:
+1. Groups data by eye_key (patient + eye)
+2. Sorts injections by date
+3. Calculates days between consecutive injections
+4. Flags clinically significant gaps
+5. Tracks VA changes between injections</p>
+</div>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">analyzer</span> <span class="o">=</span> <span class="n">EyleaDataAnalyzer</span><span class="p">(</span><span class="s1">&#39;data.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">intervals</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">analyze_injection_intervals</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">intervals</span><span class="p">[[</span><span class="s1">&#39;eye_key&#39;</span><span class="p">,</span> <span class="s1">&#39;interval_days&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">describe</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.analyze_va_trajectories">
+<span class="sig-name descname"><span class="pre">analyze_va_trajectories</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.analyze_va_trajectories"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.analyze_va_trajectories" title="Link to this definition"></a></dt>
+<dd><p>Analyze visual acuity trajectories over time by eye.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame with VA trajectory information containing:
+- Patient and eye identifiers
+- Injection sequence numbers
+- Days from first injection
+- VA score at each injection
+- Baseline VA
+- VA change from baseline</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Processing steps:
+1. Groups data by eye_key (patient + eye)
+2. Uses first available VA as baseline if missing
+3. Calculates days from first injection
+4. Computes VA change from baseline
+5. Applies smoothing for population average</p>
+</div>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">analyzer</span> <span class="o">=</span> <span class="n">EyleaDataAnalyzer</span><span class="p">(</span><span class="s1">&#39;data.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">va_traj</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">analyze_va_trajectories</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">va_traj</span><span class="p">[[</span><span class="s1">&#39;eye_key&#39;</span><span class="p">,</span> <span class="s1">&#39;va_change&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">describe</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.plot_injection_intervals">
+<span class="sig-name descname"><span class="pre">plot_injection_intervals</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.plot_injection_intervals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.plot_injection_intervals" title="Link to this definition"></a></dt>
+<dd><p>Plot distribution of injection intervals and intervals by sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Saves two plots to output directory:
+1. ‘injection_intervals.png’ - Histogram of intervals with reference lines
+2. ‘injection_intervals_by_sequence.png’ - Mean/median intervals by sequence</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Plot 1 (Histogram):
+- Shows distribution of all injection intervals
+- Includes reference lines at:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>28 days (monthly)</p></li>
+<li><p>56 days (bi-monthly)</p></li>
+<li><p>84 days (quarterly)</p></li>
+</ul>
+</div></blockquote>
+<p>Plot 2 (Sequence):
+- Shows mean ± SD and median intervals by injection number
+- Helps identify interval patterns over treatment course</p>
+<p>Automatically calls analyze_injection_intervals() if needed.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.plot_va_trajectories">
+<span class="sig-name descname"><span class="pre">plot_va_trajectories</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.plot_va_trajectories"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.plot_va_trajectories" title="Link to this definition"></a></dt>
+<dd><p>Plot visual acuity trajectories over time and by injection number.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Saves two plots to output directory:
+1. ‘va_trajectories.png’ - Individual trajectories + population average
+2. ‘va_by_injection_number.png’ - Mean VA by injection number</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Plot 1 (Trajectories):
+- Shows VA over time for sample of 20 eyes
+- Includes LOESS-smoothed population average line
+- Falls back to simple average if statsmodels not available</p>
+<p>Plot 2 (Injection Number):
+- Shows mean ± SD VA by injection sequence
+- Includes sample size annotations
+- Helps identify VA patterns over treatment course</p>
+<p>Automatically calls analyze_va_trajectories() if needed.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.plot_va_change_distribution">
+<span class="sig-name descname"><span class="pre">plot_va_change_distribution</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.plot_va_change_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.plot_va_change_distribution" title="Link to this definition"></a></dt>
+<dd><p>Plot distribution of VA changes from baseline and outcome categories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Saves two plots to output directory:
+1. ‘va_change_distribution.png’ - Histogram of VA changes
+2. ‘va_outcome_categories.png’ - Categorical outcomes</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Plot 1 (Histogram):
+- Shows distribution of final VA changes from baseline
+- Includes reference lines at:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0 (no change)</p></li>
+<li><p>±5 letters (gain/loss)</p></li>
+<li><p>±15 letters (significant gain/loss)</p></li>
+</ul>
+</div></blockquote>
+<p>Plot 2 (Categories):
+- Groups outcomes into clinically relevant categories
+- Shows counts and percentages for each category
+- Categories:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>≥15 letter gain</p></li>
+<li><p>5-14 letter gain</p></li>
+<li><p>Stable (-4 to +4)</p></li>
+<li><p>5-14 letter loss</p></li>
+<li><p>≥15 letter loss</p></li>
+<li><p>Unknown</p></li>
+</ul>
+</div></blockquote>
+<p>Automatically calls analyze_va_trajectories() if needed.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.analyze_treatment_courses">
+<span class="sig-name descname"><span class="pre">analyze_treatment_courses</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.analyze_treatment_courses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.analyze_treatment_courses" title="Link to this definition"></a></dt>
+<dd><p>Analyze treatment courses by identifying potential breaks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame with treatment course information containing:
+- Patient and eye identifiers
+- Course start/end dates
+- Duration in days
+- Injection count
+- Flags for long pauses (&gt;365d)
+- Potential separate courses</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Key processing steps:
+1. Groups data by eye_key (patient + eye)
+2. Identifies very long gaps (&gt;365d) as potential course breaks
+3. Calculates duration from first to last injection
+4. Tracks injection counts per course</p>
+</div>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">analyzer</span> <span class="o">=</span> <span class="n">EyleaDataAnalyzer</span><span class="p">(</span><span class="s1">&#39;data.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">courses</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">analyze_treatment_courses</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">courses</span><span class="p">[[</span><span class="s1">&#39;eye_key&#39;</span><span class="p">,</span> <span class="s1">&#39;duration_days&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">describe</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.plot_treatment_courses">
+<span class="sig-name descname"><span class="pre">plot_treatment_courses</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.plot_treatment_courses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.plot_treatment_courses" title="Link to this definition"></a></dt>
+<dd><p>Plot treatment course durations and injection counts per course.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Saves two plots to output directory:
+1. ‘treatment_course_durations.png’ - Histogram of durations
+2. ‘injections_per_course.png’ - Histogram of injection counts</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Plot 1 (Durations):
+- Shows distribution of treatment course durations in days
+- Helps identify typical treatment persistence patterns</p>
+<p>Plot 2 (Injections):
+- Shows distribution of injection counts per course
+- Uses discrete bins (1-20 injections)
+- Helps identify typical treatment intensity</p>
+<p>Automatically calls analyze_treatment_courses() if needed.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.export_interval_va_data">
+<span class="sig-name descname"><span class="pre">export_interval_va_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'csv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.export_interval_va_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.export_interval_va_data" title="Link to this definition"></a></dt>
+<dd><p>Export interval and VA data to CSV and/or SQLite format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>format</strong> (<em>str</em><em>, </em><em>optional</em>) – Output format (‘csv’, ‘sqlite’, or ‘both’). Default ‘csv’.</p></li>
+<li><p><strong>db_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Custom path for SQLite database. Default uses ‘eylea_intervals.db’
+in output directory.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing paths to exported files with keys:
+- ‘csv’: Path to detailed CSV file
+- ‘summary_csv’: Path to summary CSV file
+- ‘sqlite’: Path to SQLite database (if exported)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Exports two data types:
+1. Detailed data (per-injection intervals and VA measurements)
+2. Summary data (per-patient interval lists and VA changes)</p>
+<p>CSV outputs:
+- ‘interval_va_data.csv’: Detailed injection-level data
+- ‘interval_va_summary.csv’: Patient-level summary</p>
+<p>SQLite outputs:
+- ‘interval_va_data’ table: Detailed data
+- ‘interval_summary’ table: Summary data</p>
+<p>Automatically calls analyze_injection_intervals() if needed.</p>
+</div>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">analyzer</span> <span class="o">=</span> <span class="n">EyleaDataAnalyzer</span><span class="p">(</span><span class="s1">&#39;data.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">paths</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">export_interval_va_data</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">paths</span><span class="p">[</span><span class="s1">&#39;csv&#39;</span><span class="p">])</span>  <span class="c1"># Prints path to detailed CSV</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.EyleaDataAnalyzer.run_analysis">
+<span class="sig-name descname"><span class="pre">run_analysis</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#EyleaDataAnalyzer.run_analysis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.EyleaDataAnalyzer.run_analysis" title="Link to this definition"></a></dt>
+<dd><p>Execute complete analysis pipeline from data loading to export.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary with analysis summary containing:
+- patient_count: Number of unique patients
+- eye_count: Number of treated eyes
+- injection_count: Total injections analyzed
+- course_count: Number of treatment courses
+- mean_injection_interval: Average interval between injections
+- median_injection_interval: Median interval between injections
+- output_dir: Path to output directory
+- data_quality_report: Summary of data quality metrics
+- export_paths: Paths to exported files</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Analysis steps:
+1. Data loading and cleaning
+2. Patient cohort analysis
+3. Injection interval analysis
+4. VA trajectory analysis
+5. Treatment course analysis
+6. Visualization generation
+7. Data export</p>
+</div>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">analyzer</span> <span class="o">=</span> <span class="n">EyleaDataAnalyzer</span><span class="p">(</span><span class="s1">&#39;data.csv&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">run_analysis</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Analyzed </span><span class="si">{</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;patient_count&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> patients&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.eylea_data_analysis.main">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_data_analysis.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_data_analysis.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_data_analysis.main" title="Link to this definition"></a></dt>
+<dd><p>Command line interface for running Eylea data analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Prints analysis summary to stdout</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Command line arguments:
+–data : Path to input CSV file (default: ‘input_data/sample_raw.csv’)
+–output : Output directory (default: ‘output’)
+–debug : Enable debug logging
+–validation-strictness : Set validation level (‘strict’, ‘moderate’, ‘lenient’)</p>
+</div>
+<div class="admonition-example admonition">
+<p class="admonition-title">Example</p>
+<p>python eylea_data_analysis.py –data treatment_data.csv –output results</p>
+</div>
+</dd></dl>
+
+<p id="module-analysis.eylea_intervals_analysis">Eylea Injection Intervals Analysis</p>
+<p>This script analyzes the injection intervals data from the SQLite database
+to identify patterns in treatment, specifically looking for two groups:
+- Group LH: 7 injections in first year, then continuing with injections every ~2 months
+- Group MR: 7 injections in first year, then a pause before resumption of treatment</p>
+<p>The script also performs Principal Component Analysis (PCA) to identify patterns
+in treatment intervals and visual acuity measures (previous VA, current VA, next VA).</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.connect_to_db">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">connect_to_db</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#connect_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.connect_to_db" title="Link to this definition"></a></dt>
+<dd><p>Connect to the SQLite database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connection</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.load_interval_data">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">load_interval_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#load_interval_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.load_interval_data" title="Link to this definition"></a></dt>
+<dd><p>Load the interval_va_data table into a Polars DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.load_interval_summary">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">load_interval_summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#load_interval_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.load_interval_summary" title="Link to this definition"></a></dt>
+<dd><p>Load the interval_summary table into a Polars DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.analyze_first_year_injections">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">analyze_first_year_injections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#analyze_first_year_injections"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.analyze_first_year_injections" title="Link to this definition"></a></dt>
+<dd><p>Analyze the first year of injections for each patient.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>df</strong> (<em>DataFrame</em>)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Args:</dt><dd><p>df: DataFrame with interval_va_data</p>
+</dd>
+<dt>Returns:</dt><dd><p>DataFrame with first year injection analysis</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.identify_treatment_groups">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">identify_treatment_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#identify_treatment_groups"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.identify_treatment_groups" title="Link to this definition"></a></dt>
+<dd><p>Identify the two treatment groups:
+- Group LH: 7 injections in first year, then continuing with injections every ~2 months
+- Group MR: 7 injections in first year, then a pause before resumption of treatment</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>df</strong> (<em>DataFrame</em>)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Args:</dt><dd><p>df: DataFrame with first year injection analysis</p>
+</dd>
+<dt>Returns:</dt><dd><p>DataFrame with group assignments</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.cluster_treatment_patterns">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">cluster_treatment_patterns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#cluster_treatment_patterns"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.cluster_treatment_patterns" title="Link to this definition"></a></dt>
+<dd><p>Use K-means clustering to identify treatment pattern groups.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>df</strong> (<em>DataFrame</em>)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Args:</dt><dd><p>df: DataFrame with first year injection analysis</p>
+</dd>
+<dt>Returns:</dt><dd><p>DataFrame with cluster assignments</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.analyze_intervals_by_group">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">analyze_intervals_by_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#analyze_intervals_by_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.analyze_intervals_by_group" title="Link to this definition"></a></dt>
+<dd><p>Analyze and visualize injection intervals by treatment group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>df</strong> (<em>DataFrame</em>)</p></li>
+<li><p><strong>interval_data</strong> (<em>DataFrame</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Args:</dt><dd><p>df: DataFrame with group assignments
+interval_data: Raw interval data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.prepare_va_interval_data_for_pca">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">prepare_va_interval_data_for_pca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#prepare_va_interval_data_for_pca"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.prepare_va_interval_data_for_pca" title="Link to this definition"></a></dt>
+<dd><p>Prepare data for PCA analysis by calculating next VA for each record.</p>
+<p>This function processes the interval data to create a dataset with:
+- treatment_interval (interval_days)
+- previous_va (prev_va)
+- current_va
+- next_va (calculated by joining with next record)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>interval_data</strong> (<em>DataFrame</em>)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Args:</dt><dd><p>interval_data: Raw interval data from the database</p>
+</dd>
+<dt>Returns:</dt><dd><p>DataFrame with prepared features for PCA analysis</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.perform_va_interval_pca">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">perform_va_interval_pca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#perform_va_interval_pca"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.perform_va_interval_pca" title="Link to this definition"></a></dt>
+<dd><p>Perform PCA analysis on treatment intervals and visual acuity measures.</p>
+<p>This function identifies patterns in:
+- Treatment interval
+- Previous VA
+- Current VA
+- Next VA</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>interval_data</strong> (<em>DataFrame</em>)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Args:</dt><dd><p>interval_data: Raw interval data from the database</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.analyze_va_by_group">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">analyze_va_by_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#analyze_va_by_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.analyze_va_by_group" title="Link to this definition"></a></dt>
+<dd><p>Analyze and visualize visual acuity by treatment group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>df</strong> (<em>DataFrame</em>)</p></li>
+<li><p><strong>interval_data</strong> (<em>DataFrame</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Args:</dt><dd><p>df: DataFrame with group assignments
+interval_data: Raw interval data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.eylea_intervals_analysis.main">
+<span class="sig-prename descclassname"><span class="pre">analysis.eylea_intervals_analysis.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/eylea_intervals_analysis.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.eylea_intervals_analysis.main" title="Link to this definition"></a></dt>
+<dd><p>Main analysis function.</p>
+</dd></dl>
+
+<p id="module-analysis.visualize_va_by_pca_cluster">Visualize Visual Acuity Trajectories by PCA Cluster</p>
+<p>This script creates visualizations of visual acuity trajectories over time
+for patients in each of the 4 clusters identified by PCA analysis.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.visualize_va_by_pca_cluster.connect_to_db">
+<span class="sig-prename descclassname"><span class="pre">analysis.visualize_va_by_pca_cluster.</span></span><span class="sig-name descname"><span class="pre">connect_to_db</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_va_by_pca_cluster.html#connect_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_va_by_pca_cluster.connect_to_db" title="Link to this definition"></a></dt>
+<dd><p>Connect to the SQLite database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connection</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.visualize_va_by_pca_cluster.load_interval_data">
+<span class="sig-prename descclassname"><span class="pre">analysis.visualize_va_by_pca_cluster.</span></span><span class="sig-name descname"><span class="pre">load_interval_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_va_by_pca_cluster.html#load_interval_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_va_by_pca_cluster.load_interval_data" title="Link to this definition"></a></dt>
+<dd><p>Load the interval_va_data table into a Polars DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.visualize_va_by_pca_cluster.load_cluster_assignments">
+<span class="sig-prename descclassname"><span class="pre">analysis.visualize_va_by_pca_cluster.</span></span><span class="sig-name descname"><span class="pre">load_cluster_assignments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_va_by_pca_cluster.html#load_cluster_assignments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_va_by_pca_cluster.load_cluster_assignments" title="Link to this definition"></a></dt>
+<dd><p>Load the cluster assignments from the PCA analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.visualize_va_by_pca_cluster.visualize_va_trajectories_by_cluster">
+<span class="sig-prename descclassname"><span class="pre">analysis.visualize_va_by_pca_cluster.</span></span><span class="sig-name descname"><span class="pre">visualize_va_trajectories_by_cluster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_va_by_pca_cluster.html#visualize_va_trajectories_by_cluster"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_va_by_pca_cluster.visualize_va_trajectories_by_cluster" title="Link to this definition"></a></dt>
+<dd><p>Visualize visual acuity trajectories by PCA cluster.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>interval_data</strong> (<em>DataFrame</em>)</p></li>
+<li><p><strong>cluster_df</strong> (<em>DataFrame</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Args:</dt><dd><p>interval_data: Raw interval data
+cluster_df: DataFrame with cluster assignments</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.visualize_va_by_pca_cluster.main">
+<span class="sig-prename descclassname"><span class="pre">analysis.visualize_va_by_pca_cluster.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_va_by_pca_cluster.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_va_by_pca_cluster.main" title="Link to this definition"></a></dt>
+<dd><p>Main function.</p>
+</dd></dl>
+
+<p id="module-analysis.visualize_long_gap_patients">Visualize Long Gap Patients (Cluster 4)</p>
+<p>This script creates visualizations specifically focused on the long-gap patients
+(Cluster 4) identified in the PCA analysis, to better illustrate what happens
+to visual acuity before, during, and after the long treatment gaps.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.visualize_long_gap_patients.connect_to_db">
+<span class="sig-prename descclassname"><span class="pre">analysis.visualize_long_gap_patients.</span></span><span class="sig-name descname"><span class="pre">connect_to_db</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_long_gap_patients.html#connect_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_long_gap_patients.connect_to_db" title="Link to this definition"></a></dt>
+<dd><p>Connect to the SQLite database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connection</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.visualize_long_gap_patients.load_interval_data">
+<span class="sig-prename descclassname"><span class="pre">analysis.visualize_long_gap_patients.</span></span><span class="sig-name descname"><span class="pre">load_interval_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_long_gap_patients.html#load_interval_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_long_gap_patients.load_interval_data" title="Link to this definition"></a></dt>
+<dd><p>Load the interval_va_data table into a Polars DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.visualize_long_gap_patients.load_cluster_assignments">
+<span class="sig-prename descclassname"><span class="pre">analysis.visualize_long_gap_patients.</span></span><span class="sig-name descname"><span class="pre">load_cluster_assignments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_long_gap_patients.html#load_cluster_assignments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_long_gap_patients.load_cluster_assignments" title="Link to this definition"></a></dt>
+<dd><p>Load the cluster assignments from the PCA analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.visualize_long_gap_patients.get_long_gap_patients">
+<span class="sig-prename descclassname"><span class="pre">analysis.visualize_long_gap_patients.</span></span><span class="sig-name descname"><span class="pre">get_long_gap_patients</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_long_gap_patients.html#get_long_gap_patients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_long_gap_patients.get_long_gap_patients" title="Link to this definition"></a></dt>
+<dd><p>Identify and prepare data for long-gap patients (Cluster 4).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>interval_data</strong> (<em>DataFrame</em>)</p></li>
+<li><p><strong>cluster_df</strong> (<em>DataFrame</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Args:</dt><dd><p>interval_data: Raw interval data
+cluster_df: DataFrame with cluster assignments</p>
+</dd>
+<dt>Returns:</dt><dd><p>DataFrame with long-gap patient data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.visualize_long_gap_patients.visualize_long_gap_patients">
+<span class="sig-prename descclassname"><span class="pre">analysis.visualize_long_gap_patients.</span></span><span class="sig-name descname"><span class="pre">visualize_long_gap_patients</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">long_gap_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_long_gap_patients.html#visualize_long_gap_patients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_long_gap_patients.visualize_long_gap_patients" title="Link to this definition"></a></dt>
+<dd><p>Create visualizations focused on long-gap patients.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>long_gap_data</strong> (<em>DataFrame</em>)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Args:</dt><dd><p>long_gap_data: DataFrame with long-gap patient data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.visualize_long_gap_patients.main">
+<span class="sig-prename descclassname"><span class="pre">analysis.visualize_long_gap_patients.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_long_gap_patients.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_long_gap_patients.main" title="Link to this definition"></a></dt>
+<dd><p>Main function.</p>
+</dd></dl>
+
+<p id="module-analysis.visualize_va_change_by_cluster">Visualize VA Change by Interval with PCA Cluster Information</p>
+<p>This script creates an enhanced visualization of VA change by interval length,
+using different marker shapes to indicate which PCA cluster each data point belongs to.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.visualize_va_change_by_cluster.connect_to_db">
+<span class="sig-prename descclassname"><span class="pre">analysis.visualize_va_change_by_cluster.</span></span><span class="sig-name descname"><span class="pre">connect_to_db</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_va_change_by_cluster.html#connect_to_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_va_change_by_cluster.connect_to_db" title="Link to this definition"></a></dt>
+<dd><p>Connect to the SQLite database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connection</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.visualize_va_change_by_cluster.load_interval_data">
+<span class="sig-prename descclassname"><span class="pre">analysis.visualize_va_change_by_cluster.</span></span><span class="sig-name descname"><span class="pre">load_interval_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_va_change_by_cluster.html#load_interval_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_va_change_by_cluster.load_interval_data" title="Link to this definition"></a></dt>
+<dd><p>Load the interval_va_data table into a Polars DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.visualize_va_change_by_cluster.load_cluster_assignments">
+<span class="sig-prename descclassname"><span class="pre">analysis.visualize_va_change_by_cluster.</span></span><span class="sig-name descname"><span class="pre">load_cluster_assignments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_va_change_by_cluster.html#load_cluster_assignments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_va_change_by_cluster.load_cluster_assignments" title="Link to this definition"></a></dt>
+<dd><p>Load the cluster assignments from the PCA analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.visualize_va_change_by_cluster.visualize_va_change_by_cluster">
+<span class="sig-prename descclassname"><span class="pre">analysis.visualize_va_change_by_cluster.</span></span><span class="sig-name descname"><span class="pre">visualize_va_change_by_cluster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interval_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_va_change_by_cluster.html#visualize_va_change_by_cluster"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_va_change_by_cluster.visualize_va_change_by_cluster" title="Link to this definition"></a></dt>
+<dd><p>Create an enhanced visualization of VA change by interval with cluster information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>interval_data</strong> (<em>DataFrame</em>)</p></li>
+<li><p><strong>cluster_df</strong> (<em>DataFrame</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Args:</dt><dd><p>interval_data: Raw interval data
+cluster_df: DataFrame with cluster assignments</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="analysis.visualize_va_change_by_cluster.main">
+<span class="sig-prename descclassname"><span class="pre">analysis.visualize_va_change_by_cluster.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/analysis/visualize_va_change_by_cluster.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#analysis.visualize_va_change_by_cluster.main" title="Link to this definition"></a></dt>
+<dd><p>Main function.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../simulation/index.html" class="btn btn-neutral float-left" title="Simulation Modules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../protocols/index.html" class="btn btn-neutral float-right" title="Protocol Modules" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Rose.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

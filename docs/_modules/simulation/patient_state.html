@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>simulation.patient_state &mdash; Macular Simulation  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Macular Simulation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../PROJECT_OVERVIEW.html">Macular Degeneration Treatment Simulation Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/index.html">Simulation Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/index.html">Analysis Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/index.html">Protocol Modules</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/patient_state.html">Patient State Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/scheduler.html">Scheduler Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/config.html">Simulation Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/clinical_model.html">Clinical Model Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/eylea_data_analysis.html">Eylea Data Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/eylea_intervals_analysis.html">Eylea Intervals Analysis Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/visit_types.html">Visit Types Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/config_parser.html">Config Parser Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../visualization/acuity_viz.html">Visual Acuity Visualization Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Macular Simulation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">simulation.patient_state</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for simulation.patient_state</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;:no-index:</span>
+<span class="sd">Patient state management for AMD treatment simulation.</span>
+
+<span class="sd">This module implements a state machine for tracking individual patient progression</span>
+<span class="sd">through AMD treatment protocols. It maintains all clinical and treatment-related</span>
+<span class="sd">state information and handles state transitions during clinic visits.</span>
+
+<span class="sd">Key Concepts</span>
+<span class="sd">------------</span>
+<span class="sd">1. **State Machine**:</span>
+<span class="sd">   - Tracks disease state (NAIVE, ACTIVE, INACTIVE, ATROPHIC)</span>
+<span class="sd">   - Manages treatment phases (loading, maintenance, etc.)</span>
+<span class="sd">   - Handles transitions between states based on clinical outcomes</span>
+
+<span class="sd">2. **Clinical Tracking**:</span>
+<span class="sd">   - Visual acuity measurements (ETDRS letters 0-85)</span>
+<span class="sd">   - Treatment history (injections, visits, responses)</span>
+<span class="sd">   - Disease progression over time</span>
+
+<span class="sd">3. **Visit Processing**:</span>
+<span class="sd">   - Handles different visit types and actions</span>
+<span class="sd">   - Updates state based on clinical model outputs</span>
+<span class="sd">   - Maintains complete visit history</span>
+
+<span class="sd">Classes</span>
+<span class="sd">-------</span>
+<span class="sd">PatientState</span>
+<span class="sd">    Core state machine class tracking all patient attributes and history</span>
+
+<span class="sd">Key Methods</span>
+<span class="sd">-----------</span>
+<span class="sd">process_visit()</span>
+<span class="sd">    Main entry point for processing clinic visits and updating state</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">Basic Usage:</span>
+<span class="sd">&gt;&gt;&gt; model = ClinicalModel()</span>
+<span class="sd">&gt;&gt;&gt; patient = PatientState(&quot;123&quot;, &quot;treat_and_extend&quot;, 70, datetime.now())</span>
+<span class="sd">&gt;&gt;&gt; visit_data = patient.process_visit(</span>
+<span class="sd">...     datetime.now(), </span>
+<span class="sd">...     [&quot;vision_test&quot;, &quot;injection&quot;], </span>
+<span class="sd">...     model</span>
+<span class="sd">... )</span>
+<span class="sd">&gt;&gt;&gt; print(f&quot;Vision change: {visit_data[&#39;vision_change&#39;]} letters&quot;)</span>
+
+<span class="sd">Advanced Usage:</span>
+<span class="sd">&gt;&gt;&gt; # Custom treatment protocol with phase transitions</span>
+<span class="sd">&gt;&gt;&gt; patient = PatientState(&quot;456&quot;, &quot;custom_protocol&quot;, 65, datetime.now())</span>
+<span class="sd">&gt;&gt;&gt; while patient.visits &lt; 24:</span>
+<span class="sd">...     visit_data = patient.process_visit(</span>
+<span class="sd">...         datetime.now(),</span>
+<span class="sd">...         [&quot;vision_test&quot;, &quot;oct_scan&quot;, &quot;injection&quot;],</span>
+<span class="sd">...         model</span>
+<span class="sd">...     )</span>
+<span class="sd">...     if visit_data[&quot;vision_change&quot;] &lt; -5:</span>
+<span class="sd">...         patient.update_phase(&quot;intensified_treatment&quot;)</span>
+
+<span class="sd">Notes</span>
+<span class="sd">-----</span>
+<span class="sd">- Visual acuity measurements use ETDRS letters (0-85 range)</span>
+<span class="sd">- Disease states follow ClinicalModel definitions</span>
+<span class="sd">- Visit intervals are clamped between 4-52 weeks</span>
+<span class="sd">- All state changes are recorded in visit_history</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.clinical_model</span> <span class="kn">import</span> <span class="n">ClinicalModel</span>
+
+<div class="viewcode-block" id="PatientState">
+<a class="viewcode-back" href="../../simulation/patient_state.html#simulation.patient_state.PatientState">[docs]</a>
+<span class="k">class</span> <span class="nc">PatientState</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;:no-index:</span>
+<span class="sd">    Manages patient state and history throughout the simulation.</span>
+
+<span class="sd">    This class maintains the complete state of a patient including their treatment history,</span>
+<span class="sd">    vision measurements, disease state, and scheduled visits. It provides methods for</span>
+<span class="sd">    processing clinic visits and updating patient state based on treatments and disease</span>
+<span class="sd">    progression.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    patient_id : str</span>
+<span class="sd">        Unique identifier for the patient</span>
+<span class="sd">    protocol_name : str</span>
+<span class="sd">        Name of the treatment protocol</span>
+<span class="sd">    initial_vision : float</span>
+<span class="sd">        Baseline visual acuity (ETDRS letters)</span>
+<span class="sd">    start_time : datetime</span>
+<span class="sd">        Time when patient enters the simulation</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    MAX_TREATMENTS_IN_PHASE : int</span>
+<span class="sd">        Maximum allowed treatments in a phase</span>
+<span class="sd">    patient_id : str</span>
+<span class="sd">        Unique identifier for the patient</span>
+<span class="sd">    state : Dict</span>
+<span class="sd">        Dictionary containing all patient state information including:</span>
+<span class="sd">        - protocol: Treatment protocol name</span>
+<span class="sd">        - current_step: Current treatment phase</span>
+<span class="sd">        - visits: Total number of visits</span>
+<span class="sd">        - injections: Total number of injections</span>
+<span class="sd">        - baseline_vision: Initial visual acuity</span>
+<span class="sd">        - current_vision: Current visual acuity</span>
+<span class="sd">        - disease_state: Current disease state</span>
+<span class="sd">        And various other tracking variables</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="PatientState.__init__">
+<a class="viewcode-back" href="../../simulation/patient_state.html#simulation.patient_state.PatientState.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">patient_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">protocol_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">initial_vision</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> 
+                 <span class="n">start_time</span><span class="p">:</span> <span class="n">datetime</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">MAX_TREATMENTS_IN_PHASE</span> <span class="o">=</span> <span class="mi">1000</span>  <span class="c1"># Maximum allowed treatments in a phase</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">patient_id</span> <span class="o">=</span> <span class="n">patient_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;protocol&quot;</span><span class="p">:</span> <span class="n">protocol_name</span><span class="p">,</span>
+            <span class="s2">&quot;current_step&quot;</span><span class="p">:</span> <span class="s2">&quot;injection_phase&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;visits&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;injections&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;baseline_vision&quot;</span><span class="p">:</span> <span class="n">initial_vision</span><span class="p">,</span>
+            <span class="s2">&quot;current_vision&quot;</span><span class="p">:</span> <span class="n">initial_vision</span><span class="p">,</span>
+            <span class="s2">&quot;last_visit_date&quot;</span><span class="p">:</span> <span class="n">start_time</span><span class="p">,</span>
+            <span class="s2">&quot;next_visit_interval&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="s2">&quot;treatment_start&quot;</span><span class="p">:</span> <span class="n">start_time</span><span class="p">,</span>
+            <span class="s2">&quot;visit_history&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;best_vision_achieved&quot;</span><span class="p">:</span> <span class="n">initial_vision</span><span class="p">,</span>
+            <span class="s2">&quot;last_treatment_response&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;treatment_response_history&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;weeks_since_last_injection&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;last_injection_date&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;disease_state&quot;</span><span class="p">:</span> <span class="s2">&quot;NAIVE&quot;</span>  <span class="c1"># Set initial disease state to NAIVE</span>
+        <span class="p">}</span></div>
+
+    
+<div class="viewcode-block" id="PatientState.process_visit">
+<a class="viewcode-back" href="../../simulation/patient_state.html#simulation.patient_state.PatientState.process_visit">[docs]</a>
+    <span class="k">def</span> <span class="nf">process_visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visit_time</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">clinical_model</span><span class="p">:</span> <span class="n">ClinicalModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process a clinic visit and update patient state.</span>
+
+<span class="sd">        This is the main state transition method that handles all visit processing</span>
+<span class="sd">        and state updates. It coordinates vision testing, treatment administration,</span>
+<span class="sd">        and disease state transitions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        visit_time : datetime</span>
+<span class="sd">            Time of the visit (must be timezone-naive UTC)</span>
+<span class="sd">            Example: datetime(2025, 4, 15)</span>
+<span class="sd">        actions : List[str]</span>
+<span class="sd">            List of actions performed during the visit. Valid actions:</span>
+<span class="sd">                - &quot;vision_test&quot;: Measures visual acuity</span>
+<span class="sd">                - &quot;oct_scan&quot;: Performs OCT imaging</span>
+<span class="sd">                - &quot;injection&quot;: Administers anti-VEGF treatment</span>
+<span class="sd">            Example: [&quot;vision_test&quot;, &quot;oct_scan&quot;, &quot;injection&quot;]</span>
+<span class="sd">        clinical_model : ClinicalModel</span>
+<span class="sd">            ClinicalModel instance for simulating vision changes and disease progression</span>
+<span class="sd">            Must be initialized with appropriate parameters</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            Dictionary containing detailed visit results:</span>
+<span class="sd">                - vision_change: float - Change in ETDRS letters</span>
+<span class="sd">                - actions_performed: List[str] - Completed actions</span>
+<span class="sd">                - disease_state: DiseaseState - Updated state</span>
+<span class="sd">                - treatment_response: Optional[Dict] - If injection given</span>
+<span class="sd">                - visit_type: str - Classification of visit</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If visit_time is timezone-aware</span>
+<span class="sd">            If actions contains invalid values</span>
+<span class="sd">            If clinical_model is not properly initialized</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Basic Visit:</span>
+<span class="sd">        &gt;&gt;&gt; model = ClinicalModel(config)</span>
+<span class="sd">        &gt;&gt;&gt; patient = PatientState(&quot;123&quot;, &quot;treat_and_extend&quot;, 70, datetime.now())</span>
+<span class="sd">        &gt;&gt;&gt; visit_data = patient.process_visit(</span>
+<span class="sd">        ...     datetime.now(),</span>
+<span class="sd">        ...     [&quot;vision_test&quot;, &quot;injection&quot;], </span>
+<span class="sd">        ...     model</span>
+<span class="sd">        ... )</span>
+
+<span class="sd">        Monitoring Visit:</span>
+<span class="sd">        &gt;&gt;&gt; visit_data = patient.process_visit(</span>
+<span class="sd">        ...     datetime.now(),</span>
+<span class="sd">        ...     [&quot;vision_test&quot;, &quot;oct_scan&quot;],</span>
+<span class="sd">        ...     model</span>
+<span class="sd">        ... )</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        State Updates:</span>
+<span class="sd">        1. Increments visit counter</span>
+<span class="sd">        2. Updates last visit date</span>
+<span class="sd">        3. Calculates weeks since last injection</span>
+<span class="sd">        4. Simulates vision changes using clinical_model</span>
+<span class="sd">        5. Processes each action in sequence</span>
+<span class="sd">        6. Records complete visit details</span>
+
+<span class="sd">        The method handles:</span>
+<span class="sd">        - Validation of input parameters</span>
+<span class="sd">        - Coordination of state updates</span>
+<span class="sd">        - Error handling for invalid states</span>
+<span class="sd">        - Complete visit recording</span>
+
+<span class="sd">        Vision changes are simulated by the clinical_model which considers:</span>
+<span class="sd">        - Current disease state</span>
+<span class="sd">        - Treatment history</span>
+<span class="sd">        - Time since last injection</span>
+<span class="sd">        - Current vision level</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;visits&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;last_visit_date&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">visit_time</span>
+        
+        <span class="c1"># Update weeks since last injection</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;last_injection_date&quot;</span><span class="p">):</span>
+            <span class="n">weeks_elapsed</span> <span class="o">=</span> <span class="p">(</span><span class="n">visit_time</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;last_injection_date&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">days</span> <span class="o">/</span> <span class="mf">7.0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;weeks_since_last_injection&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">weeks_elapsed</span>
+        
+        <span class="c1"># Calculate vision changes and update disease state</span>
+        <span class="n">vision_change</span><span class="p">,</span> <span class="n">new_disease_state</span> <span class="o">=</span> <span class="n">clinical_model</span><span class="o">.</span><span class="n">simulate_vision_change</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;disease_state&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_disease_state</span>
+        
+        <span class="c1"># Process actions</span>
+        <span class="n">visit_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;vision_change&quot;</span><span class="p">:</span> <span class="n">vision_change</span><span class="p">,</span>
+            <span class="s2">&quot;actions_performed&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;disease_state&quot;</span><span class="p">:</span> <span class="n">new_disease_state</span>
+        <span class="p">}</span>
+        
+        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;vision_test&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_process_vision_test</span><span class="p">(</span><span class="n">vision_change</span><span class="p">)</span>
+                <span class="n">visit_data</span><span class="p">[</span><span class="s2">&quot;actions_performed&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;vision_test&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;oct_scan&quot;</span><span class="p">:</span>
+                <span class="n">visit_data</span><span class="p">[</span><span class="s2">&quot;actions_performed&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;oct_scan&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;injection&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_process_injection</span><span class="p">(</span><span class="n">visit_time</span><span class="p">)</span>
+                <span class="n">visit_data</span><span class="p">[</span><span class="s2">&quot;actions_performed&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;injection&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_increment_treatments_in_phase</span><span class="p">()</span>
+        
+        <span class="c1"># Record visit in history</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_record_visit</span><span class="p">(</span><span class="n">visit_time</span><span class="p">,</span> <span class="n">actions</span><span class="p">,</span> <span class="n">visit_data</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">visit_data</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_increment_treatments_in_phase</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Safely increment the treatments_in_phase counter.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Uses modulo operation to prevent counter overflow beyond MAX_TREATMENTS_IN_PHASE.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;treatments_in_phase&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;treatments_in_phase&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;treatments_in_phase&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;treatments_in_phase&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAX_TREATMENTS_IN_PHASE</span>
+    
+    <span class="k">def</span> <span class="nf">_process_vision_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vision_change</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process vision test results with measurement noise and bounds checking.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vision_change : float</span>
+<span class="sd">            Change in visual acuity since last measurement (ETDRS letters)</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Key steps:</span>
+<span class="sd">        1. Adds Gaussian measurement noise (SD=2 letters)</span>
+<span class="sd">        2. Updates current vision score</span>
+<span class="sd">        3. Clamps vision between 0-85 ETDRS letters</span>
+<span class="sd">        4. Updates best vision achieved if improved</span>
+
+<span class="sd">        Measurement noise represents typical test-retest variability in</span>
+<span class="sd">        clinical vision testing. The 0-85 letter range reflects the</span>
+<span class="sd">        standard ETDRS chart limits.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Add measurement noise</span>
+        <span class="n">measurement_noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># SD of 2 letters</span>
+        <span class="n">new_vision</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;baseline_vision&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">vision_change</span> <span class="o">+</span> <span class="n">measurement_noise</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;current_vision&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">new_vision</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">85</span><span class="p">)</span>  <span class="c1"># Clamp between 0-85</span>
+        
+        <span class="c1"># Update best vision if applicable</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;current_vision&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;best_vision_achieved&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;best_vision_achieved&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;current_vision&quot;</span><span class="p">],</span> <span class="mi">85</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">_process_injection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visit_time</span><span class="p">:</span> <span class="n">datetime</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process injection treatment.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        visit_time : datetime</span>
+<span class="sd">            Time of the injection</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Updates injection count and resets the weeks since last injection counter.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;injections&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;last_injection_date&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">visit_time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;weeks_since_last_injection&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="k">def</span> <span class="nf">_record_visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visit_time</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+                     <span class="n">visit_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Record visit details in patient history.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        visit_time : datetime</span>
+<span class="sd">            Time of visit (will be stripped to minute precision)</span>
+<span class="sd">        actions : List[str]</span>
+<span class="sd">            Actions performed, validated against allowed actions</span>
+<span class="sd">        visit_data : Dict[str, Any]</span>
+<span class="sd">            Must contain at minimum:</span>
+<span class="sd">                - vision: float - Current ETDRS letters</span>
+<span class="sd">                - disease_state: str/DiseaseState - Current state</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">            Modifies state[&#39;visit_history&#39;] in place</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Visit records contain these standardized fields:</span>
+<span class="sd">            - date: datetime - Visit time</span>
+<span class="sd">            - actions: List[str] - Performed actions</span>
+<span class="sd">            - vision: float - ETDRS letters</span>
+<span class="sd">            - phase: str - Current treatment phase</span>
+<span class="sd">            - type: str - Visit classification</span>
+<span class="sd">            - disease_state: str - Current disease state</span>
+
+<span class="sd">        The visit history provides a complete audit trail of all patient</span>
+<span class="sd">        interactions and is used for:</span>
+<span class="sd">            - Treatment decision making</span>
+<span class="sd">            - Outcome analysis</span>
+<span class="sd">            - Protocol adherence monitoring</span>
+<span class="sd">            - Simulation validation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">visit_record</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">visit_time</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+            <span class="s1">&#39;actions&#39;</span><span class="p">:</span> <span class="n">actions</span><span class="p">,</span>
+            <span class="s1">&#39;vision&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s1">&#39;current_vision&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;phase&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;current_phase&#39;</span><span class="p">,</span> <span class="s1">&#39;loading&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="n">visit_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;visit_type&#39;</span><span class="p">,</span> <span class="s1">&#39;regular_visit&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;disease_state&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;disease_state&#39;</span><span class="p">,</span> <span class="s1">&#39;NAIVE&#39;</span><span class="p">))</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s1">&#39;visit_history&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">visit_record</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="PatientState.update_phase">
+<a class="viewcode-back" href="../../simulation/patient_state.html#simulation.patient_state.PatientState.update_phase">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_phase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_phase</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update treatment phase.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        new_phase : str</span>
+<span class="sd">            Name of the new treatment phase</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;current_phase&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_phase</span></div>
+
+    
+<div class="viewcode-block" id="PatientState.set_next_visit_interval">
+<a class="viewcode-back" href="../../simulation/patient_state.html#simulation.patient_state.PatientState.set_next_visit_interval">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_next_visit_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weeks</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set interval until next scheduled visit.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        weeks : int</span>
+<span class="sd">            Number of weeks until next visit</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Interval is clamped between 4 and 52 weeks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;next_visit_interval&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">weeks</span><span class="p">,</span> <span class="mi">52</span><span class="p">),</span> <span class="mi">4</span><span class="p">)</span>  <span class="c1"># Clamp between 4-52 weeks</span></div>
+
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">visit_history</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get patient&#39;s visit history.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        List[Dict]</span>
+<span class="sd">            List of visit records in chronological order</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;visit_history&quot;</span><span class="p">]</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">current_vision</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get patient&#39;s current visual acuity.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Current vision in ETDRS letters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;current_vision&quot;</span><span class="p">]</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">last_visit_date</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get date of patient&#39;s last visit.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        datetime</span>
+<span class="sd">            Date and time of the most recent visit</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;last_visit_date&quot;</span><span class="p">]</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">next_visit_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get weeks until next scheduled visit.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Number of weeks until next scheduled visit</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;next_visit_interval&quot;</span><span class="p">]</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Rose.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
