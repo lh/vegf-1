@@ -18,6 +18,13 @@
    - Configured treatment discontinuation settings
    - Set up sensitivity analysis options
 
+4. **Documentation Improvements**
+   - Fixed documentation structure for simulation modules
+   - Removed `:no-index:` directives from docstrings to fix duplicate documentation warnings
+   - Created documentation guidelines in meta/documentation_guidelines.md
+   - Fixed indentation and formatting issues in docstrings
+   - Updated documentation_errors.log with progress and remaining issues
+
 ## Remaining Implementation Tasks
 
 1. **SimulationConfig Class Updates**
