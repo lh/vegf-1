@@ -263,6 +263,35 @@ class TestEnhancedDiscontinuationManager(unittest.TestCase):
         # Check that the first visit is earlier than the standard schedule
         self.assertEqual(monitoring_events[0]["time"], self.current_time + timedelta(weeks=4))
     
+    def test_no_monitoring_for_administrative_cessation(self):
+        """Test that no monitoring visits are scheduled for random administrative cessation."""
+        # Schedule monitoring for random_administrative cessation
+        monitoring_events = self.manager.schedule_monitoring(
+            discontinuation_time=self.current_time,
+            cessation_type="random_administrative"
+        )
+        
+        # Check that no monitoring events are scheduled
+        self.assertEqual(len(monitoring_events), 0)
+        
+        # Also test with a clinician to ensure it doesn't affect the result
+        conservative_clinician = Clinician("adherent", {
+            "protocol_adherence_rate": 0.95,
+            "characteristics": {
+                "risk_tolerance": "low",
+                "conservative_retreatment": True
+            }
+        })
+        
+        monitoring_events = self.manager.schedule_monitoring(
+            discontinuation_time=self.current_time,
+            cessation_type="random_administrative",
+            clinician=conservative_clinician
+        )
+        
+        # Check that still no monitoring events are scheduled
+        self.assertEqual(len(monitoring_events), 0)
+    
     def test_calculate_recurrence_probability(self):
         """Test calculating recurrence probability."""
         # Calculate for stable_max_interval at 6 months

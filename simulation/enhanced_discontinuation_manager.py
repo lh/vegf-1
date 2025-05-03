@@ -232,6 +232,10 @@ class EnhancedDiscontinuationManager(DiscontinuationManager):
         - Years 2-3: Every 3-4 months (12-16 weeks)
         - Years 4-5: Every 6 months (24 weeks)
         
+        For random_administrative cessation type, no monitoring is scheduled as these
+        patients are completely lost to follow-up, reflecting real-world administrative
+        discontinuations (e.g., insurance changes).
+        
         Parameters
         ----------
         discontinuation_time : datetime
@@ -247,6 +251,10 @@ class EnhancedDiscontinuationManager(DiscontinuationManager):
             List of monitoring visit events to schedule
         """
         if not self.enabled:
+            return []
+        
+        # Return empty list for random_administrative cessation (no monitoring)
+        if cessation_type == "random_administrative":
             return []
         
         # Initialize monitoring events list

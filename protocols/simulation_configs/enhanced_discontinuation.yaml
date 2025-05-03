@@ -69,6 +69,14 @@ discontinuation:
   
   # Post-discontinuation monitoring schedules by cessation type
   monitoring:
+    # Explicit mapping of cessation types to monitoring schedules
+    cessation_types:
+      stable_max_interval: "planned"     # Protocol-based cessation gets standard monitoring
+      premature: "unplanned"             # Premature cessation gets more frequent monitoring
+      treatment_duration: "unplanned"    # Time-based cessation gets more frequent monitoring
+      random_administrative: "none"      # Administrative cessation gets no monitoring (lost to follow-up)
+    
+    # Schedule definitions
     planned:
       follow_up_schedule: [12, 24, 36]  # Weeks after discontinuation for follow-up visits
     unplanned:
