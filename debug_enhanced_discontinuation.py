@@ -35,7 +35,10 @@ def run_enhanced_discontinuation_simulation():
     print("Running simulation with enhanced discontinuation model...")
     
     # Load the enhanced discontinuation configuration
-    config = SimulationConfig.from_yaml("protocols/simulation_configs/enhanced_discontinuation.yaml")
+    # Use absolute path to avoid path duplication issues
+    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
+                              "protocols/simulation_configs/enhanced_discontinuation.yaml")
+    config = SimulationConfig.from_file(config_path)
     
     # Run the simulation
     sim = TreatAndExtendABS(config)
