@@ -17,12 +17,18 @@ Outputs:
 - Console output with summary statistics
 
 Example Usage:
-    python run_simulation.py
+    python run_simulation.py                     # Uses default test_simulation.yaml
+    python run_simulation.py eylea_literature_based  # Uses specified configuration
 
-Note: The configuration file path can be modified in the main() function.
+Command-line Arguments:
+    config_name: Name of the configuration file (without .yaml extension)
+                 Located in protocols/simulation_configs/
 """
 
 import logging
+import argparse
+import os.path
+from pathlib import Path
 # Configure logging to reduce debug output
 logging.basicConfig(level=logging.INFO)
 # Set specific loggers to higher levels to reduce noise
@@ -91,7 +97,9 @@ def run_abs(config, verbose=False):
         print(f"First visit contents: {first_patient[0]}")
     
     return patient_histories
-from test_des_simulation import run_test_des_simulation as run_des
+# Use our new production-ready DES implementation
+from des_simulation import run_des_simulation as run_des
+# Previously used test implementation: from test_des_simulation import run_test_des_simulation as run_des
 import matplotlib.pyplot as plt
 from analysis.simulation_results import SimulationResults
 from visualization.comparison_viz import plot_mean_acuity_comparison
@@ -108,7 +116,7 @@ def main():
     
     Configuration
     ------------
-    Uses 'test_simulation.yaml' by default. Modify the config path as needed.
+    Uses command-line argument or 'test_simulation.yaml' by default.
     
     Output Files
     -----------
@@ -120,8 +128,32 @@ def main():
     - Progress messages during simulation
     - Summary statistics for both simulation types
     """
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description='Run comparative simulations between ABS and DES models.')
+    parser.add_argument('config_name', nargs='?', default='test_simulation',
+                        help='Name of the configuration file (without .yaml extension)')
+    args = parser.parse_args()
+    
+    # Validate configuration file exists
+    config_path = Path("protocols") / "simulation_configs" / f"{args.config_name}.yaml"
+    if not config_path.exists():
+        print(f"Error: Configuration file '{config_path}' not found.")
+        print("Available configurations:")
+        for config_file in Path("protocols/simulation_configs").glob("*.yaml"):
+            print(f"  - {config_file.stem}")
+        return
+    
+    print(f"Loading configuration from: {config_path}")
+    print(f"Absolute path: {config_path.absolute()}")
+    
+    # Check if file exists
+    if os.path.exists(config_path):
+        print(f"Config file exists at {config_path}")
+        with open(config_path, 'r') as f:
+            print(f"File contents: {f.read()}")
+    
     # Load configuration
-    standard_config = SimulationConfig.from_yaml("test_simulation")
+    standard_config = SimulationConfig.from_yaml(args.config_name)
     
     print("\nRunning Agent-Based Simulation...")
     abs_results = run_abs(
