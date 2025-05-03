@@ -149,7 +149,30 @@ def create_test_protocol():
     return protocol
 
 def run_queue_test():
-    """Run simulation with detailed queue debugging"""
+    """
+    Run a discrete event simulation with detailed queue debugging.
+    
+    This function sets up and runs a test discrete event simulation with a minimal
+    configuration to test queue behavior. It creates a custom QueueDebugSimulation
+    instance that tracks detailed metrics about resource allocation, queue lengths,
+    and processing delays.
+    
+    Returns
+    -------
+    None
+        Results are logged to the console
+        
+    Notes
+    -----
+    The test simulation:
+    - Uses a minimal configuration with 2 patients and 30 days duration
+    - Tracks detailed metrics about queue operations
+    - Logs resource allocation, queue lengths, and event processing
+    - Reports final metrics including queue lengths, delays, and resource utilization
+    
+    This test is useful for debugging resource allocation issues, queue behavior,
+    and identifying bottlenecks in the discrete event simulation.
+    """
     # Initialize minimal config
     config = SimulationConfig(
         parameters={

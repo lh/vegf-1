@@ -14,6 +14,40 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 def run_test_simulation(config: Optional[SimulationConfig] = None, verbose: bool = False):
+    """
+    Run a test simulation with the agent-based simulation model.
+    
+    This function sets up and runs a test simulation with the specified configuration,
+    or a default configuration if none is provided. It creates test patients, schedules
+    initial visits, runs the simulation, and verifies disease state transitions and
+    visit intervals.
+    
+    Parameters
+    ----------
+    config : Optional[SimulationConfig], optional
+        Simulation configuration to use. If None, loads a default test configuration.
+    verbose : bool, optional
+        Whether to enable verbose logging, by default False
+        
+    Returns
+    -------
+    Dict[str, List[Dict]]
+        Dictionary mapping patient IDs to their visit histories
+        
+    Raises
+    ------
+    Exception
+        If an error occurs during simulation setup or execution
+        
+    Notes
+    -----
+    The test simulation verifies:
+    - Disease state transitions occur after a minimum number of visits
+    - All disease states are valid
+    - Visit schedules follow expected patterns, with flexibility for treatment discontinuation
+    - HIGHLY_ACTIVE state handling is appropriate
+    - Patients receive the expected number of injections
+    """
     try:
         # Load the Eylea treat-and-extend protocol
         if verbose:

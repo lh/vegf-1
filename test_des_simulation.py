@@ -11,6 +11,38 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def run_test_des_simulation(config: Optional[SimulationConfig] = None, verbose: bool = False):
+    """
+    Run a test simulation with the discrete event simulation model.
+    
+    This function sets up and runs a test discrete event simulation with the specified
+    configuration, or a default configuration if none is provided. It initializes the
+    simulation, schedules patient arrivals, runs the simulation, and collects results.
+    
+    Parameters
+    ----------
+    config : Optional[SimulationConfig], optional
+        Simulation configuration to use. If None, loads a default test configuration.
+    verbose : bool, optional
+        Whether to enable verbose logging and print statistics, by default False
+        
+    Returns
+    -------
+    Dict[str, List[Dict]]
+        Dictionary mapping patient IDs to their visit histories
+        
+    Raises
+    ------
+    Exception
+        If an error occurs during simulation setup or execution
+        
+    Notes
+    -----
+    The simulation:
+    - Schedules patients to arrive at a rate of approximately 3 per week
+    - Runs until the configured end date
+    - Collects visit histories for all patients
+    - Generates visualization plots if enabled in the configuration
+    """
     try:
         # Load the Eylea treat-and-extend protocol
         if verbose:

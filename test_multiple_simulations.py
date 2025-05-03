@@ -117,7 +117,38 @@ def analyze_results(conn):
         print(f"Mean visits: {sim_data['num_visits'].mean():.1f}")
 
 def run_multiple_simulations(num_runs: int = 5, suppress_plots: bool = True):
-    """Run multiple simulations of each type and analyze results"""
+    """
+    Run multiple simulations of each type and analyze comparative results.
+    
+    This function runs both agent-based (ABS) and discrete event (DES) simulations
+    multiple times, stores the results in a SQLite database, and performs comparative
+    analysis between the simulation types. It generates visualizations comparing
+    key metrics and prints summary statistics.
+    
+    Parameters
+    ----------
+    num_runs : int, optional
+        Number of simulation runs to perform for each type, by default 5
+    suppress_plots : bool, optional
+        Whether to suppress intermediate plots during simulations, by default True
+        
+    Returns
+    -------
+    None
+        Results are stored in the database and visualized
+        
+    Notes
+    -----
+    The function:
+    - Creates a fresh SQLite database for storing results
+    - Runs the specified number of ABS and DES simulations
+    - Stores patient outcomes including vision changes, injections, and visits
+    - Generates comparative box plots for key metrics
+    - Prints summary statistics for each simulation type
+    
+    This is useful for validating simulation consistency and comparing
+    the behavior of different simulation approaches.
+    """
     conn = setup_database()
     
     start_date = datetime(2023, 1, 1)

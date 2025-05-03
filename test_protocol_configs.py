@@ -6,7 +6,29 @@ import matplotlib.pyplot as plt
 from analysis.simulation_results import SimulationResults
 
 def test_different_protocols():
-    """Test running simulations with different protocol configurations"""
+    """
+    Test running simulations with different protocol configurations.
+    
+    This function loads a standard test configuration and runs both agent-based (ABS)
+    and discrete event (DES) simulations with it. It then creates comparative
+    visualizations of the mean vision outcomes and prints summary statistics.
+    
+    Returns
+    -------
+    None
+        Results are visualized and printed to console
+        
+    Notes
+    -----
+    The function:
+    - Loads the standard test simulation configuration
+    - Runs both ABS and DES simulations with this configuration
+    - Creates side-by-side plots of mean vision outcomes
+    - Prints summary statistics for both simulation types
+    
+    This test is useful for validating that both simulation types produce
+    comparable results with the same protocol configuration.
+    """
     # Load different configurations
     standard_config = SimulationConfig.from_yaml("test_simulation")
     
