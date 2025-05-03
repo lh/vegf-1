@@ -1,0 +1,152 @@
+name: "Eylea Sensitivity Analysis Parameters"
+description: "Parameter variations for sensitivity analysis based on literature confidence intervals"
+version: "1.0"
+
+# This file defines parameter variations for sensitivity analysis
+# Each variation set contains alternative values for key parameters
+
+variations:
+  # Optimistic scenario - better outcomes
+  optimistic:
+    description: "Optimistic parameter set with upper bounds of confidence intervals"
+    parameters:
+      transition_probabilities:
+        NAIVE:
+          STABLE: 0.60  # Upper bound from ALTAIR
+          ACTIVE: 0.35  # Adjusted
+          HIGHLY_ACTIVE: 0.05  # Lower probability of worse state
+        STABLE:
+          STABLE: 0.85  # Higher persistence
+          ACTIVE: 0.10
+          HIGHLY_ACTIVE: 0.05
+        ACTIVE:
+          STABLE: 0.35  # Higher chance of improvement
+          ACTIVE: 0.55
+          HIGHLY_ACTIVE: 0.10
+      
+      vision_change:
+        base_change:
+          NAIVE:
+            injection: [9.0, 1.3]  # Upper bound from studies
+            no_injection: [-2.0, 1.0]  # Less decline
+          STABLE:
+            injection: [2.0, 0.7]  # Upper bound
+            no_injection: [-0.5, 0.5]  # Less decline
+          ACTIVE:
+            injection: [1.0, 0.7]  # Upper bound
+            no_injection: [-1.0, 1.0]  # Less decline
+          HIGHLY_ACTIVE:
+            injection: [1.0, 1.2]  # Upper bound
+            no_injection: [-3.0, 1.5]  # Less decline
+      
+      treatment_discontinuation:
+        recurrence_probabilities:
+          base_risk_per_year: 0.15  # Lower recurrence risk
+        recurrence_impact:
+          vision_loss_letters: 2.5  # Less vision loss
+          vision_recovery_factor: 0.98  # Better recovery
+  
+  # Pessimistic scenario - worse outcomes
+  pessimistic:
+    description: "Pessimistic parameter set with lower bounds of confidence intervals"
+    parameters:
+      transition_probabilities:
+        NAIVE:
+          STABLE: 0.55  # Lower bound from ALTAIR
+          ACTIVE: 0.35  # Adjusted
+          HIGHLY_ACTIVE: 0.10  # Higher probability of worse state
+        STABLE:
+          STABLE: 0.80  # Lower persistence
+          ACTIVE: 0.15
+          HIGHLY_ACTIVE: 0.05
+        ACTIVE:
+          STABLE: 0.30  # Lower chance of improvement
+          ACTIVE: 0.60
+          HIGHLY_ACTIVE: 0.10
+      
+      vision_change:
+        base_change:
+          NAIVE:
+            injection: [7.0, 1.3]  # Lower bound from studies
+            no_injection: [-3.0, 1.0]  # More decline
+          STABLE:
+            injection: [1.0, 0.7]  # Lower bound
+            no_injection: [-1.0, 0.5]  # More decline
+          ACTIVE:
+            injection: [0.5, 0.7]  # Lower bound
+            no_injection: [-2.0, 1.0]  # More decline
+          HIGHLY_ACTIVE:
+            injection: [-0.5, 1.2]  # Lower bound
+            no_injection: [-5.0, 1.5]  # More decline
+      
+      treatment_discontinuation:
+        recurrence_probabilities:
+          base_risk_per_year: 0.25  # Higher recurrence risk
+        recurrence_impact:
+          vision_loss_letters: 5.0  # More vision loss
+          vision_recovery_factor: 0.90  # Worse recovery
+  
+  # Focused variations for specific parameters
+  high_recurrence:
+    description: "High disease recurrence after discontinuation"
+    parameters:
+      treatment_discontinuation:
+        recurrence_probabilities:
+          base_risk_per_year: 0.30
+          cumulative_3_year: 0.85
+          cumulative_5_year: 0.95
+  
+  low_recurrence:
+    description: "Low disease recurrence after discontinuation"
+    parameters:
+      treatment_discontinuation:
+        recurrence_probabilities:
+          base_risk_per_year: 0.15
+          cumulative_3_year: 0.60
+          cumulative_5_year: 0.75
+  
+  high_response:
+    description: "High treatment response"
+    parameters:
+      vision_change:
+        base_change:
+          NAIVE:
+            injection: [10.0, 1.3]
+          STABLE:
+            injection: [2.5, 0.7]
+          ACTIVE:
+            injection: [1.5, 0.7]
+          HIGHLY_ACTIVE:
+            injection: [1.0, 1.2]
+  
+  low_response:
+    description: "Low treatment response"
+    parameters:
+      vision_change:
+        base_change:
+          NAIVE:
+            injection: [6.5, 1.3]
+          STABLE:
+            injection: [0.8, 0.7]
+          ACTIVE:
+            injection: [0.3, 0.7]
+          HIGHLY_ACTIVE:
+            injection: [-0.5, 1.2]
+  
+  frequent_monitoring:
+    description: "More frequent monitoring after discontinuation"
+    parameters:
+      treatment_discontinuation:
+        monitoring_schedule:
+          year_1: 8  # Every 8 weeks in year 1
+          year_2_3: 12  # Every 12 weeks in years 2-3
+          year_4_plus: 16  # Every 16 weeks after year 3
+  
+  infrequent_monitoring:
+    description: "Less frequent monitoring after discontinuation"
+    parameters:
+      treatment_discontinuation:
+        monitoring_schedule:
+          year_1: 16  # Every 16 weeks in year 1
+          year_2_3: 24  # Every 24 weeks in years 2-3
+          year_4_plus: 36  # Every 36 weeks after year 3

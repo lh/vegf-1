@@ -1,0 +1,94 @@
+name: "Eylea Literature-Based Simulation"
+description: "Simulation using evidence-based parameters from ALTAIR, VIEW 1/2, and other studies"
+version: "1.0"
+
+simulation:
+  type: "agent_based"  # Can be "agent_based" or "discrete_event"
+  duration_weeks: 96  # 96 weeks (2 years) to match ALTAIR and VIEW 1/2 studies
+  population_size: 1000
+  random_seed: 42
+  output_directory: "output/eylea_literature_simulation"
+
+parameters:
+  # Base parameter set using literature-derived values
+  base_parameter_set: "protocols/parameter_sets/eylea/eylea_base_parameters.yaml"
+  
+  # Optional sensitivity analysis configuration
+  sensitivity_analysis:
+    enabled: true  # Set to false to disable sensitivity analysis
+    parameter_file: "protocols/parameter_sets/eylea/eylea_sensitivity_parameters.yaml"
+    selected_variation: "neutral"  # Options: neutral, optimistic, pessimistic, high_response, etc.
+  
+  # Optional cost parameters
+  cost_parameters:
+    enabled: false  # Set to true when cost data is available
+    parameter_file: "protocols/parameter_sets/eylea/cost_parameters.yaml"
+
+protocols:
+  # Define the treatment protocol to use
+  active_protocol: "treat_and_extend"
+  
+  # Protocol definitions
+  treat_and_extend:
+    steps:
+      - step_type: injection_phase
+        parameters:
+          dose: 2mg  # Aflibercept 2mg
+          interval_weeks: 4
+          max_repeats: 3  # 3 loading injections
+        next_step: initial_assessment
+        conditions: []
+        exit_criteria: []
+
+      - step_type: dynamic_interval
+        parameters:
+          initial_interval: 8  # Start at 8 weeks after loading
+          min_interval: 8  # Minimum interval is 8 weeks
+          max_interval: 16  # Maximum interval is 16 weeks (from ALTAIR)
+          adjustment_weeks: 2  # Adjust by 2 weeks (from ALTAIR)
+        conditions:
+          - metric: disease_activity
+            comparator: "=="
+            value: recurring
+            action: decrease_interval
+          - metric: disease_activity
+            comparator: "=="
+            value: stable
+            action: increase_interval
+        exit_criteria:
+          - metric: vision
+            comparator: "<="
+            value: "baseline - 15"
+            action: consider_stop
+          - metric: stable_max_interval
+            comparator: ">="
+            value: 3  # After 3 consecutive visits at max interval
+            action: consider_discontinuation
+
+# Treatment discontinuation and monitoring configuration
+discontinuation:
+  enabled: true
+  criteria:
+    - type: stable_max_interval
+      value: 3  # 3 consecutive visits at maximum interval
+    - type: vision_stability
+      value: 5  # Vision change less than 5 letters
+  monitoring:
+    schedule: "protocols/parameter_sets/eylea/eylea_base_parameters.yaml"  # Use monitoring schedule from base parameters
+    detection_probability: 0.87  # From Artiaga et al. study
+
+# Output configuration
+output:
+  metrics:
+    - vision_trajectory
+    - injection_count
+    - visit_count
+    - disease_state_distribution
+    - treatment_intervals
+    - discontinuation_outcomes
+  visualizations:
+    - mean_vision_trajectory
+    - vision_change_distribution
+    - injection_burden
+    - treatment_interval_distribution
+    - discontinuation_recurrence_curve

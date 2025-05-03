@@ -1,0 +1,59 @@
+name: "AMD Treatment Cost Parameters"
+description: "Cost parameters for AMD treatment simulation (placeholder values)"
+version: "1.0"
+
+# This file contains placeholder values for cost parameters
+# These will be updated with actual values when available from stakeholders
+
+cost_parameters:
+  # Visit-related costs
+  visit_costs:
+    standard_visit: 0  # Cost of a standard clinic visit without procedures
+    injection_visit: 0  # Additional cost for an injection visit (excluding drug)
+    imaging_visit: 0  # Additional cost for OCT imaging
+    virtual_review: 0  # Cost of a virtual clinic review
+  
+  # Drug costs
+  drug_costs:
+    aflibercept_2mg: 0  # Cost per injection of aflibercept 2mg
+    aflibercept_8mg: 0  # Cost per injection of aflibercept 8mg (higher dose)
+    ranibizumab: 0  # Cost per injection of ranibizumab
+    bevacizumab: 0  # Cost per injection of bevacizumab
+    faricimab: 0  # Cost per injection of faricimab
+  
+  # Resource utilization (time-based)
+  resource_utilization:
+    time_per_standard_visit: 15  # Minutes for standard visit
+    time_per_injection: 10  # Additional minutes for injection procedure
+    time_per_imaging: 15  # Minutes for OCT imaging
+    time_per_virtual_review: 5  # Minutes for virtual review
+  
+  # Staff costs per hour
+  staff_costs:
+    ophthalmologist: 0  # Cost per hour for ophthalmologist
+    nurse: 0  # Cost per hour for nurse
+    technician: 0  # Cost per hour for technician
+    administrator: 0  # Cost per hour for administrative staff
+  
+  # Equipment costs
+  equipment_costs:
+    oct_machine_per_scan: 0  # Amortized cost per OCT scan
+    injection_equipment_per_procedure: 0  # Cost of disposables per injection
+  
+  # Indirect costs
+  indirect_costs:
+    patient_travel: 0  # Average patient travel cost per visit
+    patient_time: 0  # Value of patient time per hour
+    caregiver_time: 0  # Value of caregiver time per hour
+  
+  # Adverse event costs
+  adverse_event_costs:
+    endophthalmitis: 0  # Cost of treating endophthalmitis
+    retinal_detachment: 0  # Cost of treating retinal detachment
+    vitreous_hemorrhage: 0  # Cost of treating vitreous hemorrhage
+  
+  # Long-term costs
+  long_term_costs:
+    vision_impairment_annual: 0  # Annual cost of vision impairment services
+    low_vision_aids: 0  # One-time cost of low vision aids
+    vision_rehabilitation: 0  # Cost of vision rehabilitation program

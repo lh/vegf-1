@@ -1,0 +1,145 @@
+name: "Eylea Literature-Based Parameters"
+description: "Evidence-based parameters derived from ALTAIR, VIEW 1/2, Mylight, and other studies"
+version: "1.0"
+
+protocol_specific:
+  clinical_model:
+    disease_states:
+      - NAIVE
+      - STABLE
+      - ACTIVE
+      - HIGHLY_ACTIVE
+    
+    # Transition probabilities based on ALTAIR study and other literature
+    transition_probabilities:
+      NAIVE:
+        NAIVE: 0.0
+        STABLE: 0.58  # From ALTAIR
+        ACTIVE: 0.32  # From ALTAIR
+        HIGHLY_ACTIVE: 0.10  # From ALTAIR
+      STABLE:
+        STABLE: 0.83  # From ALTAIR
+        ACTIVE: 0.12  # From ALTAIR
+        HIGHLY_ACTIVE: 0.05  # From ALTAIR
+      ACTIVE:
+        STABLE: 0.32  # From ALTAIR
+        ACTIVE: 0.57  # From ALTAIR
+        HIGHLY_ACTIVE: 0.11  # From ALTAIR
+      HIGHLY_ACTIVE:
+        STABLE: 0.08  # From ALTAIR (estimated)
+        ACTIVE: 0.34  # From ALTAIR (estimated)
+        HIGHLY_ACTIVE: 0.58  # From ALTAIR (estimated)
+    
+    # Vision change parameters based on literature evidence
+    vision_change:
+      base_change:
+        NAIVE:
+          injection: [8.4, 1.3]  # Mean letter change, SD from ALTAIR/VIEW studies
+          no_injection: [-2.5, 1.0]  # Estimated from literature
+        STABLE:
+          injection: [1.5, 0.7]  # From ALTAIR
+          no_injection: [-0.75, 0.5]  # From ALTAIR
+        ACTIVE:
+          injection: [0.8, 0.7]  # From ALTAIR
+          no_injection: [-1.5, 1.0]  # From ALTAIR
+        HIGHLY_ACTIVE:
+          injection: [0.3, 1.2]  # From ALTAIR
+          no_injection: [-4.0, 1.5]  # From ALTAIR
+      
+      time_factor:
+        max_weeks: 16  # From ALTAIR pharmacokinetic studies
+      
+      ceiling_factor:
+        max_vision: 85  # Typical ceiling in clinical studies
+      
+      measurement_noise: [0, 0.5]  # Test-retest variability
+    
+    # Treatment discontinuation parameters
+    treatment_discontinuation:
+      recurrence_probabilities:
+        base_risk_per_year: 0.207  # 1-year recurrence rate (Artiaga et al.)
+        cumulative_3_year: 0.739  # 3-year recurrence rate (Artiaga et al.)
+        cumulative_5_year: 0.880  # 5-year recurrence rate (Artiaga et al.)
+      
+      recurrence_impact:
+        vision_loss_letters: 3.6  # Mean vision loss at recurrence (Aslanis et al.)
+        vision_recovery_factor: 0.95  # Proportion of vision recovered after retreatment
+      
+      symptom_detection:
+        probability: 0.609  # Probability recurrence causes symptoms (Artiaga et al.)
+        detection_sensitivity: 1.0  # Probability symptoms lead to detection
+      
+      monitoring_schedule:
+        year_1: 12  # Weeks between monitoring visits in year 1
+        year_2_3: 16  # Weeks between monitoring visits in years 2-3
+        year_4_plus: 24  # Weeks between monitoring visits after year 3
+  
+  treatment_response:
+    loading_phase:
+      vision_improvement_mean: 8.4  # From ALTAIR, VIEW 1/2, Mylight
+      vision_improvement_sd: 1.3
+      treatment_response_factor: 1.0
+      improve_probability: 0.80
+      stable_probability: 0.15
+      decline_probability: 0.05
+      decline_mean: -2.0
+      decline_sd: 1.0
+    
+    maintenance_phase:
+      vision_stability_threshold: 5
+      disease_recurrence_base_risk: 0.15  # Based on ALTAIR
+      risk_increase_per_week: 0.01
+      decline_probability: 0.12  # Based on ALTAIR
+      decline_effect_mean: -1.5
+      decline_effect_sd: 0.7
+      memory_factor: 0.7
+      base_effect_ceiling: 5
+      regression_factor: 0.8
+      random_effect_mean: 0.5
+      random_effect_sd: 0.4
+  
+  # OCT parameters - limited data available
+  oct_parameters:
+    baseline_thickness_mean: 350  # Typical baseline CRT in wet AMD
+    baseline_thickness_sd: 50
+    treatment_effect_mean: 130  # Based on ALTAIR, VIEW 1/2 (~130μm reduction)
+    treatment_effect_sd: 20
+    change_thresholds:
+      high_risk: 50
+      medium_risk: 25
+    thickness_thresholds:
+      high_risk: 300
+      medium_risk: 275
+    fluid_risk:
+      beta_shape_a: 2
+      beta_shape_b: 5
+  
+  vision:
+    baseline_mean: 65  # Typical baseline in clinical trials
+    baseline_sd: 10
+    measurement_noise_sd: 2
+    max_letters: 85
+    min_letters: 0
+    improvement_ceiling: 5
+    headroom_factor: 0.2
+  
+  # Placeholder for resource parameters
+  resources:
+    doctors: 2
+    nurses: 4
+    oct_machines: 2
+  
+  # Cost parameters (placeholders)
+  costs:
+    visit_costs:
+      standard_visit: 0
+      injection_visit: 0
+      imaging_visit: 0
+      virtual_review: 0
+    drug_costs:
+      aflibercept_2mg: 0
+    resource_utilization:
+      time_per_standard_visit: 15  # minutes
+      time_per_injection: 10  # additional minutes
+      time_per_imaging: 15  # minutes
+      time_per_virtual_review: 5  # minutes
