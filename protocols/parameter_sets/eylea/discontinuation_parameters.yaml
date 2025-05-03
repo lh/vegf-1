@@ -1,0 +1,35 @@
+name: "Eylea Discontinuation Parameters"
+description: "Configurable parameters for treatment discontinuation in AMD simulations"
+version: "1.0"
+
+# Discontinuation configuration
+discontinuation:
+  enabled: true
+  
+  # Criteria for discontinuation
+  criteria:
+    # Discontinuation after stable visits at maximum interval
+    stable_max_interval:
+      consecutive_visits: 3  # Number of consecutive stable visits required
+      probability: 0.2       # Probability of discontinuation when criteria met
+    
+    # Random administrative discontinuations (e.g., insurance issues, patient choice)
+    random_administrative:
+      annual_probability: 0.05  # Annual probability of random discontinuation
+    
+    # Time-based discontinuation (e.g., after 1 year of treatment)
+    treatment_duration:
+      threshold_weeks: 52    # Weeks of treatment before considering discontinuation
+      probability: 0.1       # Probability of discontinuation after threshold
+  
+  # Post-discontinuation monitoring
+  monitoring:
+    follow_up_schedule: [12, 24, 36]  # Weeks after discontinuation for follow-up visits
+    recurrence_detection_probability: 0.87  # Probability of detecting recurrence if present
+  
+  # Treatment re-entry criteria
+  retreatment:
+    eligibility_criteria:
+      detected_fluid: true           # Fluid must be detected
+      vision_loss_letters: 5         # Minimum vision loss to trigger retreatment
+    probability: 0.95                # Probability of retreatment when eligible

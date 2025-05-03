@@ -30,6 +30,7 @@ from simulation.patient_state import PatientState
 from simulation.clinical_model import ClinicalModel
 from simulation.scheduler import ClinicScheduler
 from simulation.vision_models import SimplifiedVisionModel
+from simulation.discontinuation_manager import DiscontinuationManager
 
 class TreatAndExtendDES:
     """
@@ -62,6 +63,10 @@ class TreatAndExtendDES:
         # Initialize vision model
         self.vision_model = SimplifiedVisionModel(self.config)
         
+        # Initialize discontinuation manager
+        discontinuation_params = self.config.get_treatment_discontinuation_params()
+        self.discontinuation_manager = DiscontinuationManager(self.config.parameters)
+        
         # Patient state management
         self.patients = {}
         
@@ -73,7 +78,9 @@ class TreatAndExtendDES:
             "vision_improvements": 0,
             "vision_declines": 0,
             "protocol_completions": 0,
-            "protocol_discontinuations": 0
+            "protocol_discontinuations": 0,
+            "monitoring_visits": 0,
+            "retreatments": 0
         }
         
         # Event queue
@@ -221,12 +228,60 @@ class TreatAndExtendDES:
         
         patient = self.patients[patient_id]
         
+        # Check if this is a monitoring visit for a discontinued patient
+        is_monitoring = event.get("is_monitoring", False)
+        
         # Update statistics
         self.stats["total_visits"] += 1
+        if is_monitoring:
+            self.stats["monitoring_visits"] += 1
         if "injection" in event["actions"]:
             self.stats["total_injections"] += 1
         if "oct_scan" in event["actions"]:
             self.stats["total_oct_scans"] += 1
+        
+        # Handle monitoring visit differently
+        if is_monitoring and not patient["treatment_status"]["active"]:
+            # Process monitoring visit for discontinued patient
+            retreatment, updated_patient = self.discontinuation_manager.process_monitoring_visit(
+                patient_state=patient,
+                actions=event["actions"]
+            )
+            
+            # Record monitoring visit
+            visit_record = {
+                'date': event["time"],
+                'actions': event["actions"],
+                'vision': patient["current_vision"],
+                'baseline_vision': patient["baseline_vision"],
+                'phase': "monitoring",
+                'type': 'monitoring_visit',
+                'disease_state': 'stable' if not patient["disease_activity"]["fluid_detected"] else 'active',
+                'treatment_status': patient["treatment_status"].copy()
+            }
+            patient["visit_history"].append(visit_record)
+            
+            # If retreatment is recommended, restart treatment
+            if retreatment:
+                patient["treatment_status"]["active"] = True
+                patient["treatment_status"]["recurrence_detected"] = True
+                patient["current_phase"] = "loading"  # Restart with loading phase
+                patient["treatments_in_phase"] = 0
+                patient["next_visit_interval"] = 4  # Initial loading phase interval
+                patient["disease_activity"]["current_interval"] = 4
+                self.stats["retreatments"] += 1
+                
+                # Schedule next treatment visit
+                next_visit_time = event["time"] + timedelta(weeks=4)  # Start with 4-week interval
+                if next_visit_time <= self.end_date:
+                    self.events.append({
+                        "time": next_visit_time,
+                        "type": "visit",
+                        "patient_id": patient_id,
+                        "actions": ["vision_test", "oct_scan", "injection"]
+                    })
+            
+            return
         
         # Record baseline vision for this visit
         baseline_vision = patient["current_vision"]
@@ -313,14 +368,32 @@ class TreatAndExtendDES:
                 if new_interval >= 16:
                     patient["disease_activity"]["max_interval_reached"] = True
                     
-                    # Check for potential discontinuation
-                    if patient["disease_activity"]["consecutive_stable_visits"] >= 3:
-                        # Consider discontinuation after 3 stable visits at max interval
-                        if np.random.random() < 0.2:  # 20% chance of discontinuation
-                            patient["treatment_status"]["active"] = False
-                            patient["treatment_status"]["discontinuation_date"] = event["time"]
-                            self.stats["protocol_discontinuations"] += 1
-                            return  # No more visits
+                    # Use discontinuation manager to evaluate discontinuation
+                    should_discontinue, reason, probability = self.discontinuation_manager.evaluate_discontinuation(
+                        patient_state=patient,
+                        current_time=event["time"],
+                        treatment_start_time=self.start_date  # Using simulation start as treatment start for simplicity
+                    )
+                    
+                    if should_discontinue:
+                        patient["treatment_status"]["active"] = False
+                        patient["treatment_status"]["discontinuation_date"] = event["time"]
+                        patient["treatment_status"]["discontinuation_reason"] = reason
+                        self.stats["protocol_discontinuations"] += 1
+                        
+                        # Schedule monitoring visits
+                        monitoring_events = self.discontinuation_manager.schedule_monitoring(event["time"])
+                        for monitoring_event in monitoring_events:
+                            if monitoring_event["time"] <= self.end_date:
+                                self.events.append({
+                                    "time": monitoring_event["time"],
+                                    "type": "visit",
+                                    "patient_id": patient_id,
+                                    "actions": monitoring_event["actions"],
+                                    "is_monitoring": True
+                                })
+                        
+                        return  # No more regular visits
             
             # Update interval for next visit
             patient["next_visit_interval"] = new_interval
@@ -350,6 +423,14 @@ class TreatAndExtendDES:
         print("-" * 20)
         for stat, value in self.stats.items():
             print(f"{stat}: {value}")
+        
+        # Add discontinuation manager statistics
+        discontinuation_stats = self.discontinuation_manager.get_statistics()
+        if discontinuation_stats:
+            print("\nDiscontinuation Statistics:")
+            print("-" * 20)
+            for stat, value in discontinuation_stats.items():
+                print(f"{stat}: {value}")
         
         # Print patient summary
         print("\nPatient Summary:")

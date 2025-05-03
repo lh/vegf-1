@@ -2,11 +2,17 @@ name: "Eylea Literature-Based Simulation"
 description: "Simulation using evidence-based parameters from ALTAIR, VIEW 1/2, and other studies"
 version: "1.0"
 
+protocol:
+  agent: eylea
+  type: test_simulation
+  parameter_set: standard
+
 simulation:
   type: "agent_based"  # Can be "agent_based" or "discrete_event"
-  duration_weeks: 96  # 96 weeks (2 years) to match ALTAIR and VIEW 1/2 studies
-  population_size: 1000
+  duration_days: 672  # 96 weeks (2 years) = 96 * 7 = 672 days
+  num_patients: 1000  # Using num_patients instead of population_size
   random_seed: 42
+  start_date: "2023-01-01"  # Adding required start_date
   output_directory: "output/eylea_literature_simulation"
 
 parameters:
@@ -68,27 +74,11 @@ protocols:
 # Treatment discontinuation and monitoring configuration
 discontinuation:
   enabled: true
-  criteria:
-    - type: stable_max_interval
-      value: 3  # 3 consecutive visits at maximum interval
-    - type: vision_stability
-      value: 5  # Vision change less than 5 letters
-  monitoring:
-    schedule: "protocols/parameter_sets/eylea/eylea_base_parameters.yaml"  # Use monitoring schedule from base parameters
-    detection_probability: 0.87  # From Artiaga et al. study
+  parameter_file: "protocols/parameter_sets/eylea/discontinuation_parameters.yaml"
 
 # Output configuration
 output:
-  metrics:
-    - vision_trajectory
-    - injection_count
-    - visit_count
-    - disease_state_distribution
-    - treatment_intervals
-    - discontinuation_outcomes
-  visualizations:
-    - mean_vision_trajectory
-    - vision_change_distribution
-    - injection_burden
-    - treatment_interval_distribution
-    - discontinuation_recurrence_curve
+  save_results: true
+  database: simulations.db
+  plots: true
+  verbose: false

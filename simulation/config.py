@@ -481,29 +481,43 @@ class SimulationConfig:
         -------
         Dict[str, Any]
             Treatment discontinuation parameters including:
-            - recurrence_probabilities
-            - recurrence_impact
-            - symptom_detection
-            - monitoring_schedule
+            - enabled: Whether discontinuation is enabled
+            - criteria: Discontinuation criteria configuration
+            - monitoring: Post-discontinuation monitoring configuration
+            - retreatment: Treatment re-entry configuration
 
-        Raises
-        ------
-        ValueError
-            If required parameters are missing
+        Notes
+        -----
+        If a parameter_file is specified in the discontinuation configuration,
+        loads the parameters from that file. Otherwise, falls back to the
+        parameters in the clinical model.
         """
-        clinical_model_params = self.get_clinical_model_params()
-        discontinuation_params = clinical_model_params.get("treatment_discontinuation", {})
+        # First check if there's a dedicated discontinuation section in the simulation config
+        sim_config = self.parameters.get("simulation", {})
+        discontinuation_config = self.parameters.get("discontinuation", {})
         
-        if not discontinuation_params:
+        # If no discontinuation config found, check in clinical model
+        if not discontinuation_config:
+            clinical_model_params = self.get_clinical_model_params()
+            discontinuation_config = clinical_model_params.get("treatment_discontinuation", {})
+        
+        # If still no config found, return empty dict
+        if not discontinuation_config:
             logger.warning("Treatment discontinuation parameters not found")
             return {}
         
-        required_sections = ["recurrence_probabilities", "recurrence_impact", "symptom_detection"]
-        for section in required_sections:
-            if section not in discontinuation_params:
-                logger.warning(f"Missing treatment discontinuation section: {section}")
+        # Check if there's a parameter file specified
+        parameter_file = discontinuation_config.get("parameter_file", "")
+        if parameter_file:
+            try:
+                logger.info(f"Loading discontinuation parameters from {parameter_file}")
+                discontinuation_params = self.load_parameter_file(parameter_file)
+                return discontinuation_params.get("discontinuation", {})
+            except Exception as e:
+                logger.error(f"Error loading discontinuation parameters: {str(e)}")
+                # Fall back to config in simulation config
         
-        return discontinuation_params
+        return discontinuation_config
 
     def get_sensitivity_analysis_params(self) -> Dict[str, Any]:
         """
