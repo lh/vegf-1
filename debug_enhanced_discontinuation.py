@@ -338,18 +338,22 @@ def create_discontinuation_visualizations(discontinuation_types, clinician_disco
     # Plot discontinuation types
     labels = list(discontinuation_types.keys())
     values = list(discontinuation_types.values())
-    ax1.bar(labels, values)
+    x = np.arange(len(labels))
+    ax1.bar(x, values)
     ax1.set_title("Discontinuations by Type")
     ax1.set_ylabel("Count")
+    ax1.set_xticks(x)
     ax1.set_xticklabels(labels, rotation=45, ha="right")
     
     # Plot clinician discontinuations
     if clinician_discontinuations:
         labels = list(clinician_discontinuations.keys())
         values = list(clinician_discontinuations.values())
-        ax2.bar(labels, values)
+        x = np.arange(len(labels))
+        ax2.bar(x, values)
         ax2.set_title("Discontinuations by Clinician Profile")
         ax2.set_ylabel("Count")
+        ax2.set_xticks(x)
         ax2.set_xticklabels(labels, rotation=45, ha="right")
     
     plt.tight_layout()
