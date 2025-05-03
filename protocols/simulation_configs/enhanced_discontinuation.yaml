@@ -1,6 +1,12 @@
 # Enhanced Discontinuation Model Configuration
 # This configuration demonstrates the enhanced discontinuation model with clinician variation
 
+# Required top-level sections
+name: "enhanced_discontinuation"
+output:
+  directory: "output"
+  format: "csv"
+
 # Simulation parameters
 simulation:
   name: "Enhanced Discontinuation Model"
