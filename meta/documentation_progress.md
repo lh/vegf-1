@@ -63,6 +63,27 @@ result
 """
 ```
 
+### Documentation Structure
+
+We follow a specific structure for our Sphinx documentation:
+
+1. **Index Files**: Keep index.rst files brief and use them as tables of contents
+   - Use toctree directives to list module pages
+   - Do NOT include automodule directives in index files
+   - Example: docs/simulation/index.rst lists simulation modules but doesn't document them directly
+
+2. **Module Files**: Create individual .rst files for each module
+   - Use automodule directives in these files
+   - Include members, undoc-members, and show-inheritance options
+   - Example: docs/simulation/config.rst documents the simulation.config module
+
+3. **Avoiding Duplicate Documentation**:
+   - Never document the same module in multiple places
+   - Do not use :no-index: in Python docstrings
+   - Use cross-references instead of duplicating documentation
+
+For detailed guidelines, see meta/documentation_guidelines.md.
+
 ### Next Files to Document
 
 1. simulation/clinical_model.py
