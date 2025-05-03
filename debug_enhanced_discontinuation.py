@@ -362,6 +362,11 @@ def create_discontinuation_visualizations(discontinuation_types, clinician_disco
         ax2.set_ylabel("Count")
         ax2.set_xticks(x)
         ax2.set_xticklabels(labels, rotation=45, ha="right")
+    else:
+        # If no clinician discontinuations, add a message
+        ax2.text(0.5, 0.5, "No clinician discontinuations", 
+                 horizontalalignment='center', verticalalignment='center',
+                 transform=ax2.transAxes, fontsize=12)
     
     plt.tight_layout()
     plt.savefig("enhanced_discontinuation_analysis.png")
