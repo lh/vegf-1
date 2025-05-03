@@ -279,7 +279,7 @@ Similar modifications to the DES implementation.
 We'll use the YAML configuration structure as outlined in the design document, with sections for:
 
 1. Discontinuation criteria by type
-2. Monitoring schedules 
+2. Monitoring schedules by cessation type, including no-monitoring option for administrative cessation
 3. Recurrence models with time-dependent rates
 4. Risk modifiers for recurrence
 5. Clinician profiles and characteristics
@@ -295,6 +295,11 @@ We'll use the YAML configuration structure as outlined in the design document, w
 4. **Enhanced Visualization**: We've created visualizations for discontinuation types, clinician profiles, and clinician decision influence.
 
 5. **Backward Compatibility**: The enhanced manager is compatible with existing code while providing new functionality.
+
+6. **Cessation-specific Monitoring**: Different cessation types will have different monitoring behaviors:
+   - Planned cessation (stable_max_interval): Standard year-dependent monitoring
+   - Premature and time-based cessation: More frequent monitoring
+   - Administrative cessation (random_administrative): No monitoring visits scheduled, reflecting real-world administrative discontinuations (e.g., insurance changes) where patients are completely lost to follow-up
 
 ## Testing Strategy
 
@@ -323,11 +328,16 @@ We'll use the YAML configuration structure as outlined in the design document, w
 
 ## Next Steps
 
-1. Finalize integration tests for ABS and DES implementations
-2. Validate the model against clinical data
-3. Complete documentation and parameter configurations
-4. Prepare for future economic analysis
-5. Consider adding more sophisticated clinician decision models for future extensions
+1. Implement no-monitoring option for random administrative cessation:
+   - Modify `schedule_monitoring` method to return empty list for random_administrative cessation type
+   - Update YAML configuration to explicitly indicate which cessation types receive monitoring
+   - Add test cases to verify no monitoring visits are scheduled for administrative cessation
+   - Update documentation to reflect this behavioral distinction
+2. Finalize integration tests for ABS and DES implementations
+3. Validate the model against clinical data
+4. Complete documentation and parameter configurations
+5. Prepare for future economic analysis
+6. Consider adding more sophisticated clinician decision models for future extensions
 
 ## References
 
