@@ -20,44 +20,45 @@ Key Features
 Configuration Structure
 ----------------------- 
 Example YAML configuration structure:
-```yaml
-simulation:
-  type: "des"
-  num_patients: 1000
-  duration_days: 365
-  random_seed: 42
-  verbose: true
-  start_date: "2023-01-01"
-  resources:
-    capacity:
-      doctors: 5
-      nurses: 10
-      oct_machines: 3
 
-clinical_model:
-  disease_states: ["NAIVE", "STABLE", "ACTIVE", "HIGHLY_ACTIVE"]
-  transition_probabilities:
-    NAIVE:
-      STABLE: 0.3
-      ACTIVE: 0.6
-      HIGHLY_ACTIVE: 0.1
-    STABLE:
-      STABLE: 0.7
-      ACTIVE: 0.3
-  vision_change:
-    base_change:
-      NAIVE:
-        injection: [5, 2]
-        no_injection: [0, 1]
-      STABLE:
-        injection: [2, 1]
-        no_injection: [-1, 0.5]
-    time_factor:
-      max_weeks: 52
-    ceiling_factor:
-      max_vision: 100
-    measurement_noise: [0, 0.5]
-```
+.. code-block:: yaml
+
+    simulation:
+      type: "des"
+      num_patients: 1000
+      duration_days: 365
+      random_seed: 42
+      verbose: true
+      start_date: "2023-01-01"
+      resources:
+        capacity:
+          doctors: 5
+          nurses: 10
+          oct_machines: 3
+
+    clinical_model:
+      disease_states: ["NAIVE", "STABLE", "ACTIVE", "HIGHLY_ACTIVE"]
+      transition_probabilities:
+        NAIVE:
+          STABLE: 0.3
+          ACTIVE: 0.6
+          HIGHLY_ACTIVE: 0.1
+        STABLE:
+          STABLE: 0.7
+          ACTIVE: 0.3
+      vision_change:
+        base_change:
+          NAIVE:
+            injection: [5, 2]
+            no_injection: [0, 1]
+          STABLE:
+            injection: [2, 1]
+            no_injection: [-1, 0.5]
+        time_factor:
+          max_weeks: 52
+        ceiling_factor:
+          max_vision: 100
+        measurement_noise: [0, 0.5]
 
 Notes
 -----
@@ -68,8 +69,10 @@ Notes
 """
 
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List, Union
 from datetime import datetime, timedelta
+from pathlib import Path
+import yaml
 from protocols.protocol_parser import ProtocolParser
 from protocol_models import TreatmentProtocol
 import logging
@@ -107,6 +110,8 @@ class SimulationConfig:
         Simulation start date
     resources : Optional[Dict[str, Any]], optional
         Resource configuration dictionary
+    sensitivity_analysis : Optional[Dict[str, Any]], optional
+        Sensitivity analysis configuration
 
     Attributes
     ----------
@@ -128,6 +133,8 @@ class SimulationConfig:
         Simulation start date
     resources : Optional[Dict[str, Any]]
         Resource configuration
+    sensitivity_analysis : Optional[Dict[str, Any]]
+        Sensitivity analysis configuration
     """
     parameters: Dict[str, Any]
     protocol: TreatmentProtocol
@@ -138,6 +145,7 @@ class SimulationConfig:
     verbose: bool
     start_date: datetime
     resources: Optional[Dict[str, Any]] = None
+    sensitivity_analysis: Optional[Dict[str, Any]] = None
     
     def get_vision_params(self) -> Dict[str, Any]:
         """
@@ -341,11 +349,12 @@ class SimulationConfig:
         -------
         Dict[str, Any]
             DES parameters with defaults:
+            
             - daily_capacity: 20 patients
             - days_per_week: 5 days
             - patient_generation:
-                - rate_per_week: 3 patients
-                - random_seed: None (use simulation seed)
+              - rate_per_week: 3 patients
+              - random_seed: None (use simulation seed)
         """
         simulation = self.parameters.get("simulation", {})
         scheduling = simulation.get("scheduling", {})
@@ -431,6 +440,194 @@ class SimulationConfig:
         
         return clinical_model_params
     
+    def load_parameter_file(self, file_path: str) -> Dict[str, Any]:
+        """
+        Load parameters from an external YAML file.
+
+        Parameters
+        ----------
+        file_path : str
+            Path to the parameter file
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary containing the loaded parameters
+
+        Raises
+        ------
+        FileNotFoundError
+            If the parameter file cannot be found
+        ValueError
+            If the parameter file is invalid
+        """
+        try:
+            with open(file_path, 'r') as f:
+                params = yaml.safe_load(f)
+                logger.debug(f"Loaded parameters from {file_path}: {params}")
+                return params
+        except FileNotFoundError:
+            logger.error(f"Parameter file not found: {file_path}")
+            raise FileNotFoundError(f"Parameter file not found: {file_path}")
+        except Exception as e:
+            logger.error(f"Error loading parameter file {file_path}: {str(e)}")
+            raise ValueError(f"Error loading parameter file {file_path}: {str(e)}")
+
+    def get_treatment_discontinuation_params(self) -> Dict[str, Any]:
+        """
+        Get treatment discontinuation parameters.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Treatment discontinuation parameters including:
+            - recurrence_probabilities
+            - recurrence_impact
+            - symptom_detection
+            - monitoring_schedule
+
+        Raises
+        ------
+        ValueError
+            If required parameters are missing
+        """
+        clinical_model_params = self.get_clinical_model_params()
+        discontinuation_params = clinical_model_params.get("treatment_discontinuation", {})
+        
+        if not discontinuation_params:
+            logger.warning("Treatment discontinuation parameters not found")
+            return {}
+        
+        required_sections = ["recurrence_probabilities", "recurrence_impact", "symptom_detection"]
+        for section in required_sections:
+            if section not in discontinuation_params:
+                logger.warning(f"Missing treatment discontinuation section: {section}")
+        
+        return discontinuation_params
+
+    def get_sensitivity_analysis_params(self) -> Dict[str, Any]:
+        """
+        Get sensitivity analysis parameters if enabled.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary containing sensitivity analysis parameters:
+            - enabled: Whether sensitivity analysis is enabled
+            - parameter_file: Path to sensitivity parameter file
+            - selected_variation: Name of selected parameter variation
+            - variations: Dictionary of parameter variations if loaded
+
+        Notes
+        -----
+        If sensitivity analysis is enabled, loads the parameter variations
+        from the specified file and applies the selected variation.
+        """
+        if not self.sensitivity_analysis:
+            return {"enabled": False}
+        
+        result = {
+            "enabled": self.sensitivity_analysis.get("enabled", False),
+            "parameter_file": self.sensitivity_analysis.get("parameter_file", ""),
+            "selected_variation": self.sensitivity_analysis.get("selected_variation", "neutral")
+        }
+        
+        # If enabled and parameter file is specified, load variations
+        if result["enabled"] and result["parameter_file"]:
+            try:
+                sensitivity_params = self.load_parameter_file(result["parameter_file"])
+                result["variations"] = sensitivity_params.get("variations", {})
+                logger.debug(f"Loaded sensitivity variations: {list(result['variations'].keys())}")
+            except Exception as e:
+                logger.error(f"Error loading sensitivity parameters: {str(e)}")
+                result["enabled"] = False
+        
+        return result
+
+    def apply_sensitivity_variation(self, variation_name: str) -> None:
+        """
+        Apply a sensitivity analysis variation to the parameters.
+
+        Parameters
+        ----------
+        variation_name : str
+            Name of the variation to apply
+
+        Raises
+        ------
+        ValueError
+            If the variation does not exist
+
+        Notes
+        -----
+        This method modifies the parameters in place by applying the
+        specified variation from the sensitivity analysis file.
+        """
+        sensitivity_params = self.get_sensitivity_analysis_params()
+        
+        if not sensitivity_params.get("enabled", False):
+            logger.warning("Sensitivity analysis is not enabled")
+            return
+        
+        variations = sensitivity_params.get("variations", {})
+        if variation_name not in variations:
+            logger.error(f"Sensitivity variation '{variation_name}' not found")
+            raise ValueError(f"Sensitivity variation '{variation_name}' not found")
+        
+        variation = variations[variation_name]
+        variation_params = variation.get("parameters", {})
+        
+        # Apply the variation parameters by deep merging
+        self._deep_merge_parameters(self.parameters, variation_params)
+        logger.info(f"Applied sensitivity variation '{variation_name}'")
+
+    def _deep_merge_parameters(self, target: Dict, source: Dict) -> None:
+        """
+        Deep merge source dictionary into target dictionary.
+
+        Parameters
+        ----------
+        target : Dict
+            Target dictionary to merge into
+        source : Dict
+            Source dictionary to merge from
+
+        Notes
+        -----
+        This method recursively merges dictionaries, updating values
+        at the leaf level while preserving the structure.
+        """
+        for key, value in source.items():
+            if key in target and isinstance(target[key], dict) and isinstance(value, dict):
+                self._deep_merge_parameters(target[key], value)
+            else:
+                target[key] = value
+
+    def get_cost_parameters(self) -> Dict[str, Any]:
+        """
+        Get cost parameters if enabled.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary containing cost parameters or empty dict if not enabled
+        """
+        cost_params_config = self.parameters.get("cost_parameters", {})
+        
+        if not cost_params_config.get("enabled", False):
+            return {}
+        
+        parameter_file = cost_params_config.get("parameter_file", "")
+        if not parameter_file:
+            return {}
+        
+        try:
+            cost_params = self.load_parameter_file(parameter_file)
+            return cost_params.get("cost_parameters", {})
+        except Exception as e:
+            logger.error(f"Error loading cost parameters: {str(e)}")
+            return {}
+
     @classmethod
     def from_yaml(cls, config_name: str) -> 'SimulationConfig':
         """
@@ -468,12 +665,23 @@ class SimulationConfig:
             raise ValueError("Protocol must be a TreatmentProtocol object")
             
         resources = None
-        if hasattr(full_config['config'], 'simulation'):
-            sim_config = full_config['config'].simulation
-            if hasattr(sim_config, 'resources'):
-                resources = sim_config.resources
+        sensitivity_analysis = None
         
-        return cls(
+        # Load the full simulation configuration to get additional parameters
+        config_path = Path("protocols") / "simulation_configs" / f"{config_name}.yaml"
+        if config_path.exists():
+            with open(config_path, 'r') as f:
+                sim_config = yaml.safe_load(f)
+                
+                # Extract resources if present
+                if "simulation" in sim_config and "resources" in sim_config["simulation"]:
+                    resources = sim_config["simulation"]["resources"]
+                
+                # Extract sensitivity analysis configuration if present
+                if "parameters" in sim_config and "sensitivity_analysis" in sim_config["parameters"]:
+                    sensitivity_analysis = sim_config["parameters"]["sensitivity_analysis"]
+        
+        config = cls(
             parameters=full_config['parameters'],
             protocol=full_config['protocol'],
             simulation_type=full_config['config'].simulation_type,
@@ -482,5 +690,29 @@ class SimulationConfig:
             random_seed=full_config['config'].random_seed,
             verbose=full_config['config'].verbose,
             start_date=start_date,
-            resources=resources
+            resources=resources,
+            sensitivity_analysis=sensitivity_analysis
         )
+        
+        # Load base parameter set if specified
+        if "parameters" in sim_config and "base_parameter_set" in sim_config["parameters"]:
+            base_param_file = sim_config["parameters"]["base_parameter_set"]
+            try:
+                base_params = config.load_parameter_file(base_param_file)
+                # Merge protocol_specific parameters into the config parameters
+                if "protocol_specific" in base_params:
+                    config._deep_merge_parameters(config.parameters, base_params["protocol_specific"])
+                    logger.info(f"Loaded base parameters from {base_param_file}")
+            except Exception as e:
+                logger.error(f"Error loading base parameter set: {str(e)}")
+        
+        # Apply sensitivity variation if enabled
+        if sensitivity_analysis and sensitivity_analysis.get("enabled", False):
+            selected_variation = sensitivity_analysis.get("selected_variation", "neutral")
+            if selected_variation != "neutral":
+                try:
+                    config.apply_sensitivity_variation(selected_variation)
+                except Exception as e:
+                    logger.error(f"Error applying sensitivity variation: {str(e)}")
+        
+        return config

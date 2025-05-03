@@ -1,8 +1,5 @@
 """Clinical model for AMD disease progression and vision changes.
 
-This module implements the clinical aspects of AMD progression, including disease states,
-vision changes, and treatment effects. It uses a state-based model with probabilistic
-transitions and configurable parameters for vision changes.
 
 This module implements the clinical aspects of AMD progression, including disease states,
 vision changes, and treatment effects. It uses a state-based model with probabilistic
@@ -59,7 +56,7 @@ Notes
 - Ceiling effect reduces changes as vision approaches maximum
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 from enum import Enum
 import numpy as np
 import logging
@@ -90,10 +87,12 @@ class DiseaseState(Enum):
     Notes
     -----
     State transitions are probabilistic and configurable via ClinicalModel.
+    
     Default transition probabilities from NAIVE state:
-        - STABLE: 30%
-        - ACTIVE: 60%
-        - HIGHLY_ACTIVE: 10%
+    
+    - STABLE: 30%
+    - ACTIVE: 60%
+    - HIGHLY_ACTIVE: 10%
     """
     NAIVE = 0
     STABLE = 1
@@ -106,9 +105,9 @@ class DiseaseState(Enum):
 from simulation.config import SimulationConfig
 
 class ClinicalModel:
-    """:no-index:
+    """
     Models clinical aspects of AMD progression, including disease states and vision changes.
-    
+
     This model includes four disease states: NAIVE, STABLE, ACTIVE, and HIGHLY_ACTIVE.
     It simulates disease progression and vision changes based on the current state and treatment.
     
@@ -118,32 +117,22 @@ class ClinicalModel:
     Parameters
     ----------
     config : simulation.config.SimulationConfig
-        Configuration object containing:
-            - clinical_model_params: Clinical model parameters
-            - vision_params: Vision change parameters
-            - transition_probabilities: State transition probabilities
+        Configuration object containing clinical model parameters, vision parameters,
+        and transition probabilities between disease states.
 
     Attributes
     ----------
     config : simulation.config.SimulationConfig
         Configuration object containing model parameters
     transition_probabilities : Dict[DiseaseState, Dict[DiseaseState, float]]
-        Probability matrix for transitions between disease states with structure:
-            {
-                DiseaseState.NAIVE: {DiseaseState.STABLE: 0.3, ...},
-                DiseaseState.STABLE: {DiseaseState.STABLE: 0.7, ...},
-                ...
-            }
+        Probability matrix for transitions between disease states
     vision_change_params : Dict
-        Parameters controlling vision changes under different conditions including:
-            - base_change: Mean/SD for each state and injection status
-            - time_factor: Effect of time since last injection
-            - ceiling_factor: Vision ceiling effect
-            - measurement_noise: Random variability
+        Parameters controlling vision changes under different conditions
 
     Notes
     -----
     The model captures key clinical aspects of AMD progression:
+
     1. State-dependent response to treatment
     2. Waning of treatment effect over time
     3. Diminishing returns at higher vision levels
@@ -154,6 +143,7 @@ class ClinicalModel:
         self.config = config
         self.transition_probabilities = self._parse_transition_probabilities()
         self.vision_change_params = self._parse_vision_change_params()
+        self.treatment_discontinuation_params = self._parse_treatment_discontinuation_params()
 
     def _parse_transition_probabilities(self) -> Dict[DiseaseState, Dict[DiseaseState, float]]:
         """Parse transition probabilities from configuration.
@@ -182,6 +172,20 @@ class ClinicalModel:
             }
             for state, probs in config_probs.items()
         }
+    
+    def _parse_treatment_discontinuation_params(self) -> Dict[str, Any]:
+        """Parse treatment discontinuation parameters from configuration.
+
+        Returns
+        -------
+        Dict[str, Any]
+            Dictionary containing treatment discontinuation parameters
+
+        Notes
+        -----
+        Returns empty dictionary if treatment discontinuation parameters are not found.
+        """
+        return self.config.get_treatment_discontinuation_params()
 
     def _parse_vision_change_params(self) -> Dict:
         """Parse vision change parameters from configuration.
@@ -252,10 +256,11 @@ class ClinicalModel:
         Notes
         -----
         Disease progression follows these rules:
+        
         1. NAIVE state has fixed transition probabilities:
-            - STABLE: 30%
-            - ACTIVE: 60%
-            - HIGHLY_ACTIVE: 10%
+           - STABLE: 30%
+           - ACTIVE: 60%
+           - HIGHLY_ACTIVE: 10%
         2. Other states use probabilities from configuration
         3. If no probabilities defined, remains in current state
         4. Probabilities are normalized to sum to 1 if needed
@@ -332,6 +337,10 @@ class ClinicalModel:
                     Used in time factor calculation
                 - current_vision: Current vision score (ETDRS letters, int)
                     Must be between 0-100 (will be clamped if outside range)
+                - treatment_status: Dict containing treatment status information
+                    - active: bool - Whether treatment is active
+                    - weeks_since_discontinuation: int - Weeks since treatment was discontinued
+                    - recurrence_detected: bool - Whether recurrence has been detected
             
             Optional keys:
                 - debug: bool - Enable debug output if True
@@ -355,7 +364,8 @@ class ClinicalModel:
         ...     "injections": 1,
         ...     "last_recorded_injection": 0,
         ...     "weeks_since_last_injection": 4,
-        ...     "current_vision": 70
+        ...     "current_vision": 70,
+        ...     "treatment_status": {"active": True, "weeks_since_discontinuation": 0, "recurrence_detected": False}
         ... }
         >>> vision_change, new_state = model.simulate_vision_change(state)
         >>> print(f"Vision changed by {vision_change:.1f} letters")
@@ -399,6 +409,7 @@ class ClinicalModel:
         2. Waning of treatment effect over time  
         3. Diminishing returns at higher vision levels
         4. Realistic measurement variability
+        5. Treatment discontinuation and recurrence
         """
         current_disease_state = state.get("disease_state", DiseaseState.NAIVE)
         if isinstance(current_disease_state, str):
@@ -407,6 +418,11 @@ class ClinicalModel:
         is_injection = state.get("injections", 0) > state.get("last_recorded_injection", -1)
         weeks_since_injection = state.get("weeks_since_last_injection", 0)
         current_vision = state.get("current_vision", 70)  # Assume 70 letters as default
+        
+        # Get treatment status
+        treatment_status = state.get("treatment_status", {"active": True, "weeks_since_discontinuation": 0, "recurrence_detected": False})
+        is_treatment_active = treatment_status.get("active", True)
+        recurrence_detected = treatment_status.get("recurrence_detected", False)
 
         params = self.vision_change_params
         
@@ -421,10 +437,22 @@ class ClinicalModel:
         if not base_params:
             raise ValueError(f"Missing base change parameters for disease state: {new_disease_state.name}")
         
+        # Determine base change based on injection status and treatment status
         if is_injection:
             base_change = np.random.normal(*base_params['injection'])
         else:
             base_change = np.random.normal(*base_params['no_injection'])
+            
+            # If treatment is inactive and recurrence detected, apply additional vision loss
+            if not is_treatment_active and recurrence_detected and self.treatment_discontinuation_params:
+                recurrence_impact = self.treatment_discontinuation_params.get("recurrence_impact", {})
+                additional_loss = recurrence_impact.get("vision_loss_letters", 0)
+                
+                # Only apply additional loss if not already applied (check if it's a monitoring visit)
+                if "recurrence_already_applied" not in state:
+                    base_change -= additional_loss
+                    state["recurrence_already_applied"] = True
+                    logger.debug(f"Applied recurrence vision loss of {additional_loss} letters")
 
         # Time factor
         max_weeks = params.get('time_factor', {}).get('max_weeks', 52)
@@ -439,4 +467,45 @@ class ClinicalModel:
 
         total_change = base_change * time_factor * ceiling_factor + measurement_noise
         
+        # If treatment is resumed after recurrence, apply recovery factor
+        if is_treatment_active and recurrence_detected and is_injection and self.treatment_discontinuation_params:
+            recurrence_impact = self.treatment_discontinuation_params.get("recurrence_impact", {})
+            recovery_factor = recurrence_impact.get("vision_recovery_factor", 0.95)
+            
+            # Apply recovery boost to vision change
+            recovery_boost = (state.get("best_vision_achieved", current_vision) - current_vision) * recovery_factor
+            if recovery_boost > 0:
+                total_change += recovery_boost * 0.5  # Apply 50% of potential recovery in first injection
+                logger.debug(f"Applied recurrence recovery boost of {recovery_boost * 0.5} letters")
+        
         return total_change, new_disease_state
+    
+    def calculate_monitoring_schedule(self, state: Dict) -> int:
+        """Calculate appropriate monitoring interval based on treatment status.
+
+        Parameters
+        ----------
+        state : Dict
+            Patient state dictionary containing treatment status information
+
+        Returns
+        -------
+        int
+            Recommended weeks until next monitoring visit
+        """
+        if not self.treatment_discontinuation_params:
+            return 12  # Default to 12 weeks if no parameters available
+        
+        treatment_status = state.get("treatment_status", {})
+        weeks_since_discontinuation = treatment_status.get("weeks_since_discontinuation", 0)
+        
+        # Get monitoring schedule from parameters
+        monitoring_schedule = self.treatment_discontinuation_params.get("monitoring_schedule", {})
+        
+        # Determine appropriate schedule based on time since discontinuation
+        if weeks_since_discontinuation < 52:  # Year 1
+            return monitoring_schedule.get("year_1", 12)
+        elif weeks_since_discontinuation < 156:  # Years 2-3
+            return monitoring_schedule.get("year_2_3", 16)
+        else:  # Year 4+
+            return monitoring_schedule.get("year_4_plus", 24)
