@@ -1,0 +1,200 @@
+python run_simulation.py eylea_literature_based
+Loading configuration from: protocols/simulation_configs/eylea_literature_based.yaml
+Absolute path: /Users/rose/Code/aided/protocols/simulation_configs/eylea_literature_based.yaml
+Config file exists at protocols/simulation_configs/eylea_literature_based.yaml
+File contents: name: "Eylea Literature-Based Simulation"
+description: "Simulation using evidence-based parameters from ALTAIR, VIEW 1/2, and other studies"
+version: "1.0"
+
+protocol:
+  agent: eylea
+  type: test_simulation
+  parameter_set: standard
+
+simulation:
+  type: "agent_based"  # Can be "agent_based" or "discrete_event"
+  duration_days: 672  # 96 weeks (2 years) = 96 * 7 = 672 days
+  num_patients: 1000  # Using num_patients instead of population_size
+  random_seed: 42
+  start_date: "2023-01-01"  # Adding required start_date
+  output_directory: "output/eylea_literature_simulation"
+
+parameters:
+  # Base parameter set using literature-derived values
+  base_parameter_set: "protocols/parameter_sets/eylea/eylea_base_parameters.yaml"
+  
+  # Optional sensitivity analysis configuration
+  sensitivity_analysis:
+    enabled: true  # Set to false to disable sensitivity analysis
+    parameter_file: "protocols/parameter_sets/eylea/eylea_sensitivity_parameters.yaml"
+    selected_variation: "neutral"  # Options: neutral, optimistic, pessimistic, high_response, etc.
+  
+  # Optional cost parameters
+  cost_parameters:
+    enabled: false  # Set to true when cost data is available
+    parameter_file: "protocols/parameter_sets/eylea/cost_parameters.yaml"
+
+protocols:
+  # Define the treatment protocol to use
+  active_protocol: "treat_and_extend"
+  
+  # Protocol definitions
+  treat_and_extend:
+    steps:
+      - step_type: injection_phase
+        parameters:
+          dose: 2mg  # Aflibercept 2mg
+          interval_weeks: 4
+          max_repeats: 3  # 3 loading injections
+        next_step: initial_assessment
+        conditions: []
+        exit_criteria: []
+
+      - step_type: dynamic_interval
+        parameters:
+          initial_interval: 8  # Start at 8 weeks after loading
+          min_interval: 8  # Minimum interval is 8 weeks
+          max_interval: 16  # Maximum interval is 16 weeks (from ALTAIR)
+          adjustment_weeks: 2  # Adjust by 2 weeks (from ALTAIR)
+        conditions:
+          - metric: disease_activity
+            comparator: "=="
+            value: recurring
+            action: decrease_interval
+          - metric: disease_activity
+            comparator: "=="
+            value: stable
+            action: increase_interval
+        exit_criteria:
+          - metric: vision
+            comparator: "<="
+            value: "baseline - 15"
+            action: consider_stop
+          - metric: stable_max_interval
+            comparator: ">="
+            value: 3  # After 3 consecutive visits at max interval
+            action: consider_discontinuation
+
+# Treatment discontinuation and monitoring configuration
+discontinuation:
+  enabled: true
+  criteria:
+    - type: stable_max_interval
+      value: 3  # 3 consecutive visits at maximum interval
+    - type: vision_stability
+      value: 5  # Vision change less than 5 letters
+  monitoring:
+    schedule: "protocols/parameter_sets/eylea/eylea_base_parameters.yaml"  # Use monitoring schedule from base parameters
+    detection_probability: 0.87  # From Artiaga et al. study
+
+# Output configuration
+output:
+  save_results: true
+  database: simulations.db
+  plots: true
+  verbose: false
+
+Loading configuration from: protocols/simulation_configs/eylea_literature_based.yaml
+Absolute path: /Users/rose/Code/aided/protocols/simulation_configs/eylea_literature_based.yaml
+Config file exists at protocols/simulation_configs/eylea_literature_based.yaml
+File contents: {'name': 'Eylea Literature-Based Simulation', 'description': 'Simulation using evidence-based parameters from ALTAIR, VIEW 1/2, and other studies', 'version': '1.0', 'protocol': {'agent': 'eylea', 'type': 'test_simulation', 'parameter_set': 'standard'}, 'simulation': {'type': 'agent_based', 'duration_days': 672, 'num_patients': 1000, 'random_seed': 42, 'start_date': '2023-01-01', 'output_directory': 'output/eylea_literature_simulation'}, 'parameters': {'base_parameter_set': 'protocols/parameter_sets/eylea/eylea_base_parameters.yaml', 'sensitivity_analysis': {'enabled': True, 'parameter_file': 'protocols/parameter_sets/eylea/eylea_sensitivity_parameters.yaml', 'selected_variation': 'neutral'}, 'cost_parameters': {'enabled': False, 'parameter_file': 'protocols/parameter_sets/eylea/cost_parameters.yaml'}}, 'protocols': {'active_protocol': 'treat_and_extend', 'treat_and_extend': {'steps': [{'step_type': 'injection_phase', 'parameters': {'dose': '2mg', 'interval_weeks': 4, 'max_repeats': 3}, 'next_step': 'initial_assessment', 'conditions': [], 'exit_criteria': []}, {'step_type': 'dynamic_interval', 'parameters': {'initial_interval': 8, 'min_interval': 8, 'max_interval': 16, 'adjustment_weeks': 2}, 'conditions': [{'metric': 'disease_activity', 'comparator': '==', 'value': 'recurring', 'action': 'decrease_interval'}, {'metric': 'disease_activity', 'comparator': '==', 'value': 'stable', 'action': 'increase_interval'}], 'exit_criteria': [{'metric': 'vision', 'comparator': '<=', 'value': 'baseline - 15', 'action': 'consider_stop'}, {'metric': 'stable_max_interval', 'comparator': '>=', 'value': 3, 'action': 'consider_discontinuation'}]}]}}, 'discontinuation': {'enabled': True, 'criteria': [{'type': 'stable_max_interval', 'value': 3}, {'type': 'vision_stability', 'value': 5}], 'monitoring': {'schedule': 'protocols/parameter_sets/eylea/eylea_base_parameters.yaml', 'detection_probability': 0.87}}, 'output': {'save_results': True, 'database': 'simulations.db', 'plots': True, 'verbose': False}}
+Clinical model parameters not found in simulation configuration
+INFO:simulation.config:Loaded base parameters from protocols/parameter_sets/eylea/eylea_base_parameters.yaml
+
+Running Agent-Based Simulation...
+Simulation completed. End time: 2023-01-01 00:00:00
+
+First patient history structure (len=25):
+First visit object type: <class 'dict'>
+First visit contents: {'date': datetime.datetime(2023, 1, 1, 2, 0), 'type': 'regular_visit', 'actions': ['vision_test', 'oct_scan', 'injection'], 'baseline_vision': 67, 'vision': 67.1585992822947, 'disease_state': <DiseaseState.STABLE: 1>}
+
+Running Discrete Event Simulation...
+Loading configuration from: protocols/simulation_configs/eylea_literature_based.yaml
+Absolute path: /Users/rose/Code/aided/protocols/simulation_configs/eylea_literature_based.yaml
+Config file exists at protocols/simulation_configs/eylea_literature_based.yaml
+File contents: {'name': 'Eylea Literature-Based Simulation', 'description': 'Simulation using evidence-based parameters from ALTAIR, VIEW 1/2, and other studies', 'version': '1.0', 'protocol': {'agent': 'eylea', 'type': 'test_simulation', 'parameter_set': 'standard'}, 'simulation': {'type': 'agent_based', 'duration_days': 672, 'num_patients': 1000, 'random_seed': 42, 'start_date': '2023-01-01', 'output_directory': 'output/eylea_literature_simulation'}, 'parameters': {'base_parameter_set': 'protocols/parameter_sets/eylea/eylea_base_parameters.yaml', 'sensitivity_analysis': {'enabled': True, 'parameter_file': 'protocols/parameter_sets/eylea/eylea_sensitivity_parameters.yaml', 'selected_variation': 'neutral'}, 'cost_parameters': {'enabled': False, 'parameter_file': 'protocols/parameter_sets/eylea/cost_parameters.yaml'}}, 'protocols': {'active_protocol': 'treat_and_extend', 'treat_and_extend': {'steps': [{'step_type': 'injection_phase', 'parameters': {'dose': '2mg', 'interval_weeks': 4, 'max_repeats': 3}, 'next_step': 'initial_assessment', 'conditions': [], 'exit_criteria': []}, {'step_type': 'dynamic_interval', 'parameters': {'initial_interval': 8, 'min_interval': 8, 'max_interval': 16, 'adjustment_weeks': 2}, 'conditions': [{'metric': 'disease_activity', 'comparator': '==', 'value': 'recurring', 'action': 'decrease_interval'}, {'metric': 'disease_activity', 'comparator': '==', 'value': 'stable', 'action': 'increase_interval'}], 'exit_criteria': [{'metric': 'vision', 'comparator': '<=', 'value': 'baseline - 15', 'action': 'consider_stop'}, {'metric': 'stable_max_interval', 'comparator': '>=', 'value': 3, 'action': 'consider_discontinuation'}]}]}}, 'discontinuation': {'enabled': True, 'criteria': [{'type': 'stable_max_interval', 'value': 3}, {'type': 'vision_stability', 'value': 5}], 'monitoring': {'schedule': 'protocols/parameter_sets/eylea/eylea_base_parameters.yaml', 'detection_probability': 0.87}}, 'output': {'save_results': True, 'database': 'simulations.db', 'plots': True, 'verbose': False}}
+Clinical model parameters not found in simulation configuration
+INFO:simulation.config:Loaded base parameters from protocols/parameter_sets/eylea/eylea_base_parameters.yaml
+Initializing treat-and-extend DES simulation...
+Generating 1000 patients...
+Processing events...
+Processed 1000 events...
+Processed 2000 events...
+Processed 3000 events...
+Processed 4000 events...
+Processed 5000 events...
+Processed 6000 events...
+Processed 7000 events...
+Processed 8000 events...
+Simulation complete after 8615 events
+
+Simulation Statistics:
+--------------------
+total_visits: 8615
+total_injections: 8615
+total_oct_scans: 8615
+vision_improvements: 8271
+vision_declines: 173
+protocol_completions: 1000
+protocol_discontinuations: 112
+
+Patient Summary:
+--------------------
+Total Patients: 1000
+Total Visits: 8615
+Average Visits per Patient: 8.6
+Loading Phase Completion Rate: 100.0%
+Maintenance Phase Injection Rate: 100.0%
+Saved data for 1000 patients to treat_and_extend_des_data.csv
+
+Patient PATIENT333 visits:
+  2023-04-11 04:51:25.581506 - Phase: loading - Actions: ['vision_test', 'oct_scan', 'injection']
+  2023-05-09 04:51:25.581506 - Phase: loading - Actions: ['vision_test', 'oct_scan', 'injection']
+  2023-06-06 04:51:25.581506 - Phase: loading - Actions: ['vision_test', 'oct_scan', 'injection']
+  2023-08-01 04:51:25.581506 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+  2023-10-10 04:51:25.581506 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+  2024-01-02 04:51:25.581506 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+  2024-03-12 04:51:25.581506 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+  2024-06-04 04:51:25.581506 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+  2024-09-10 04:51:25.581506 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+
+Patient PATIENT107 visits:
+  2023-01-29 04:01:53.804535 - Phase: loading - Actions: ['vision_test', 'oct_scan', 'injection']
+  2023-02-26 04:01:53.804535 - Phase: loading - Actions: ['vision_test', 'oct_scan', 'injection']
+  2023-03-26 04:01:53.804535 - Phase: loading - Actions: ['vision_test', 'oct_scan', 'injection']
+  2023-05-21 04:01:53.804535 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+  2023-07-16 04:01:53.804535 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+  2023-09-24 04:01:53.804535 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+  2023-12-17 04:01:53.804535 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+  2024-03-24 04:01:53.804535 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+  2024-07-14 04:01:53.804535 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+
+Patient PATIENT528 visits:
+  2023-06-14 09:49:12.426429 - Phase: loading - Actions: ['vision_test', 'oct_scan', 'injection']
+  2023-07-12 09:49:12.426429 - Phase: loading - Actions: ['vision_test', 'oct_scan', 'injection']
+  2023-08-09 09:49:12.426429 - Phase: loading - Actions: ['vision_test', 'oct_scan', 'injection']
+  2023-10-04 09:49:12.426429 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+  2023-12-13 09:49:12.426429 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+  2024-02-07 09:49:12.426429 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+  2024-04-17 09:49:12.426429 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+  2024-06-12 09:49:12.426429 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+  2024-08-21 09:49:12.426429 - Phase: maintenance - Actions: ['vision_test', 'oct_scan', 'injection']
+
+ABS data dumped to abs_data_dump.csv
+Saved ABS visualization to abs_mean_acuity.png
+Saved DES visualization to des_mean_acuity.png
+Saved combined visualization to individual_simulation_results.png
+
+DES mean vision data length: 16
+ABS mean vision data length: 53
+Using target length of 53 for comparison visualization
+
+Agent-Based Simulation Summary Statistics:
+{'num_patients': 1000, 'mean_visits_per_patient': 24.006, 'mean_injections_per_patient': 24.006, 'mean_vision_change': np.float64(6.496312600401568), 'vision_improved_percent': 63.1, 'vision_stable_percent': 36.9, 'vision_declined_percent': 0.0, 'vision_baseline_mean': np.float64(64.68321196483363), 'vision_baseline_std': np.float64(9.747425267581312), 'vision_final_mean': np.float64(71.17952456523521), 'vision_final_std': np.float64(7.124396184739118), 'treatment_interval_mean': np.float64(3.9109797444145005), 'treatment_interval_std': np.float64(0.4811095098075455), 'loading_phase_completion_rate': 100.0, 'time_to_first_improvement': np.float64(49.785714285714285), 'vision_change_confidence_interval': (np.float64(6.258373832370054), np.float64(6.734251368433082))}
+
+Discrete Event Simulation Summary Statistics:
+{'num_patients': 1000, 'mean_visits_per_patient': 8.615, 'mean_injections_per_patient': 8.615, 'mean_vision_change': np.float64(14.585504040471628), 'vision_improved_percent': 99.8, 'vision_stable_percent': 0.2, 'vision_declined_percent': 0.0, 'vision_baseline_mean': np.float64(67.00529036608637), 'vision_baseline_std': np.float64(0.9911029998082058), 'vision_final_mean': np.float64(81.59079440655799), 'vision_final_std': np.float64(3.046790512128098), 'treatment_interval_mean': np.float64(8.632961260669731), 'treatment_interval_std': np.float64(3.382802412690633), 'loading_phase_completion_rate': 100.0, 'time_to_first_improvement': np.float64(16.0), 'vision_change_confidence_interval': (np.float64(14.401366222428733), np.float64(14.769641858514523))}
+
+Visualization files generated:
+1. individual_simulation_results.png
+2. mean_acuity_comparison.png

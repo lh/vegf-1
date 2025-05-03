@@ -6,7 +6,7 @@ It handles various discontinuation criteria, post-discontinuation monitoring,
 and treatment re-entry based on disease recurrence.
 
 Key Features
------------
+------------
 - Configuration-driven discontinuation criteria
 - Multiple discontinuation types (stable at max interval, administrative, time-based)
 - Post-discontinuation monitoring
@@ -27,8 +27,7 @@ from typing import Dict, Any, List, Tuple, Optional, Union
 logger = logging.getLogger(__name__)
 
 class DiscontinuationManager:
-    """
-    Manager for treatment discontinuation decisions and monitoring.
+    """Manager for treatment discontinuation decisions and monitoring.
     
     This class encapsulates all discontinuation-related logic, providing a consistent
     interface for both ABS and DES simulations. It evaluates different discontinuation
@@ -39,9 +38,11 @@ class DiscontinuationManager:
     ----------
     config : Dict[str, Any]
         Configuration dictionary containing discontinuation parameters
-        
+    
     Attributes
     ----------
+    enabled : bool
+        Whether discontinuation is enabled
     config : Dict[str, Any]
         Configuration dictionary
     criteria : Dict[str, Any]
@@ -50,11 +51,12 @@ class DiscontinuationManager:
         Post-discontinuation monitoring configuration
     retreatment : Dict[str, Any]
         Treatment re-entry configuration
+    stats : Dict[str, int]
+        Statistics tracking discontinuation events
     """
     
     def __init__(self, config: Dict[str, Any]):
-        """
-        Initialize the discontinuation manager with configuration.
+        """Initialize the discontinuation manager with configuration.
         
         Parameters
         ----------
@@ -89,8 +91,7 @@ class DiscontinuationManager:
                                 patient_state: Dict[str, Any], 
                                 current_time: datetime,
                                 treatment_start_time: Optional[datetime] = None) -> Tuple[bool, str, float]:
-        """
-        Evaluate whether a patient should discontinue treatment.
+        """Evaluate whether a patient should discontinue treatment.
         
         Parameters
         ----------
@@ -98,9 +99,9 @@ class DiscontinuationManager:
             Current patient state including disease activity and treatment history
         current_time : datetime
             Current simulation time
-        treatment_start_time : datetime, optional
+        treatment_start_time : Optional[datetime], optional
             Time when treatment started, by default None
-            
+        
         Returns
         -------
         Tuple[bool, str, float]
@@ -163,14 +164,13 @@ class DiscontinuationManager:
     
     def schedule_monitoring(self, 
                            discontinuation_time: datetime) -> List[Dict[str, Any]]:
-        """
-        Schedule post-discontinuation monitoring visits.
+        """Schedule post-discontinuation monitoring visits.
         
         Parameters
         ----------
         discontinuation_time : datetime
             Time when treatment was discontinued
-            
+        
         Returns
         -------
         List[Dict[str, Any]]
@@ -196,14 +196,13 @@ class DiscontinuationManager:
     
     def evaluate_retreatment(self, 
                             patient_state: Dict[str, Any]) -> Tuple[bool, float]:
-        """
-        Evaluate whether a discontinued patient should re-enter treatment.
+        """Evaluate whether a discontinued patient should re-enter treatment.
         
         Parameters
         ----------
         patient_state : Dict[str, Any]
             Current patient state including disease activity and vision
-            
+        
         Returns
         -------
         Tuple[bool, float]
@@ -233,8 +232,7 @@ class DiscontinuationManager:
     def process_monitoring_visit(self, 
                                 patient_state: Dict[str, Any],
                                 actions: List[str]) -> Tuple[bool, Dict[str, Any]]:
-        """
-        Process a monitoring visit for a discontinued patient.
+        """Process a monitoring visit for a discontinued patient.
         
         Parameters
         ----------
@@ -242,7 +240,7 @@ class DiscontinuationManager:
             Current patient state
         actions : List[str]
             Actions performed during the visit
-            
+        
         Returns
         -------
         Tuple[bool, Dict[str, Any]]
@@ -277,8 +275,7 @@ class DiscontinuationManager:
         return False, patient_state
     
     def get_statistics(self) -> Dict[str, int]:
-        """
-        Get discontinuation statistics.
+        """Get discontinuation statistics.
         
         Returns
         -------

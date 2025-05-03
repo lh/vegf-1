@@ -22,7 +22,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Scheduler Module" href="scheduler.html" />
-    <link rel="prev" title="Protocol Modules" href="../protocols/index.html" /> 
+    <link rel="prev" title="Base Simulation Module" href="base.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -45,9 +45,37 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../PROJECT_OVERVIEW.html">Macular Degeneration Treatment Simulation Project</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Simulation Modules</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Simulation Modules</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="base.html">Base Simulation Module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Patient State Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#key-concepts">Key Concepts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#key-methods">Key Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.patient_state.PatientState"><code class="docutils literal notranslate"><span class="pre">PatientState</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.patient_state.PatientState.__init__"><code class="docutils literal notranslate"><span class="pre">PatientState.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.patient_state.PatientState.process_visit"><code class="docutils literal notranslate"><span class="pre">PatientState.process_visit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.patient_state.PatientState.discontinue_treatment"><code class="docutils literal notranslate"><span class="pre">PatientState.discontinue_treatment()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.patient_state.PatientState.resume_treatment"><code class="docutils literal notranslate"><span class="pre">PatientState.resume_treatment()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.patient_state.PatientState.set_monitoring_schedule"><code class="docutils literal notranslate"><span class="pre">PatientState.set_monitoring_schedule()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.patient_state.PatientState.update_phase"><code class="docutils literal notranslate"><span class="pre">PatientState.update_phase()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.patient_state.PatientState.set_next_visit_interval"><code class="docutils literal notranslate"><span class="pre">PatientState.set_next_visit_interval()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.patient_state.PatientState.visit_history"><code class="docutils literal notranslate"><span class="pre">PatientState.visit_history</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.patient_state.PatientState.current_vision"><code class="docutils literal notranslate"><span class="pre">PatientState.current_vision</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.patient_state.PatientState.last_visit_date"><code class="docutils literal notranslate"><span class="pre">PatientState.last_visit_date</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.patient_state.PatientState.next_visit_interval"><code class="docutils literal notranslate"><span class="pre">PatientState.next_visit_interval</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scheduler.html">Scheduler Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html">Simulation Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clinical_model.html">Clinical Model Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vision_models.html">Vision Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discontinuation_manager.html">Discontinuation Manager Module</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../analysis/index.html">Analysis Modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../protocols/index.html">Protocol Modules</a></li>
 </ul>
@@ -59,6 +87,9 @@
 <li class="toctree-l2"><a class="reference internal" href="#simulation.patient_state.PatientState"><code class="docutils literal notranslate"><span class="pre">PatientState</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#simulation.patient_state.PatientState.__init__"><code class="docutils literal notranslate"><span class="pre">PatientState.__init__()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#simulation.patient_state.PatientState.process_visit"><code class="docutils literal notranslate"><span class="pre">PatientState.process_visit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.patient_state.PatientState.discontinue_treatment"><code class="docutils literal notranslate"><span class="pre">PatientState.discontinue_treatment()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.patient_state.PatientState.resume_treatment"><code class="docutils literal notranslate"><span class="pre">PatientState.resume_treatment()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.patient_state.PatientState.set_monitoring_schedule"><code class="docutils literal notranslate"><span class="pre">PatientState.set_monitoring_schedule()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#simulation.patient_state.PatientState.update_phase"><code class="docutils literal notranslate"><span class="pre">PatientState.update_phase()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#simulation.patient_state.PatientState.set_next_visit_interval"><code class="docutils literal notranslate"><span class="pre">PatientState.set_next_visit_interval()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#simulation.patient_state.PatientState.visit_history"><code class="docutils literal notranslate"><span class="pre">PatientState.visit_history</span></code></a></li>
@@ -99,6 +130,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Simulation Modules</a></li>
       <li class="breadcrumb-item active">Patient State Module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/simulation/patient_state.rst.txt" rel="nofollow"> View page source</a>
@@ -111,10 +143,6 @@
              
   <section id="module-simulation.patient_state">
 <span id="patient-state-module"></span><h1>Patient State Module<a class="headerlink" href="#module-simulation.patient_state" title="Link to this heading"></a></h1>
-<dl class="field-list simple">
-<dt class="field-odd">no-index<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
-</dl>
 <p>Patient state management for AMD treatment simulation.</p>
 <p>This module implements a state machine for tracking individual patient progression
 through AMD treatment protocols. It maintains all clinical and treatment-related
@@ -186,18 +214,6 @@ state information and handles state transitions during clinic visits.</p>
 <dt class="sig sig-object py" id="simulation.patient_state.PatientState">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulation.patient_state.</span></span><span class="sig-name descname"><span class="pre">PatientState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">patient_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_vision</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/patient_state.html#PatientState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.patient_state.PatientState" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">No-index<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
-<dt class="field-even">Parameters<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>patient_id</strong> (<em>str</em>)</p></li>
-<li><p><strong>protocol_name</strong> (<em>str</em>)</p></li>
-<li><p><strong>initial_vision</strong> (<em>float</em>)</p></li>
-<li><p><strong>start_time</strong> (<em>datetime</em>)</p></li>
-</ul>
-</dd>
-</dl>
 <p>Manages patient state and history throughout the simulation.</p>
 <p>This class maintains the complete state of a patient including their treatment history,
 vision measurements, disease state, and scheduled visits. It provides methods for
@@ -269,30 +285,20 @@ and disease state transitions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>visit_time</strong> (<em>datetime</em>) – Time of the visit (must be timezone-naive UTC)
-Example: datetime(2025, 4, 15)</p></li>
-<li><p><strong>actions</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – <dl class="simple">
-<dt>List of actions performed during the visit. Valid actions:</dt><dd><ul>
-<li><p>”vision_test”: Measures visual acuity</p></li>
-<li><p>”oct_scan”: Performs OCT imaging</p></li>
-<li><p>”injection”: Administers anti-VEGF treatment</p></li>
-</ul>
-</dd>
-</dl>
-<p>Example: [“vision_test”, “oct_scan”, “injection”]</p>
-</p></li>
-<li><p><strong>clinical_model</strong> (<a class="reference internal" href="index.html#simulation.clinical_model.ClinicalModel" title="simulation.clinical_model.ClinicalModel"><em>ClinicalModel</em></a>) – ClinicalModel instance for simulating vision changes and disease progression
-Must be initialized with appropriate parameters</p></li>
+<li><p><strong>visit_time</strong> (<em>datetime</em>) – Time of the visit (must be timezone-naive UTC)</p></li>
+<li><p><strong>actions</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of actions performed during the visit</p></li>
+<li><p><strong>clinical_model</strong> (<em>ClinicalModel</em>) – ClinicalModel instance for simulating vision changes and disease progression</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
 <dt>Dictionary containing detailed visit results:</dt><dd><ul class="simple">
-<li><p>vision_change: float - Change in ETDRS letters</p></li>
+<li><p>baseline_vision: float - Vision before treatment</p></li>
+<li><p>new_vision: float - Vision after treatment</p></li>
 <li><p>actions_performed: List[str] - Completed actions</p></li>
-<li><p>disease_state: DiseaseState - Updated state</p></li>
-<li><p>treatment_response: Optional[Dict] - If injection given</p></li>
+<li><p>disease_state: str - Updated disease state</p></li>
 <li><p>visit_type: str - Classification of visit</p></li>
+<li><p>treatment_status: Dict - Current treatment status</p></li>
 </ul>
 </dd>
 </dl>
@@ -301,49 +307,58 @@ Must be initialized with appropriate parameters</p></li>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Dict[str, Any]</p>
 </dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If visit_time is timezone-aware
-    If actions contains invalid values
-    If clinical_model is not properly initialized</p>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.patient_state.PatientState.discontinue_treatment">
+<span class="sig-name descname"><span class="pre">discontinue_treatment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">visit_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reason</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'protocol_decision'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/patient_state.html#PatientState.discontinue_treatment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.patient_state.PatientState.discontinue_treatment" title="Link to this definition"></a></dt>
+<dd><p>Discontinue active treatment and set up monitoring schedule.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>visit_time</strong> (<em>datetime</em>) – Time when treatment is discontinued</p></li>
+<li><p><strong>reason</strong> (<em>str</em><em>, </em><em>optional</em>) – Reason for discontinuation (default: “protocol_decision”)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
-<div class="admonition-examples admonition">
-<p class="admonition-title">Examples</p>
-<p>Basic Visit:
-&gt;&gt;&gt; model = ClinicalModel(config)
-&gt;&gt;&gt; patient = PatientState(“123”, “treat_and_extend”, 70, datetime.now())
-&gt;&gt;&gt; visit_data = patient.process_visit(
-…     datetime.now(),
-…     [“vision_test”, “injection”],
-…     model
-… )</p>
-<p>Monitoring Visit:
-&gt;&gt;&gt; visit_data = patient.process_visit(
-…     datetime.now(),
-…     [“vision_test”, “oct_scan”],
-…     model
-… )</p>
-</div>
 <div class="admonition-notes admonition">
 <p class="admonition-title">Notes</p>
-<p>State Updates:
-1. Increments visit counter
-2. Updates last visit date
-3. Calculates weeks since last injection
-4. Simulates vision changes using clinical_model
-5. Processes each action in sequence
-6. Records complete visit details</p>
-<p>The method handles:
-- Validation of input parameters
-- Coordination of state updates
-- Error handling for invalid states
-- Complete visit recording</p>
-<p>Vision changes are simulated by the clinical_model which considers:
-- Current disease state
-- Treatment history
-- Time since last injection
-- Current vision level</p>
+<p>Updates treatment status to inactive and sets up monitoring schedule.</p>
 </div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.patient_state.PatientState.resume_treatment">
+<span class="sig-name descname"><span class="pre">resume_treatment</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/patient_state.html#PatientState.resume_treatment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.patient_state.PatientState.resume_treatment" title="Link to this definition"></a></dt>
+<dd><p>Resume treatment after discontinuation.
+:rtype: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Called when recurrence is detected and treatment needs to be resumed.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.patient_state.PatientState.set_monitoring_schedule">
+<span class="sig-name descname"><span class="pre">set_monitoring_schedule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weeks</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/patient_state.html#PatientState.set_monitoring_schedule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.patient_state.PatientState.set_monitoring_schedule" title="Link to this definition"></a></dt>
+<dd><p>Set the monitoring schedule for a patient after treatment discontinuation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>weeks</strong> (<em>int</em>) – Number of weeks between monitoring visits</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -436,14 +451,14 @@ Must be initialized with appropriate parameters</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../protocols/index.html" class="btn btn-neutral float-left" title="Protocol Modules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="base.html" class="btn btn-neutral float-left" title="Base Simulation Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="scheduler.html" class="btn btn-neutral float-right" title="Scheduler Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Rose.</p>
+    <p>&#169; Copyright 2025, Luke Herbert.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

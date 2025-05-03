@@ -16,7 +16,7 @@ stateDiagram-v2
     LoadingPhase --> TreatmentCycle: "N = 8"
     
     TreatmentCycle --> FluidDetected: "Fluid detected"
-    FluidDetected --> TreatmentCycle: "N = max(N - 2, 4)"
+    FluidDetected --> TreatmentCycle: "N = max(N - 2, 8)"
 
     note right of TreatmentCycle
         N = Current interval in weeks

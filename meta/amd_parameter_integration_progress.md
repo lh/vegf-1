@@ -25,6 +25,40 @@
    - Fixed indentation and formatting issues in docstrings
    - Updated documentation_errors.log with progress and remaining issues
 
+5. **Command-Line Interface Improvements**
+   - Modified run_simulation.py to accept command-line arguments
+   - Added argparse to handle configuration file specification
+   - Added validation to check if the specified configuration file exists
+   - Added helpful error messages and available configuration listing
+
+6. **Configuration File Updates**
+   - Fixed eylea_literature_based.yaml configuration file
+   - Added the required protocol section with appropriate values
+   - Changed duration_weeks to duration_days (96 weeks = 672 days)
+   - Changed population_size to num_patients to match expected format
+   - Added required start_date field
+   - Updated the output section to match the expected format
+
+7. **Simulation Results**
+   - Successfully ran simulation with 1000 patients over a 2-year period (672 days)
+   - Agent-Based Simulation (ABS):
+     - Mean vision improvement: +6.50 ETDRS letters
+     - 63.2% of patients showed vision improvement
+     - 36.7% maintained stable vision
+     - Mean visits per patient: 24.0
+     - Mean injections per patient: 24.0
+   - Discrete Event Simulation (DES):
+     - Mean vision improvement: +3.21 ETDRS letters
+     - 27.4% of patients showed vision improvement
+     - 72.6% maintained stable vision
+     - Mean visits per patient: 4.1
+     - Mean injections per patient: 1.3
+   - Comparison:
+     - ABS predicted greater vision improvement than DES
+     - ABS showed more variability in vision outcomes
+     - Both models demonstrated overall vision improvement over time
+     - The ABS model showed a more oscillating pattern in vision improvement
+
 ## Remaining Implementation Tasks
 
 1. **SimulationConfig Class Updates**

@@ -21,7 +21,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Eylea Data Analysis Module" href="../analysis/eylea_data_analysis.html" />
+    <link rel="next" title="Vision Models" href="vision_models.html" />
     <link rel="prev" title="Simulation Config Module" href="config.html" /> 
 </head>
 
@@ -45,9 +45,24 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../PROJECT_OVERVIEW.html">Macular Degeneration Treatment Simulation Project</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Simulation Modules</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Simulation Modules</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="base.html">Base Simulation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="patient_state.html">Patient State Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scheduler.html">Scheduler Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html">Simulation Config Module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Clinical Model Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#key-features">Key Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mathematical-model">Mathematical Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#state-transitions">State Transitions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vision_models.html">Vision Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discontinuation_manager.html">Discontinuation Manager Module</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../analysis/index.html">Analysis Modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../protocols/index.html">Protocol Modules</a></li>
 </ul>
@@ -89,6 +104,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Simulation Modules</a></li>
       <li class="breadcrumb-item active">Clinical Model Module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/simulation/clinical_model.rst.txt" rel="nofollow"> View page source</a>
@@ -102,9 +118,6 @@
   <section id="clinical-model-module">
 <h1>Clinical Model Module<a class="headerlink" href="#clinical-model-module" title="Link to this heading"></a></h1>
 <p>Clinical model for AMD disease progression and vision changes.</p>
-<p>This module implements the clinical aspects of AMD progression, including disease states,
-vision changes, and treatment effects. It uses a state-based model with probabilistic
-transitions and configurable parameters for vision changes.</p>
 <p>This module implements the clinical aspects of AMD progression, including disease states,
 vision changes, and treatment effects. It uses a state-based model with probabilistic
 transitions and configurable parameters for vision changes.</p>
@@ -195,15 +208,13 @@ Patients experience rapid vision decline without treatment.</p></li>
 </dl>
 <div class="admonition-notes admonition">
 <p class="admonition-title">Notes</p>
-<p>State transitions are probabilistic and configurable via ClinicalModel.
-Default transition probabilities from NAIVE state:</p>
-<blockquote>
-<div><ul class="simple">
+<p>State transitions are probabilistic and configurable via ClinicalModel.</p>
+<p>Default transition probabilities from NAIVE state:</p>
+<ul class="simple">
 <li><p>STABLE: 30%</p></li>
 <li><p>ACTIVE: 60%</p></li>
 <li><p>HIGHLY_ACTIVE: 10%</p></li>
 </ul>
-</div></blockquote>
 </div>
 <dl class="py attribute">
 <dt class="sig sig-object py">
@@ -231,13 +242,6 @@ Default transition probabilities from NAIVE state:</p>
 <dt class="sig sig-object py">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulation.clinical_model.</span></span><span class="sig-name descname"><span class="pre">ClinicalModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#ClinicalModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">No-index<span class="colon">:</span></dt>
-<dd class="field-odd"><p></p></dd>
-<dt class="field-even">Parameters<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>config</strong> (<a class="reference internal" href="index.html#simulation.config.SimulationConfig" title="simulation.config.SimulationConfig"><em>SimulationConfig</em></a>)</p>
-</dd>
-</dl>
 <p>Models clinical aspects of AMD progression, including disease states and vision changes.</p>
 <p>This model includes four disease states: NAIVE, STABLE, ACTIVE, and HIGHLY_ACTIVE.
 It simulates disease progression and vision changes based on the current state and treatment.</p>
@@ -245,50 +249,33 @@ It simulates disease progression and vision changes based on the current state a
 with normal distributions, differentiating between injection and non-injection visits.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="index.html#simulation.config.SimulationConfig" title="simulation.config.SimulationConfig"><em>simulation.config.SimulationConfig</em></a>) – <dl class="simple">
-<dt>Configuration object containing:</dt><dd><ul class="simple">
-<li><p>clinical_model_params: Clinical model parameters</p></li>
-<li><p>vision_params: Vision change parameters</p></li>
-<li><p>transition_probabilities: State transition probabilities</p></li>
-</ul>
-</dd>
-</dl>
-</p>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="config.html#simulation.config.SimulationConfig" title="simulation.config.SimulationConfig"><em>simulation.config.SimulationConfig</em></a>) – Configuration object containing clinical model parameters, vision parameters,
+and transition probabilities between disease states.</p>
 </dd>
 <dt class="field-even">Variables<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>config</strong> (<a class="reference internal" href="index.html#simulation.config.SimulationConfig" title="simulation.config.SimulationConfig"><em>simulation.config.SimulationConfig</em></a>) – Configuration object containing model parameters</p></li>
-<li><p><strong>transition_probabilities</strong> (<em>Dict</em><em>[</em><a class="reference internal" href="index.html#simulation.clinical_model.DiseaseState" title="simulation.clinical_model.DiseaseState"><em>DiseaseState</em></a><em>, </em><em>Dict</em><em>[</em><a class="reference internal" href="index.html#simulation.clinical_model.DiseaseState" title="simulation.clinical_model.DiseaseState"><em>DiseaseState</em></a><em>, </em><em>float</em><em>]</em><em>]</em>) – <p>Probability matrix for transitions between disease states with structure:
-{</p>
-<blockquote>
-<div><p>DiseaseState.NAIVE: {DiseaseState.STABLE: 0.3, …},
-DiseaseState.STABLE: {DiseaseState.STABLE: 0.7, …},
-…</p>
-</div></blockquote>
-<p>}</p>
-</p></li>
-<li><p><strong>vision_change_params</strong> (<em>Dict</em>) – Parameters controlling vision changes under different conditions including:
-- base_change: Mean/SD for each state and injection status
-- time_factor: Effect of time since last injection
-- ceiling_factor: Vision ceiling effect
-- measurement_noise: Random variability</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="config.html#simulation.config.SimulationConfig" title="simulation.config.SimulationConfig"><em>simulation.config.SimulationConfig</em></a>) – Configuration object containing model parameters</p></li>
+<li><p><strong>transition_probabilities</strong> (<em>Dict</em><em>[</em><em>DiseaseState</em><em>, </em><em>Dict</em><em>[</em><em>DiseaseState</em><em>, </em><em>float</em><em>]</em><em>]</em>) – Probability matrix for transitions between disease states</p></li>
+<li><p><strong>vision_change_params</strong> (<em>Dict</em>) – Parameters controlling vision changes under different conditions</p></li>
 </ul>
 </dd>
 </dl>
 <div class="admonition-notes admonition">
 <p class="admonition-title">Notes</p>
-<p>The model captures key clinical aspects of AMD progression:
-1. State-dependent response to treatment
-2. Waning of treatment effect over time
-3. Diminishing returns at higher vision levels
-4. Realistic measurement variability</p>
+<p>The model captures key clinical aspects of AMD progression:</p>
+<ol class="arabic simple">
+<li><p>State-dependent response to treatment</p></li>
+<li><p>Waning of treatment effect over time</p></li>
+<li><p>Diminishing returns at higher vision levels</p></li>
+<li><p>Realistic measurement variability</p></li>
+</ol>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#ClinicalModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="index.html#simulation.config.SimulationConfig" title="simulation.config.SimulationConfig"><em>SimulationConfig</em></a>)</p>
+<dd class="field-odd"><p><strong>config</strong> (<a class="reference internal" href="config.html#simulation.config.SimulationConfig" title="simulation.config.SimulationConfig"><em>SimulationConfig</em></a>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -299,13 +286,13 @@ DiseaseState.STABLE: {DiseaseState.STABLE: 0.7, …},
 <dd><p>Get transition probabilities for the current disease state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>current_state</strong> (<a class="reference internal" href="index.html#simulation.clinical_model.DiseaseState" title="simulation.clinical_model.DiseaseState"><em>DiseaseState</em></a>) – Current disease state (NAIVE, STABLE, ACTIVE, or HIGHLY_ACTIVE)</p>
+<dd class="field-odd"><p><strong>current_state</strong> (<em>DiseaseState</em>) – Current disease state (NAIVE, STABLE, ACTIVE, or HIGHLY_ACTIVE)</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary mapping possible next states to their transition probabilities</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Dict[<a class="reference internal" href="index.html#simulation.clinical_model.DiseaseState" title="simulation.clinical_model.DiseaseState">DiseaseState</a>, float]</p>
+<dd class="field-odd"><p>Dict[DiseaseState, float]</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If no transition probabilities are defined for the current state</p>
@@ -319,13 +306,13 @@ DiseaseState.STABLE: {DiseaseState.STABLE: 0.7, …},
 <dd><p>Simulate disease state progression using configured transition probabilities.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>current_state</strong> (<a class="reference internal" href="index.html#simulation.clinical_model.DiseaseState" title="simulation.clinical_model.DiseaseState"><em>DiseaseState</em></a>) – Current disease state (NAIVE, STABLE, ACTIVE, or HIGHLY_ACTIVE)</p>
+<dd class="field-odd"><p><strong>current_state</strong> (<em>DiseaseState</em>) – Current disease state (NAIVE, STABLE, ACTIVE, or HIGHLY_ACTIVE)</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>New disease state after progression</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="index.html#simulation.clinical_model.DiseaseState" title="simulation.clinical_model.DiseaseState">DiseaseState</a></p>
+<dd class="field-odd"><p>DiseaseState</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If current_state is not a valid DiseaseState</p>
@@ -342,16 +329,12 @@ DiseaseState.STABLE: {DiseaseState.STABLE: 0.7, …},
 </div>
 <div class="admonition-notes admonition">
 <p class="admonition-title">Notes</p>
-<p>Disease progression follows these rules:
-1. NAIVE state has fixed transition probabilities:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>STABLE: 30%</p></li>
-<li><p>ACTIVE: 60%</p></li>
-<li><p>HIGHLY_ACTIVE: 10%</p></li>
-</ul>
-</div></blockquote>
-<ol class="arabic simple" start="2">
+<p>Disease progression follows these rules:</p>
+<ol class="arabic simple">
+<li><p>NAIVE state has fixed transition probabilities:
+- STABLE: 30%
+- ACTIVE: 60%
+- HIGHLY_ACTIVE: 10%</p></li>
 <li><p>Other states use probabilities from configuration</p></li>
 <li><p>If no probabilities defined, remains in current state</p></li>
 <li><p>Probabilities are normalized to sum to 1 if needed</p></li>
@@ -421,6 +404,15 @@ Defaults to mean=70, sd=5 if not specified in configuration.</p>
 </dd>
 </dl>
 </li>
+<li><dl class="simple">
+<dt>treatment_status: Dict containing treatment status information</dt><dd><ul>
+<li><p>active: bool - Whether treatment is active</p></li>
+<li><p>weeks_since_discontinuation: int - Weeks since treatment was discontinued</p></li>
+<li><p>recurrence_detected: bool - Whether recurrence has been detected</p></li>
+</ul>
+</dd>
+</dl>
+</li>
 </ul>
 </dd>
 <dt>Optional keys:</dt><dd><ul class="simple">
@@ -441,7 +433,7 @@ Defaults to mean=70, sd=5 if not specified in configuration.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Tuple[float, <a class="reference internal" href="index.html#simulation.clinical_model.DiseaseState" title="simulation.clinical_model.DiseaseState">DiseaseState</a>]</p>
+<dd class="field-odd"><p>Tuple[float, DiseaseState]</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If required vision change parameters are missing from configuration</p>
@@ -454,7 +446,8 @@ Defaults to mean=70, sd=5 if not specified in configuration.</p>
 <span class="gp">... </span>    <span class="s2">&quot;injections&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="s2">&quot;last_recorded_injection&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="s2">&quot;weeks_since_last_injection&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="s2">&quot;current_vision&quot;</span><span class="p">:</span> <span class="mi">70</span>
+<span class="gp">... </span>    <span class="s2">&quot;current_vision&quot;</span><span class="p">:</span> <span class="mi">70</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s2">&quot;treatment_status&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;weeks_since_discontinuation&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;recurrence_detected&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
 <span class="gp">... </span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">vision_change</span><span class="p">,</span> <span class="n">new_state</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">simulate_vision_change</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Vision changed by </span><span class="si">{</span><span class="n">vision_change</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> letters&quot;</span><span class="p">)</span>
@@ -516,8 +509,26 @@ Non-injection: μ = -5 to +5 letters</p>
 1. State-dependent response to treatment
 2. Waning of treatment effect over time
 3. Diminishing returns at higher vision levels
-4. Realistic measurement variability</p>
+4. Realistic measurement variability
+5. Treatment discontinuation and recurrence</p>
 </div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">calculate_monitoring_schedule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/clinical_model.html#ClinicalModel.calculate_monitoring_schedule"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Calculate appropriate monitoring interval based on treatment status.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<em>Dict</em>) – Patient state dictionary containing treatment status information</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Recommended weeks until next monitoring visit</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -529,13 +540,13 @@ Non-injection: μ = -5 to +5 letters</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="config.html" class="btn btn-neutral float-left" title="Simulation Config Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../analysis/eylea_data_analysis.html" class="btn btn-neutral float-right" title="Eylea Data Analysis Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="vision_models.html" class="btn btn-neutral float-right" title="Vision Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Rose.</p>
+    <p>&#169; Copyright 2025, Luke Herbert.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -1,5 +1,6 @@
-name: Test Simulation
-description: Basic test configuration for protocol validation
+name: "Test Simulation"
+description: "Basic test configuration for protocol validation"
+version: "1.0"
 
 protocol:
   agent: eylea
@@ -12,6 +13,7 @@ simulation:
   num_patients: 50
   random_seed: 42
   start_date: "2023-01-01"
+  output_directory: "output/test_simulation"
   
   # DES-specific settings
   scheduling:
@@ -70,6 +72,75 @@ simulation:
         max_vision: 100  # Vision score at which improvement becomes minimal
       measurement_noise: [0, 0.5]  # mean, std dev of measurement variability
 
+parameters:
+  # Optional sensitivity analysis configuration
+  sensitivity_analysis:
+    enabled: false  # Set to true to enable sensitivity analysis
+    parameter_file: ""
+    selected_variation: "neutral"
+  
+  # Optional cost parameters
+  cost_parameters:
+    enabled: false  # Set to true when cost data is available
+    parameter_file: ""
+
+protocols:
+  # Define the treatment protocol to use
+  active_protocol: "treat_and_extend"
+  
+  # Protocol definitions
+  treat_and_extend:
+    steps:
+      - step_type: injection_phase
+        parameters:
+          dose: 2mg  # Aflibercept 2mg
+          interval_weeks: 4
+          max_repeats: 3  # 3 loading injections
+        next_step: initial_assessment
+        conditions: []
+        exit_criteria: []
+
+      - step_type: dynamic_interval
+        parameters:
+          initial_interval: 8  # Start at 8 weeks after loading
+          min_interval: 4  # Minimum interval is 4 weeks
+          max_interval: 12  # Maximum interval is 12 weeks
+          adjustment_weeks: 2  # Adjust by 2 weeks
+        conditions:
+          - metric: disease_activity
+            comparator: "=="
+            value: recurring
+            action: decrease_interval
+          - metric: disease_activity
+            comparator: "=="
+            value: stable
+            action: increase_interval
+        exit_criteria:
+          - metric: vision
+            comparator: "<="
+            value: "baseline - 15"
+            action: consider_stop
+          - metric: stable_max_interval
+            comparator: ">="
+            value: 3  # After 3 consecutive visits at max interval
+            action: consider_discontinuation
+
+# Treatment discontinuation and monitoring configuration
+discontinuation:
+  enabled: true
+  criteria:
+    - type: stable_max_interval
+      value: 3  # 3 consecutive visits at maximum interval
+    - type: vision_stability
+      value: 5  # Vision change less than 5 letters
+  monitoring:
+    schedule:
+      year_1: 12  # Weeks between monitoring visits in year 1
+      year_2_3: 16  # Weeks between monitoring visits in years 2-3
+      year_4_plus: 24  # Weeks between monitoring visits after year 3
+    detection_probability: 0.85  # Probability of detecting recurrence during monitoring
+
+# Output configuration
 output:
   save_results: true
   database: simulations.db

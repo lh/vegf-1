@@ -93,9 +93,6 @@
   <h1>Source code for simulation.clinical_model</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Clinical model for AMD disease progression and vision changes.</span>
 
-<span class="sd">This module implements the clinical aspects of AMD progression, including disease states,</span>
-<span class="sd">vision changes, and treatment effects. It uses a state-based model with probabilistic</span>
-<span class="sd">transitions and configurable parameters for vision changes.</span>
 
 <span class="sd">This module implements the clinical aspects of AMD progression, including disease states,</span>
 <span class="sd">vision changes, and treatment effects. It uses a state-based model with probabilistic</span>
@@ -152,12 +149,16 @@
 <span class="sd">- Ceiling effect reduces changes as vision approaches maximum</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Any</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="c1"># Set up logging</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DiseaseState">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.clinical_model.DiseaseState">[docs]</a>
+<a class="viewcode-back" href="../../simulation/clinical_model.html#simulation.clinical_model.DiseaseState">[docs]</a>
 <span class="k">class</span> <span class="nc">DiseaseState</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Disease states for AMD progression.</span>
 
@@ -181,10 +182,12 @@
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    State transitions are probabilistic and configurable via ClinicalModel.</span>
+<span class="sd">    </span>
 <span class="sd">    Default transition probabilities from NAIVE state:</span>
-<span class="sd">        - STABLE: 30%</span>
-<span class="sd">        - ACTIVE: 60%</span>
-<span class="sd">        - HIGHLY_ACTIVE: 10%</span>
+<span class="sd">    </span>
+<span class="sd">    - STABLE: 30%</span>
+<span class="sd">    - ACTIVE: 60%</span>
+<span class="sd">    - HIGHLY_ACTIVE: 10%</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">NAIVE</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">STABLE</span> <span class="o">=</span> <span class="mi">1</span>
@@ -198,11 +201,11 @@
 <span class="kn">from</span> <span class="nn">simulation.config</span> <span class="kn">import</span> <span class="n">SimulationConfig</span>
 
 <div class="viewcode-block" id="ClinicalModel">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.clinical_model.ClinicalModel">[docs]</a>
+<a class="viewcode-back" href="../../simulation/clinical_model.html#simulation.clinical_model.ClinicalModel">[docs]</a>
 <span class="k">class</span> <span class="nc">ClinicalModel</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;:no-index:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Models clinical aspects of AMD progression, including disease states and vision changes.</span>
-<span class="sd">    </span>
+
 <span class="sd">    This model includes four disease states: NAIVE, STABLE, ACTIVE, and HIGHLY_ACTIVE.</span>
 <span class="sd">    It simulates disease progression and vision changes based on the current state and treatment.</span>
 <span class="sd">    </span>
@@ -212,32 +215,22 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    config : simulation.config.SimulationConfig</span>
-<span class="sd">        Configuration object containing:</span>
-<span class="sd">            - clinical_model_params: Clinical model parameters</span>
-<span class="sd">            - vision_params: Vision change parameters</span>
-<span class="sd">            - transition_probabilities: State transition probabilities</span>
+<span class="sd">        Configuration object containing clinical model parameters, vision parameters,</span>
+<span class="sd">        and transition probabilities between disease states.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    config : simulation.config.SimulationConfig</span>
 <span class="sd">        Configuration object containing model parameters</span>
 <span class="sd">    transition_probabilities : Dict[DiseaseState, Dict[DiseaseState, float]]</span>
-<span class="sd">        Probability matrix for transitions between disease states with structure:</span>
-<span class="sd">            {</span>
-<span class="sd">                DiseaseState.NAIVE: {DiseaseState.STABLE: 0.3, ...},</span>
-<span class="sd">                DiseaseState.STABLE: {DiseaseState.STABLE: 0.7, ...},</span>
-<span class="sd">                ...</span>
-<span class="sd">            }</span>
+<span class="sd">        Probability matrix for transitions between disease states</span>
 <span class="sd">    vision_change_params : Dict</span>
-<span class="sd">        Parameters controlling vision changes under different conditions including:</span>
-<span class="sd">            - base_change: Mean/SD for each state and injection status</span>
-<span class="sd">            - time_factor: Effect of time since last injection</span>
-<span class="sd">            - ceiling_factor: Vision ceiling effect</span>
-<span class="sd">            - measurement_noise: Random variability</span>
+<span class="sd">        Parameters controlling vision changes under different conditions</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    The model captures key clinical aspects of AMD progression:</span>
+
 <span class="sd">    1. State-dependent response to treatment</span>
 <span class="sd">    2. Waning of treatment effect over time</span>
 <span class="sd">    3. Diminishing returns at higher vision levels</span>
@@ -245,11 +238,12 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     
 <div class="viewcode-block" id="ClinicalModel.__init__">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.clinical_model.ClinicalModel.__init__">[docs]</a>
+<a class="viewcode-back" href="../../simulation/clinical_model.html#simulation.clinical_model.ClinicalModel.__init__">[docs]</a>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">SimulationConfig</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transition_probabilities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_transition_probabilities</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vision_change_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_vision_change_params</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vision_change_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_vision_change_params</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">treatment_discontinuation_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_treatment_discontinuation_params</span><span class="p">()</span></div>
 
 
     <span class="k">def</span> <span class="nf">_parse_transition_probabilities</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">DiseaseState</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">DiseaseState</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
@@ -279,6 +273,20 @@
             <span class="p">}</span>
             <span class="k">for</span> <span class="n">state</span><span class="p">,</span> <span class="n">probs</span> <span class="ow">in</span> <span class="n">config_probs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="p">}</span>
+    
+    <span class="k">def</span> <span class="nf">_parse_treatment_discontinuation_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse treatment discontinuation parameters from configuration.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            Dictionary containing treatment discontinuation parameters</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Returns empty dictionary if treatment discontinuation parameters are not found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_treatment_discontinuation_params</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_parse_vision_change_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse vision change parameters from configuration.</span>
@@ -300,7 +308,7 @@
         <span class="k">return</span> <span class="n">vision_change</span>
 
 <div class="viewcode-block" id="ClinicalModel.get_transition_probabilities">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.clinical_model.ClinicalModel.get_transition_probabilities">[docs]</a>
+<a class="viewcode-back" href="../../simulation/clinical_model.html#simulation.clinical_model.ClinicalModel.get_transition_probabilities">[docs]</a>
     <span class="k">def</span> <span class="nf">get_transition_probabilities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_state</span><span class="p">:</span> <span class="n">DiseaseState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">DiseaseState</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get transition probabilities for the current disease state.</span>
 
@@ -325,7 +333,7 @@
 
 
 <div class="viewcode-block" id="ClinicalModel.simulate_disease_progression">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.clinical_model.ClinicalModel.simulate_disease_progression">[docs]</a>
+<a class="viewcode-back" href="../../simulation/clinical_model.html#simulation.clinical_model.ClinicalModel.simulate_disease_progression">[docs]</a>
     <span class="k">def</span> <span class="nf">simulate_disease_progression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_state</span><span class="p">:</span> <span class="n">DiseaseState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DiseaseState</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Simulate disease state progression using configured transition probabilities.</span>
 
@@ -354,10 +362,11 @@
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
 <span class="sd">        Disease progression follows these rules:</span>
+<span class="sd">        </span>
 <span class="sd">        1. NAIVE state has fixed transition probabilities:</span>
-<span class="sd">            - STABLE: 30%</span>
-<span class="sd">            - ACTIVE: 60%</span>
-<span class="sd">            - HIGHLY_ACTIVE: 10%</span>
+<span class="sd">           - STABLE: 30%</span>
+<span class="sd">           - ACTIVE: 60%</span>
+<span class="sd">           - HIGHLY_ACTIVE: 10%</span>
 <span class="sd">        2. Other states use probabilities from configuration</span>
 <span class="sd">        3. If no probabilities defined, remains in current state</span>
 <span class="sd">        4. Probabilities are normalized to sum to 1 if needed</span>
@@ -374,7 +383,7 @@
 <span class="sd">        - STABLE patients typically remain stable</span>
 <span class="sd">        - ACTIVE patients may progress to HIGHLY_ACTIVE or regress to STABLE</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DEBUG: Simulating disease progression - Current state: </span><span class="si">{</span><span class="n">current_state</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Simulating disease progression - Current state: </span><span class="si">{</span><span class="n">current_state</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         
         <span class="k">if</span> <span class="n">current_state</span> <span class="o">==</span> <span class="n">DiseaseState</span><span class="o">.</span><span class="n">NAIVE</span><span class="p">:</span>
             <span class="c1"># For NAIVE state, transition to other states based on predefined probabilities</span>
@@ -382,7 +391,7 @@
             <span class="n">probs</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]</span>  <span class="c1"># These should match the probabilities defined earlier</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">current_state</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">transition_probabilities</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;WARNING: No transition probabilities defined for state </span><span class="si">{</span><span class="n">current_state</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No transition probabilities defined for state </span><span class="si">{</span><span class="n">current_state</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">current_state</span>
             <span class="n">transition_probs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transition_probabilities</span><span class="p">[</span><span class="n">current_state</span><span class="p">]</span>
             <span class="n">states</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">DiseaseState</span><span class="p">)</span>
@@ -391,17 +400,17 @@
         <span class="c1"># Normalize probabilities</span>
         <span class="n">total_prob</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">total_prob</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;WARNING: All transition probabilities are zero for state </span><span class="si">{</span><span class="n">current_state</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;All transition probabilities are zero for state </span><span class="si">{</span><span class="n">current_state</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">current_state</span>
         <span class="n">normalized_probs</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="o">/</span> <span class="n">total_prob</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">probs</span><span class="p">]</span>
         
         <span class="n">new_state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">states</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">normalized_probs</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DEBUG: Disease progression - From </span><span class="si">{</span><span class="n">current_state</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">new_state</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Disease progression - From </span><span class="si">{</span><span class="n">current_state</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">new_state</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">new_state</span></div>
 
 
 <div class="viewcode-block" id="ClinicalModel.get_initial_vision">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.clinical_model.ClinicalModel.get_initial_vision">[docs]</a>
+<a class="viewcode-back" href="../../simulation/clinical_model.html#simulation.clinical_model.ClinicalModel.get_initial_vision">[docs]</a>
     <span class="k">def</span> <span class="nf">get_initial_vision</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get initial vision for a new patient.</span>
 
@@ -422,7 +431,7 @@
 
 
 <div class="viewcode-block" id="ClinicalModel.simulate_vision_change">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.clinical_model.ClinicalModel.simulate_vision_change">[docs]</a>
+<a class="viewcode-back" href="../../simulation/clinical_model.html#simulation.clinical_model.ClinicalModel.simulate_vision_change">[docs]</a>
     <span class="k">def</span> <span class="nf">simulate_vision_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">DiseaseState</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate vision change and new disease state based on current state and treatment.</span>
 
@@ -440,6 +449,10 @@
 <span class="sd">                    Used in time factor calculation</span>
 <span class="sd">                - current_vision: Current vision score (ETDRS letters, int)</span>
 <span class="sd">                    Must be between 0-100 (will be clamped if outside range)</span>
+<span class="sd">                - treatment_status: Dict containing treatment status information</span>
+<span class="sd">                    - active: bool - Whether treatment is active</span>
+<span class="sd">                    - weeks_since_discontinuation: int - Weeks since treatment was discontinued</span>
+<span class="sd">                    - recurrence_detected: bool - Whether recurrence has been detected</span>
 <span class="sd">            </span>
 <span class="sd">            Optional keys:</span>
 <span class="sd">                - debug: bool - Enable debug output if True</span>
@@ -463,7 +476,8 @@
 <span class="sd">        ...     &quot;injections&quot;: 1,</span>
 <span class="sd">        ...     &quot;last_recorded_injection&quot;: 0,</span>
 <span class="sd">        ...     &quot;weeks_since_last_injection&quot;: 4,</span>
-<span class="sd">        ...     &quot;current_vision&quot;: 70</span>
+<span class="sd">        ...     &quot;current_vision&quot;: 70,</span>
+<span class="sd">        ...     &quot;treatment_status&quot;: {&quot;active&quot;: True, &quot;weeks_since_discontinuation&quot;: 0, &quot;recurrence_detected&quot;: False}</span>
 <span class="sd">        ... }</span>
 <span class="sd">        &gt;&gt;&gt; vision_change, new_state = model.simulate_vision_change(state)</span>
 <span class="sd">        &gt;&gt;&gt; print(f&quot;Vision changed by {vision_change:.1f} letters&quot;)</span>
@@ -507,6 +521,7 @@
 <span class="sd">        2. Waning of treatment effect over time  </span>
 <span class="sd">        3. Diminishing returns at higher vision levels</span>
 <span class="sd">        4. Realistic measurement variability</span>
+<span class="sd">        5. Treatment discontinuation and recurrence</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">current_disease_state</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;disease_state&quot;</span><span class="p">,</span> <span class="n">DiseaseState</span><span class="o">.</span><span class="n">NAIVE</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current_disease_state</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -515,6 +530,11 @@
         <span class="n">is_injection</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;injections&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;last_recorded_injection&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">weeks_since_injection</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;weeks_since_last_injection&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="n">current_vision</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;current_vision&quot;</span><span class="p">,</span> <span class="mi">70</span><span class="p">)</span>  <span class="c1"># Assume 70 letters as default</span>
+        
+        <span class="c1"># Get treatment status</span>
+        <span class="n">treatment_status</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;treatment_status&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;weeks_since_discontinuation&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;recurrence_detected&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
+        <span class="n">is_treatment_active</span> <span class="o">=</span> <span class="n">treatment_status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;active&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">recurrence_detected</span> <span class="o">=</span> <span class="n">treatment_status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;recurrence_detected&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
         <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vision_change_params</span>
         
@@ -529,10 +549,22 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">base_params</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing base change parameters for disease state: </span><span class="si">{</span><span class="n">new_disease_state</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         
+        <span class="c1"># Determine base change based on injection status and treatment status</span>
         <span class="k">if</span> <span class="n">is_injection</span><span class="p">:</span>
             <span class="n">base_change</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="o">*</span><span class="n">base_params</span><span class="p">[</span><span class="s1">&#39;injection&#39;</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">base_change</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="o">*</span><span class="n">base_params</span><span class="p">[</span><span class="s1">&#39;no_injection&#39;</span><span class="p">])</span>
+            
+            <span class="c1"># If treatment is inactive and recurrence detected, apply additional vision loss</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_treatment_active</span> <span class="ow">and</span> <span class="n">recurrence_detected</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">treatment_discontinuation_params</span><span class="p">:</span>
+                <span class="n">recurrence_impact</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">treatment_discontinuation_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;recurrence_impact&quot;</span><span class="p">,</span> <span class="p">{})</span>
+                <span class="n">additional_loss</span> <span class="o">=</span> <span class="n">recurrence_impact</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;vision_loss_letters&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                
+                <span class="c1"># Only apply additional loss if not already applied (check if it&#39;s a monitoring visit)</span>
+                <span class="k">if</span> <span class="s2">&quot;recurrence_already_applied&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">state</span><span class="p">:</span>
+                    <span class="n">base_change</span> <span class="o">-=</span> <span class="n">additional_loss</span>
+                    <span class="n">state</span><span class="p">[</span><span class="s2">&quot;recurrence_already_applied&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Applied recurrence vision loss of </span><span class="si">{</span><span class="n">additional_loss</span><span class="si">}</span><span class="s2"> letters&quot;</span><span class="p">)</span>
 
         <span class="c1"># Time factor</span>
         <span class="n">max_weeks</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;time_factor&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;max_weeks&#39;</span><span class="p">,</span> <span class="mi">52</span><span class="p">)</span>
@@ -547,7 +579,51 @@
 
         <span class="n">total_change</span> <span class="o">=</span> <span class="n">base_change</span> <span class="o">*</span> <span class="n">time_factor</span> <span class="o">*</span> <span class="n">ceiling_factor</span> <span class="o">+</span> <span class="n">measurement_noise</span>
         
+        <span class="c1"># If treatment is resumed after recurrence, apply recovery factor</span>
+        <span class="k">if</span> <span class="n">is_treatment_active</span> <span class="ow">and</span> <span class="n">recurrence_detected</span> <span class="ow">and</span> <span class="n">is_injection</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">treatment_discontinuation_params</span><span class="p">:</span>
+            <span class="n">recurrence_impact</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">treatment_discontinuation_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;recurrence_impact&quot;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">recovery_factor</span> <span class="o">=</span> <span class="n">recurrence_impact</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;vision_recovery_factor&quot;</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">)</span>
+            
+            <span class="c1"># Apply recovery boost to vision change</span>
+            <span class="n">recovery_boost</span> <span class="o">=</span> <span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;best_vision_achieved&quot;</span><span class="p">,</span> <span class="n">current_vision</span><span class="p">)</span> <span class="o">-</span> <span class="n">current_vision</span><span class="p">)</span> <span class="o">*</span> <span class="n">recovery_factor</span>
+            <span class="k">if</span> <span class="n">recovery_boost</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">total_change</span> <span class="o">+=</span> <span class="n">recovery_boost</span> <span class="o">*</span> <span class="mf">0.5</span>  <span class="c1"># Apply 50% of potential recovery in first injection</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Applied recurrence recovery boost of </span><span class="si">{</span><span class="n">recovery_boost</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">0.5</span><span class="si">}</span><span class="s2"> letters&quot;</span><span class="p">)</span>
+        
         <span class="k">return</span> <span class="n">total_change</span><span class="p">,</span> <span class="n">new_disease_state</span></div>
+
+    
+<div class="viewcode-block" id="ClinicalModel.calculate_monitoring_schedule">
+<a class="viewcode-back" href="../../simulation/clinical_model.html#simulation.clinical_model.ClinicalModel.calculate_monitoring_schedule">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate_monitoring_schedule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate appropriate monitoring interval based on treatment status.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        state : Dict</span>
+<span class="sd">            Patient state dictionary containing treatment status information</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Recommended weeks until next monitoring visit</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">treatment_discontinuation_params</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">12</span>  <span class="c1"># Default to 12 weeks if no parameters available</span>
+        
+        <span class="n">treatment_status</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;treatment_status&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">weeks_since_discontinuation</span> <span class="o">=</span> <span class="n">treatment_status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;weeks_since_discontinuation&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        
+        <span class="c1"># Get monitoring schedule from parameters</span>
+        <span class="n">monitoring_schedule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">treatment_discontinuation_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;monitoring_schedule&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        
+        <span class="c1"># Determine appropriate schedule based on time since discontinuation</span>
+        <span class="k">if</span> <span class="n">weeks_since_discontinuation</span> <span class="o">&lt;</span> <span class="mi">52</span><span class="p">:</span>  <span class="c1"># Year 1</span>
+            <span class="k">return</span> <span class="n">monitoring_schedule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;year_1&quot;</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">weeks_since_discontinuation</span> <span class="o">&lt;</span> <span class="mi">156</span><span class="p">:</span>  <span class="c1"># Years 2-3</span>
+            <span class="k">return</span> <span class="n">monitoring_schedule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;year_2_3&quot;</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># Year 4+</span>
+            <span class="k">return</span> <span class="n">monitoring_schedule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;year_4_plus&quot;</span><span class="p">,</span> <span class="mi">24</span><span class="p">)</span></div>
 </div>
 
 </pre></div>
@@ -559,7 +635,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Rose.</p>
+    <p>&#169; Copyright 2025, Luke Herbert.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

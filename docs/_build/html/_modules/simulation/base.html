@@ -118,7 +118,7 @@
 <span class="p">)</span>
 
 <div class="viewcode-block" id="ProtocolEvent">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.ProtocolEvent">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.ProtocolEvent">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">ProtocolEvent</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Protocol-specific event data.</span>
@@ -152,7 +152,7 @@
 
 
 <div class="viewcode-block" id="SimulationEnvironment">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.SimulationEnvironment">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.SimulationEnvironment">[docs]</a>
 <span class="k">class</span> <span class="nc">SimulationEnvironment</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Global simulation environment.</span>
 
@@ -180,7 +180,7 @@
 <span class="sd">    patient-specific state.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <div class="viewcode-block" id="SimulationEnvironment.__init__">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.SimulationEnvironment.__init__">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.SimulationEnvironment.__init__">[docs]</a>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_date</span><span class="p">:</span> <span class="n">datetime</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span> <span class="o">=</span> <span class="n">start_date</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">global_state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></div>
@@ -188,7 +188,7 @@
 
 
 <div class="viewcode-block" id="Event">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.Event">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.Event">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">Event</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Simulation event.</span>
@@ -255,7 +255,7 @@
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">patient_id</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">event_type</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">patient_id</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Event.create_protocol_event">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.Event.create_protocol_event">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.Event.create_protocol_event">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">create_protocol_event</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> 
                             <span class="n">time</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
@@ -311,7 +311,7 @@
 
 
 <div class="viewcode-block" id="Event.get_visit_type">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.Event.get_visit_type">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.Event.get_visit_type">[docs]</a>
     <span class="k">def</span> <span class="nf">get_visit_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VisitType</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get visit type from phase if available.</span>
@@ -327,7 +327,7 @@
 
 
 <div class="viewcode-block" id="Event.get_required_actions">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.Event.get_required_actions">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.Event.get_required_actions">[docs]</a>
     <span class="k">def</span> <span class="nf">get_required_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ActionType</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get required actions from visit type.</span>
@@ -344,7 +344,7 @@
 
 
 <div class="viewcode-block" id="Event.get_optional_actions">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.Event.get_optional_actions">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.Event.get_optional_actions">[docs]</a>
     <span class="k">def</span> <span class="nf">get_optional_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ActionType</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get optional actions from visit type.</span>
@@ -361,7 +361,7 @@
 
 
 <div class="viewcode-block" id="Event.get_decisions">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.Event.get_decisions">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.Event.get_decisions">[docs]</a>
     <span class="k">def</span> <span class="nf">get_decisions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">DecisionType</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get decisions from visit type.</span>
@@ -379,7 +379,7 @@
 
 
 <div class="viewcode-block" id="SimulationClock">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.SimulationClock">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.SimulationClock">[docs]</a>
 <span class="k">class</span> <span class="nc">SimulationClock</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Manages simulation time and event scheduling.</span>
@@ -404,7 +404,7 @@
 <span class="sd">        Counter for tie-breaking event ordering</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <div class="viewcode-block" id="SimulationClock.__init__">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.SimulationClock.__init__">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.SimulationClock.__init__">[docs]</a>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_date</span><span class="p">:</span> <span class="n">datetime</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span> <span class="o">=</span> <span class="n">start_date</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">end_date</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Will be set when simulation runs</span>
@@ -413,7 +413,7 @@
 
     
 <div class="viewcode-block" id="SimulationClock.schedule_event">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.SimulationClock.schedule_event">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.SimulationClock.schedule_event">[docs]</a>
     <span class="k">def</span> <span class="nf">schedule_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Schedule an event with proper ordering by time and priority.</span>
@@ -459,7 +459,7 @@
 
     
 <div class="viewcode-block" id="SimulationClock.get_next_event">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.SimulationClock.get_next_event">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.SimulationClock.get_next_event">[docs]</a>
     <span class="k">def</span> <span class="nf">get_next_event</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get next event without updating clock time.</span>
@@ -478,7 +478,7 @@
 
 
 <div class="viewcode-block" id="BaseSimulation">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.BaseSimulation">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.BaseSimulation">[docs]</a>
 <span class="k">class</span> <span class="nc">BaseSimulation</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Abstract base class for simulations.</span>
@@ -505,7 +505,7 @@
 <span class="sd">        Registered treatment protocols</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <div class="viewcode-block" id="BaseSimulation.__init__">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.BaseSimulation.__init__">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.BaseSimulation.__init__">[docs]</a>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_date</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">environment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SimulationEnvironment</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">clock</span> <span class="o">=</span> <span class="n">SimulationClock</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -514,7 +514,7 @@
 
     
 <div class="viewcode-block" id="BaseSimulation.process_event">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.BaseSimulation.process_event">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.BaseSimulation.process_event">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">process_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -533,7 +533,7 @@
 
     
 <div class="viewcode-block" id="BaseSimulation.run">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.BaseSimulation.run">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.BaseSimulation.run">[docs]</a>
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">until</span><span class="p">:</span> <span class="n">datetime</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run simulation until specified datetime.</span>
@@ -584,7 +584,7 @@
 
             
 <div class="viewcode-block" id="BaseSimulation.register_protocol">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.BaseSimulation.register_protocol">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.BaseSimulation.register_protocol">[docs]</a>
     <span class="k">def</span> <span class="nf">register_protocol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">protocol</span><span class="p">:</span> <span class="n">TreatmentProtocol</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Register a protocol for use in the simulation.</span>
@@ -600,7 +600,7 @@
 
         
 <div class="viewcode-block" id="BaseSimulation.get_protocol">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.BaseSimulation.get_protocol">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.BaseSimulation.get_protocol">[docs]</a>
     <span class="k">def</span> <span class="nf">get_protocol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TreatmentProtocol</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a registered protocol by type.</span>
@@ -619,7 +619,7 @@
 
         
 <div class="viewcode-block" id="BaseSimulation.schedule_protocol_event">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.base.BaseSimulation.schedule_protocol_event">[docs]</a>
+<a class="viewcode-back" href="../../simulation/base.html#simulation.base.BaseSimulation.schedule_protocol_event">[docs]</a>
     <span class="k">def</span> <span class="nf">schedule_protocol_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
                               <span class="n">time</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
                               <span class="n">patient_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -665,7 +665,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Rose.</p>
+    <p>&#169; Copyright 2025, Luke Herbert.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

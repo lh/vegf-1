@@ -1,0 +1,135 @@
+Perfect! Let's run the eylea_literature_based simulation configuration, which is a more realistic scenario based on clinical literature. This configuration has interesting parameters:
+
+Configuration Details
+Simulation Parameters
+Population: 1000 patients
+Duration: 672 days (96 weeks/2 years)
+Protocol: Treat-and-extend with Eylea (aflibercept 2mg)
+Treatment Protocol
+Loading phase: 3 injections at 4-week intervals
+Maintenance phase: Dynamic intervals between 8-16 weeks
+Interval adjustments: 2-week adjustments based on disease activity
+Discontinuation Parameters
+Stable at max interval: 20% probability after 3 consecutive stable visits
+Random administrative: 5% annual probability (insurance issues, patient choice)
+Treatment duration: 10% probability after 52 weeks of treatment
+Monitoring: Follow-ups at 12, 24, and 36 weeks post-discontinuation
+Retreatment: 95% probability when disease recurs
+Running the Simulation
+To run this simulation, we'll need to toggle to Act mode and execute:
+
+python run_simulation.py eylea_literature_based
+What to Look For in Results
+When we run this simulation, we should look for:
+
+Discontinuation patterns:
+
+How many patients discontinue treatment?
+What's the most common reason for discontinuation?
+When do most discontinuations occur during the 2-year period?
+Vision outcomes:
+
+How does mean visual acuity change over time?
+Are there differences between patients who discontinue vs. those who don't?
+Comparison between models:
+
+Are there significant differences between ABS and DES results?
+Which aspects show the most variation?
+Treatment patterns:
+
+Average number of injections per patient
+Distribution of treatment intervals
+The results will include visualizations and statistics that help us understand these aspects. The eylea_literature_based configuration should produce more realistic results than the default test simulation.
+
+ python run_simulation.py eylea_literature_based      
+
+
+ Simulation Analysis: eylea_literature_based
+I've run the eylea_literature_based simulation and analyzed the results. Here are the key findings:
+
+Simulation Results
+Both Agent-Based Simulation (ABS) and Discrete Event Simulation (DES) produced very similar results:
+
+Visual Acuity Outcomes:
+
+Starting baseline: ~71 ETDRS letters
+Final mean vision: ~85 ETDRS letters
+Mean improvement: ~14 letters
+Both simulations showed rapid improvement in the first 10 weeks, followed by a plateau
+Treatment Patterns:
+
+ABS: 9.95 visits/injections per patient
+DES: 8.49 visits/injections per patient
+100% loading phase completion rate in both models
+100% maintenance phase injection rate (every visit included an injection)
+Treatment Intervals:
+
+ABS: Mean interval of 9.29 weeks
+DES: Mean interval of 8.60 weeks
+Discontinuation Issue
+I identified an issue with the discontinuation feature. Despite being enabled in the configuration file (discontinuation: enabled: true), the log shows:
+
+INFO:simulation.discontinuation_manager:Initialized DiscontinuationManager with enabled=False
+The issue is in both treat_and_extend_abs.py and treat_and_extend_des.py. The discontinuation manager is initialized with:
+
+# Initialize discontinuation manager
+discontinuation_params = self.config.get_treatment_discontinuation_params()
+self.discontinuation_manager = DiscontinuationManager(self.config.parameters)
+It's getting the discontinuation parameters but then initializing the manager with the entire config parameters instead of the specific discontinuation parameters. This is why we see no discontinuations in the results despite the feature being enabled in the configuration.
+
+To fix this, the code should be modified to:
+
+# Initialize discontinuation manager
+discontinuation_params = self.config.get_treatment_discontinuation_params()
+self.discontinuation_manager = DiscontinuationManager({"discontinuation": discontinuation_params})
+Conclusion
+The simulation successfully models the treat-and-extend protocol for Eylea (aflibercept) treatment, showing significant vision improvement that matches literature expectations. Both simulation approaches (ABS and DES) produce consistent results, validating the model's reliability.
+
+The discontinuation feature is not working as expected due to the initialization issue, which prevents us from seeing how treatment discontinuation would affect long-term outcomes. Fixing this issue would allow for more realistic modeling of real-world treatment patterns where patients often discontinue treatment after achieving stable vision at maximum intervals.
+
+
+Discontinuation Module Troubleshooting
+I've analyzed the code and found the root cause of the discontinuation feature not working properly. Here's my assessment:
+
+The Problem
+The debug output shows that despite having discontinuation: enabled: true in the configuration, the discontinuation manager is being initialized with enabled=False:
+
+INFO:simulation.discontinuation_manager:Initialized DiscontinuationManager with enabled=False
+Root Cause
+After examining the code in both treatment protocol implementations (ABS and DES), I found the issue in how the discontinuation manager is initialized:
+
+In both treat_and_extend_abs.py and treat_and_extend_des.py, the code retrieves the discontinuation parameters but then passes the entire configuration parameters to the DiscontinuationManager:
+
+# Initialize discontinuation manager
+discontinuation_params = self.config.get_treatment_discontinuation_params()
+self.discontinuation_manager = DiscontinuationManager(self.config.parameters)
+The problem is that the DiscontinuationManager class expects a configuration structure with a top-level "discontinuation" key:
+
+# From discontinuation_manager.py
+def __init__(self, config: Dict[str, Any]):
+    self.config = config
+    
+    # Extract discontinuation configuration
+    discontinuation_config = config.get("discontinuation", {})
+    
+    # Set default values if configuration is missing
+    self.enabled = discontinuation_config.get("enabled", False)
+    self.criteria = discontinuation_config.get("criteria", {})
+    self.monitoring = discontinuation_config.get("monitoring", {})
+    self.retreatment = discontinuation_config.get("retreatment", {})
+When the entire self.config.parameters is passed, the manager tries to find a top-level "discontinuation" key which doesn't exist at that level, so it defaults to enabled=False.
+
+Proposed Fix
+The solution is to modify the initialization in both treat_and_extend_abs.py and treat_and_extend_des.py to properly structure the parameters for the DiscontinuationManager:
+
+# Initialize discontinuation manager
+discontinuation_params = self.config.get_treatment_discontinuation_params()
+self.discontinuation_manager = DiscontinuationManager({"discontinuation": discontinuation_params})
+This ensures that the manager receives the discontinuation parameters in the expected structure, with a top-level "discontinuation" key.
+
+Next Steps
+Modify the code in both treatment protocol implementations
+Test the fix by running the same eylea_literature_based simulation
+Verify that the discontinuation manager now shows as enabled in the logs
+Analyze the simulation results to confirm discontinuations are occurring as expected
+

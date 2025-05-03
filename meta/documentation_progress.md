@@ -1,34 +1,28 @@
 # Documentation Progress
 
-## Current Status (April 23, 2025)
+## Current Status (May 3, 2025)
 
 We are improving documentation across the project using numpy-style docstrings to support Sphinx documentation generation.
 
 ### Recent Documentation Updates
 
-1. **analysis/simulation_results.py**
-   - Added detailed module docstring explaining statistical methods
-   - Documented all class methods with numpy-style docstrings
-   - Added notes about:
-     - Renamed local 'stats' dictionary to 'summary_data' to avoid naming conflict
-     - Explicit scipy.stats module usage
-     - Edge case handling for confidence intervals
-   - Added examples and usage notes
-   - Commit: (pending)
+1. **run_simulation.py**
+   - Updated module docstring to include command-line argument documentation
+   - Added detailed example usage section
+   - Added proper NumPy-style docstrings for all functions
+   - Added documentation for the new command-line argument handling
 
-### Recently Documented Files
+2. **eylea_literature_based.yaml**
+   - Updated configuration file with proper structure
+   - Added comments explaining parameter values and sources
+   - Ensured compatibility with the updated configuration parser
 
-1. **protocol_models.py**
-   - Added comprehensive module docstring
-   - Documented all classes and methods
-   - Added examples and usage notes
-   - Commit: d7cd563
-
-2. **protocols/config_parser.py**  
-   - Enhanced all method docstrings
-   - Added detailed parameter descriptions
-   - Included examples and return value docs
-   - Commit: 10e05c3
+3. **simulation/config.py**
+   - Fixed all docstring formatting issues
+   - Added Parameters and Returns sections to all method docstrings
+   - Added documentation for sensitivity analysis parameters
+   - Added documentation for cost parameters
+   - Added documentation for treatment discontinuation parameters
 
 ### Documentation Standards
 
@@ -86,9 +80,12 @@ For detailed guidelines, see meta/documentation_guidelines.md.
 
 ### Next Files to Document
 
-1. simulation/clinical_model.py
-2. simulation/patient_state.py  
-3. protocols/visit_types.yaml
+1. Test files (see meta/documentation_errors.log for the full list)
+2. Remaining formatting issues in:
+   - simulation/config.py
+   - simulation/scheduler.py
+   - simulation/patient_state.py
+   - simulation/clinical_model.py
 
 ### Validation
 
@@ -110,11 +107,17 @@ Use the docgen MCP server to validate docstrings:
 - [x] protocols/visit_types.yaml
 - [x] validation/config_validator.py
 - [x] visualization/outcome_viz.py
+- [x] simulation/config.py
+- [x] simulation/scheduler.py
+- [x] simulation/base.py
+- [x] simulation/abs.py
+- [x] simulation/des.py
 
 ### Configuration Files
 - [x] conftest.py
 - [x] docs/conf.py
 - [x] setup_env.py
+- [x] protocols/simulation_configs/eylea_literature_based.yaml
 
 ### Protocol Files  
 - [x] protocols/__init__.py
@@ -140,6 +143,7 @@ Use the docgen MCP server to validate docstrings:
 
 ### Scripts
 - [x] run_simulation.py
+- [x] run_eylea_analysis.py
 
 ## Notes
 

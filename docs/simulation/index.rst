@@ -1,5 +1,5 @@
 Simulation Modules
-=================
+==================
 
 This section contains documentation for the simulation modules, which implement the core
 functionality of the AMD simulation system.
@@ -12,3 +12,5 @@ functionality of the AMD simulation system.
    scheduler
    config
    clinical_model
+   vision_models
+   discontinuation_manager

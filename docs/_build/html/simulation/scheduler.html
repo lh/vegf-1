@@ -45,9 +45,28 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../PROJECT_OVERVIEW.html">Macular Degeneration Treatment Simulation Project</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Simulation Modules</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Simulation Modules</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="base.html">Base Simulation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="patient_state.html">Patient State Module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Scheduler Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#key-features">Key Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.scheduler.ClinicScheduler"><code class="docutils literal notranslate"><span class="pre">ClinicScheduler</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.scheduler.ClinicScheduler.__init__"><code class="docutils literal notranslate"><span class="pre">ClinicScheduler.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.scheduler.ClinicScheduler.request_slot"><code class="docutils literal notranslate"><span class="pre">ClinicScheduler.request_slot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.scheduler.ClinicScheduler.schedule_next_visit"><code class="docutils literal notranslate"><span class="pre">ClinicScheduler.schedule_next_visit()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="config.html">Simulation Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clinical_model.html">Clinical Model Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vision_models.html">Vision Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discontinuation_manager.html">Discontinuation Manager Module</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../analysis/index.html">Analysis Modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../protocols/index.html">Protocol Modules</a></li>
 </ul>
@@ -93,6 +112,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Simulation Modules</a></li>
       <li class="breadcrumb-item active">Scheduler Module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/simulation/scheduler.rst.txt" rel="nofollow"> View page source</a>
@@ -189,7 +209,7 @@ considering both clinic working days and daily capacity constraints.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>event</strong> (<a class="reference internal" href="index.html#simulation.base.Event" title="simulation.base.Event"><em>Event</em></a>) – Event containing visit details including requested time</p></li>
+<li><p><strong>event</strong> (<a class="reference internal" href="base.html#simulation.base.Event" title="simulation.base.Event"><em>Event</em></a>) – Event containing visit details including requested time</p></li>
 <li><p><strong>end_date</strong> (<em>datetime</em>) – Simulation end date for rescheduling bounds</p></li>
 </ul>
 </dd>
@@ -219,6 +239,7 @@ considering both clinic working days and daily capacity constraints.</p>
 <li><p>Rescheduling maintains original appointment details</p></li>
 <li><p>Time values should be timezone-naive datetimes</p></li>
 </ul>
+<p>The algorithm follows these steps:</p>
 <ol class="arabic simple">
 <li><p>Check if requested date is a clinic day</p></li>
 <li><p>Initialize slot count if new date</p></li>
@@ -244,7 +265,7 @@ considering both clinic working days and daily capacity constraints.</p>
 </ul>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="index.html#simulation.base.Event" title="simulation.base.Event"><em>Event</em></a> | None</p>
+<dd class="field-odd"><p><a class="reference internal" href="base.html#simulation.base.Event" title="simulation.base.Event"><em>Event</em></a> | None</p>
 </dd>
 </dl>
 <p>Schedule the next visit for a patient.</p>
@@ -264,7 +285,7 @@ the specified interval.</p>
 <dd class="field-even"><p>Scheduled visit event, or None if beyond simulation end</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Optional[<a class="reference internal" href="index.html#simulation.base.Event" title="simulation.base.Event">Event</a>]</p>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="base.html#simulation.base.Event" title="simulation.base.Event">Event</a>]</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If next_visit_interval is not positive</p>
@@ -307,7 +328,7 @@ the specified interval.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Rose.</p>
+    <p>&#169; Copyright 2025, Luke Herbert.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

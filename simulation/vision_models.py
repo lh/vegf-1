@@ -24,11 +24,6 @@ class BaseVisionModel(ABC):
     
     This abstract base class defines the interface for all vision change models.
     Concrete implementations must provide a calculate_vision_change method.
-    
-    Methods
-    -------
-    calculate_vision_change(state, actions, phase)
-        Calculate vision change based on patient state and actions
     """
     
     @abstractmethod
@@ -68,7 +63,7 @@ class SimplifiedVisionModel(BaseVisionModel):
     
     Parameters
     ----------
-    config : SimulationConfig, optional
+    config : simulation.config.SimulationConfig, optional
         Configuration object, by default None
         
     Attributes
@@ -91,7 +86,7 @@ class SimplifiedVisionModel(BaseVisionModel):
         
         Parameters
         ----------
-        config : SimulationConfig, optional
+        config : simulation.config.SimulationConfig, optional
             Configuration object, by default None
         """
         self.config = config
@@ -169,12 +164,12 @@ class LiteratureBasedVisionModel(BaseVisionModel):
     
     Parameters
     ----------
-    clinical_model : ClinicalModel
+    clinical_model : simulation.clinical_model.ClinicalModel
         Clinical model for disease progression and treatment effects
         
     Attributes
     ----------
-    clinical_model : ClinicalModel
+    clinical_model : simulation.clinical_model.ClinicalModel
         Clinical model used for vision change calculations
     """
     
@@ -184,7 +179,7 @@ class LiteratureBasedVisionModel(BaseVisionModel):
         
         Parameters
         ----------
-        clinical_model : ClinicalModel
+        clinical_model : simulation.clinical_model.ClinicalModel
             Clinical model for disease progression and treatment effects
         """
         self.clinical_model = clinical_model
@@ -235,9 +230,9 @@ def create_vision_model(model_type, config=None, clinical_model=None):
         Type of vision model to create:
         - 'simplified': SimplifiedVisionModel
         - 'literature_based': LiteratureBasedVisionModel
-    config : SimulationConfig, optional
+    config : simulation.config.SimulationConfig, optional
         Configuration object, by default None
-    clinical_model : ClinicalModel, optional
+    clinical_model : simulation.clinical_model.ClinicalModel, optional
         Clinical model for disease progression, by default None
         
     Returns

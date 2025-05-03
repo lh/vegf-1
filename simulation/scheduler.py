@@ -102,9 +102,9 @@ class ClinicScheduler:
         - Updates appointment counts when slot is granted
         - Rescheduling maintains original appointment details
         - Time values should be timezone-naive datetimes
-
-        Algorithm
-        ---------
+        
+        The algorithm follows these steps:
+        
         1. Check if requested date is a clinic day
         2. Initialize slot count if new date
         3. Check daily capacity
@@ -176,7 +176,6 @@ class ClinicScheduler:
         - Handles week-to-day conversion automatically
         - Returns None if calculated visit would be after simulation end
         - Visit intervals must be positive integers
-        
         """
         # Calculate next visit time based on last visit
         next_time = last_visit + timedelta(weeks=next_visit_interval)

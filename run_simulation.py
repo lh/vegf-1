@@ -40,63 +40,8 @@ from simulation.config import SimulationConfig
 from simulation.abs import AgentBasedSimulation
 from simulation.base import Event
 
-def run_abs(config, verbose=False):
-    """Run agent-based simulation using production implementation.
-    
-    Parameters
-    ----------
-    config : SimulationConfig
-        Simulation configuration
-    verbose : bool, optional
-        Whether to print detailed output, by default False
-        
-    Returns
-    -------
-    dict
-        Dictionary mapping patient IDs to their visit histories
-    """
-    # Initialize simulation
-    start_date = datetime(2023, 1, 1)
-    end_date = start_date + timedelta(days=config.duration_days)
-    
-    sim = AgentBasedSimulation(config, start_date)
-    sim.clock.end_date = end_date  # Set end date before scheduling events
-    
-    # Add patients and schedule their initial visits
-    for i in range(1, config.num_patients + 1):
-        patient_id = f"TEST{i:03d}"
-        sim.add_patient(patient_id, "treat_and_extend")
-        
-        # Schedule initial visit - spread patients across first week
-        initial_visit_time = start_date + timedelta(hours=i*2)  # Space patients out by 2 hours
-        sim.clock.schedule_event(Event(
-            time=initial_visit_time,
-            event_type="visit",
-            patient_id=patient_id,
-            data={
-                "visit_type": "injection_visit",
-                "actions": ["vision_test", "oct_scan", "injection"],
-                "decisions": ["nurse_vision_check", "doctor_treatment_decision"]
-            },
-            priority=1
-        ))
-    
-    # Run simulation
-    sim.run(end_date)
-    
-    # Collect results
-    patient_histories = {}
-    for patient_id, patient in sim.agents.items():
-        patient_histories[patient_id] = patient.history
-    
-    # Debug print first patient's history structure
-    if patient_histories:
-        first_patient = next(iter(patient_histories.values()))
-        print(f"\nFirst patient history structure (len={len(first_patient)}):")
-        print(f"First visit object type: {type(first_patient[0])}")
-        print(f"First visit contents: {first_patient[0]}")
-    
-    return patient_histories
+# Use the treat-and-extend protocol implementation for ABS
+from treat_and_extend_abs import run_treat_and_extend_abs as run_abs
 # Use the treat-and-extend protocol implementation for DES
 from treat_and_extend_des import run_treat_and_extend_des as run_des
 # Previous implementations:
