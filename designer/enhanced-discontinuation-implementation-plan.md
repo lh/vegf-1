@@ -1,0 +1,313 @@
+# Enhanced Discontinuation Model Implementation Plan
+
+**Author:** Cline  
+**Date:** May 3, 2025  
+**Version:** 1.0
+
+## Overview
+
+This document outlines the implementation plan for the enhanced discontinuation model as described in the design document. The implementation will proceed in four phases over a four-week period, with each phase building on the previous one.
+
+## Implementation Approach
+
+We'll proceed with the following approach:
+
+1. Create a new `EnhancedDiscontinuationManager` class that inherits from the current `DiscontinuationManager`
+2. Implement clinician variation as a configurable option with a perfect clinician as the default state
+3. Use the comprehensive AMD parameters for time-dependent recurrence probability calculations
+4. Maintain the proposed YAML configuration structure from the design document
+
+## Phase 1: Basic Framework (Week 1)
+
+This phase establishes the core of the enhanced model:
+
+### 1.1 Create `EnhancedDiscontinuationManager` class
+
+- Create a new class that inherits from `DiscontinuationManager`
+- Override the `evaluate_discontinuation` method to return cessation type
+- Add support for premature discontinuation type
+- Enhance statistics tracking for different discontinuation types
+
+```python
+class EnhancedDiscontinuationManager(DiscontinuationManager):
+    """Enhanced discontinuation manager with multiple discontinuation types and time-dependent recurrence.
+    
+    Extends the base DiscontinuationManager to provide:
+    1. Multiple discontinuation types (protocol-based, administrative, time-based, premature)
+    2. Type-specific monitoring schedules
+    3. Time-dependent recurrence probabilities based on clinical data
+    4. Tracking of discontinuation type in patient state
+    """
+```
+
+### 1.2 Update patient state structure
+
+- Add `cessation_type` to treatment status
+- Add cost tracking for future economic analysis
+- Add risk factor tracking (composite approach)
+
+### 1.3 Update ABS and DES implementations
+
+- Modify to use the enhanced manager
+- Update patient state tracking
+- Pass cessation type to patient records
+
+### 1.4 Add enhanced statistics tracking
+
+- Track discontinuations by type
+- Track retreatments by discontinuation type
+- Prepare for economic analysis with cost tracking
+
+## Phase 2: Clinician Variation (Week 2)
+
+### 2.1 Create `Clinician` class
+
+- Default "perfect" clinician with complete protocol adherence
+- Configurable profiles with varying adherence characteristics
+- Decision modification logic for discontinuation and retreatment
+
+```python
+class Clinician:
+    """Model of an individual clinician with characteristic behaviors.
+    
+    This class represents a clinician with specific adherence characteristics
+    that affect treatment decisions. The default "perfect" clinician follows
+    protocol perfectly.
+    """
+```
+
+### 2.2 Create `ClinicianManager` class
+
+- Configurable on/off setting
+- Patient assignment logic
+- Clinician profile distribution
+
+```python
+class ClinicianManager:
+    """Manages a pool of clinicians and handles patient assignment.
+    
+    When enabled, creates a pool of clinicians with different profiles and
+    assigns them to patients. When disabled, uses a single "perfect" clinician.
+    """
+```
+
+### 2.3 Update `EnhancedDiscontinuationManager`
+
+- Accept clinician input for decisions
+- Apply clinician-specific decision modifications
+- Track clinician influence on decisions
+
+### 2.4 Integrate clinician variation with simulation classes
+
+- Initialize and use clinician manager
+- Pass clinician ID to discontinuation manager
+- Track decision modifications
+
+## Phase 3: Time-dependent Recurrence (Week 3)
+
+### 3.1 Implement time-dependent recurrence model
+
+- Use Artiaga study data for recurrence rates
+- Implement piecewise linear interpolation
+- Add composite risk modifiers
+
+```python
+def calculate_recurrence_probability(self, weeks_since_discontinuation, cessation_type, has_PED=False):
+    """Calculate disease recurrence probability based on time and cessation type.
+    
+    Uses clinical data from Artiaga et al. and Aslanis et al. to determine
+    time-dependent recurrence probabilities.
+    """
+```
+
+### 3.2 Enhance monitoring visit processing
+
+- Use time-dependent recurrence probabilities
+- Apply appropriate probabilities by cessation type
+- Implement Year 2 monitoring schedule from Artiaga
+
+### 3.3 Update `process_monitoring_visit` method
+
+- Track discontinuation type for statistics
+- Apply appropriate recurrence detection probabilities
+- Track costs for future economic analysis
+
+### 3.4 Implement basic reporting
+
+- Graph discontinuation types
+- Track recurrence rates by time
+- Report retreatment rates by discontinuation type
+
+## Phase 4: Testing and Integration (Week 4)
+
+### 4.1 Create comprehensive test suite
+
+- Unit tests for each component
+- Integration tests for ABS and DES implementations
+- Clinical validation tests
+
+### 4.2 Validate against clinical data
+
+- Verify recurrence rates match Artiaga study
+- Validate clinician variation effects
+- Test different discontinuation scenarios
+
+### 4.3 Documentation and reporting
+
+- Update docstrings with numpy format
+- Create visual reports of outcomes
+- Document parameter configurations
+
+### 4.4 Final integration
+
+- Ensure compatibility with both simulation types
+- Verify statistics collection
+- Prepare for future economic analysis
+
+## Implementation Details
+
+### File Structure
+
+```
+simulation/
+├── discontinuation_manager.py  # Existing file to be extended
+├── enhanced_discontinuation_manager.py  # New file
+├── clinician.py  # New file
+├── clinician_manager.py  # New file
+```
+
+### Key Classes and Methods
+
+#### EnhancedDiscontinuationManager
+
+```python
+class EnhancedDiscontinuationManager(DiscontinuationManager):
+    def __init__(self, config):
+        # Initialize with enhanced configuration
+        
+    def evaluate_discontinuation(self, patient_state, current_time, clinician_id=None, treatment_start_time=None):
+        # Return discontinue flag, reason, probability, and cessation_type
+        
+    def schedule_monitoring(self, discontinuation_time, cessation_type="planned"):
+        # Schedule monitoring based on cessation type
+        
+    def calculate_recurrence_probability(self, weeks_since_discontinuation, cessation_type, has_PED=False):
+        # Calculate time-dependent recurrence probability
+        
+    def process_monitoring_visit(self, patient_state, actions):
+        # Process monitoring with time-dependent recurrence
+        
+    def get_statistics(self):
+        # Return enhanced statistics
+```
+
+#### Clinician
+
+```python
+class Clinician:
+    def __init__(self, profile_name="perfect", profile_config=None):
+        # Initialize clinician with profile
+        
+    def follows_protocol(self):
+        # Determine if clinician follows protocol
+        
+    def evaluate_discontinuation(self, patient_state, protocol_decision, protocol_probability):
+        # Modify discontinuation decision
+        
+    def evaluate_retreatment(self, patient_state, protocol_decision, protocol_probability):
+        # Modify retreatment decision
+```
+
+#### ClinicianManager
+
+```python
+class ClinicianManager:
+    def __init__(self, config, enabled=False):
+        # Initialize clinician pool
+        
+    def _initialize_clinicians(self):
+        # Create clinicians based on configuration
+        
+    def assign_clinician(self, patient_id, visit_time):
+        # Assign clinician to patient
+        
+    def get_clinician(self, clinician_id):
+        # Get clinician by ID
+        
+    def get_performance_metrics(self):
+        # Get clinician performance metrics
+```
+
+### Integration with ABS
+
+```python
+# In TreatAndExtendABS.__init__
+def __init__(self, config, start_date=None):
+    # Initialize enhanced discontinuation manager
+    # Initialize clinician manager if enabled
+    
+# In TreatAndExtendABS.process_event
+def process_event(self, event):
+    # Assign clinician to patient
+    # Get enhanced discontinuation decision with cessation type
+    # Update patient state with cessation type
+```
+
+### Integration with DES
+
+Similar modifications to the DES implementation.
+
+## Parameter Structure
+
+We'll use the YAML configuration structure as outlined in the design document, with sections for:
+
+1. Discontinuation criteria by type
+2. Monitoring schedules 
+3. Recurrence models with time-dependent rates
+4. Risk modifiers for recurrence
+5. Clinician profiles and characteristics
+
+## Notable Implementation Decisions
+
+1. **Composite Risk Approach**: Rather than tracking PED development separately, we'll apply a single risk modifier based on the Aslanis study (74% vs 48% recurrence with/without PED).
+
+2. **Monitoring Schedule**: We'll implement only the Year 2 recommendations from Artiaga, following a simplified approach.
+
+3. **Economic Foundation**: We'll collect all the necessary data points for future economic analysis, but assign zero values for now.
+
+4. **Simple Visualization**: We'll create basic reports and graphs rather than complex visualizations, preparing for future Streamlit integration.
+
+5. **Backward Compatibility**: The enhanced manager will be compatible with existing code while providing new functionality.
+
+## Testing Strategy
+
+1. **Unit Tests**: Test each component in isolation
+   - Test different discontinuation types
+   - Test time-dependent recurrence calculation
+   - Test clinician decision modifications
+
+2. **Integration Tests**: Test components working together
+   - Test ABS with enhanced discontinuation
+   - Test DES with enhanced discontinuation
+   - Test clinician variation effects
+
+3. **Validation Tests**: Verify against clinical data
+   - Compare recurrence rates to Artiaga study
+   - Validate clinician behavior patterns
+   - Test different risk factor scenarios
+
+## Expected Outcomes
+
+1. More realistic discontinuation patterns with multiple types
+2. Time-dependent recurrence probabilities based on clinical data
+3. Clinician variation effects on treatment decisions
+4. Foundation for future economic analysis
+5. Enhanced reporting and statistics
+
+## References
+
+1. Aslanis et al. (2021): Prospective study of treatment discontinuation after treat-and-extend
+2. Artiaga et al. (2023): Retrospective study of treatment discontinuation with long-term follow-up
+3. Arendt et al.: Study of discontinuation after three 16-week intervals
+4. ALTAIR Study (2020): Japanese treat-and-extend study with 2-week vs. 4-week adjustments
+5. Comprehensive AMD Parameters document (meta/comprehensive-amd-parameters.md)

@@ -31,6 +31,8 @@ from simulation.clinical_model import ClinicalModel
 from simulation.scheduler import ClinicScheduler
 from simulation.vision_models import SimplifiedVisionModel
 from simulation.discontinuation_manager import DiscontinuationManager
+from simulation.enhanced_discontinuation_manager import EnhancedDiscontinuationManager
+from simulation.clinician import Clinician, ClinicianManager
 
 class TreatAndExtendDES:
     """
@@ -63,7 +65,12 @@ class TreatAndExtendDES:
         # Initialize vision model
         self.vision_model = SimplifiedVisionModel(self.config)
         
-        # Initialize discontinuation manager
+        # Initialize clinician manager
+        clinician_config = self.config.parameters.get("clinicians", {})
+        clinician_enabled = clinician_config.get("enabled", False)
+        self.clinician_manager = ClinicianManager(self.config.parameters, enabled=clinician_enabled)
+        
+        # Initialize enhanced discontinuation manager
         # Get the parameter file path from the config
         discontinuation_config = self.config.parameters.get("discontinuation", {})
         parameter_file = discontinuation_config.get("parameter_file", "")
@@ -74,14 +81,14 @@ class TreatAndExtendDES:
                 with open(parameter_file, 'r') as f:
                     import yaml
                     discontinuation_params = yaml.safe_load(f)
-                    self.discontinuation_manager = DiscontinuationManager(discontinuation_params)
+                    self.discontinuation_manager = EnhancedDiscontinuationManager(discontinuation_params)
             except Exception as e:
                 print(f"Error loading discontinuation parameters: {str(e)}")
                 # Fall back to empty dict with enabled=True
-                self.discontinuation_manager = DiscontinuationManager({"discontinuation": {"enabled": True}})
+                self.discontinuation_manager = EnhancedDiscontinuationManager({"discontinuation": {"enabled": True}})
         else:
             # If no parameter file specified, use the discontinuation config from the parameters
-            self.discontinuation_manager = DiscontinuationManager({"discontinuation": {"enabled": True}})
+            self.discontinuation_manager = EnhancedDiscontinuationManager({"discontinuation": {"enabled": True}})
         
         # Patient state management
         self.patients = {}
@@ -96,7 +103,11 @@ class TreatAndExtendDES:
             "protocol_completions": 0,
             "protocol_discontinuations": 0,
             "monitoring_visits": 0,
-            "retreatments": 0
+            "retreatments": 0,
+            "clinician_decisions": {
+                "protocol_followed": 0,
+                "protocol_overridden": 0
+            }
         }
         
         # Event queue
@@ -213,7 +224,11 @@ class TreatAndExtendDES:
                 "treatment_status": {
                     "active": True,
                     "recurrence_detected": False,
-                    "weeks_since_discontinuation": 0
+                    "weeks_since_discontinuation": 0,
+                    "cessation_type": None
+                },
+                "disease_characteristics": {
+                    "has_PED": np.random.random() < 0.3,  # 30% of patients have PED
                 },
                 "visit_history": []
             }
@@ -244,6 +259,11 @@ class TreatAndExtendDES:
         
         patient = self.patients[patient_id]
         
+        # Get the assigned clinician for this visit
+        clinician_id = self.clinician_manager.assign_clinician(patient_id, event["time"])
+        clinician = self.clinician_manager.get_clinician(clinician_id)
+        event["clinician_id"] = clinician_id  # Store for reference
+        
         # Check if this is a monitoring visit for a discontinued patient
         is_monitoring = event.get("is_monitoring", False)
         
@@ -262,11 +282,13 @@ class TreatAndExtendDES:
             # Convert patient dictionary to the format expected by discontinuation manager
             patient_state = {
                 "disease_activity": patient["disease_activity"],
-                "treatment_status": patient["treatment_status"]
+                "treatment_status": patient["treatment_status"],
+                "disease_characteristics": patient["disease_characteristics"]
             }
             retreatment, updated_patient = self.discontinuation_manager.process_monitoring_visit(
                 patient_state=patient_state,
-                actions=event["actions"]
+                actions=event["actions"],
+                clinician=clinician
             )
             
             # Record monitoring visit
@@ -278,7 +300,8 @@ class TreatAndExtendDES:
                 'phase': "monitoring",
                 'type': 'monitoring_visit',
                 'disease_state': 'stable' if not patient["disease_activity"]["fluid_detected"] else 'active',
-                'treatment_status': patient["treatment_status"].copy()
+                'treatment_status': patient["treatment_status"].copy(),
+                'clinician_id': clinician_id
             }
             patient["visit_history"].append(visit_record)
             
@@ -345,7 +368,8 @@ class TreatAndExtendDES:
             'phase': patient["current_phase"],
             'type': 'regular_visit',
             'disease_state': 'stable' if not fluid_detected else 'active',
-            'treatment_status': patient["treatment_status"].copy()
+            'treatment_status': patient["treatment_status"].copy(),
+            'clinician_id': clinician_id
         }
         patient["visit_history"].append(visit_record)
         
@@ -393,22 +417,29 @@ class TreatAndExtendDES:
                     # Convert patient dictionary to the format expected by discontinuation manager
                     patient_state = {
                         "disease_activity": patient["disease_activity"],
-                        "treatment_status": patient["treatment_status"]
+                        "treatment_status": patient["treatment_status"],
+                        "disease_characteristics": patient["disease_characteristics"]
                     }
-                    should_discontinue, reason, probability = self.discontinuation_manager.evaluate_discontinuation(
+                    should_discontinue, reason, probability, cessation_type = self.discontinuation_manager.evaluate_discontinuation(
                         patient_state=patient_state,
                         current_time=event["time"],
-                        treatment_start_time=self.start_date  # Using simulation start as treatment start for simplicity
+                        clinician_id=clinician_id,
+                        treatment_start_time=self.start_date,  # Using simulation start as treatment start for simplicity
+                        clinician=clinician
                     )
                     
                     if should_discontinue:
                         patient["treatment_status"]["active"] = False
                         patient["treatment_status"]["discontinuation_date"] = event["time"]
                         patient["treatment_status"]["discontinuation_reason"] = reason
+                        patient["treatment_status"]["cessation_type"] = cessation_type
                         self.stats["protocol_discontinuations"] += 1
                         
                         # Schedule monitoring visits
-                        monitoring_events = self.discontinuation_manager.schedule_monitoring(event["time"])
+                        monitoring_events = self.discontinuation_manager.schedule_monitoring(
+                            event["time"],
+                            cessation_type=cessation_type
+                        )
                         for monitoring_event in monitoring_events:
                             if monitoring_event["time"] <= self.end_date:
                                 self.events.append({
@@ -416,7 +447,8 @@ class TreatAndExtendDES:
                                     "type": "visit",
                                     "patient_id": patient_id,
                                     "actions": monitoring_event["actions"],
-                                    "is_monitoring": True
+                                    "is_monitoring": True,
+                                    "cessation_type": monitoring_event.get("cessation_type")
                                 })
                         
                         return  # No more regular visits
@@ -440,6 +472,20 @@ class TreatAndExtendDES:
                 "patient_id": patient_id,
                 "actions": next_actions
             })
+    
+    def _print_statistics(self):
+        """
+        Print simulation statistics.
+        """
+        print("\nSimulation Statistics:")
+        print("-" * 20)
+        for stat, value in self.stats.items():
+            print(f"{stat}: {value}")
+        
+        # Add discontinuation manager statistics
+        discontinuation_stats = self.discontinuation_manager.get_statistics()
+        if discontinuation_stats:
+            print
     
     def _print_statistics(self):
         """
