@@ -1,0 +1,188 @@
+# Default test configuration for DES integration tests
+# This configuration is designed for testing the enhanced discontinuation model
+
+# Required top-level sections
+name: "test_des_default"
+output:
+  directory: "output"
+  format: "csv"
+
+# Simulation parameters
+simulation:
+  name: "Enhanced Discontinuation Test - DES"
+  description: "Test configuration for enhanced discontinuation model with DES"
+  start_date: "2025-01-01"
+  duration_days: 365  # 1 year
+  num_patients: 10
+  random_seed: 42
+
+# Treatment protocol parameters
+protocol:
+  name: "Treat-and-Extend with Enhanced Discontinuation"
+  type: "treat_and_extend"
+  agent: "treat_and_extend_des"  # Specify the agent implementation to use
+  loading_phase:
+    injections: 3
+    interval_weeks: 4
+  maintenance_phase:
+    min_interval_weeks: 8
+    max_interval_weeks: 16
+    extension_increment_weeks: 2
+    reduction_increment_weeks: 2
+
+# Vision parameters
+vision:
+  baseline_mean: 65.0
+  baseline_std: 10.0
+  treatment_effect:
+    loading_phase: 8.4
+    maintenance_phase: 1.5
+  natural_decline:
+    untreated: -3.0
+    treated: -0.5
+
+# Enhanced discontinuation configuration
+discontinuation:
+  enabled: true
+  
+  # Criteria for discontinuation
+  criteria:
+    # Planned discontinuation (protocol-based)
+    stable_max_interval:
+      consecutive_visits: 3       # Number of consecutive stable visits required
+      probability: 0.2            # Probability of discontinuation when criteria met
+      interval_weeks: 16          # Required interval for planned discontinuation
+    
+    # Unplanned discontinuations - administrative
+    random_administrative:
+      annual_probability: 0.05    # Annual probability of random discontinuation
+    
+    # Unplanned discontinuations - time-based
+    treatment_duration:
+      threshold_weeks: 52         # Weeks of treatment before considering discontinuation
+      probability: 0.1            # Probability of discontinuation after threshold
+    
+    # Premature discontinuation (non-adherence to protocol)
+    premature:
+      min_interval_weeks: 8       # Minimum interval where premature discontinuation might occur
+      probability_factor: 2.0     # Multiplier for discontinuation probability (relative to planned)
+  
+  # Post-discontinuation monitoring schedules by cessation type
+  monitoring:
+    # Explicit mapping of cessation types to monitoring schedules
+    cessation_types:
+      stable_max_interval: "planned"     # Protocol-based cessation gets standard monitoring
+      premature: "unplanned"             # Premature cessation gets more frequent monitoring
+      treatment_duration: "unplanned"    # Time-based cessation gets more frequent monitoring
+      random_administrative: "none"      # Administrative cessation gets no monitoring (lost to follow-up)
+    
+    # Schedule definitions
+    planned:
+      follow_up_schedule: [12, 24, 36]  # Weeks after discontinuation for follow-up visits
+    unplanned:
+      follow_up_schedule: [8, 16, 24]   # More frequent monitoring for unplanned cessation
+    recurrence_detection_probability: 0.87  # Probability of detecting recurrence if present
+  
+  # Disease recurrence models
+  recurrence:
+    # Planned discontinuation (stable at max interval)
+    planned:
+      base_annual_rate: 0.13      # Annual base recurrence rate (from Arendt)
+      cumulative_rates:           # Cumulative rates over time
+        year_1: 0.13              # 1-year cumulative rate
+        year_3: 0.40              # 3-year cumulative rate
+        year_5: 0.65              # 5-year cumulative rate
+    
+    # Premature discontinuation (before reaching stability at max interval)
+    premature:
+      base_annual_rate: 0.53      # Annual base recurrence rate (from Aslanis)
+      cumulative_rates:
+        year_1: 0.53              # 1-year cumulative rate
+        year_3: 0.85              # 3-year cumulative rate (estimated)
+        year_5: 0.95              # 5-year cumulative rate (estimated)
+    
+    # Administrative discontinuation
+    administrative:
+      base_annual_rate: 0.30      # Annual base recurrence rate (estimated)
+      cumulative_rates:
+        year_1: 0.30              # 1-year cumulative rate
+        year_3: 0.70              # 3-year cumulative rate
+        year_5: 0.85              # 5-year cumulative rate
+    
+    # Time-based discontinuation (after fixed duration)
+    duration_based:
+      base_annual_rate: 0.32      # Annual base recurrence rate (from Artiaga)
+      cumulative_rates:
+        year_1: 0.21              # 1-year cumulative rate (from Artiaga)
+        year_3: 0.74              # 3-year cumulative rate (from Artiaga)
+        year_5: 0.88              # 5-year cumulative rate (from Artiaga)
+    
+    # Risk factors that modify recurrence rates
+    risk_modifiers:
+      with_PED: 1.54              # Multiplier for recurrence rate if PED is present (74%/48% from Aslanis)
+      without_PED: 1.0            # Reference rate
+  
+  # Treatment re-entry criteria
+  retreatment:
+    eligibility_criteria:
+      detected_fluid: true        # Fluid must be detected
+      vision_loss_letters: 5      # Minimum vision loss to trigger retreatment
+    probability: 0.95             # Probability of retreatment when eligible
+
+# Clinician configuration
+clinicians:
+  enabled: true
+  
+  # Clinician profiles with different adherence characteristics
+  profiles:
+    # Protocol-adherent "by the book" clinician
+    adherent:
+      protocol_adherence_rate: 0.95
+      probability: 0.25  # 25% of clinicians follow this profile
+      characteristics:
+        risk_tolerance: "low"      # Affects discontinuation decisions
+        conservative_retreatment: true  # More likely to restart treatment
+    
+    # Average clinician
+    average:
+      protocol_adherence_rate: 0.80
+      probability: 0.50  # 50% of clinicians follow this profile
+      characteristics:
+        risk_tolerance: "medium"
+        conservative_retreatment: false
+    
+    # Less adherent "freestyle" clinician
+    non_adherent:
+      protocol_adherence_rate: 0.50
+      probability: 0.25  # 25% of clinicians follow this profile
+      characteristics:
+        risk_tolerance: "high"     # More willing to discontinue early
+        conservative_retreatment: false
+  
+  # Clinician decision biases
+  decision_biases:
+    # Different thresholds for considering "stable" disease
+    stability_thresholds:
+      adherent: 3       # Requires 3 consecutive stable visits
+      average: 2        # Requires 2 consecutive stable visits
+      non_adherent: 1   # Only requires 1 stable visit
+    
+    # Different preferences for treatment intervals
+    interval_preferences:
+      adherent:
+        min_interval: 8
+        max_interval: 16
+        extension_threshold: 2   # Letters of improvement needed to extend
+      average:
+        min_interval: 8
+        max_interval: 12        # More conservative max interval
+        extension_threshold: 1
+      non_adherent:
+        min_interval: 6         # May use shorter intervals
+        max_interval: 16
+        extension_threshold: 0   # Extends even with no improvement
+  
+  # Patient assignment model
+  patient_assignment:
+    mode: "fixed"  # Options: "fixed", "random_per_visit", "weighted"
+    continuity_of_care: 0.9  # Probability of seeing the same clinician (if mode="weighted")
