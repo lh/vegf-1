@@ -296,7 +296,69 @@ class EnhancedDiscontinuationABSTest(unittest.TestCase):
             config.num_patients = num_patients
         
         # Create and run simulation with mocked components
-        with patch('simulation.config.SimulationConfig.from_yaml', return_value=config):
+        with patch('simulation.config.SimulationConfig.from_yaml', return_value=config), \
+             patch('treat_and_extend_abs.Patient') as mock_patient_class:
+            
+            # Mock the Patient class to return a patient with the required state
+            def mock_patient_init(patient_id, initial_vision, start_date):
+                # Create a mock patient with the required state
+                mock_patient = MagicMock()
+                mock_patient.patient_id = patient_id
+                mock_patient.current_vision = initial_vision
+                mock_patient.baseline_vision = initial_vision
+                mock_patient.current_phase = "maintenance"
+                mock_patient.treatments_in_phase = 3
+                mock_patient.next_visit_interval = 16
+                mock_patient.disease_activity = {
+                    "fluid_detected": False,
+                    "consecutive_stable_visits": 3,
+                    "max_interval_reached": True,
+                    "current_interval": 16
+                }
+                mock_patient.treatment_status = {
+                    "active": True,
+                    "recurrence_detected": False,
+                    "discontinuation_date": None,
+                    "cessation_type": None
+                }
+                mock_patient.disease_characteristics = {
+                    "has_PED": False
+                }
+                mock_patient.history = []
+                mock_patient.treatment_start = start_date
+                
+                # Mock the process_visit method
+                def process_visit(visit_time, actions, vision_model):
+                    # Record the visit
+                    visit_record = {
+                        'date': visit_time,
+                        'type': 'regular_visit',
+                        'actions': actions,
+                        'baseline_vision': mock_patient.baseline_vision,
+                        'vision': mock_patient.current_vision,
+                        'disease_state': 'stable',
+                        'phase': mock_patient.current_phase,
+                        'interval': mock_patient.disease_activity["current_interval"],
+                        'treatment_status': mock_patient.treatment_status.copy()
+                    }
+                    mock_patient.history.append(visit_record)
+                    
+                    # Return visit data
+                    return {
+                        'visit_type': 'regular_visit',
+                        'baseline_vision': mock_patient.baseline_vision,
+                        'new_vision': mock_patient.current_vision,
+                        'disease_state': 'stable'
+                    }
+                
+                mock_patient.process_visit = process_visit
+                
+                return mock_patient
+            
+            # Set the side effect of the mock
+            mock_patient_class.side_effect = mock_patient_init
+            
+            # Create and run simulation
             sim = TreatAndExtendABS(config)
             return sim.run()
     

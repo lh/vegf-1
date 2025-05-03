@@ -296,7 +296,56 @@ class EnhancedDiscontinuationDESTest(unittest.TestCase):
             config.num_patients = num_patients
         
         # Create and run simulation with mocked components
-        with patch('simulation.config.SimulationConfig.from_yaml', return_value=config):
+        with patch('simulation.config.SimulationConfig.from_yaml', return_value=config), \
+             patch('treat_and_extend_des.TreatAndExtendDES.generate_patients') as mock_generate_patients:
+            
+            # Mock the generate_patients method to create patients with the required state
+            def mock_gen_patients(self):
+                # Create patients with the required state
+                for i in range(1, self.config.num_patients + 1):
+                    patient_id = f"PATIENT{i:03d}"
+                    
+                    # Create a patient state dictionary
+                    patient_state = {
+                        "patient_id": patient_id,
+                        "disease_activity": {
+                            "fluid_detected": False,
+                            "consecutive_stable_visits": 3,
+                            "max_interval_reached": True,
+                            "current_interval": 16
+                        },
+                        "treatment_status": {
+                            "active": True,
+                            "recurrence_detected": False,
+                            "discontinuation_date": None,
+                            "cessation_type": None
+                        },
+                        "disease_characteristics": {
+                            "has_PED": False
+                        },
+                        "current_vision": 65.0,
+                        "baseline_vision": 65.0,
+                        "current_phase": "maintenance",
+                        "treatments_in_phase": 3,
+                        "next_visit_interval": 16,
+                        "history": []
+                    }
+                    
+                    # Add patient to simulation
+                    self.patients[patient_id] = patient_state
+                    
+                    # Schedule initial visit
+                    self.scheduler.schedule_visit(
+                        patient_id=patient_id,
+                        visit_time=self.start_date,
+                        visit_type="regular_visit",
+                        actions=["vision_test", "oct_scan", "injection"]
+                    )
+            
+            # Set the side effect of the mock
+            mock_generate_patients.side_effect = mock_gen_patients
+            
+            # Create and run simulation
             sim = TreatAndExtendDES(config.config_name)
             return sim.run()
     
