@@ -218,9 +218,12 @@ def run_enhanced_discontinuation_simulation():
                 # If this patient has discontinued, add the discontinuation date
                 patient = self.agents[patient_id]
                 if not patient.treatment_status["active"] and patient.treatment_status["discontinuation_date"]:
-                    if visit_date.strftime("%Y-%m-%d") == patient.treatment_status["discontinuation_date"]:
+                    # Make the discontinuation date match one of the visit dates
+                    if i == num_visits - 2:  # Second to last visit
                         visit["discontinuation"] = True
                         visit["cessation_type"] = patient.treatment_status["cessation_type"]
+                        # Store the discontinuation date for later reference
+                        patient.treatment_status["discontinuation_date"] = visit_date.strftime("%Y-%m-%d")
             
             return visits
     
