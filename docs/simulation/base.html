@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Base Simulation Module &mdash; Macular Simulation  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Patient State Module" href="patient_state.html" />
+    <link rel="prev" title="Simulation Modules" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Macular Simulation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../PROJECT_OVERVIEW.html">Macular Degeneration Treatment Simulation Project</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Simulation Modules</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Base Simulation Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.base.ProtocolEvent"><code class="docutils literal notranslate"><span class="pre">ProtocolEvent</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.ProtocolEvent.phase_type"><code class="docutils literal notranslate"><span class="pre">ProtocolEvent.phase_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.ProtocolEvent.action"><code class="docutils literal notranslate"><span class="pre">ProtocolEvent.action</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.ProtocolEvent.parameters"><code class="docutils literal notranslate"><span class="pre">ProtocolEvent.parameters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.ProtocolEvent.result"><code class="docutils literal notranslate"><span class="pre">ProtocolEvent.result</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.ProtocolEvent.__init__"><code class="docutils literal notranslate"><span class="pre">ProtocolEvent.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.base.SimulationEnvironment"><code class="docutils literal notranslate"><span class="pre">SimulationEnvironment</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.SimulationEnvironment.__init__"><code class="docutils literal notranslate"><span class="pre">SimulationEnvironment.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.base.Event"><code class="docutils literal notranslate"><span class="pre">Event</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.Event.time"><code class="docutils literal notranslate"><span class="pre">Event.time</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.Event.event_type"><code class="docutils literal notranslate"><span class="pre">Event.event_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.Event.patient_id"><code class="docutils literal notranslate"><span class="pre">Event.patient_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.Event.data"><code class="docutils literal notranslate"><span class="pre">Event.data</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.Event.priority"><code class="docutils literal notranslate"><span class="pre">Event.priority</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.Event.protocol_event"><code class="docutils literal notranslate"><span class="pre">Event.protocol_event</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.Event.phase"><code class="docutils literal notranslate"><span class="pre">Event.phase</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.Event.protocol"><code class="docutils literal notranslate"><span class="pre">Event.protocol</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.Event.create_protocol_event"><code class="docutils literal notranslate"><span class="pre">Event.create_protocol_event()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.Event.get_visit_type"><code class="docutils literal notranslate"><span class="pre">Event.get_visit_type()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.Event.get_required_actions"><code class="docutils literal notranslate"><span class="pre">Event.get_required_actions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.Event.get_optional_actions"><code class="docutils literal notranslate"><span class="pre">Event.get_optional_actions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.Event.get_decisions"><code class="docutils literal notranslate"><span class="pre">Event.get_decisions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.Event.__init__"><code class="docutils literal notranslate"><span class="pre">Event.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.base.SimulationClock"><code class="docutils literal notranslate"><span class="pre">SimulationClock</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.SimulationClock.__init__"><code class="docutils literal notranslate"><span class="pre">SimulationClock.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.SimulationClock.schedule_event"><code class="docutils literal notranslate"><span class="pre">SimulationClock.schedule_event()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.SimulationClock.get_next_event"><code class="docutils literal notranslate"><span class="pre">SimulationClock.get_next_event()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.base.BaseSimulation"><code class="docutils literal notranslate"><span class="pre">BaseSimulation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.BaseSimulation.__init__"><code class="docutils literal notranslate"><span class="pre">BaseSimulation.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.BaseSimulation.process_event"><code class="docutils literal notranslate"><span class="pre">BaseSimulation.process_event()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.BaseSimulation.run"><code class="docutils literal notranslate"><span class="pre">BaseSimulation.run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.BaseSimulation.register_protocol"><code class="docutils literal notranslate"><span class="pre">BaseSimulation.register_protocol()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.BaseSimulation.get_protocol"><code class="docutils literal notranslate"><span class="pre">BaseSimulation.get_protocol()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.base.BaseSimulation.schedule_protocol_event"><code class="docutils literal notranslate"><span class="pre">BaseSimulation.schedule_protocol_event()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="patient_state.html">Patient State Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scheduler.html">Scheduler Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config.html">Simulation Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="clinical_model.html">Clinical Model Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vision_models.html">Vision Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discontinuation_manager.html">Discontinuation Manager Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis/index.html">Analysis Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../protocols/index.html">Protocol Modules</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="patient_state.html">Patient State Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scheduler.html">Scheduler Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Simulation Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="clinical_model.html">Clinical Model Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../analysis/eylea_data_analysis.html">Eylea Data Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis/eylea_intervals_analysis.html">Eylea Intervals Analysis Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../protocols/visit_types.html">Visit Types Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../protocols/config_parser.html">Config Parser Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../visualization/acuity_viz.html">Visual Acuity Visualization Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Macular Simulation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Simulation Modules</a></li>
+      <li class="breadcrumb-item active">Base Simulation Module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/simulation/base.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="base-simulation-module">
+<h1>Base Simulation Module<a class="headerlink" href="#base-simulation-module" title="Link to this heading"></a></h1>
+<p id="module-simulation.base">Base classes and components for discrete event simulation.</p>
+<p>This module provides the fundamental building blocks for discrete event simulation,
+including event management, simulation clock, and protocol handling. It defines
+the base classes that specific simulation implementations will extend.</p>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Key components:
+- Event: Represents discrete simulation events with timing and data
+- SimulationClock: Manages event scheduling and time progression
+- BaseSimulation: Abstract base class for all simulation implementations
+- ProtocolEvent: Protocol-specific event data structure
+- SimulationEnvironment: Global simulation state container</p>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulation.base.ProtocolEvent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulation.base.</span></span><span class="sig-name descname"><span class="pre">ProtocolEvent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phase_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#ProtocolEvent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.ProtocolEvent" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Protocol-specific event data.</p>
+<p>Represents an event that is specific to a treatment protocol, containing
+information about the phase, action, and associated parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>phase_type</strong> (<em>PhaseType</em>) – Type of protocol phase this event belongs to (e.g., INITIAL, MAINTENANCE)</p></li>
+<li><p><strong>action</strong> (<em>str</em>) – Action to be performed (e.g., ‘inject’, ‘assess’, ‘adjust_interval’)</p></li>
+<li><p><strong>parameters</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>optional</em>) – Additional parameters for the action (default: {})</p></li>
+<li><p><strong>result</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Results from executing the action (default: None)</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">event</span> <span class="o">=</span> <span class="n">ProtocolEvent</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">phase_type</span><span class="o">=</span><span class="n">PhaseType</span><span class="o">.</span><span class="n">MAINTENANCE</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">action</span><span class="o">=</span><span class="s1">&#39;inject&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">parameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;drug&#39;</span><span class="p">:</span> <span class="s1">&#39;eylea&#39;</span><span class="p">,</span> <span class="s1">&#39;dose&#39;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">}</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulation.base.ProtocolEvent.phase_type">
+<span class="sig-name descname"><span class="pre">phase_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">PhaseType</span></code></em><a class="headerlink" href="#simulation.base.ProtocolEvent.phase_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulation.base.ProtocolEvent.action">
+<span class="sig-name descname"><span class="pre">action</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#simulation.base.ProtocolEvent.action" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulation.base.ProtocolEvent.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">,</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">]</span></em><a class="headerlink" href="#simulation.base.ProtocolEvent.parameters" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulation.base.ProtocolEvent.result">
+<span class="sig-name descname"><span class="pre">result</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">,</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#simulation.base.ProtocolEvent.result" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.base.ProtocolEvent.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phase_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#simulation.base.ProtocolEvent.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>phase_type</strong> (<em>PhaseType</em>)</p></li>
+<li><p><strong>action</strong> (<em>str</em>)</p></li>
+<li><p><strong>parameters</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>result</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="simulation.base.SimulationEnvironment">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulation.base.</span></span><span class="sig-name descname"><span class="pre">SimulationEnvironment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_date</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#SimulationEnvironment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.SimulationEnvironment" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Global simulation environment.</p>
+<p>Maintains global state and timing information for the simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>start_date</strong> (<em>datetime</em>) – Start date and time for the simulation</p>
+</dd>
+<dt class="field-even">Variables<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>current_time</strong> (<em>datetime</em>) – Current simulation time</p></li>
+<li><p><strong>global_state</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Dictionary storing global simulation state including:
+- resource_availability: Dict of resource counts
+- queue_lengths: Dict of patient queue lengths
+- statistics: Aggregated simulation metrics</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>The environment provides shared state across all simulation components
+and patients. It should be used for system-wide properties rather than
+patient-specific state.</p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.base.SimulationEnvironment.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_date</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#SimulationEnvironment.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.SimulationEnvironment.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>start_date</strong> (<em>datetime</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="simulation.base.Event">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulation.base.</span></span><span class="sig-name descname"><span class="pre">Event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patient_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol_event=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#Event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.Event" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Simulation event.</p>
+<p>Represents a discrete event in the simulation with timing, type, and associated data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time</strong> (<em>datetime</em>) – When the event occurs</p></li>
+<li><p><strong>event_type</strong> (<em>str</em>) – Type of event (e.g., ‘arrival’, ‘treatment’, ‘assessment’)</p></li>
+<li><p><strong>patient_id</strong> (<em>str</em>) – ID of the patient this event relates to</p></li>
+<li><p><strong>data</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>optional</em>) – Additional event data (default: {})</p></li>
+<li><p><strong>priority</strong> (<em>int</em><em>, </em><em>optional</em>) – Event priority (lower numbers = higher priority) (default: 1)</p></li>
+<li><p><strong>protocol_event</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#simulation.base.ProtocolEvent" title="simulation.base.ProtocolEvent"><em>ProtocolEvent</em></a><em>]</em><em>, </em><em>optional</em>) – Associated protocol-specific event data (default: None)</p></li>
+<li><p><strong>phase</strong> (<em>Optional</em><em>[</em><em>ProtocolPhase</em><em>]</em><em>, </em><em>optional</em>) – Treatment phase this event belongs to (default: None)</p></li>
+<li><p><strong>protocol</strong> (<em>Optional</em><em>[</em><em>TreatmentProtocol</em><em>]</em><em>, </em><em>optional</em>) – Treatment protocol this event belongs to (default: None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Variables<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>_hash</strong> (<em>int</em>) – Internal hash value for event comparison</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Events are comparable and hashable based on their time, type, and patient_id.
+This enables proper ordering in priority queues and event lists.</p>
+</div>
+<div class="admonition-examples admonition">
+<p class="admonition-title">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">event</span> <span class="o">=</span> <span class="n">Event</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">time</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2023</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">event_type</span><span class="o">=</span><span class="s1">&#39;treatment&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">patient_id</span><span class="o">=</span><span class="s1">&#39;pat123&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;drug&#39;</span><span class="p">:</span> <span class="s1">&#39;eylea&#39;</span><span class="p">,</span> <span class="s1">&#39;dose&#39;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">}</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulation.base.Event.time">
+<span class="sig-name descname"><span class="pre">time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></em><a class="headerlink" href="#simulation.base.Event.time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulation.base.Event.event_type">
+<span class="sig-name descname"><span class="pre">event_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#simulation.base.Event.event_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulation.base.Event.patient_id">
+<span class="sig-name descname"><span class="pre">patient_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#simulation.base.Event.patient_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulation.base.Event.data">
+<span class="sig-name descname"><span class="pre">data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">,</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">]</span></em><a class="headerlink" href="#simulation.base.Event.data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulation.base.Event.priority">
+<span class="sig-name descname"><span class="pre">priority</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#simulation.base.Event.priority" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulation.base.Event.protocol_event">
+<span class="sig-name descname"><span class="pre">protocol_event</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><a class="reference internal" href="#simulation.base.ProtocolEvent" title="simulation.base.ProtocolEvent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProtocolEvent</span></code></a><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#simulation.base.Event.protocol_event" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulation.base.Event.phase">
+<span class="sig-name descname"><span class="pre">phase</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">ProtocolPhase</span></code><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#simulation.base.Event.phase" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulation.base.Event.protocol">
+<span class="sig-name descname"><span class="pre">protocol</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">TreatmentProtocol</span></code><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#simulation.base.Event.protocol" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.base.Event.create_protocol_event">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_protocol_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patient_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#Event.create_protocol_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.Event.create_protocol_event" title="Link to this definition"></a></dt>
+<dd><p>Create a protocol-specific event with phase and protocol context.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time</strong> (<em>datetime</em>) – When the event occurs</p></li>
+<li><p><strong>patient_id</strong> (<em>str</em>) – ID of the patient</p></li>
+<li><p><strong>phase_type</strong> (<em>PhaseType</em>) – Type of protocol phase</p></li>
+<li><p><strong>action</strong> (<em>str</em>) – Action to be performed</p></li>
+<li><p><strong>data</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>optional</em>) – Additional event data</p></li>
+<li><p><strong>priority</strong> (<em>int</em><em>, </em><em>optional</em>) – Event priority</p></li>
+<li><p><strong>phase</strong> (<em>Optional</em><em>[</em><em>ProtocolPhase</em><em>]</em><em>, </em><em>optional</em>) – Treatment phase</p></li>
+<li><p><strong>protocol</strong> (<em>Optional</em><em>[</em><em>TreatmentProtocol</em><em>]</em><em>, </em><em>optional</em>) – Treatment protocol</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>New protocol event</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#simulation.base.Event" title="simulation.base.Event">Event</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.base.Event.get_visit_type">
+<span class="sig-name descname"><span class="pre">get_visit_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#Event.get_visit_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.Event.get_visit_type" title="Link to this definition"></a></dt>
+<dd><p>Get visit type from phase if available.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Visit type if phase is set, None otherwise</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[VisitType]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.base.Event.get_required_actions">
+<span class="sig-name descname"><span class="pre">get_required_actions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#Event.get_required_actions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.Event.get_required_actions" title="Link to this definition"></a></dt>
+<dd><p>Get required actions from visit type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of required actions for this visit type</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[ActionType]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.base.Event.get_optional_actions">
+<span class="sig-name descname"><span class="pre">get_optional_actions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#Event.get_optional_actions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.Event.get_optional_actions" title="Link to this definition"></a></dt>
+<dd><p>Get optional actions from visit type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of optional actions for this visit type</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[ActionType]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.base.Event.get_decisions">
+<span class="sig-name descname"><span class="pre">get_decisions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#Event.get_decisions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.Event.get_decisions" title="Link to this definition"></a></dt>
+<dd><p>Get decisions from visit type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of decisions required for this visit type</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[DecisionType]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.base.Event.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">event_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patient_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol_event=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#simulation.base.Event.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time</strong> (<em>datetime</em>)</p></li>
+<li><p><strong>event_type</strong> (<em>str</em>)</p></li>
+<li><p><strong>patient_id</strong> (<em>str</em>)</p></li>
+<li><p><strong>data</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+<li><p><strong>priority</strong> (<em>int</em>)</p></li>
+<li><p><strong>protocol_event</strong> (<a class="reference internal" href="#simulation.base.ProtocolEvent" title="simulation.base.ProtocolEvent"><em>ProtocolEvent</em></a><em> | </em><em>None</em>)</p></li>
+<li><p><strong>phase</strong> (<em>ProtocolPhase</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>protocol</strong> (<em>TreatmentProtocol</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="simulation.base.SimulationClock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulation.base.</span></span><span class="sig-name descname"><span class="pre">SimulationClock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_date</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#SimulationClock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.SimulationClock" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Manages simulation time and event scheduling.</p>
+<p>Maintains ordered list of events and handles event scheduling with proper
+temporal ordering and priority handling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>start_date</strong> (<em>datetime</em>) – Start date and time for the simulation</p>
+</dd>
+<dt class="field-even">Variables<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>current_time</strong> (<em>datetime</em>) – Current simulation time</p></li>
+<li><p><strong>end_date</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – End date for the simulation</p></li>
+<li><p><strong>event_list</strong> (<em>List</em>) – Ordered list of pending events</p></li>
+<li><p><strong>_counter</strong> (<em>int</em>) – Counter for tie-breaking event ordering</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.base.SimulationClock.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_date</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#SimulationClock.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.SimulationClock.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>start_date</strong> (<em>datetime</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.base.SimulationClock.schedule_event">
+<span class="sig-name descname"><span class="pre">schedule_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#SimulationClock.schedule_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.SimulationClock.schedule_event" title="Link to this definition"></a></dt>
+<dd><p>Schedule an event with proper ordering by time and priority.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event</strong> (<a class="reference internal" href="#simulation.base.Event" title="simulation.base.Event"><em>Event</em></a>) – Event to schedule</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>Events are ordered by:
+1. Time (earlier events first)
+2. Priority (lower numbers = higher priority)
+3. Insertion order (tie-breaker)</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.base.SimulationClock.get_next_event">
+<span class="sig-name descname"><span class="pre">get_next_event</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#SimulationClock.get_next_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.SimulationClock.get_next_event" title="Link to this definition"></a></dt>
+<dd><p>Get next event without updating clock time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Next event in chronological order, or None if no events remain</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[<a class="reference internal" href="#simulation.base.Event" title="simulation.base.Event">Event</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="simulation.base.BaseSimulation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulation.base.</span></span><span class="sig-name descname"><span class="pre">BaseSimulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">environment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#BaseSimulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.BaseSimulation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for simulations.</p>
+<p>Provides core simulation functionality including event processing,
+protocol management, and simulation execution control.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_date</strong> (<em>datetime</em>) – Start date and time for the simulation</p></li>
+<li><p><strong>environment</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#simulation.base.SimulationEnvironment" title="simulation.base.SimulationEnvironment"><em>SimulationEnvironment</em></a><em>]</em><em>, </em><em>optional</em>) – Simulation environment, creates new one if not provided</p></li>
+</ul>
+</dd>
+<dt class="field-even">Variables<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>clock</strong> (<a class="reference internal" href="#simulation.base.SimulationClock" title="simulation.base.SimulationClock"><em>SimulationClock</em></a>) – Manages simulation time and events</p></li>
+<li><p><strong>metrics</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>List</em><em>[</em><em>Any</em><em>]</em><em>]</em>) – Stores simulation metrics</p></li>
+<li><p><strong>environment</strong> (<a class="reference internal" href="#simulation.base.SimulationEnvironment" title="simulation.base.SimulationEnvironment"><em>SimulationEnvironment</em></a>) – Global simulation environment</p></li>
+<li><p><strong>protocols</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>TreatmentProtocol</em><em>]</em>) – Registered treatment protocols</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.base.BaseSimulation.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">environment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#BaseSimulation.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.BaseSimulation.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_date</strong> (<em>datetime</em>)</p></li>
+<li><p><strong>environment</strong> (<a class="reference internal" href="#simulation.base.SimulationEnvironment" title="simulation.base.SimulationEnvironment"><em>SimulationEnvironment</em></a><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.base.BaseSimulation.process_event">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">process_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#BaseSimulation.process_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.BaseSimulation.process_event" title="Link to this definition"></a></dt>
+<dd><p>Process a simulation event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>event</strong> (<a class="reference internal" href="#simulation.base.Event" title="simulation.base.Event"><em>Event</em></a>) – Event to process</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>This method must be implemented by concrete simulation classes.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.base.BaseSimulation.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">until</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#BaseSimulation.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.BaseSimulation.run" title="Link to this definition"></a></dt>
+<dd><p>Run simulation until specified datetime.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>until</strong> (<em>datetime</em>) – End date and time for the simulation</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<ul class="simple">
+<li><p>Processes events chronologically until end time is reached</p></li>
+<li><p>Prints progress indicators (dots) for each simulated week</p></li>
+<li><p>Includes safety limit to prevent infinite loops</p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.base.BaseSimulation.register_protocol">
+<span class="sig-name descname"><span class="pre">register_protocol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">protocol_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#BaseSimulation.register_protocol"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.BaseSimulation.register_protocol" title="Link to this definition"></a></dt>
+<dd><p>Register a protocol for use in the simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>protocol_type</strong> (<em>str</em>) – Identifier for the protocol type</p></li>
+<li><p><strong>protocol</strong> (<em>TreatmentProtocol</em>) – Protocol instance to register</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.base.BaseSimulation.get_protocol">
+<span class="sig-name descname"><span class="pre">get_protocol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">protocol_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#BaseSimulation.get_protocol"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.BaseSimulation.get_protocol" title="Link to this definition"></a></dt>
+<dd><p>Get a registered protocol by type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>protocol_type</strong> (<em>str</em>) – Identifier for the protocol type</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Registered protocol or None if not found</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[TreatmentProtocol]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.base.BaseSimulation.schedule_protocol_event">
+<span class="sig-name descname"><span class="pre">schedule_protocol_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patient_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/base.html#BaseSimulation.schedule_protocol_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.base.BaseSimulation.schedule_protocol_event" title="Link to this definition"></a></dt>
+<dd><p>Schedule a protocol-specific event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time</strong> (<em>datetime</em>) – When the event should occur</p></li>
+<li><p><strong>patient_id</strong> (<em>str</em>) – ID of the patient</p></li>
+<li><p><strong>phase_type</strong> (<em>PhaseType</em>) – Type of protocol phase</p></li>
+<li><p><strong>action</strong> (<em>str</em>) – Action to be performed</p></li>
+<li><p><strong>data</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>, </em><em>optional</em>) – Additional event data</p></li>
+<li><p><strong>priority</strong> (<em>int</em><em>, </em><em>optional</em>) – Event priority</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Simulation Modules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="patient_state.html" class="btn btn-neutral float-right" title="Patient State Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Luke Herbert.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

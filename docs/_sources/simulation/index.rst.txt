@@ -1,31 +1,16 @@
 Simulation Modules
-=================
+==================
 
-.. automodule:: simulation.base
-   :members:
-   :undoc-members:
-   :show-inheritance:
+This section contains documentation for the simulation modules, which implement the core
+functionality of the AMD simulation system.
 
-.. automodule:: simulation.patient_state
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Clinic Scheduler
-----------------
-.. autoclass:: simulation.scheduler.ClinicScheduler
-   :members:
-   :exclude-members: schedule_next_visit
-   :noindex:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: simulation.config
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: simulation.clinical_model
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. toctree::
+   :maxdepth: 2
+   
+   base
+   patient_state
+   scheduler
+   config
+   clinical_model
+   vision_models
+   discontinuation_manager

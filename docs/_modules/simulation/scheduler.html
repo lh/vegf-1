@@ -202,9 +202,9 @@
 <span class="sd">        - Updates appointment counts when slot is granted</span>
 <span class="sd">        - Rescheduling maintains original appointment details</span>
 <span class="sd">        - Time values should be timezone-naive datetimes</span>
-
-<span class="sd">        Algorithm</span>
-<span class="sd">        ---------</span>
+<span class="sd">        </span>
+<span class="sd">        The algorithm follows these steps:</span>
+<span class="sd">        </span>
 <span class="sd">        1. Check if requested date is a clinic day</span>
 <span class="sd">        2. Initialize slot count if new date</span>
 <span class="sd">        3. Check daily capacity</span>
@@ -279,7 +279,6 @@
 <span class="sd">        - Handles week-to-day conversion automatically</span>
 <span class="sd">        - Returns None if calculated visit would be after simulation end</span>
 <span class="sd">        - Visit intervals must be positive integers</span>
-<span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Calculate next visit time based on last visit</span>
         <span class="n">next_time</span> <span class="o">=</span> <span class="n">last_visit</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">weeks</span><span class="o">=</span><span class="n">next_visit_interval</span><span class="p">)</span>
@@ -383,7 +382,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Rose.</p>
+    <p>&#169; Copyright 2025, Luke Herbert.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

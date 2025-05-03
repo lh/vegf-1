@@ -45,9 +45,51 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../PROJECT_OVERVIEW.html">Macular Degeneration Treatment Simulation Project</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Simulation Modules</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Simulation Modules</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="base.html">Base Simulation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="patient_state.html">Patient State Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scheduler.html">Scheduler Module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Simulation Config Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#key-features">Key Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuration-structure">Configuration Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig"><code class="docutils literal notranslate"><span class="pre">SimulationConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.parameters"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.parameters</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.protocol"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.protocol</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.simulation_type"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.simulation_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.num_patients"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.num_patients</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.duration_days"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.duration_days</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.random_seed"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.random_seed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.verbose"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.verbose</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.start_date"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.start_date</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.resources"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.resources</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.sensitivity_analysis"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.sensitivity_analysis</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_vision_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_vision_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_maintenance_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_maintenance_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_loading_phase_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_loading_phase_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_resource_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_resource_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_simulation_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_simulation_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_des_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_des_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_output_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_output_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_clinical_model_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_clinical_model_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.load_parameter_file"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.load_parameter_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_treatment_discontinuation_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_treatment_discontinuation_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_sensitivity_analysis_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_sensitivity_analysis_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.apply_sensitivity_variation"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.apply_sensitivity_variation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.get_cost_parameters"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_cost_parameters()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.from_yaml"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.from_yaml()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#simulation.config.SimulationConfig.__init__"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="clinical_model.html">Clinical Model Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vision_models.html">Vision Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="discontinuation_manager.html">Discontinuation Manager Module</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../analysis/index.html">Analysis Modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../protocols/index.html">Protocol Modules</a></li>
 </ul>
@@ -68,13 +110,20 @@
 <li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.verbose"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.verbose</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.start_date"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.start_date</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.resources"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.resources</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.sensitivity_analysis"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.sensitivity_analysis</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_vision_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_vision_params()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_maintenance_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_maintenance_params()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_loading_phase_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_loading_phase_params()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_resource_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_resource_params()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_simulation_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_simulation_params()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_des_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_des_params()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_output_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_output_params()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_clinical_model_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_clinical_model_params()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.load_parameter_file"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.load_parameter_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_treatment_discontinuation_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_treatment_discontinuation_params()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_sensitivity_analysis_params"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_sensitivity_analysis_params()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.apply_sensitivity_variation"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.apply_sensitivity_variation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.get_cost_parameters"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.get_cost_parameters()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.from_yaml"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.from_yaml()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#simulation.config.SimulationConfig.__init__"><code class="docutils literal notranslate"><span class="pre">SimulationConfig.__init__()</span></code></a></li>
 </ul>
@@ -109,6 +158,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Simulation Modules</a></li>
       <li class="breadcrumb-item active">Simulation Config Module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/simulation/config.rst.txt" rel="nofollow"> View page source</a>
@@ -144,62 +194,45 @@ are properly validated before being used in a simulation run.</p>
 </section>
 <section id="configuration-structure">
 <h2>Configuration Structure<a class="headerlink" href="#configuration-structure" title="Link to this heading"></a></h2>
-<p>Example YAML configuration structure:
-<a href="#id1"><span class="problematic" id="id2">``</span></a><a href="#id3"><span class="problematic" id="id4">`</span></a>yaml
-simulation:</p>
-<blockquote>
-<div><p>type: “des”
-num_patients: 1000
-duration_days: 365
-random_seed: 42
-verbose: true
-start_date: “2023-01-01”
-resources:</p>
-<blockquote>
-<div><dl class="simple">
-<dt>capacity:</dt><dd><p>doctors: 5
-nurses: 10
-oct_machines: 3</p>
-</dd>
-</dl>
-</div></blockquote>
-</div></blockquote>
-<dl>
-<dt>clinical_model:</dt><dd><p>disease_states: [“NAIVE”, “STABLE”, “ACTIVE”, “HIGHLY_ACTIVE”]
-transition_probabilities:</p>
-<blockquote>
-<div><dl class="simple">
-<dt>NAIVE:</dt><dd><p>STABLE: 0.3
-ACTIVE: 0.6
-HIGHLY_ACTIVE: 0.1</p>
-</dd>
-<dt>STABLE:</dt><dd><p>STABLE: 0.7
-ACTIVE: 0.3</p>
-</dd>
-</dl>
-</div></blockquote>
-<dl>
-<dt>vision_change:</dt><dd><dl class="simple">
-<dt>base_change:</dt><dd><dl class="simple">
-<dt>NAIVE:</dt><dd><p>injection: [5, 2]
-no_injection: [0, 1]</p>
-</dd>
-<dt>STABLE:</dt><dd><p>injection: [2, 1]
-no_injection: [-1, 0.5]</p>
-</dd>
-</dl>
-</dd>
-<dt>time_factor:</dt><dd><p>max_weeks: 52</p>
-</dd>
-<dt>ceiling_factor:</dt><dd><p>max_vision: 100</p>
-</dd>
-</dl>
-<p>measurement_noise: [0, 0.5]</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p><a href="#id5"><span class="problematic" id="id6">``</span></a><a href="#id7"><span class="problematic" id="id8">`</span></a></p>
+<p>Example YAML configuration structure:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">simulation</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;des&quot;</span>
+<span class="w">  </span><span class="nt">num_patients</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+<span class="w">  </span><span class="nt">duration_days</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">365</span>
+<span class="w">  </span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+<span class="w">  </span><span class="nt">verbose</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">start_date</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2023-01-01&quot;</span>
+<span class="w">  </span><span class="nt">resources</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">capacity</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">doctors</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">      </span><span class="nt">nurses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<span class="w">      </span><span class="nt">oct_machines</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+
+<span class="nt">clinical_model</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">disease_states</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;NAIVE&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;STABLE&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;ACTIVE&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;HIGHLY_ACTIVE&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">transition_probabilities</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">NAIVE</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">STABLE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.3</span>
+<span class="w">      </span><span class="nt">ACTIVE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.6</span>
+<span class="w">      </span><span class="nt">HIGHLY_ACTIVE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span>
+<span class="w">    </span><span class="nt">STABLE</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">STABLE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.7</span>
+<span class="w">      </span><span class="nt">ACTIVE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.3</span>
+<span class="w">  </span><span class="nt">vision_change</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">base_change</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">NAIVE</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">injection</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">5</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span>
+<span class="w">        </span><span class="nt">no_injection</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">STABLE</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">injection</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">]</span>
+<span class="w">        </span><span class="nt">no_injection</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">-1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.5</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">time_factor</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">max_weeks</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">52</span>
+<span class="w">    </span><span class="nt">ceiling_factor</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">max_vision</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="w">    </span><span class="nt">measurement_noise</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.5</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
 <div class="admonition-notes admonition">
 <p class="admonition-title">Notes</p>
 <ul class="simple">
@@ -212,9 +245,10 @@ no_injection: [-1, 0.5]</p>
 </section>
 <dl class="py class">
 <dt class="sig sig-object py" id="simulation.config.SimulationConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulation.config.</span></span><span class="sig-name descname"><span class="pre">SimulationConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_patients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/config.html#SimulationConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.config.SimulationConfig" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simulation.config.</span></span><span class="sig-name descname"><span class="pre">SimulationConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_patients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensitivity_analysis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/config.html#SimulationConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.config.SimulationConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Configuration for a simulation run with protocol objects.</p>
+<p>Added direct initialization support for testing purposes.</p>
 <p>This class encapsulates all configuration parameters needed to run a simulation,
 including treatment protocols, patient parameters, and resource constraints.
 Provides validation methods for all configuration sections.</p>
@@ -230,6 +264,7 @@ Provides validation methods for all configuration sections.</p>
 <li><p><strong>verbose</strong> (<em>bool</em>) – Whether to enable verbose logging</p></li>
 <li><p><strong>start_date</strong> (<em>datetime</em>) – Simulation start date</p></li>
 <li><p><strong>resources</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Resource configuration dictionary</p></li>
+<li><p><strong>sensitivity_analysis</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Sensitivity analysis configuration</p></li>
 </ul>
 </dd>
 <dt class="field-even">Variables<span class="colon">:</span></dt>
@@ -243,6 +278,7 @@ Provides validation methods for all configuration sections.</p>
 <li><p><strong>verbose</strong> (<em>bool</em>) – Verbosity flag</p></li>
 <li><p><strong>start_date</strong> (<em>datetime</em>) – Simulation start date</p></li>
 <li><p><strong>resources</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – Resource configuration</p></li>
+<li><p><strong>sensitivity_analysis</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – Sensitivity analysis configuration</p></li>
 </ul>
 </dd>
 </dl>
@@ -289,6 +325,11 @@ Provides validation methods for all configuration sections.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="simulation.config.SimulationConfig.resources">
 <span class="sig-name descname"><span class="pre">resources</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">,</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#simulation.config.SimulationConfig.resources" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulation.config.SimulationConfig.sensitivity_analysis">
+<span class="sig-name descname"><span class="pre">sensitivity_analysis</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">,</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#simulation.config.SimulationConfig.sensitivity_analysis" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -395,21 +436,34 @@ otherwise falls back to default values.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="simulation.config.SimulationConfig.get_simulation_params">
+<span class="sig-name descname"><span class="pre">get_simulation_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/config.html#SimulationConfig.get_simulation_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.config.SimulationConfig.get_simulation_params" title="Link to this definition"></a></dt>
+<dd><p>Get general simulation parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Simulation parameters including:
+- end_date: datetime (calculated from start_date + duration_days)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="simulation.config.SimulationConfig.get_des_params">
 <span class="sig-name descname"><span class="pre">get_des_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/config.html#SimulationConfig.get_des_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.config.SimulationConfig.get_des_params" title="Link to this definition"></a></dt>
 <dd><p>Get DES-specific parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><p>DES parameters with defaults:
-- daily_capacity: 20 patients
-- days_per_week: 5 days
-- patient_generation:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>rate_per_week: 3 patients</p></li>
-<li><p>random_seed: None (use simulation seed)</p></li>
+<dd class="field-odd"><p><p>DES parameters with defaults:</p>
+<ul class="simple">
+<li><p>daily_capacity: 20 patients</p></li>
+<li><p>days_per_week: 5 days</p></li>
+<li><p>patient_generation:
+- rate_per_week: 3 patients
+- random_seed: None (use simulation seed)</p></li>
 </ul>
-</div></blockquote>
 </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -466,6 +520,112 @@ otherwise falls back to default values.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="simulation.config.SimulationConfig.load_parameter_file">
+<span class="sig-name descname"><span class="pre">load_parameter_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/config.html#SimulationConfig.load_parameter_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.config.SimulationConfig.load_parameter_file" title="Link to this definition"></a></dt>
+<dd><p>Load parameters from an external YAML file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – Path to the parameter file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing the loaded parameters</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[str, Any]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>FileNotFoundError</strong> – If the parameter file cannot be found</p></li>
+<li><p><strong>ValueError</strong> – If the parameter file is invalid</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.config.SimulationConfig.get_treatment_discontinuation_params">
+<span class="sig-name descname"><span class="pre">get_treatment_discontinuation_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/config.html#SimulationConfig.get_treatment_discontinuation_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.config.SimulationConfig.get_treatment_discontinuation_params" title="Link to this definition"></a></dt>
+<dd><p>Get treatment discontinuation parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Treatment discontinuation parameters including:
+- enabled: Whether discontinuation is enabled
+- criteria: Discontinuation criteria configuration
+- monitoring: Post-discontinuation monitoring configuration
+- retreatment: Treatment re-entry configuration</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>If a parameter_file is specified in the discontinuation configuration,
+loads the parameters from that file. Otherwise, falls back to the
+parameters in the clinical model.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.config.SimulationConfig.get_sensitivity_analysis_params">
+<span class="sig-name descname"><span class="pre">get_sensitivity_analysis_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/config.html#SimulationConfig.get_sensitivity_analysis_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.config.SimulationConfig.get_sensitivity_analysis_params" title="Link to this definition"></a></dt>
+<dd><p>Get sensitivity analysis parameters if enabled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary containing sensitivity analysis parameters:
+- enabled: Whether sensitivity analysis is enabled
+- parameter_file: Path to sensitivity parameter file
+- selected_variation: Name of selected parameter variation
+- variations: Dictionary of parameter variations if loaded</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>If sensitivity analysis is enabled, loads the parameter variations
+from the specified file and applies the selected variation.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.config.SimulationConfig.apply_sensitivity_variation">
+<span class="sig-name descname"><span class="pre">apply_sensitivity_variation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variation_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/config.html#SimulationConfig.apply_sensitivity_variation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.config.SimulationConfig.apply_sensitivity_variation" title="Link to this definition"></a></dt>
+<dd><p>Apply a sensitivity analysis variation to the parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>variation_name</strong> (<em>str</em>) – Name of the variation to apply</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the variation does not exist</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+<div class="admonition-notes admonition">
+<p class="admonition-title">Notes</p>
+<p>This method modifies the parameters in place by applying the
+specified variation from the sensitivity analysis file.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulation.config.SimulationConfig.get_cost_parameters">
+<span class="sig-name descname"><span class="pre">get_cost_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/config.html#SimulationConfig.get_cost_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.config.SimulationConfig.get_cost_parameters" title="Link to this definition"></a></dt>
+<dd><p>Get cost parameters if enabled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary containing cost parameters or empty dict if not enabled</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="simulation.config.SimulationConfig.from_yaml">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/simulation/config.html#SimulationConfig.from_yaml"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulation.config.SimulationConfig.from_yaml" title="Link to this definition"></a></dt>
 <dd><p>Create configuration from YAML with protocol objects.</p>
@@ -477,7 +637,7 @@ otherwise falls back to default values.</p>
 <dd class="field-even"><p>New SimulationConfig instance</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="index.html#simulation.config.SimulationConfig" title="simulation.config.SimulationConfig">SimulationConfig</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="#simulation.config.SimulationConfig" title="simulation.config.SimulationConfig">SimulationConfig</a></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If protocol is invalid or required parameters are missing</p>
@@ -492,7 +652,7 @@ including protocol definitions and parameter validation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="simulation.config.SimulationConfig.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_patients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#simulation.config.SimulationConfig.__init__" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_patients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resources</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensitivity_analysis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#simulation.config.SimulationConfig.__init__" title="Link to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -505,6 +665,7 @@ including protocol definitions and parameter validation.</p>
 <li><p><strong>verbose</strong> (<em>bool</em>)</p></li>
 <li><p><strong>start_date</strong> (<em>datetime</em>)</p></li>
 <li><p><strong>resources</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>sensitivity_analysis</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -528,7 +689,7 @@ including protocol definitions and parameter validation.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Rose.</p>
+    <p>&#169; Copyright 2025, Luke Herbert.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

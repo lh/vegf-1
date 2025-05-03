@@ -113,44 +113,45 @@
 <span class="sd">Configuration Structure</span>
 <span class="sd">----------------------- </span>
 <span class="sd">Example YAML configuration structure:</span>
-<span class="sd">```yaml</span>
-<span class="sd">simulation:</span>
-<span class="sd">  type: &quot;des&quot;</span>
-<span class="sd">  num_patients: 1000</span>
-<span class="sd">  duration_days: 365</span>
-<span class="sd">  random_seed: 42</span>
-<span class="sd">  verbose: true</span>
-<span class="sd">  start_date: &quot;2023-01-01&quot;</span>
-<span class="sd">  resources:</span>
-<span class="sd">    capacity:</span>
-<span class="sd">      doctors: 5</span>
-<span class="sd">      nurses: 10</span>
-<span class="sd">      oct_machines: 3</span>
 
-<span class="sd">clinical_model:</span>
-<span class="sd">  disease_states: [&quot;NAIVE&quot;, &quot;STABLE&quot;, &quot;ACTIVE&quot;, &quot;HIGHLY_ACTIVE&quot;]</span>
-<span class="sd">  transition_probabilities:</span>
-<span class="sd">    NAIVE:</span>
-<span class="sd">      STABLE: 0.3</span>
-<span class="sd">      ACTIVE: 0.6</span>
-<span class="sd">      HIGHLY_ACTIVE: 0.1</span>
-<span class="sd">    STABLE:</span>
-<span class="sd">      STABLE: 0.7</span>
-<span class="sd">      ACTIVE: 0.3</span>
-<span class="sd">  vision_change:</span>
-<span class="sd">    base_change:</span>
-<span class="sd">      NAIVE:</span>
-<span class="sd">        injection: [5, 2]</span>
-<span class="sd">        no_injection: [0, 1]</span>
-<span class="sd">      STABLE:</span>
-<span class="sd">        injection: [2, 1]</span>
-<span class="sd">        no_injection: [-1, 0.5]</span>
-<span class="sd">    time_factor:</span>
-<span class="sd">      max_weeks: 52</span>
-<span class="sd">    ceiling_factor:</span>
-<span class="sd">      max_vision: 100</span>
-<span class="sd">    measurement_noise: [0, 0.5]</span>
-<span class="sd">```</span>
+<span class="sd">.. code-block:: yaml</span>
+
+<span class="sd">    simulation:</span>
+<span class="sd">      type: &quot;des&quot;</span>
+<span class="sd">      num_patients: 1000</span>
+<span class="sd">      duration_days: 365</span>
+<span class="sd">      random_seed: 42</span>
+<span class="sd">      verbose: true</span>
+<span class="sd">      start_date: &quot;2023-01-01&quot;</span>
+<span class="sd">      resources:</span>
+<span class="sd">        capacity:</span>
+<span class="sd">          doctors: 5</span>
+<span class="sd">          nurses: 10</span>
+<span class="sd">          oct_machines: 3</span>
+
+<span class="sd">    clinical_model:</span>
+<span class="sd">      disease_states: [&quot;NAIVE&quot;, &quot;STABLE&quot;, &quot;ACTIVE&quot;, &quot;HIGHLY_ACTIVE&quot;]</span>
+<span class="sd">      transition_probabilities:</span>
+<span class="sd">        NAIVE:</span>
+<span class="sd">          STABLE: 0.3</span>
+<span class="sd">          ACTIVE: 0.6</span>
+<span class="sd">          HIGHLY_ACTIVE: 0.1</span>
+<span class="sd">        STABLE:</span>
+<span class="sd">          STABLE: 0.7</span>
+<span class="sd">          ACTIVE: 0.3</span>
+<span class="sd">      vision_change:</span>
+<span class="sd">        base_change:</span>
+<span class="sd">          NAIVE:</span>
+<span class="sd">            injection: [5, 2]</span>
+<span class="sd">            no_injection: [0, 1]</span>
+<span class="sd">          STABLE:</span>
+<span class="sd">            injection: [2, 1]</span>
+<span class="sd">            no_injection: [-1, 0.5]</span>
+<span class="sd">        time_factor:</span>
+<span class="sd">          max_weeks: 52</span>
+<span class="sd">        ceiling_factor:</span>
+<span class="sd">          max_vision: 100</span>
+<span class="sd">        measurement_noise: [0, 0.5]</span>
 
 <span class="sd">Notes</span>
 <span class="sd">-----</span>
@@ -161,8 +162,10 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
 <span class="kn">from</span> <span class="nn">protocols.protocol_parser</span> <span class="kn">import</span> <span class="n">ProtocolParser</span>
 <span class="kn">from</span> <span class="nn">protocol_models</span> <span class="kn">import</span> <span class="n">TreatmentProtocol</span>
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -170,11 +173,13 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <div class="viewcode-block" id="SimulationConfig">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig">[docs]</a>
+<a class="viewcode-back" href="../../simulation/config.html#simulation.config.SimulationConfig">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">SimulationConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Configuration for a simulation run with protocol objects.</span>
+<span class="sd">    </span>
+<span class="sd">    Added direct initialization support for testing purposes.</span>
 
 <span class="sd">    This class encapsulates all configuration parameters needed to run a simulation,</span>
 <span class="sd">    including treatment protocols, patient parameters, and resource constraints.</span>
@@ -200,6 +205,8 @@
 <span class="sd">        Simulation start date</span>
 <span class="sd">    resources : Optional[Dict[str, Any]], optional</span>
 <span class="sd">        Resource configuration dictionary</span>
+<span class="sd">    sensitivity_analysis : Optional[Dict[str, Any]], optional</span>
+<span class="sd">        Sensitivity analysis configuration</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -221,6 +228,8 @@
 <span class="sd">        Simulation start date</span>
 <span class="sd">    resources : Optional[Dict[str, Any]]</span>
 <span class="sd">        Resource configuration</span>
+<span class="sd">    sensitivity_analysis : Optional[Dict[str, Any]]</span>
+<span class="sd">        Sensitivity analysis configuration</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">parameters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
     <span class="n">protocol</span><span class="p">:</span> <span class="n">TreatmentProtocol</span>
@@ -231,9 +240,10 @@
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span>
     <span class="n">start_date</span><span class="p">:</span> <span class="n">datetime</span>
     <span class="n">resources</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">sensitivity_analysis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     
 <div class="viewcode-block" id="SimulationConfig.get_vision_params">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig.get_vision_params">[docs]</a>
+<a class="viewcode-back" href="../../simulation/config.html#simulation.config.SimulationConfig.get_vision_params">[docs]</a>
     <span class="k">def</span> <span class="nf">get_vision_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get validated vision-related parameters.</span>
@@ -282,7 +292,7 @@
 
     
 <div class="viewcode-block" id="SimulationConfig.get_maintenance_params">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig.get_maintenance_params">[docs]</a>
+<a class="viewcode-back" href="../../simulation/config.html#simulation.config.SimulationConfig.get_maintenance_params">[docs]</a>
     <span class="k">def</span> <span class="nf">get_maintenance_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get validated maintenance phase parameters.</span>
@@ -337,7 +347,7 @@
 
 
 <div class="viewcode-block" id="SimulationConfig.get_loading_phase_params">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig.get_loading_phase_params">[docs]</a>
+<a class="viewcode-back" href="../../simulation/config.html#simulation.config.SimulationConfig.get_loading_phase_params">[docs]</a>
     <span class="k">def</span> <span class="nf">get_loading_phase_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get validated loading phase parameters.</span>
@@ -392,7 +402,7 @@
 
     
 <div class="viewcode-block" id="SimulationConfig.get_resource_params">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig.get_resource_params">[docs]</a>
+<a class="viewcode-back" href="../../simulation/config.html#simulation.config.SimulationConfig.get_resource_params">[docs]</a>
     <span class="k">def</span> <span class="nf">get_resource_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get resource configuration parameters.</span>
@@ -426,8 +436,24 @@
         <span class="p">}</span></div>
 
     
+<div class="viewcode-block" id="SimulationConfig.get_simulation_params">
+<a class="viewcode-back" href="../../simulation/config.html#simulation.config.SimulationConfig.get_simulation_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_simulation_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get general simulation parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            Simulation parameters including:</span>
+<span class="sd">            - end_date: datetime (calculated from start_date + duration_days)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;end_date&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_date</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">duration_days</span><span class="p">)</span>
+        <span class="p">}</span></div>
+
+
 <div class="viewcode-block" id="SimulationConfig.get_des_params">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig.get_des_params">[docs]</a>
+<a class="viewcode-back" href="../../simulation/config.html#simulation.config.SimulationConfig.get_des_params">[docs]</a>
     <span class="k">def</span> <span class="nf">get_des_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get DES-specific parameters.</span>
 
@@ -435,11 +461,12 @@
 <span class="sd">        -------</span>
 <span class="sd">        Dict[str, Any]</span>
 <span class="sd">            DES parameters with defaults:</span>
+<span class="sd">            </span>
 <span class="sd">            - daily_capacity: 20 patients</span>
 <span class="sd">            - days_per_week: 5 days</span>
 <span class="sd">            - patient_generation:</span>
-<span class="sd">                - rate_per_week: 3 patients</span>
-<span class="sd">                - random_seed: None (use simulation seed)</span>
+<span class="sd">              - rate_per_week: 3 patients</span>
+<span class="sd">              - random_seed: None (use simulation seed)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">simulation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simulation&quot;</span><span class="p">,</span> <span class="p">{})</span>
         <span class="n">scheduling</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;scheduling&quot;</span><span class="p">,</span> <span class="p">{})</span>
@@ -456,7 +483,7 @@
 
         
 <div class="viewcode-block" id="SimulationConfig.get_output_params">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig.get_output_params">[docs]</a>
+<a class="viewcode-back" href="../../simulation/config.html#simulation.config.SimulationConfig.get_output_params">[docs]</a>
     <span class="k">def</span> <span class="nf">get_output_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get output configuration parameters.</span>
@@ -482,7 +509,7 @@
 
 
 <div class="viewcode-block" id="SimulationConfig.get_clinical_model_params">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig.get_clinical_model_params">[docs]</a>
+<a class="viewcode-back" href="../../simulation/config.html#simulation.config.SimulationConfig.get_clinical_model_params">[docs]</a>
     <span class="k">def</span> <span class="nf">get_clinical_model_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get validated clinical model parameters.</span>
@@ -532,8 +559,225 @@
         <span class="k">return</span> <span class="n">clinical_model_params</span></div>
 
     
+<div class="viewcode-block" id="SimulationConfig.load_parameter_file">
+<a class="viewcode-back" href="../../simulation/config.html#simulation.config.SimulationConfig.load_parameter_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">load_parameter_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load parameters from an external YAML file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        file_path : str</span>
+<span class="sd">            Path to the parameter file</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            Dictionary containing the loaded parameters</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        FileNotFoundError</span>
+<span class="sd">            If the parameter file cannot be found</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the parameter file is invalid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">params</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded parameters from </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">params</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">params</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter file not found: </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter file not found: </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error loading parameter file </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error loading parameter file </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SimulationConfig.get_treatment_discontinuation_params">
+<a class="viewcode-back" href="../../simulation/config.html#simulation.config.SimulationConfig.get_treatment_discontinuation_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_treatment_discontinuation_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get treatment discontinuation parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            Treatment discontinuation parameters including:</span>
+<span class="sd">            - enabled: Whether discontinuation is enabled</span>
+<span class="sd">            - criteria: Discontinuation criteria configuration</span>
+<span class="sd">            - monitoring: Post-discontinuation monitoring configuration</span>
+<span class="sd">            - retreatment: Treatment re-entry configuration</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        If a parameter_file is specified in the discontinuation configuration,</span>
+<span class="sd">        loads the parameters from that file. Otherwise, falls back to the</span>
+<span class="sd">        parameters in the clinical model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># First check if there&#39;s a dedicated discontinuation section in the simulation config</span>
+        <span class="n">sim_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simulation&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">discontinuation_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;discontinuation&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        
+        <span class="c1"># If no discontinuation config found, check in clinical model</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">discontinuation_config</span><span class="p">:</span>
+            <span class="n">clinical_model_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_clinical_model_params</span><span class="p">()</span>
+            <span class="n">discontinuation_config</span> <span class="o">=</span> <span class="n">clinical_model_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;treatment_discontinuation&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        
+        <span class="c1"># If still no config found, return empty dict</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">discontinuation_config</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Treatment discontinuation parameters not found&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        
+        <span class="c1"># Check if there&#39;s a parameter file specified</span>
+        <span class="n">parameter_file</span> <span class="o">=</span> <span class="n">discontinuation_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter_file&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parameter_file</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading discontinuation parameters from </span><span class="si">{</span><span class="n">parameter_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">discontinuation_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_parameter_file</span><span class="p">(</span><span class="n">parameter_file</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">discontinuation_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;discontinuation&quot;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error loading discontinuation parameters: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="c1"># Fall back to config in simulation config</span>
+        
+        <span class="k">return</span> <span class="n">discontinuation_config</span></div>
+
+
+<div class="viewcode-block" id="SimulationConfig.get_sensitivity_analysis_params">
+<a class="viewcode-back" href="../../simulation/config.html#simulation.config.SimulationConfig.get_sensitivity_analysis_params">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_sensitivity_analysis_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get sensitivity analysis parameters if enabled.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            Dictionary containing sensitivity analysis parameters:</span>
+<span class="sd">            - enabled: Whether sensitivity analysis is enabled</span>
+<span class="sd">            - parameter_file: Path to sensitivity parameter file</span>
+<span class="sd">            - selected_variation: Name of selected parameter variation</span>
+<span class="sd">            - variations: Dictionary of parameter variations if loaded</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        If sensitivity analysis is enabled, loads the parameter variations</span>
+<span class="sd">        from the specified file and applies the selected variation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensitivity_analysis</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+        
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensitivity_analysis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+            <span class="s2">&quot;parameter_file&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensitivity_analysis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter_file&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;selected_variation&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensitivity_analysis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;selected_variation&quot;</span><span class="p">,</span> <span class="s2">&quot;neutral&quot;</span><span class="p">)</span>
+        <span class="p">}</span>
+        
+        <span class="c1"># If enabled and parameter file is specified, load variations</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;enabled&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;parameter_file&quot;</span><span class="p">]:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sensitivity_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_parameter_file</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;parameter_file&quot;</span><span class="p">])</span>
+                <span class="n">result</span><span class="p">[</span><span class="s2">&quot;variations&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sensitivity_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;variations&quot;</span><span class="p">,</span> <span class="p">{})</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded sensitivity variations: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;variations&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error loading sensitivity parameters: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">result</span><span class="p">[</span><span class="s2">&quot;enabled&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="SimulationConfig.apply_sensitivity_variation">
+<a class="viewcode-back" href="../../simulation/config.html#simulation.config.SimulationConfig.apply_sensitivity_variation">[docs]</a>
+    <span class="k">def</span> <span class="nf">apply_sensitivity_variation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variation_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply a sensitivity analysis variation to the parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        variation_name : str</span>
+<span class="sd">            Name of the variation to apply</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the variation does not exist</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This method modifies the parameters in place by applying the</span>
+<span class="sd">        specified variation from the sensitivity analysis file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sensitivity_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sensitivity_analysis_params</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sensitivity_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Sensitivity analysis is not enabled&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+        
+        <span class="n">variations</span> <span class="o">=</span> <span class="n">sensitivity_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;variations&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="n">variation_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">variations</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sensitivity variation &#39;</span><span class="si">{</span><span class="n">variation_name</span><span class="si">}</span><span class="s2">&#39; not found&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sensitivity variation &#39;</span><span class="si">{</span><span class="n">variation_name</span><span class="si">}</span><span class="s2">&#39; not found&quot;</span><span class="p">)</span>
+        
+        <span class="n">variation</span> <span class="o">=</span> <span class="n">variations</span><span class="p">[</span><span class="n">variation_name</span><span class="p">]</span>
+        <span class="n">variation_params</span> <span class="o">=</span> <span class="n">variation</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameters&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        
+        <span class="c1"># Apply the variation parameters by deep merging</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_deep_merge_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">variation_params</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Applied sensitivity variation &#39;</span><span class="si">{</span><span class="n">variation_name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_deep_merge_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deep merge source dictionary into target dictionary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        target : Dict</span>
+<span class="sd">            Target dictionary to merge into</span>
+<span class="sd">        source : Dict</span>
+<span class="sd">            Source dictionary to merge from</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This method recursively merges dictionaries, updating values</span>
+<span class="sd">        at the leaf level while preserving the structure.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">source</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">target</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_deep_merge_parameters</span><span class="p">(</span><span class="n">target</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">target</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="SimulationConfig.get_cost_parameters">
+<a class="viewcode-back" href="../../simulation/config.html#simulation.config.SimulationConfig.get_cost_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_cost_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get cost parameters if enabled.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Any]</span>
+<span class="sd">            Dictionary containing cost parameters or empty dict if not enabled</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cost_params_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cost_parameters&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cost_params_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        
+        <span class="n">parameter_file</span> <span class="o">=</span> <span class="n">cost_params_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;parameter_file&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">parameter_file</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cost_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_parameter_file</span><span class="p">(</span><span class="n">parameter_file</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">cost_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cost_parameters&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error loading cost parameters: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{}</span></div>
+
+
 <div class="viewcode-block" id="SimulationConfig.from_yaml">
-<a class="viewcode-back" href="../../simulation/index.html#simulation.config.SimulationConfig.from_yaml">[docs]</a>
+<a class="viewcode-back" href="../../simulation/config.html#simulation.config.SimulationConfig.from_yaml">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_yaml</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;SimulationConfig&#39;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -571,12 +815,23 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Protocol must be a TreatmentProtocol object&quot;</span><span class="p">)</span>
             
         <span class="n">resources</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">],</span> <span class="s1">&#39;simulation&#39;</span><span class="p">):</span>
-            <span class="n">sim_config</span> <span class="o">=</span> <span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">simulation</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sim_config</span><span class="p">,</span> <span class="s1">&#39;resources&#39;</span><span class="p">):</span>
-                <span class="n">resources</span> <span class="o">=</span> <span class="n">sim_config</span><span class="o">.</span><span class="n">resources</span>
+        <span class="n">sensitivity_analysis</span> <span class="o">=</span> <span class="kc">None</span>
         
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+        <span class="c1"># Load the full simulation configuration to get additional parameters</span>
+        <span class="n">config_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;protocols&quot;</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;simulation_configs&quot;</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config_name</span><span class="si">}</span><span class="s2">.yaml&quot;</span>
+        <span class="k">if</span> <span class="n">config_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">sim_config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                
+                <span class="c1"># Extract resources if present</span>
+                <span class="k">if</span> <span class="s2">&quot;simulation&quot;</span> <span class="ow">in</span> <span class="n">sim_config</span> <span class="ow">and</span> <span class="s2">&quot;resources&quot;</span> <span class="ow">in</span> <span class="n">sim_config</span><span class="p">[</span><span class="s2">&quot;simulation&quot;</span><span class="p">]:</span>
+                    <span class="n">resources</span> <span class="o">=</span> <span class="n">sim_config</span><span class="p">[</span><span class="s2">&quot;simulation&quot;</span><span class="p">][</span><span class="s2">&quot;resources&quot;</span><span class="p">]</span>
+                
+                <span class="c1"># Extract sensitivity analysis configuration if present</span>
+                <span class="k">if</span> <span class="s2">&quot;parameters&quot;</span> <span class="ow">in</span> <span class="n">sim_config</span> <span class="ow">and</span> <span class="s2">&quot;sensitivity_analysis&quot;</span> <span class="ow">in</span> <span class="n">sim_config</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">]:</span>
+                    <span class="n">sensitivity_analysis</span> <span class="o">=</span> <span class="n">sim_config</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">][</span><span class="s2">&quot;sensitivity_analysis&quot;</span><span class="p">]</span>
+        
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">parameters</span><span class="o">=</span><span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;parameters&#39;</span><span class="p">],</span>
             <span class="n">protocol</span><span class="o">=</span><span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;protocol&#39;</span><span class="p">],</span>
             <span class="n">simulation_type</span><span class="o">=</span><span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">simulation_type</span><span class="p">,</span>
@@ -585,8 +840,32 @@
             <span class="n">random_seed</span><span class="o">=</span><span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">random_seed</span><span class="p">,</span>
             <span class="n">verbose</span><span class="o">=</span><span class="n">full_config</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
             <span class="n">start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span>
-            <span class="n">resources</span><span class="o">=</span><span class="n">resources</span>
-        <span class="p">)</span></div>
+            <span class="n">resources</span><span class="o">=</span><span class="n">resources</span><span class="p">,</span>
+            <span class="n">sensitivity_analysis</span><span class="o">=</span><span class="n">sensitivity_analysis</span>
+        <span class="p">)</span>
+        
+        <span class="c1"># Load base parameter set if specified</span>
+        <span class="k">if</span> <span class="s2">&quot;parameters&quot;</span> <span class="ow">in</span> <span class="n">sim_config</span> <span class="ow">and</span> <span class="s2">&quot;base_parameter_set&quot;</span> <span class="ow">in</span> <span class="n">sim_config</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">]:</span>
+            <span class="n">base_param_file</span> <span class="o">=</span> <span class="n">sim_config</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">][</span><span class="s2">&quot;base_parameter_set&quot;</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">base_params</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">load_parameter_file</span><span class="p">(</span><span class="n">base_param_file</span><span class="p">)</span>
+                <span class="c1"># Merge protocol_specific parameters into the config parameters</span>
+                <span class="k">if</span> <span class="s2">&quot;protocol_specific&quot;</span> <span class="ow">in</span> <span class="n">base_params</span><span class="p">:</span>
+                    <span class="n">config</span><span class="o">.</span><span class="n">_deep_merge_parameters</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">base_params</span><span class="p">[</span><span class="s2">&quot;protocol_specific&quot;</span><span class="p">])</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded base parameters from </span><span class="si">{</span><span class="n">base_param_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error loading base parameter set: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Apply sensitivity variation if enabled</span>
+        <span class="k">if</span> <span class="n">sensitivity_analysis</span> <span class="ow">and</span> <span class="n">sensitivity_analysis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">selected_variation</span> <span class="o">=</span> <span class="n">sensitivity_analysis</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;selected_variation&quot;</span><span class="p">,</span> <span class="s2">&quot;neutral&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">selected_variation</span> <span class="o">!=</span> <span class="s2">&quot;neutral&quot;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">config</span><span class="o">.</span><span class="n">apply_sensitivity_variation</span><span class="p">(</span><span class="n">selected_variation</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error applying sensitivity variation: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">config</span></div>
 </div>
 
 </pre></div>
@@ -598,7 +877,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Rose.</p>
+    <p>&#169; Copyright 2025, Luke Herbert.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

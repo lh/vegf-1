@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>simulation.vision_models &mdash; Macular Simulation  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Macular Simulation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../PROJECT_OVERVIEW.html">Macular Degeneration Treatment Simulation Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/index.html">Simulation Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/index.html">Analysis Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/index.html">Protocol Modules</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/patient_state.html">Patient State Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/scheduler.html">Scheduler Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/config.html">Simulation Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../simulation/clinical_model.html">Clinical Model Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/eylea_data_analysis.html">Eylea Data Analysis Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../analysis/eylea_intervals_analysis.html">Eylea Intervals Analysis Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/visit_types.html">Visit Types Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../protocols/config_parser.html">Config Parser Module</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../visualization/acuity_viz.html">Visual Acuity Visualization Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Macular Simulation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">simulation.vision_models</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for simulation.vision_models</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Vision change models for AMD simulations.</span>
+
+<span class="sd">This module provides different implementations of vision change models for</span>
+<span class="sd">AMD disease progression simulations. It allows for consistent vision change</span>
+<span class="sd">calculations across different simulation types (ABS and DES).</span>
+
+<span class="sd">Classes:</span>
+<span class="sd">    BaseVisionModel: Abstract base class for vision change models</span>
+<span class="sd">    SimplifiedVisionModel: Simple normally distributed vision change model</span>
+<span class="sd">    LiteratureBasedVisionModel: Vision change model based on literature data</span>
+<span class="sd">    ClinicalTrialVisionModel: Vision change model based on clinical trial data</span>
+
+<span class="sd">Notes:</span>
+<span class="sd">    This module centralizes vision change logic to ensure consistency</span>
+<span class="sd">    across different simulation implementations (ABS and DES).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">simulation.clinical_model</span> <span class="kn">import</span> <span class="n">DiseaseState</span>
+
+<div class="viewcode-block" id="BaseVisionModel">
+<a class="viewcode-back" href="../../simulation/vision_models.html#simulation.vision_models.BaseVisionModel">[docs]</a>
+<span class="k">class</span> <span class="nc">BaseVisionModel</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for vision change models.</span>
+<span class="sd">    </span>
+<span class="sd">    This abstract base class defines the interface for all vision change models.</span>
+<span class="sd">    Concrete implementations must provide a calculate_vision_change method.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="BaseVisionModel.calculate_vision_change">
+<a class="viewcode-back" href="../../simulation/vision_models.html#simulation.vision_models.BaseVisionModel.calculate_vision_change">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">calculate_vision_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">actions</span><span class="p">,</span> <span class="n">phase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate vision change based on patient state.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        state : dict</span>
+<span class="sd">            Patient state dictionary containing:</span>
+<span class="sd">            - current_vision: Current visual acuity</span>
+<span class="sd">            - fluid_detected: Whether fluid was detected at last visit</span>
+<span class="sd">            - treatments_in_phase: Number of treatments in current phase</span>
+<span class="sd">            - interval: Current treatment interval in weeks</span>
+<span class="sd">            - treatment_status: Dictionary with treatment status information</span>
+<span class="sd">        actions : list</span>
+<span class="sd">            Actions performed during the visit (e.g., [&quot;vision_test&quot;, &quot;oct_scan&quot;, &quot;injection&quot;])</span>
+<span class="sd">        phase : str</span>
+<span class="sd">            Current treatment phase (&#39;loading&#39; or &#39;maintenance&#39;)</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            (vision_change, fluid_detected)</span>
+<span class="sd">            - vision_change: Change in visual acuity (ETDRS letters)</span>
+<span class="sd">            - fluid_detected: Whether fluid was detected at this visit</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+<div class="viewcode-block" id="SimplifiedVisionModel">
+<a class="viewcode-back" href="../../simulation/vision_models.html#simulation.vision_models.SimplifiedVisionModel">[docs]</a>
+<span class="k">class</span> <span class="nc">SimplifiedVisionModel</span><span class="p">(</span><span class="n">BaseVisionModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simple normally distributed vision change model.</span>
+<span class="sd">    </span>
+<span class="sd">    This model uses fixed normal distributions for vision change,</span>
+<span class="sd">    with different parameters for loading and maintenance phases.</span>
+<span class="sd">    This matches the model used in the original treat_and_extend_des.py.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    config : simulation.config.SimulationConfig, optional</span>
+<span class="sd">        Configuration object, by default None</span>
+<span class="sd">        </span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    loading_params : dict</span>
+<span class="sd">        Parameters for loading phase vision change:</span>
+<span class="sd">        - mean: Mean vision change in ETDRS letters</span>
+<span class="sd">        - std: Standard deviation of vision change</span>
+<span class="sd">    maintenance_params : dict</span>
+<span class="sd">        Parameters for maintenance phase vision change:</span>
+<span class="sd">        - mean: Mean vision change in ETDRS letters</span>
+<span class="sd">        - std: Standard deviation of vision change</span>
+<span class="sd">    fluid_detection_prob : float</span>
+<span class="sd">        Probability of fluid detection (0.0-1.0)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="SimplifiedVisionModel.__init__">
+<a class="viewcode-back" href="../../simulation/vision_models.html#simulation.vision_models.SimplifiedVisionModel.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the model with optional configuration.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config : simulation.config.SimulationConfig, optional</span>
+<span class="sd">            Configuration object, by default None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        
+        <span class="c1"># Default parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loading_params</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;mean&#39;</span><span class="p">:</span> <span class="mf">6.0</span><span class="p">,</span>  <span class="c1"># Higher mean for loading phase</span>
+            <span class="s1">&#39;std&#39;</span><span class="p">:</span> <span class="mf">1.5</span>
+        <span class="p">}</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">maintenance_params</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;mean&#39;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span>  <span class="c1"># Lower mean for maintenance phase</span>
+            <span class="s1">&#39;std&#39;</span><span class="p">:</span> <span class="mf">1.0</span>
+        <span class="p">}</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">fluid_detection_prob</span> <span class="o">=</span> <span class="mf">0.3</span>  <span class="c1"># 30% chance of fluid detection</span>
+        
+        <span class="c1"># Override defaults with configuration if provided</span>
+        <span class="k">if</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">vision_params</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_vision_params</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">vision_params</span> <span class="ow">and</span> <span class="s1">&#39;vision_model&#39;</span> <span class="ow">in</span> <span class="n">vision_params</span><span class="p">:</span>
+                <span class="n">model_params</span> <span class="o">=</span> <span class="n">vision_params</span><span class="p">[</span><span class="s1">&#39;vision_model&#39;</span><span class="p">]</span>
+                
+                <span class="k">if</span> <span class="s1">&#39;loading_phase&#39;</span> <span class="ow">in</span> <span class="n">model_params</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">loading_params</span> <span class="o">=</span> <span class="n">model_params</span><span class="p">[</span><span class="s1">&#39;loading_phase&#39;</span><span class="p">]</span>
+                
+                <span class="k">if</span> <span class="s1">&#39;maintenance_phase&#39;</span> <span class="ow">in</span> <span class="n">model_params</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">maintenance_params</span> <span class="o">=</span> <span class="n">model_params</span><span class="p">[</span><span class="s1">&#39;maintenance_phase&#39;</span><span class="p">]</span>
+                
+                <span class="k">if</span> <span class="s1">&#39;fluid_detection_probability&#39;</span> <span class="ow">in</span> <span class="n">model_params</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fluid_detection_prob</span> <span class="o">=</span> <span class="n">model_params</span><span class="p">[</span><span class="s1">&#39;fluid_detection_probability&#39;</span><span class="p">]</span></div>
+
+        
+<div class="viewcode-block" id="SimplifiedVisionModel.calculate_vision_change">
+<a class="viewcode-back" href="../../simulation/vision_models.html#simulation.vision_models.SimplifiedVisionModel.calculate_vision_change">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate_vision_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">actions</span><span class="p">,</span> <span class="n">phase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate vision change based on patient state.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        state : dict</span>
+<span class="sd">            Patient state dictionary</span>
+<span class="sd">        actions : list</span>
+<span class="sd">            Actions performed during the visit</span>
+<span class="sd">        phase : str</span>
+<span class="sd">            Current treatment phase (&#39;loading&#39; or &#39;maintenance&#39;)</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            (vision_change, fluid_detected)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Only apply vision improvement if receiving an injection</span>
+        <span class="k">if</span> <span class="s2">&quot;injection&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fluid_detected&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        
+        <span class="c1"># Select appropriate parameters based on phase</span>
+        <span class="k">if</span> <span class="n">phase</span> <span class="o">==</span> <span class="s2">&quot;loading&quot;</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loading_params</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maintenance_params</span>
+        
+        <span class="c1"># Calculate vision change</span>
+        <span class="n">vision_change</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;std&#39;</span><span class="p">])</span>
+        
+        <span class="c1"># Determine if fluid was detected</span>
+        <span class="n">fluid_detected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid_detection_prob</span>
+        
+        <span class="k">return</span> <span class="n">vision_change</span><span class="p">,</span> <span class="n">fluid_detected</span></div>
+</div>
+
+
+<div class="viewcode-block" id="LiteratureBasedVisionModel">
+<a class="viewcode-back" href="../../simulation/vision_models.html#simulation.vision_models.LiteratureBasedVisionModel">[docs]</a>
+<span class="k">class</span> <span class="nc">LiteratureBasedVisionModel</span><span class="p">(</span><span class="n">BaseVisionModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Vision change model based on literature data.</span>
+<span class="sd">    </span>
+<span class="sd">    This model uses the clinical_model&#39;s simulate_vision_change method,</span>
+<span class="sd">    which implements a more complex vision change model based on </span>
+<span class="sd">    literature data and disease states.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    clinical_model : simulation.clinical_model.ClinicalModel</span>
+<span class="sd">        Clinical model for disease progression and treatment effects</span>
+<span class="sd">        </span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    clinical_model : simulation.clinical_model.ClinicalModel</span>
+<span class="sd">        Clinical model used for vision change calculations</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="LiteratureBasedVisionModel.__init__">
+<a class="viewcode-back" href="../../simulation/vision_models.html#simulation.vision_models.LiteratureBasedVisionModel.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clinical_model</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the model with a clinical model.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        clinical_model : simulation.clinical_model.ClinicalModel</span>
+<span class="sd">            Clinical model for disease progression and treatment effects</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clinical_model</span> <span class="o">=</span> <span class="n">clinical_model</span></div>
+
+    
+<div class="viewcode-block" id="LiteratureBasedVisionModel.calculate_vision_change">
+<a class="viewcode-back" href="../../simulation/vision_models.html#simulation.vision_models.LiteratureBasedVisionModel.calculate_vision_change">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate_vision_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">actions</span><span class="p">,</span> <span class="n">phase</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate vision change based on patient state.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        state : dict</span>
+<span class="sd">            Patient state dictionary</span>
+<span class="sd">        actions : list</span>
+<span class="sd">            Actions performed during the visit</span>
+<span class="sd">        phase : str</span>
+<span class="sd">            Current treatment phase (&#39;loading&#39; or &#39;maintenance&#39;)</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            (vision_change, fluid_detected)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Create state dictionary for clinical model</span>
+        <span class="n">clinical_state</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;disease_state&quot;</span><span class="p">:</span> <span class="s2">&quot;ACTIVE&quot;</span> <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fluid_detected&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;STABLE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;injections&quot;</span><span class="p">:</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;treatments_in_phase&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="s2">&quot;injection&quot;</span> <span class="ow">in</span> <span class="n">actions</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;last_recorded_injection&quot;</span><span class="p">:</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;treatments_in_phase&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="s2">&quot;injection&quot;</span> <span class="ow">in</span> <span class="n">actions</span> <span class="k">else</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;treatments_in_phase&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="s2">&quot;weeks_since_last_injection&quot;</span><span class="p">:</span> <span class="mi">0</span> <span class="k">if</span> <span class="s2">&quot;injection&quot;</span> <span class="ow">in</span> <span class="n">actions</span> <span class="k">else</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;interval&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+            <span class="s2">&quot;current_vision&quot;</span><span class="p">:</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;current_vision&quot;</span><span class="p">,</span> <span class="mi">65</span><span class="p">),</span>
+            <span class="s2">&quot;treatment_status&quot;</span><span class="p">:</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;treatment_status&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+        <span class="p">}</span>
+        
+        <span class="c1"># Simulate vision change using clinical model</span>
+        <span class="n">vision_change</span><span class="p">,</span> <span class="n">new_disease_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clinical_model</span><span class="o">.</span><span class="n">simulate_vision_change</span><span class="p">(</span><span class="n">clinical_state</span><span class="p">)</span>
+        
+        <span class="c1"># Determine if fluid was detected based on disease state</span>
+        <span class="n">fluid_detected</span> <span class="o">=</span> <span class="n">new_disease_state</span> <span class="ow">in</span> <span class="p">[</span><span class="n">DiseaseState</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span> <span class="n">DiseaseState</span><span class="o">.</span><span class="n">HIGHLY_ACTIVE</span><span class="p">]</span>
+        
+        <span class="k">return</span> <span class="n">vision_change</span><span class="p">,</span> <span class="n">fluid_detected</span></div>
+</div>
+
+
+<div class="viewcode-block" id="create_vision_model">
+<a class="viewcode-back" href="../../simulation/vision_models.html#simulation.vision_models.create_vision_model">[docs]</a>
+<span class="k">def</span> <span class="nf">create_vision_model</span><span class="p">(</span><span class="n">model_type</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">clinical_model</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Factory function to create a vision model.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model_type : str</span>
+<span class="sd">        Type of vision model to create:</span>
+<span class="sd">        - &#39;simplified&#39;: SimplifiedVisionModel</span>
+<span class="sd">        - &#39;literature_based&#39;: LiteratureBasedVisionModel</span>
+<span class="sd">    config : simulation.config.SimulationConfig, optional</span>
+<span class="sd">        Configuration object, by default None</span>
+<span class="sd">    clinical_model : simulation.clinical_model.ClinicalModel, optional</span>
+<span class="sd">        Clinical model for disease progression, by default None</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    BaseVisionModel</span>
+<span class="sd">        Vision model instance</span>
+<span class="sd">        </span>
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If model_type is not recognized</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">model_type</span> <span class="o">==</span> <span class="s1">&#39;simplified&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">SimplifiedVisionModel</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">model_type</span> <span class="o">==</span> <span class="s1">&#39;literature_based&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">clinical_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;clinical_model is required for literature_based vision model&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">LiteratureBasedVisionModel</span><span class="p">(</span><span class="n">clinical_model</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown vision model type: </span><span class="si">{</span><span class="n">model_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Luke Herbert.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
