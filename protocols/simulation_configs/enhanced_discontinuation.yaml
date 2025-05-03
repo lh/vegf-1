@@ -20,6 +20,7 @@ simulation:
 protocol:
   name: "Treat-and-Extend with Enhanced Discontinuation"
   type: "treat_and_extend"
+  agent: "treat_and_extend_abs"  # Specify the agent implementation to use
   loading_phase:
     injections: 3
     interval_weeks: 4
