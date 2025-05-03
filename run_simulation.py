@@ -97,9 +97,10 @@ def run_abs(config, verbose=False):
         print(f"First visit contents: {first_patient[0]}")
     
     return patient_histories
-# Use our direct implementation of treat-and-extend protocol for DES
-from direct_des_fix import run_direct_des_fix as run_des
+# Use the treat-and-extend protocol implementation for DES
+from treat_and_extend_des import run_treat_and_extend_des as run_des
 # Previous implementations:
+# from direct_des_fix import run_direct_des_fix as run_des
 # from des_simulation import run_des_simulation as run_des
 # from test_des_simulation import run_test_des_simulation as run_des
 import matplotlib.pyplot as plt
