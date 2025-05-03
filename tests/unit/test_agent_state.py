@@ -157,10 +157,26 @@ def test_visit_processing(agent_state, config):
     visit_time = datetime(2024, 2, 1)
     clinical_model = ClinicalModel(config)
     
+    # Add treatment_status to agent_state to support new clinical model
+    if "treatment_status" not in agent_state.state:
+        agent_state.state["treatment_status"] = {
+            "active": True,
+            "weeks_since_discontinuation": 0,
+            "monitoring_schedule": 12,
+            "recurrence_detected": False,
+            "discontinuation_date": None,
+            "reason_for_discontinuation": None
+        }
+    
     # Process a visit with multiple actions
     visit_data = agent_state.process_visit(visit_time, ["vision_test", "oct_scan", "injection"], clinical_model)
     
-    assert "vision_change" in visit_data
+    # The vision_change field is no longer directly in visit_data, but the vision change is reflected
+    # in the difference between baseline_vision and new_vision
+    assert "baseline_vision" in visit_data
+    assert "new_vision" in visit_data
+    assert visit_data["new_vision"] != visit_data["baseline_vision"]  # Vision should change
+    
     # OCT scan performed but results not currently available
     assert "oct_scan" in visit_data["actions_performed"] 
     assert "actions_performed" in visit_data
