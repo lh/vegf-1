@@ -44,8 +44,13 @@ def run_enhanced_discontinuation_simulation():
     # Create a mock simulation object
     class MockSimulation:
         def __init__(self):
-            self.discontinuation_manager = EnhancedDiscontinuationManager()
-            self.clinician_manager = ClinicianManager()
+            # Create empty config dictionaries
+            discontinuation_config = {}
+            clinician_config = {}
+            
+            # Create the managers with the config dictionaries
+            self.discontinuation_manager = EnhancedDiscontinuationManager(discontinuation_config)
+            self.clinician_manager = ClinicianManager(clinician_config)
             self.agents = {}
             
             # Add a get_statistics method to the discontinuation manager
