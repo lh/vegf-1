@@ -350,12 +350,25 @@ class TreatAndExtendDES:
             maintenance_injection_rate = (maintenance_injections / maintenance_visits) * 100
             print(f"Maintenance Phase Injection Rate: {maintenance_injection_rate:.1f}%")
 
-def run_direct_des_fix():
+def run_direct_des_fix(config=None, verbose=False):
     """
     Run the direct DES fix implementation.
+    
+    Parameters
+    ----------
+    config : SimulationConfig, optional
+        Simulation configuration, by default None
+    verbose : bool, optional
+        Whether to print verbose output, by default False
+        
+    Returns
+    -------
+    Dict[str, List[Dict]]
+        Dictionary mapping patient IDs to their visit histories
     """
     # Create and run simulation
-    sim = TreatAndExtendDES()
+    config_name = config.config_name if config and hasattr(config, 'config_name') else "eylea_literature_based"
+    sim = TreatAndExtendDES(config_name)
     patient_histories = sim.run()
     
     # Convert patient histories to DataFrame for analysis
