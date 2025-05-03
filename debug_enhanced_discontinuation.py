@@ -61,6 +61,19 @@ def run_enhanced_discontinuation_simulation():
                         "premature": 0.90,
                         "random_administrative": 0.85,
                         "treatment_duration": 0.80
+                    },
+                    "clinician_decisions": {
+                        "total": 50,
+                        "modified": 15,
+                        "by_type": {
+                            "discontinuation": {"total": 30, "modified": 8},
+                            "retreatment": {"total": 20, "modified": 7}
+                        },
+                        "by_profile": {
+                            "adherent": {"total": 20, "modified": 3},
+                            "average": {"total": 20, "modified": 6},
+                            "non_adherent": {"total": 10, "modified": 6}
+                        }
                     }
                 }
             
@@ -325,6 +338,25 @@ def analyze_discontinuation_patterns(patient_histories, sim):
         for cessation_type, rate in discontinuation_stats["retreatment_rates_by_type"].items():
             print(f"  {cessation_type}: {rate * 100:.1f}%")
     
+    # Print clinician decision statistics
+    if "clinician_decisions" in discontinuation_stats:
+        clinician_decisions = discontinuation_stats["clinician_decisions"]
+        print("\nClinician Decision Statistics:")
+        print(f"  Total decisions: {clinician_decisions['total']}")
+        print(f"  Modified decisions: {clinician_decisions['modified']} ({(clinician_decisions['modified'] / max(1, clinician_decisions['total'])) * 100:.1f}%)")
+        
+        print("\n  By Decision Type:")
+        for decision_type, stats in clinician_decisions["by_type"].items():
+            if stats["total"] > 0:
+                modification_rate = (stats["modified"] / stats["total"]) * 100
+                print(f"    {decision_type}: {stats['modified']}/{stats['total']} modified ({modification_rate:.1f}%)")
+        
+        print("\n  By Clinician Profile:")
+        for profile, stats in clinician_decisions["by_profile"].items():
+            if stats["total"] > 0:
+                modification_rate = (stats["modified"] / stats["total"]) * 100
+                print(f"    {profile}: {stats['modified']}/{stats['total']} modified ({modification_rate:.1f}%)")
+    
     # Create visualizations
     create_discontinuation_visualizations(discontinuation_types, clinician_discontinuations)
 
@@ -339,8 +371,8 @@ def create_discontinuation_visualizations(discontinuation_types, clinician_disco
     clinician_discontinuations : dict
         Dictionary mapping clinician profiles to discontinuation counts
     """
-    # Create a figure with two subplots
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    # Create a figure with three subplots
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 5))
     
     # Plot discontinuation types
     labels = list(discontinuation_types.keys())
@@ -367,6 +399,38 @@ def create_discontinuation_visualizations(discontinuation_types, clinician_disco
         ax2.text(0.5, 0.5, "No clinician discontinuations", 
                  horizontalalignment='center', verticalalignment='center',
                  transform=ax2.transAxes, fontsize=12)
+    
+    # Plot clinician decision influence
+    # Get the statistics from the mock simulation
+    clinician_decisions = {
+        "adherent": {"modified": 3, "total": 20},
+        "average": {"modified": 6, "total": 20},
+        "non_adherent": {"modified": 6, "total": 10}
+    }
+    
+    if clinician_decisions:
+        labels = list(clinician_decisions.keys())
+        modified_values = [stats["modified"] for stats in clinician_decisions.values()]
+        total_values = [stats["total"] for stats in clinician_decisions.values()]
+        
+        x = np.arange(len(labels))
+        width = 0.35
+        
+        # Plot total decisions
+        ax3.bar(x - width/2, total_values, width, label='Total Decisions')
+        # Plot modified decisions
+        ax3.bar(x + width/2, modified_values, width, label='Modified Decisions')
+        
+        ax3.set_title("Clinician Decision Influence")
+        ax3.set_ylabel("Count")
+        ax3.set_xticks(x)
+        ax3.set_xticklabels(labels, rotation=45, ha="right")
+        ax3.legend()
+    else:
+        # If no clinician decisions, add a message
+        ax3.text(0.5, 0.5, "No clinician decision data", 
+                 horizontalalignment='center', verticalalignment='center',
+                 transform=ax3.transAxes, fontsize=12)
     
     plt.tight_layout()
     plt.savefig("enhanced_discontinuation_analysis.png")

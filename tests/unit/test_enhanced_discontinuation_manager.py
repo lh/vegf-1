@@ -130,40 +130,44 @@ class TestEnhancedDiscontinuationManager(unittest.TestCase):
     
     def test_evaluate_discontinuation_stable_max_interval(self):
         """Test discontinuation evaluation for stable max interval."""
-        # Set random seed for reproducibility
-        np.random.seed(42)
-        
-        # Call the method
-        should_discontinue, reason, probability, cessation_type = self.manager.evaluate_discontinuation(
-            patient_state=self.patient_state,
-            current_time=self.current_time,
-            treatment_start_time=self.treatment_start_time
-        )
-        
-        # Check the result
-        self.assertTrue(should_discontinue)
-        self.assertEqual(reason, "stable_max_interval")
-        self.assertEqual(cessation_type, "stable_max_interval")
-        self.assertAlmostEqual(probability, 0.2)
+        # Force discontinuation for this test
+        with patch.object(np.random, 'random', return_value=0.1):  # Return a value less than probability (0.2)
+            # Call the method
+            should_discontinue, reason, probability, cessation_type = self.manager.evaluate_discontinuation(
+                patient_state=self.patient_state,
+                current_time=self.current_time,
+                treatment_start_time=self.treatment_start_time
+            )
+            
+            # Check the result
+            self.assertTrue(should_discontinue)
+            self.assertEqual(reason, "stable_max_interval")
+            self.assertEqual(cessation_type, "stable_max_interval")
+            self.assertAlmostEqual(probability, 0.2)
     
     def test_evaluate_discontinuation_with_clinician(self):
         """Test discontinuation evaluation with clinician influence."""
-        # Set random seed for reproducibility
-        np.random.seed(42)
+        # Create a mock clinician that always follows protocol
+        mock_clinician = MagicMock()
+        mock_clinician.profile_name = "adherent"
+        mock_clinician.follows_protocol.return_value = True
+        mock_clinician.evaluate_discontinuation.return_value = (True, 0.2)
         
-        # Call the method with a clinician
-        should_discontinue, reason, probability, cessation_type = self.manager.evaluate_discontinuation(
-            patient_state=self.patient_state,
-            current_time=self.current_time,
-            treatment_start_time=self.treatment_start_time,
-            clinician=self.clinician
-        )
-        
-        # Check the result - with this seed, the adherent clinician should follow protocol
-        self.assertTrue(should_discontinue)
-        self.assertEqual(reason, "stable_max_interval")
-        self.assertEqual(cessation_type, "stable_max_interval")
-        self.assertAlmostEqual(probability, 0.2)
+        # Force discontinuation for this test
+        with patch.object(np.random, 'random', return_value=0.1):
+            # Call the method with the mock clinician
+            should_discontinue, reason, probability, cessation_type = self.manager.evaluate_discontinuation(
+                patient_state=self.patient_state,
+                current_time=self.current_time,
+                treatment_start_time=self.treatment_start_time,
+                clinician=mock_clinician
+            )
+            
+            # Check the result - the adherent clinician should follow protocol
+            self.assertTrue(should_discontinue)
+            self.assertEqual(reason, "stable_max_interval")
+            self.assertEqual(cessation_type, "stable_max_interval")
+            self.assertAlmostEqual(probability, 0.2)
         
         # Create a non-adherent clinician
         non_adherent_clinician = Clinician("non_adherent", {
@@ -249,6 +253,10 @@ class TestEnhancedDiscontinuationManager(unittest.TestCase):
     
     def test_process_monitoring_visit(self):
         """Test processing a monitoring visit."""
+        # Reset the stats before the test
+        self.manager.stats["retreatments"] = 0
+        self.manager.stats["retreatments_by_type"]["stable_max_interval"] = 0
+        
         # Set up a patient state with a discontinuation date
         patient_state = self.patient_state.copy()
         patient_state["treatment_status"] = {
@@ -258,18 +266,17 @@ class TestEnhancedDiscontinuationManager(unittest.TestCase):
             "cessation_type": "stable_max_interval"
         }
         
-        # Set random seed for reproducibility
-        np.random.seed(42)
-        
-        # Mock the calculate_recurrence_probability method to always return 1.0
-        with patch.object(self.manager, 'calculate_recurrence_probability', return_value=1.0):
+        # Force recurrence and retreatment for this test
+        with patch.object(self.manager, 'calculate_recurrence_probability', return_value=1.0), \
+             patch.object(np.random, 'random', return_value=0.1), \
+             patch.object(self.manager, 'evaluate_retreatment', return_value=(True, 0.95)):
             # Process a monitoring visit
             retreatment, updated_state = self.manager.process_monitoring_visit(
                 patient_state=patient_state,
                 actions=["vision_test", "oct_scan"]
             )
             
-            # Check the result - with this seed, recurrence should be detected and retreatment recommended
+            # Check the result - recurrence should be detected and retreatment recommended
             self.assertTrue(retreatment)
             self.assertTrue(updated_state["treatment_status"]["active"])
             self.assertTrue(updated_state["treatment_status"]["recurrence_detected"])

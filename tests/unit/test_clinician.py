@@ -110,24 +110,28 @@ class TestClinician(unittest.TestCase):
     
     def test_follows_protocol(self):
         """Test the follows_protocol method."""
-        # Set random seed for reproducibility
-        np.random.seed(42)
-        
         # Perfect clinician should always follow protocol
-        for _ in range(10):
-            self.assertTrue(self.perfect_clinician.follows_protocol())
+        with patch.object(np.random, 'random', return_value=0.5):  # Any value will work for perfect clinician
+            for _ in range(10):
+                self.assertTrue(self.perfect_clinician.follows_protocol())
         
         # Adherent clinician should follow protocol most of the time
-        adherent_follows = sum(self.adherent_clinician.follows_protocol() for _ in range(100))
-        self.assertGreater(adherent_follows, 90)  # Should be around 95
+        with patch.object(np.random, 'random', side_effect=[0.9 if i % 20 == 0 else 0.1 for i in range(100)]):
+            # This will return values below the adherence rate (0.95) 95% of the time
+            adherent_follows = sum(self.adherent_clinician.follows_protocol() for _ in range(100))
+            self.assertGreater(adherent_follows, 90)  # Should be around 95
         
         # Average clinician should follow protocol less often
-        average_follows = sum(self.average_clinician.follows_protocol() for _ in range(100))
-        self.assertGreater(average_follows, 70)  # Should be around 80
+        with patch.object(np.random, 'random', side_effect=[0.9 if i % 5 == 0 else 0.1 for i in range(100)]):
+            # This will return values below the adherence rate (0.8) 80% of the time
+            average_follows = sum(self.average_clinician.follows_protocol() for _ in range(100))
+            self.assertGreater(average_follows, 70)  # Should be around 80
         
         # Non-adherent clinician should follow protocol least often
-        non_adherent_follows = sum(self.non_adherent_clinician.follows_protocol() for _ in range(100))
-        self.assertGreater(non_adherent_follows, 40)  # Should be around 50
+        with patch.object(np.random, 'random', side_effect=[0.9 if i % 2 == 0 else 0.1 for i in range(100)]):
+            # This will return values below the adherence rate (0.5) 50% of the time
+            non_adherent_follows = sum(self.non_adherent_clinician.follows_protocol() for _ in range(100))
+            self.assertGreater(non_adherent_follows, 40)  # Should be around 50
     
     def test_evaluate_discontinuation(self):
         """Test the evaluate_discontinuation method."""

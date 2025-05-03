@@ -1,6 +1,6 @@
 # Enhanced Discontinuation Model Implementation Plan
 
-**Author:** Cline  
+**Author:** Luke Herbert 
 **Date:** May 3, 2025  
 **Version:** 1.0
 
@@ -67,9 +67,9 @@ class EnhancedDiscontinuationManager(DiscontinuationManager):
 - Added visualization of discontinuation patterns by type and clinician profile
 - Implemented detailed statistics reporting for discontinuation types, PED prevalence, and retreatment rates
 
-## Phase 2: Clinician Variation (Week 2) - IN PROGRESS
+## Phase 2: Clinician Variation (Week 2) - COMPLETED
 
-**Status: Partially completed on May 3, 2025**
+**Status: Completed on May 3, 2025**
 
 ### 2.1 Create `Clinician` class - COMPLETED
 
@@ -102,25 +102,29 @@ class ClinicianManager:
     """
 ```
 
-### 2.3 Update `EnhancedDiscontinuationManager`
+### 2.3 Update `EnhancedDiscontinuationManager` - COMPLETED
 
 - Accept clinician input for decisions
 - Apply clinician-specific decision modifications
 - Track clinician influence on decisions
+- Enhanced statistics tracking for clinician decisions
 
-### 2.4 Integrate clinician variation with simulation classes
+### 2.4 Integrate clinician variation with simulation classes - COMPLETED
 
 - Initialize and use clinician manager
 - Pass clinician ID to discontinuation manager
 - Track decision modifications
+- Update monitoring visit scheduling to use clinician preferences
 
-## Phase 3: Time-dependent Recurrence (Week 3)
+## Phase 3: Time-dependent Recurrence (Week 3) - IN PROGRESS
 
-### 3.1 Implement time-dependent recurrence model
+**Status: Partially completed on May 3, 2025**
+
+### 3.1 Implement time-dependent recurrence model - COMPLETED
 
 - Use Artiaga study data for recurrence rates
 - Implement piecewise linear interpolation
-- Add composite risk modifiers
+- Add composite risk modifiers for PED
 
 ```python
 def calculate_recurrence_probability(self, weeks_since_discontinuation, cessation_type, has_PED=False):
@@ -131,45 +135,48 @@ def calculate_recurrence_probability(self, weeks_since_discontinuation, cessatio
     """
 ```
 
-### 3.2 Enhance monitoring visit processing
+### 3.2 Enhance monitoring visit processing - IN PROGRESS
 
-- Use time-dependent recurrence probabilities
-- Apply appropriate probabilities by cessation type
-- Implement Year 2 monitoring schedule from Artiaga
+- Use time-dependent recurrence probabilities - COMPLETED
+- Apply appropriate probabilities by cessation type - COMPLETED
+- Implement Year 2 monitoring schedule from Artiaga - IN PROGRESS
 
-### 3.3 Update `process_monitoring_visit` method
+### 3.3 Update `process_monitoring_visit` method - COMPLETED
 
 - Track discontinuation type for statistics
 - Apply appropriate recurrence detection probabilities
-- Track costs for future economic analysis
+- Track clinician influence on retreatment decisions
 
-### 3.4 Implement basic reporting
+### 3.4 Implement basic reporting - IN PROGRESS
 
-- Graph discontinuation types
-- Track recurrence rates by time
-- Report retreatment rates by discontinuation type
+- Graph discontinuation types - COMPLETED
+- Track recurrence rates by time - COMPLETED
+- Report retreatment rates by discontinuation type - COMPLETED
+- Visualize clinician influence on decisions - COMPLETED
 
-## Phase 4: Testing and Integration (Week 4)
+## Phase 4: Testing and Integration (Week 4) - PENDING
 
-### 4.1 Create comprehensive test suite
+### 4.1 Create comprehensive test suite - PARTIALLY COMPLETED
 
-- Unit tests for each component
-- Integration tests for ABS and DES implementations
-- Clinical validation tests
+- Unit tests for each component - PARTIALLY COMPLETED
+  - Test for `EnhancedDiscontinuationManager` - COMPLETED
+  - Test for `Clinician` and `ClinicianManager` - COMPLETED
+  - Integration tests for ABS and DES implementations - PENDING
+  - Clinical validation tests - PENDING
 
-### 4.2 Validate against clinical data
+### 4.2 Validate against clinical data - PENDING
 
 - Verify recurrence rates match Artiaga study
 - Validate clinician variation effects
 - Test different discontinuation scenarios
 
-### 4.3 Documentation and reporting
+### 4.3 Documentation and reporting - PARTIALLY COMPLETED
 
-- Update docstrings with numpy format
-- Create visual reports of outcomes
-- Document parameter configurations
+- Update docstrings with numpy format - COMPLETED
+- Create visual reports of outcomes - PARTIALLY COMPLETED
+- Document parameter configurations - PENDING
 
-### 4.4 Final integration
+### 4.4 Final integration - PENDING
 
 - Ensure compatibility with both simulation types
 - Verify statistics collection
@@ -182,9 +189,8 @@ def calculate_recurrence_probability(self, weeks_since_discontinuation, cessatio
 ```
 simulation/
 ├── discontinuation_manager.py  # Existing file to be extended
-├── enhanced_discontinuation_manager.py  # New file
-├── clinician.py  # New file
-├── clinician_manager.py  # New file
+├── enhanced_discontinuation_manager.py  # New file - COMPLETED
+├── clinician.py  # New file - COMPLETED (includes ClinicianManager)
 ```
 
 ### Key Classes and Methods
@@ -280,40 +286,48 @@ We'll use the YAML configuration structure as outlined in the design document, w
 
 ## Notable Implementation Decisions
 
-1. **Composite Risk Approach**: Rather than tracking PED development separately, we'll apply a single risk modifier based on the Aslanis study (74% vs 48% recurrence with/without PED).
+1. **Composite Risk Approach**: Rather than tracking PED development separately, we've applied a single risk modifier based on the Aslanis study (74% vs 48% recurrence with/without PED).
 
-2. **Monitoring Schedule**: We'll implement only the Year 2 recommendations from Artiaga, following a simplified approach.
+2. **Monitoring Schedule**: We're implementing only the Year 2 recommendations from Artiaga, following a simplified approach.
 
-3. **Economic Foundation**: We'll collect all the necessary data points for future economic analysis, but assign zero values for now.
+3. **Clinician Influence Tracking**: We've added detailed tracking of clinician influence on decisions, including statistics by clinician profile and decision type.
 
-4. **Simple Visualization**: We'll create basic reports and graphs rather than complex visualizations, preparing for future Streamlit integration.
+4. **Enhanced Visualization**: We've created visualizations for discontinuation types, clinician profiles, and clinician decision influence.
 
-5. **Backward Compatibility**: The enhanced manager will be compatible with existing code while providing new functionality.
+5. **Backward Compatibility**: The enhanced manager is compatible with existing code while providing new functionality.
 
 ## Testing Strategy
 
-1. **Unit Tests**: Test each component in isolation
-   - Test different discontinuation types
-   - Test time-dependent recurrence calculation
-   - Test clinician decision modifications
+1. **Unit Tests**: Test each component in isolation - PARTIALLY COMPLETED
+   - Test different discontinuation types - COMPLETED
+   - Test time-dependent recurrence calculation - COMPLETED
+   - Test clinician decision modifications - COMPLETED
 
-2. **Integration Tests**: Test components working together
+2. **Integration Tests**: Test components working together - PENDING
    - Test ABS with enhanced discontinuation
    - Test DES with enhanced discontinuation
    - Test clinician variation effects
 
-3. **Validation Tests**: Verify against clinical data
+3. **Validation Tests**: Verify against clinical data - PENDING
    - Compare recurrence rates to Artiaga study
    - Validate clinician behavior patterns
    - Test different risk factor scenarios
 
 ## Expected Outcomes
 
-1. More realistic discontinuation patterns with multiple types
-2. Time-dependent recurrence probabilities based on clinical data
-3. Clinician variation effects on treatment decisions
-4. Foundation for future economic analysis
-5. Enhanced reporting and statistics
+1. More realistic discontinuation patterns with multiple types - ACHIEVED
+2. Time-dependent recurrence probabilities based on clinical data - ACHIEVED
+3. Clinician variation effects on treatment decisions - ACHIEVED
+4. Foundation for future economic analysis - PARTIALLY ACHIEVED
+5. Enhanced reporting and statistics - ACHIEVED
+
+## Next Steps
+
+1. Complete the Year 2 monitoring schedule implementation from Artiaga
+2. Finalize integration tests for ABS and DES implementations
+3. Validate the model against clinical data
+4. Complete documentation and parameter configurations
+5. Prepare for future economic analysis
 
 ## References
 
