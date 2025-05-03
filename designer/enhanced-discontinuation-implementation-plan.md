@@ -135,11 +135,11 @@ def calculate_recurrence_probability(self, weeks_since_discontinuation, cessatio
     """
 ```
 
-### 3.2 Enhance monitoring visit processing - IN PROGRESS
+### 3.2 Enhance monitoring visit processing - COMPLETED
 
 - Use time-dependent recurrence probabilities - COMPLETED
 - Apply appropriate probabilities by cessation type - COMPLETED
-- Implement Year 2 monitoring schedule from Artiaga - IN PROGRESS
+- Implement Year 2 monitoring schedule from Artiaga - COMPLETED
 
 ### 3.3 Update `process_monitoring_visit` method - COMPLETED
 
@@ -323,11 +323,11 @@ We'll use the YAML configuration structure as outlined in the design document, w
 
 ## Next Steps
 
-1. Complete the Year 2 monitoring schedule implementation from Artiaga
-2. Finalize integration tests for ABS and DES implementations
-3. Validate the model against clinical data
-4. Complete documentation and parameter configurations
-5. Prepare for future economic analysis
+1. Finalize integration tests for ABS and DES implementations
+2. Validate the model against clinical data
+3. Complete documentation and parameter configurations
+4. Prepare for future economic analysis
+5. Consider adding more sophisticated clinician decision models for future extensions
 
 ## References
 

@@ -225,7 +225,12 @@ class EnhancedDiscontinuationManager(DiscontinuationManager):
                            discontinuation_time: datetime,
                            cessation_type: str = "stable_max_interval",
                            clinician: Optional[Clinician] = None) -> List[Dict[str, Any]]:
-        """Schedule post-discontinuation monitoring visits based on cessation type.
+        """Schedule post-discontinuation monitoring visits based on cessation type and Artiaga study.
+        
+        Implements the year-dependent monitoring schedule from the Artiaga study:
+        - First year: Every 1-3 months (4-12 weeks)
+        - Years 2-3: Every 3-4 months (12-16 weeks)
+        - Years 4-5: Every 6 months (24 weeks)
         
         Parameters
         ----------
@@ -244,37 +249,64 @@ class EnhancedDiscontinuationManager(DiscontinuationManager):
         if not self.enabled:
             return []
         
+        # Initialize monitoring events list
+        monitoring_events = []
+        
+        # Define year-dependent monitoring schedules based on Artiaga study
+        year1_schedule = []
+        year2_3_schedule = []
+        year4_5_schedule = []
+        
         # Get the appropriate follow-up schedule based on cessation type
-        # Default to planned schedule if not found
         if cessation_type in ["premature", "random_administrative", "treatment_duration"]:
-            follow_up_schedule = self.monitoring.get("unplanned", {}).get(
-                "follow_up_schedule", 
-                self.monitoring.get("planned", {}).get("follow_up_schedule", [12, 24, 36])
-            )
+            # More frequent monitoring for unplanned cessation
+            # First year: Every 1-2 months
+            year1_schedule = [4, 8, 12, 16, 20, 24, 28, 32, 36, 44, 52]
+            # Years 2-3: Every 3 months
+            year2_3_schedule = [64, 76, 88, 100, 112, 124, 136, 148]
+            # Years 4-5: Every 6 months
+            year4_5_schedule = [172, 196, 220, 244]
         else:
-            follow_up_schedule = self.monitoring.get("planned", {}).get("follow_up_schedule", [12, 24, 36])
+            # Standard monitoring for planned cessation
+            # First year: Every 2-3 months
+            year1_schedule = [8, 20, 32, 44, 52]
+            # Years 2-3: Every 4 months
+            year2_3_schedule = [68, 84, 100, 116, 132, 148]
+            # Years 4-5: Every 6 months
+            year4_5_schedule = [172, 196, 220, 244]
         
         # Apply clinician-specific modifications if a clinician is provided
         if clinician and clinician.profile_name != "perfect":
             # Clinicians with different risk tolerances may modify the follow-up schedule
             if clinician.risk_tolerance == "low":
                 # Conservative clinicians may schedule more frequent follow-ups
-                follow_up_schedule = [max(4, week - 4) for week in follow_up_schedule]
+                year1_schedule = sorted(list(set([max(4, week - 4) for week in year1_schedule])))
+                year2_3_schedule = sorted(list(set([max(8, week - 8) for week in year2_3_schedule])))
+                year4_5_schedule = sorted(list(set([max(12, week - 8) for week in year4_5_schedule])))
             elif clinician.risk_tolerance == "high":
                 # Less conservative clinicians may schedule less frequent follow-ups
-                follow_up_schedule = [week + 4 for week in follow_up_schedule]
+                year1_schedule = sorted(list(set([week + 4 for week in year1_schedule])))
+                year2_3_schedule = sorted(list(set([week + 8 for week in year2_3_schedule])))
+                year4_5_schedule = sorted(list(set([week + 8 for week in year4_5_schedule])))
         
-        monitoring_events = []
+        # Combine all schedules
+        all_weeks = year1_schedule + year2_3_schedule + year4_5_schedule
         
-        for weeks in follow_up_schedule:
+        # Create monitoring events
+        for weeks in all_weeks:
             visit_time = discontinuation_time + timedelta(weeks=weeks)
+            
+            # Determine which year this visit falls in for reference
+            year = (weeks // 52) + 1
+            period = "year_1" if year == 1 else "year_2_3" if year <= 3 else "year_4_5"
             
             monitoring_events.append({
                 "time": visit_time,
                 "type": "monitoring_visit",
                 "actions": ["vision_test", "oct_scan"],
                 "is_monitoring": True,
-                "cessation_type": cessation_type  # Store cessation type for reference
+                "cessation_type": cessation_type,  # Store cessation type for reference
+                "monitoring_period": period  # Store which monitoring period this belongs to
             })
         
         return monitoring_events

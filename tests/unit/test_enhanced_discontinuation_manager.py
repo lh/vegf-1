@@ -194,30 +194,74 @@ class TestEnhancedDiscontinuationManager(unittest.TestCase):
         self.assertIn(cessation_type, ["stable_max_interval", "premature", ""])
     
     def test_schedule_monitoring(self):
-        """Test scheduling monitoring visits."""
-        # Schedule monitoring for stable_max_interval
+        """Test scheduling monitoring visits with year-dependent schedules."""
+        # Schedule monitoring for stable_max_interval (planned cessation)
         monitoring_events = self.manager.schedule_monitoring(
             discontinuation_time=self.current_time,
             cessation_type="stable_max_interval"
         )
         
-        # Check the result
-        self.assertEqual(len(monitoring_events), 3)
-        self.assertEqual(monitoring_events[0]["time"], self.current_time + timedelta(weeks=12))
-        self.assertEqual(monitoring_events[1]["time"], self.current_time + timedelta(weeks=24))
-        self.assertEqual(monitoring_events[2]["time"], self.current_time + timedelta(weeks=36))
+        # Check the result - should use the planned schedule
+        # Expected schedule for planned cessation:
+        # Year 1: [8, 20, 32, 44, 52]
+        # Year 2-3: [68, 84, 100, 116, 132, 148]
+        # Year 4-5: [172, 196, 220, 244]
+        self.assertEqual(len(monitoring_events), 15)  # Total number of visits across all years
         
-        # Schedule monitoring for premature
+        # Check that the first visit is at week 8
+        self.assertEqual(monitoring_events[0]["time"], self.current_time + timedelta(weeks=8))
+        
+        # Check that the monitoring_period is correctly set
+        self.assertEqual(monitoring_events[0]["monitoring_period"], "year_1")
+        self.assertEqual(monitoring_events[5]["monitoring_period"], "year_2_3")
+        self.assertEqual(monitoring_events[10]["monitoring_period"], "year_2_3")
+        self.assertEqual(monitoring_events[11]["monitoring_period"], "year_4_5")
+        
+        # Schedule monitoring for premature (unplanned cessation)
         monitoring_events = self.manager.schedule_monitoring(
             discontinuation_time=self.current_time,
             cessation_type="premature"
         )
         
-        # Check the result - should use unplanned schedule
-        self.assertEqual(len(monitoring_events), 3)
-        self.assertEqual(monitoring_events[0]["time"], self.current_time + timedelta(weeks=8))
-        self.assertEqual(monitoring_events[1]["time"], self.current_time + timedelta(weeks=16))
-        self.assertEqual(monitoring_events[2]["time"], self.current_time + timedelta(weeks=24))
+        # Check the result - should use the unplanned schedule
+        # Expected schedule for unplanned cessation:
+        # Year 1: [4, 8, 12, 16, 20, 24, 28, 32, 36, 44, 52]
+        # Year 2-3: [64, 76, 88, 100, 112, 124, 136, 148]
+        # Year 4-5: [172, 196, 220, 244]
+        self.assertEqual(len(monitoring_events), 23)  # Total number of visits across all years
+        
+        # Check that the first visit is at week 4 (more frequent for unplanned)
+        self.assertEqual(monitoring_events[0]["time"], self.current_time + timedelta(weeks=4))
+        
+        # Check that the monitoring_period is correctly set
+        self.assertEqual(monitoring_events[0]["monitoring_period"], "year_1")
+        # Check a few key indices to ensure periods are set correctly
+        year1_count = sum(1 for event in monitoring_events if event["monitoring_period"] == "year_1")
+        year2_3_count = sum(1 for event in monitoring_events if event["monitoring_period"] == "year_2_3")
+        year4_5_count = sum(1 for event in monitoring_events if event["monitoring_period"] == "year_4_5")
+        
+        # Verify we have the expected number of visits in each period
+        self.assertGreater(year1_count, 0)
+        self.assertGreater(year2_3_count, 0)
+        self.assertGreater(year4_5_count, 0)
+        
+        # Test with a clinician with low risk tolerance (should schedule more frequent visits)
+        conservative_clinician = Clinician("adherent", {
+            "protocol_adherence_rate": 0.95,
+            "characteristics": {
+                "risk_tolerance": "low",
+                "conservative_retreatment": True
+            }
+        })
+        
+        monitoring_events = self.manager.schedule_monitoring(
+            discontinuation_time=self.current_time,
+            cessation_type="stable_max_interval",
+            clinician=conservative_clinician
+        )
+        
+        # Check that the first visit is earlier than the standard schedule
+        self.assertEqual(monitoring_events[0]["time"], self.current_time + timedelta(weeks=4))
     
     def test_calculate_recurrence_probability(self):
         """Test calculating recurrence probability."""
