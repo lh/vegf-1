@@ -489,11 +489,34 @@ class TreatAndExtendABS(BaseSimulation):
                     "treatment_status": patient.treatment_status,
                     "disease_characteristics": patient.disease_characteristics
                 }
+                
+                # First get the protocol retreatment decision without clinician influence
+                protocol_retreatment, _ = self.discontinuation_manager.process_monitoring_visit(
+                    patient_state=patient_state,
+                    actions=event.data["actions"]
+                )
+                
+                # Then get the actual decision with clinician influence
                 retreatment, updated_patient = self.discontinuation_manager.process_monitoring_visit(
                     patient_state=patient_state,
                     actions=event.data["actions"],
                     clinician=clinician
                 )
+                
+                # Track clinician influence on decision
+                if clinician and clinician.profile_name != "perfect":
+                    self.discontinuation_manager.track_clinician_decision(
+                        clinician=clinician,
+                        decision_type="retreatment",
+                        protocol_decision=protocol_retreatment,
+                        actual_decision=retreatment
+                    )
+                    
+                    # Update statistics
+                    if protocol_retreatment != retreatment:
+                        self.stats["clinician_decisions"]["protocol_overridden"] += 1
+                    else:
+                        self.stats["clinician_decisions"]["protocol_followed"] += 1
                 
                 # Record monitoring visit
                 visit_record = {
@@ -538,6 +561,15 @@ class TreatAndExtendABS(BaseSimulation):
                     "treatment_status": patient.treatment_status,
                     "disease_characteristics": patient.disease_characteristics
                 }
+                
+                # First get the protocol decision without clinician influence
+                protocol_decision, protocol_reason, protocol_probability, protocol_cessation_type = self.discontinuation_manager.evaluate_discontinuation(
+                    patient_state=patient_state,
+                    current_time=event.time,
+                    treatment_start_time=patient.treatment_start
+                )
+                
+                # Then get the actual decision with clinician influence
                 should_discontinue, reason, probability, cessation_type = self.discontinuation_manager.evaluate_discontinuation(
                     patient_state=patient_state,
                     current_time=event.time,
@@ -545,6 +577,21 @@ class TreatAndExtendABS(BaseSimulation):
                     treatment_start_time=patient.treatment_start,
                     clinician=clinician
                 )
+                
+                # Track clinician influence on decision
+                if clinician and clinician.profile_name != "perfect":
+                    self.discontinuation_manager.track_clinician_decision(
+                        clinician=clinician,
+                        decision_type="discontinuation",
+                        protocol_decision=protocol_decision,
+                        actual_decision=should_discontinue
+                    )
+                    
+                    # Update statistics
+                    if protocol_decision != should_discontinue:
+                        self.stats["clinician_decisions"]["protocol_overridden"] += 1
+                    else:
+                        self.stats["clinician_decisions"]["protocol_followed"] += 1
                 
                 if should_discontinue:
                     patient.treatment_status["active"] = False
@@ -556,7 +603,8 @@ class TreatAndExtendABS(BaseSimulation):
                     # Schedule monitoring visits
                     monitoring_events = self.discontinuation_manager.schedule_monitoring(
                         event.time, 
-                        cessation_type=cessation_type
+                        cessation_type=cessation_type,
+                        clinician=clinician
                     )
                     for monitoring_event in monitoring_events:
                         if monitoring_event["time"] <= self.end_date:

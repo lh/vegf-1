@@ -12,6 +12,7 @@ import os
 from datetime import datetime, timedelta
 import numpy as np
 from unittest.mock import patch, MagicMock
+import yaml
 
 # Add the parent directory to the path so we can import the simulation modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -21,6 +22,257 @@ from treat_and_extend_abs import TreatAndExtendABS, run_treat_and_extend_abs
 from simulation.enhanced_discontinuation_manager import EnhancedDiscontinuationManager
 from simulation.clinician import Clinician, ClinicianManager
 
+class MockSimulationConfig:
+    """Mock configuration class for testing."""
+    
+    def __init__(self, config_dict=None):
+        """Initialize with a configuration dictionary."""
+        if config_dict is None:
+            config_dict = {}
+            
+        # Set default values
+        self.config_name = "test_abs_default"
+        self.start_date = "2025-01-01"
+        self.duration_days = 365  # 1 year
+        self.num_patients = 10    # Small number of patients
+        self.random_seed = 42     # Fixed seed
+        
+        # Load parameters from config file if provided
+        config_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "configs",
+            "test_abs_default.yaml"
+        )
+        
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, 'r') as f:
+                    yaml_config = yaml.safe_load(f)
+                    if yaml_config:
+                        # Extract simulation parameters
+                        sim_params = yaml_config.get('simulation', {})
+                        self.start_date = sim_params.get('start_date', self.start_date)
+                        self.duration_days = sim_params.get('duration_days', self.duration_days)
+                        self.num_patients = sim_params.get('num_patients', self.num_patients)
+                        self.random_seed = sim_params.get('random_seed', self.random_seed)
+                        
+                        # Store all parameters
+                        self.parameters = yaml_config
+            except Exception as e:
+                print(f"Error loading config file: {e}")
+                self.parameters = self._get_default_parameters()
+        else:
+            self.parameters = self._get_default_parameters()
+        
+        # Override with provided config_dict
+        if config_dict:
+            if 'simulation' in config_dict:
+                sim_params = config_dict.get('simulation', {})
+                self.start_date = sim_params.get('start_date', self.start_date)
+                self.duration_days = sim_params.get('duration_days', self.duration_days)
+                self.num_patients = sim_params.get('num_patients', self.num_patients)
+                self.random_seed = sim_params.get('random_seed', self.random_seed)
+            
+            # Update parameters
+            if 'parameters' in config_dict:
+                self.parameters.update(config_dict['parameters'])
+            else:
+                self.parameters.update(config_dict)
+    
+    def _get_default_parameters(self):
+        """Get default parameters for testing."""
+        return {
+            "discontinuation": {
+                "enabled": True,
+                "criteria": {
+                    "stable_max_interval": {
+                        "consecutive_visits": 3,
+                        "probability": 0.2,
+                        "interval_weeks": 16
+                    },
+                    "random_administrative": {
+                        "annual_probability": 0.05
+                    },
+                    "treatment_duration": {
+                        "threshold_weeks": 52,
+                        "probability": 0.1
+                    },
+                    "premature": {
+                        "min_interval_weeks": 8,
+                        "probability_factor": 2.0
+                    }
+                },
+                "monitoring": {
+                    "cessation_types": {
+                        "stable_max_interval": "planned",
+                        "premature": "unplanned",
+                        "treatment_duration": "unplanned",
+                        "random_administrative": "none"
+                    },
+                    "planned": {
+                        "follow_up_schedule": [12, 24, 36]
+                    },
+                    "unplanned": {
+                        "follow_up_schedule": [8, 16, 24]
+                    },
+                    "recurrence_detection_probability": 0.87
+                },
+                "recurrence": {
+                    "planned": {
+                        "base_annual_rate": 0.13,
+                        "cumulative_rates": {
+                            "year_1": 0.13,
+                            "year_3": 0.40,
+                            "year_5": 0.65
+                        }
+                    },
+                    "premature": {
+                        "base_annual_rate": 0.53,
+                        "cumulative_rates": {
+                            "year_1": 0.53,
+                            "year_3": 0.85,
+                            "year_5": 0.95
+                        }
+                    },
+                    "risk_modifiers": {
+                        "with_PED": 1.54,
+                        "without_PED": 1.0
+                    }
+                },
+                "retreatment": {
+                    "eligibility_criteria": {
+                        "detected_fluid": True,
+                        "vision_loss_letters": 5
+                    },
+                    "probability": 0.95
+                }
+            },
+            "clinicians": {
+                "enabled": True,
+                "profiles": {
+                    "adherent": {
+                        "protocol_adherence_rate": 0.95,
+                        "probability": 0.25,
+                        "characteristics": {
+                            "risk_tolerance": "low",
+                            "conservative_retreatment": True
+                        }
+                    },
+                    "average": {
+                        "protocol_adherence_rate": 0.80,
+                        "probability": 0.50,
+                        "characteristics": {
+                            "risk_tolerance": "medium",
+                            "conservative_retreatment": False
+                        }
+                    },
+                    "non_adherent": {
+                        "protocol_adherence_rate": 0.50,
+                        "probability": 0.25,
+                        "characteristics": {
+                            "risk_tolerance": "high",
+                            "conservative_retreatment": False
+                        }
+                    }
+                },
+                "decision_biases": {
+                    "stability_thresholds": {
+                        "adherent": 3,
+                        "average": 2,
+                        "non_adherent": 1
+                    },
+                    "interval_preferences": {
+                        "adherent": {
+                            "min_interval": 8,
+                            "max_interval": 16,
+                            "extension_threshold": 2
+                        },
+                        "average": {
+                            "min_interval": 8,
+                            "max_interval": 12,
+                            "extension_threshold": 1
+                        },
+                        "non_adherent": {
+                            "min_interval": 6,
+                            "max_interval": 16,
+                            "extension_threshold": 0
+                        }
+                    }
+                },
+                "patient_assignment": {
+                    "mode": "fixed",
+                    "continuity_of_care": 0.9
+                }
+            }
+        }
+    
+    def get_vision_params(self):
+        """Get vision parameters."""
+        return {
+            "baseline_mean": 65.0,
+            "baseline_std": 10.0
+        }
+    
+    def get_clinical_model_params(self):
+        """Get clinical model parameters."""
+        return {
+            "disease_states": ["NAIVE", "STABLE", "ACTIVE", "HIGHLY_ACTIVE"],
+            "transition_probabilities": {
+                "NAIVE": {
+                    "NAIVE": 0.0,
+                    "STABLE": 0.58,
+                    "ACTIVE": 0.32,
+                    "HIGHLY_ACTIVE": 0.10
+                },
+                "STABLE": {
+                    "STABLE": 0.83,
+                    "ACTIVE": 0.12,
+                    "HIGHLY_ACTIVE": 0.05
+                },
+                "ACTIVE": {
+                    "STABLE": 0.32,
+                    "ACTIVE": 0.57,
+                    "HIGHLY_ACTIVE": 0.11
+                },
+                "HIGHLY_ACTIVE": {
+                    "STABLE": 0.08,
+                    "ACTIVE": 0.34,
+                    "HIGHLY_ACTIVE": 0.58
+                }
+            },
+            "vision_change": {
+                "base_change": {
+                    "NAIVE": {
+                        "injection": [8.4, 1.3],
+                        "no_injection": [-2.5, 1.0]
+                    },
+                    "STABLE": {
+                        "injection": [1.5, 0.7],
+                        "no_injection": [-0.75, 0.5]
+                    },
+                    "ACTIVE": {
+                        "injection": [0.8, 0.7],
+                        "no_injection": [-1.5, 1.0]
+                    },
+                    "HIGHLY_ACTIVE": {
+                        "injection": [0.3, 1.2],
+                        "no_injection": [-4.0, 1.5]
+                    }
+                },
+                "time_factor": {
+                    "max_weeks": 16
+                },
+                "ceiling_factor": {
+                    "max_vision": 85
+                },
+                "measurement_noise": [0, 0.5]
+            }
+        }
+    
+    def get_treatment_discontinuation_params(self):
+        """Get treatment discontinuation parameters."""
+        return self.parameters.get("discontinuation", {})
+
 class EnhancedDiscontinuationABSTest(unittest.TestCase):
     """Test cases for enhanced discontinuation in ABS implementation."""
     
@@ -29,27 +281,8 @@ class EnhancedDiscontinuationABSTest(unittest.TestCase):
         # Set fixed random seed for reproducibility
         np.random.seed(42)
         
-        # Load default test configuration
-        self.config_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "configs",
-            "test_abs_default.yaml"
-        )
-        
-        # Create directory if it doesn't exist
-        os.makedirs(os.path.dirname(self.config_path), exist_ok=True)
-        
-        # Use the enhanced discontinuation config as a base if it exists
-        try:
-            self.config = SimulationConfig.from_yaml("protocols/simulation_configs/enhanced_discontinuation.yaml")
-        except:
-            # Create a basic config if the enhanced discontinuation config doesn't exist
-            self.config = SimulationConfig.from_yaml("eylea_literature_based")
-        
-        # Override simulation parameters for faster tests
-        self.config.duration_days = 365  # 1 year
-        self.config.num_patients = 10    # Small number of patients
-        self.config.random_seed = 42     # Fixed seed
+        # Create a mock configuration
+        self.config = MockSimulationConfig()
     
     def _run_simulation(self, config=None, duration_days=None, num_patients=None):
         """Run an ABS simulation with the given configuration."""
@@ -62,9 +295,10 @@ class EnhancedDiscontinuationABSTest(unittest.TestCase):
         if num_patients is not None:
             config.num_patients = num_patients
         
-        # Create and run simulation
-        sim = TreatAndExtendABS(config)
-        return sim.run()
+        # Create and run simulation with mocked components
+        with patch('simulation.config.SimulationConfig.from_yaml', return_value=config):
+            sim = TreatAndExtendABS(config)
+            return sim.run()
     
     def _count_discontinuations_by_type(self, patient_histories):
         """Count discontinuations by type in patient histories."""

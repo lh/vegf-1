@@ -413,20 +413,44 @@ class TreatAndExtendDES:
                 if new_interval >= 16:
                     patient["disease_activity"]["max_interval_reached"] = True
                     
-                    # Use discontinuation manager to evaluate discontinuation
-                    # Convert patient dictionary to the format expected by discontinuation manager
-                    patient_state = {
-                        "disease_activity": patient["disease_activity"],
-                        "treatment_status": patient["treatment_status"],
-                        "disease_characteristics": patient["disease_characteristics"]
-                    }
-                    should_discontinue, reason, probability, cessation_type = self.discontinuation_manager.evaluate_discontinuation(
-                        patient_state=patient_state,
-                        current_time=event["time"],
-                        clinician_id=clinician_id,
-                        treatment_start_time=self.start_date,  # Using simulation start as treatment start for simplicity
-                        clinician=clinician
+                # Use discontinuation manager to evaluate discontinuation
+                # Convert patient dictionary to the format expected by discontinuation manager
+                patient_state = {
+                    "disease_activity": patient["disease_activity"],
+                    "treatment_status": patient["treatment_status"],
+                    "disease_characteristics": patient["disease_characteristics"]
+                }
+                
+                # First get the protocol decision without clinician influence
+                protocol_decision, protocol_reason, protocol_probability, protocol_cessation_type = self.discontinuation_manager.evaluate_discontinuation(
+                    patient_state=patient_state,
+                    current_time=event["time"],
+                    treatment_start_time=self.start_date  # Using simulation start as treatment start for simplicity
+                )
+                
+                # Then get the actual decision with clinician influence
+                should_discontinue, reason, probability, cessation_type = self.discontinuation_manager.evaluate_discontinuation(
+                    patient_state=patient_state,
+                    current_time=event["time"],
+                    clinician_id=clinician_id,
+                    treatment_start_time=self.start_date,  # Using simulation start as treatment start for simplicity
+                    clinician=clinician
+                )
+                
+                # Track clinician influence on decision
+                if clinician and clinician.profile_name != "perfect":
+                    self.discontinuation_manager.track_clinician_decision(
+                        clinician=clinician,
+                        decision_type="discontinuation",
+                        protocol_decision=protocol_decision,
+                        actual_decision=should_discontinue
                     )
+                    
+                    # Update statistics
+                    if protocol_decision != should_discontinue:
+                        self.stats["clinician_decisions"]["protocol_overridden"] = self.stats["clinician_decisions"].get("protocol_overridden", 0) + 1
+                    else:
+                        self.stats["clinician_decisions"]["protocol_followed"] = self.stats["clinician_decisions"].get("protocol_followed", 0) + 1
                     
                     if should_discontinue:
                         patient["treatment_status"]["active"] = False
@@ -438,7 +462,8 @@ class TreatAndExtendDES:
                         # Schedule monitoring visits
                         monitoring_events = self.discontinuation_manager.schedule_monitoring(
                             event["time"],
-                            cessation_type=cessation_type
+                            cessation_type=cessation_type,
+                            clinician=clinician
                         )
                         for monitoring_event in monitoring_events:
                             if monitoring_event["time"] <= self.end_date:

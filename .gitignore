@@ -48,3 +48,6 @@ docs/*.doctree
 
 # Do not ignore files in subdirectories of docs/
 !docs/**/
+
+# The Paper folder has its own git repository
+Paper/
