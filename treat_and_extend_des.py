@@ -29,6 +29,7 @@ from simulation import DiscreteEventSimulation, Event
 from simulation.patient_state import PatientState
 from simulation.clinical_model import ClinicalModel
 from simulation.scheduler import ClinicScheduler
+from simulation.vision_models import SimplifiedVisionModel
 
 class TreatAndExtendDES:
     """
@@ -57,6 +58,9 @@ class TreatAndExtendDES:
             daily_capacity=20,
             days_per_week=5
         )
+        
+        # Initialize vision model
+        self.vision_model = SimplifiedVisionModel(self.config)
         
         # Patient state management
         self.patients = {}
@@ -224,12 +228,27 @@ class TreatAndExtendDES:
         if "oct_scan" in event["actions"]:
             self.stats["total_oct_scans"] += 1
         
-        # Simulate vision change
+        # Record baseline vision for this visit
         baseline_vision = patient["current_vision"]
-        vision_change = np.random.normal(2, 1)  # Simplified vision change model
-        new_vision = min(max(baseline_vision + vision_change, 0), 85)
         
-        # Update patient vision
+        # Create state dictionary for vision model
+        state = {
+            "fluid_detected": patient["disease_activity"]["fluid_detected"],
+            "treatments_in_phase": patient["treatments_in_phase"],
+            "interval": patient["disease_activity"]["current_interval"],
+            "current_vision": patient["current_vision"],
+            "treatment_status": patient["treatment_status"]
+        }
+        
+        # Calculate vision change using vision model
+        vision_change, fluid_detected = self.vision_model.calculate_vision_change(
+            state=state,
+            actions=event["actions"],
+            phase=patient["current_phase"]
+        )
+        
+        # Update vision
+        new_vision = min(max(baseline_vision + vision_change, 0), 85)
         patient["current_vision"] = new_vision
         
         # Update vision statistics
@@ -237,9 +256,6 @@ class TreatAndExtendDES:
             self.stats["vision_improvements"] += 1
         elif new_vision < baseline_vision:
             self.stats["vision_declines"] += 1
-        
-        # Determine if fluid was detected (simplified)
-        fluid_detected = np.random.random() < 0.3  # 30% chance of fluid detection
         
         # Update disease activity
         patient["disease_activity"]["fluid_detected"] = fluid_detected
