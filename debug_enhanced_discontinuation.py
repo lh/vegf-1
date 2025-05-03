@@ -34,13 +34,102 @@ def run_enhanced_discontinuation_simulation():
     """
     print("Running simulation with enhanced discontinuation model...")
     
-    # Load the enhanced discontinuation configuration
-    # Use a direct reference to the config file to avoid path duplication issues
-    config_name = "enhanced_discontinuation"
-    config = SimulationConfig.from_yaml(config_name)
+    # Create a simple configuration dictionary
+    config = {
+        "simulation": {
+            "name": "Enhanced Discontinuation Model",
+            "description": "Simulation with enhanced discontinuation model and clinician variation",
+            "start_date": "2025-01-01",
+            "duration_days": 1095,  # 3 years
+            "num_patients": 20,  # Use a smaller number for testing
+            "random_seed": 42
+        },
+        "vision": {
+            "baseline_mean": 65.0,
+            "baseline_std": 10.0,
+            "treatment_effect": {
+                "loading_phase": 8.4,
+                "maintenance_phase": 1.5
+            },
+            "natural_decline": {
+                "untreated": -3.0,
+                "treated": -0.5
+            }
+        },
+        "discontinuation": {
+            "enabled": True,
+            "criteria": {
+                "stable_max_interval": {
+                    "consecutive_visits": 3,
+                    "probability": 0.2,
+                    "interval_weeks": 16
+                },
+                "premature": {
+                    "min_interval_weeks": 8,
+                    "probability_factor": 2.0
+                }
+            },
+            "recurrence": {
+                "planned": {
+                    "cumulative_rates": {
+                        "year_1": 0.13,
+                        "year_3": 0.40,
+                        "year_5": 0.65
+                    }
+                },
+                "premature": {
+                    "cumulative_rates": {
+                        "year_1": 0.53,
+                        "year_3": 0.85,
+                        "year_5": 0.95
+                    }
+                },
+                "risk_modifiers": {
+                    "with_PED": 1.54,
+                    "without_PED": 1.0
+                }
+            }
+        },
+        "clinicians": {
+            "enabled": True,
+            "profiles": {
+                "adherent": {
+                    "protocol_adherence_rate": 0.95,
+                    "probability": 0.25,
+                    "characteristics": {
+                        "risk_tolerance": "low",
+                        "conservative_retreatment": True
+                    }
+                },
+                "average": {
+                    "protocol_adherence_rate": 0.80,
+                    "probability": 0.50,
+                    "characteristics": {
+                        "risk_tolerance": "medium",
+                        "conservative_retreatment": False
+                    }
+                },
+                "non_adherent": {
+                    "protocol_adherence_rate": 0.50,
+                    "probability": 0.25,
+                    "characteristics": {
+                        "risk_tolerance": "high",
+                        "conservative_retreatment": False
+                    }
+                }
+            }
+        }
+    }
+    
+    # Create a SimulationConfig object
+    sim_config = SimulationConfig(
+        name="enhanced_discontinuation_test",
+        description="Test of enhanced discontinuation model",
+        parameters=config
+    )
     
     # Run the simulation
-    sim = TreatAndExtendABS(config)
+    sim = TreatAndExtendABS(sim_config)
     patient_histories = sim.run()
     
     # Analyze the results
