@@ -171,15 +171,19 @@ def run_enhanced_discontinuation_simulation():
                     self.disease_characteristics = {
                         "has_PED": random.random() < 0.3
                     }
+                    # Ensure we have some discontinuations for visualization
+                    is_active = random.random() < 0.5  # 50% chance of being active
+                    has_discontinued = not is_active
+                    
                     self.treatment_status = {
-                        "active": random.random() < 0.7,
-                        "discontinuation_date": "2025-06-15" if random.random() < 0.4 else None,
+                        "active": is_active,
+                        "discontinuation_date": "2025-06-15" if has_discontinued else None,
                         "cessation_type": random.choice([
                             "stable_max_interval", 
                             "premature", 
                             "random_administrative", 
                             "treatment_duration"
-                        ]) if random.random() < 0.4 else None
+                        ]) if has_discontinued else None
                     }
             
             return MockPatient()
