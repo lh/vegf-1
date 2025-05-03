@@ -29,6 +29,7 @@ from simulation.base import BaseSimulation, Event, SimulationClock
 from simulation.clinical_model import ClinicalModel, DiseaseState
 from simulation.scheduler import ClinicScheduler
 from simulation.vision_models import SimplifiedVisionModel
+from simulation.discontinuation_manager import DiscontinuationManager
 
 class Patient:
     """Patient agent in the treat-and-extend ABS simulation.
@@ -212,6 +213,7 @@ class Patient:
                     # Check if max interval reached
                     if new_interval >= 16:
                         self.disease_activity["max_interval_reached"] = True
+                        # Note: Discontinuation decision will be handled by the simulation class
                 
                 # Update interval for next visit
                 self.next_visit_interval = new_interval
@@ -286,6 +288,27 @@ class TreatAndExtendABS(BaseSimulation):
         self.agents = {}
         self.clinical_model = ClinicalModel(self.config)
         self.vision_model = SimplifiedVisionModel(self.config)
+        
+        # Initialize discontinuation manager
+        # Get the parameter file path from the config
+        discontinuation_config = self.config.parameters.get("discontinuation", {})
+        parameter_file = discontinuation_config.get("parameter_file", "")
+        
+        if parameter_file:
+            try:
+                # Directly load the discontinuation parameters from the file
+                with open(parameter_file, 'r') as f:
+                    import yaml
+                    discontinuation_params = yaml.safe_load(f)
+                    self.discontinuation_manager = DiscontinuationManager(discontinuation_params)
+            except Exception as e:
+                print(f"Error loading discontinuation parameters: {str(e)}")
+                # Fall back to empty dict with enabled=True
+                self.discontinuation_manager = DiscontinuationManager({"discontinuation": {"enabled": True}})
+        else:
+            # If no parameter file specified, use the discontinuation config from the parameters
+            self.discontinuation_manager = DiscontinuationManager({"discontinuation": {"enabled": True}})
+        
         self.scheduler = ClinicScheduler(
             daily_capacity=20,
             days_per_week=5
@@ -301,7 +324,9 @@ class TreatAndExtendABS(BaseSimulation):
             "vision_improvements": 0,
             "vision_declines": 0,
             "protocol_completions": 0,
-            "protocol_discontinuations": 0
+            "protocol_discontinuations": 0,
+            "monitoring_visits": 0,
+            "retreatments": 0
         }
     
     def generate_patients(self):
@@ -426,7 +451,95 @@ class TreatAndExtendABS(BaseSimulation):
             if patient.current_phase == "maintenance" and patient.treatments_in_phase == 0:
                 self.stats["protocol_completions"] += 1
             
-            # Check if treatment was discontinued
+            # Check if this is a monitoring visit for a discontinued patient
+            is_monitoring = event.data.get("is_monitoring", False)
+            
+            if is_monitoring:
+                self.stats["monitoring_visits"] += 1
+                
+                # Process monitoring visit
+                # Convert Patient object to dictionary for discontinuation manager
+                patient_state = {
+                    "disease_activity": patient.disease_activity,
+                    "treatment_status": patient.treatment_status
+                }
+                retreatment, updated_patient = self.discontinuation_manager.process_monitoring_visit(
+                    patient_state=patient_state,
+                    actions=event.data["actions"]
+                )
+                
+                # Record monitoring visit
+                visit_record = {
+                    'date': event.time,
+                    'type': 'monitoring_visit',
+                    'actions': event.data["actions"],
+                    'baseline_vision': patient.baseline_vision,
+                    'vision': patient.current_vision,
+                    'disease_state': 'active' if patient.disease_activity["fluid_detected"] else 'stable',
+                    'phase': 'monitoring',
+                    'interval': None
+                }
+                patient.history.append(visit_record)
+                
+                # If retreatment is recommended, restart treatment
+                if retreatment:
+                    patient.treatment_status["active"] = True
+                    patient.treatment_status["recurrence_detected"] = True
+                    patient.current_phase = "loading"  # Restart with loading phase
+                    patient.treatments_in_phase = 0
+                    patient.next_visit_interval = 4  # Initial loading phase interval
+                    patient.disease_activity["current_interval"] = 4
+                    self.stats["retreatments"] += 1
+                    
+                    # Schedule next treatment visit
+                    next_visit = self.schedule_next_visit(patient_id, event.time)
+                    if next_visit:
+                        self.clock.schedule_event(next_visit)
+                
+                return
+            
+            # Check if patient is in maintenance phase and at max interval
+            if (patient.current_phase == "maintenance" and 
+                patient.disease_activity["max_interval_reached"] and
+                patient.disease_activity["consecutive_stable_visits"] >= 3):
+                
+                # Use discontinuation manager to evaluate discontinuation
+                # Convert Patient object to dictionary for discontinuation manager
+                patient_state = {
+                    "disease_activity": patient.disease_activity,
+                    "treatment_status": patient.treatment_status
+                }
+                should_discontinue, reason, probability = self.discontinuation_manager.evaluate_discontinuation(
+                    patient_state=patient_state,
+                    current_time=event.time,
+                    treatment_start_time=patient.treatment_start
+                )
+                
+                if should_discontinue:
+                    patient.treatment_status["active"] = False
+                    patient.treatment_status["discontinuation_date"] = event.time
+                    patient.treatment_status["discontinuation_reason"] = reason
+                    self.stats["protocol_discontinuations"] += 1
+                    
+                    # Schedule monitoring visits
+                    monitoring_events = self.discontinuation_manager.schedule_monitoring(event.time)
+                    for monitoring_event in monitoring_events:
+                        if monitoring_event["time"] <= self.end_date:
+                            self.clock.schedule_event(Event(
+                                time=monitoring_event["time"],
+                                event_type="visit",
+                                patient_id=patient_id,
+                                data={
+                                    "visit_type": "monitoring_visit",
+                                    "actions": monitoring_event["actions"],
+                                    "is_monitoring": True
+                                },
+                                priority=1
+                            ))
+                    
+                    return  # No more regular visits
+            
+            # Check if treatment was already discontinued
             if not patient.treatment_status["active"] and patient.treatment_status["discontinuation_date"] is None:
                 patient.treatment_status["discontinuation_date"] = event.time
                 self.stats["protocol_discontinuations"] += 1
@@ -488,6 +601,14 @@ class TreatAndExtendABS(BaseSimulation):
         print("-" * 20)
         for stat, value in self.stats.items():
             print(f"{stat}: {value}")
+        
+        # Add discontinuation manager statistics
+        discontinuation_stats = self.discontinuation_manager.get_statistics()
+        if discontinuation_stats:
+            print("\nDiscontinuation Statistics:")
+            print("-" * 20)
+            for stat, value in discontinuation_stats.items():
+                print(f"{stat}: {value}")
         
         # Print patient summary
         print("\nPatient Summary:")

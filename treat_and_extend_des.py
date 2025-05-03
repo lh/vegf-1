@@ -64,8 +64,24 @@ class TreatAndExtendDES:
         self.vision_model = SimplifiedVisionModel(self.config)
         
         # Initialize discontinuation manager
-        discontinuation_params = self.config.get_treatment_discontinuation_params()
-        self.discontinuation_manager = DiscontinuationManager(self.config.parameters)
+        # Get the parameter file path from the config
+        discontinuation_config = self.config.parameters.get("discontinuation", {})
+        parameter_file = discontinuation_config.get("parameter_file", "")
+        
+        if parameter_file:
+            try:
+                # Directly load the discontinuation parameters from the file
+                with open(parameter_file, 'r') as f:
+                    import yaml
+                    discontinuation_params = yaml.safe_load(f)
+                    self.discontinuation_manager = DiscontinuationManager(discontinuation_params)
+            except Exception as e:
+                print(f"Error loading discontinuation parameters: {str(e)}")
+                # Fall back to empty dict with enabled=True
+                self.discontinuation_manager = DiscontinuationManager({"discontinuation": {"enabled": True}})
+        else:
+            # If no parameter file specified, use the discontinuation config from the parameters
+            self.discontinuation_manager = DiscontinuationManager({"discontinuation": {"enabled": True}})
         
         # Patient state management
         self.patients = {}
@@ -243,8 +259,13 @@ class TreatAndExtendDES:
         # Handle monitoring visit differently
         if is_monitoring and not patient["treatment_status"]["active"]:
             # Process monitoring visit for discontinued patient
+            # Convert patient dictionary to the format expected by discontinuation manager
+            patient_state = {
+                "disease_activity": patient["disease_activity"],
+                "treatment_status": patient["treatment_status"]
+            }
             retreatment, updated_patient = self.discontinuation_manager.process_monitoring_visit(
-                patient_state=patient,
+                patient_state=patient_state,
                 actions=event["actions"]
             )
             
@@ -369,8 +390,13 @@ class TreatAndExtendDES:
                     patient["disease_activity"]["max_interval_reached"] = True
                     
                     # Use discontinuation manager to evaluate discontinuation
+                    # Convert patient dictionary to the format expected by discontinuation manager
+                    patient_state = {
+                        "disease_activity": patient["disease_activity"],
+                        "treatment_status": patient["treatment_status"]
+                    }
                     should_discontinue, reason, probability = self.discontinuation_manager.evaluate_discontinuation(
-                        patient_state=patient,
+                        patient_state=patient_state,
                         current_time=event["time"],
                         treatment_start_time=self.start_date  # Using simulation start as treatment start for simplicity
                     )
