@@ -97,9 +97,11 @@ def run_abs(config, verbose=False):
         print(f"First visit contents: {first_patient[0]}")
     
     return patient_histories
-# Use our new production-ready DES implementation
-from des_simulation import run_des_simulation as run_des
-# Previously used test implementation: from test_des_simulation import run_test_des_simulation as run_des
+# Use our direct implementation of treat-and-extend protocol for DES
+from direct_des_fix import run_direct_des_fix as run_des
+# Previous implementations:
+# from des_simulation import run_des_simulation as run_des
+# from test_des_simulation import run_test_des_simulation as run_des
 import matplotlib.pyplot as plt
 from analysis.simulation_results import SimulationResults
 from visualization.comparison_viz import plot_mean_acuity_comparison
