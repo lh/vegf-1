@@ -5,6 +5,7 @@ This module handles running simulations from the Streamlit UI and processing res
 """
 
 import os
+import sys
 import json
 import tempfile
 import pandas as pd
@@ -15,10 +16,17 @@ import streamlit as st
 import time
 from datetime import datetime
 
+# Add parent directory to sys.path to allow importing from the main project
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # Import simulation modules
-from simulation.config import SimulationConfig
-from treat_and_extend_abs import TreatAndExtendABS
-from treat_and_extend_des import TreatAndExtendDES
+try:
+    from simulation.config import SimulationConfig
+    from treat_and_extend_abs import TreatAndExtendABS
+    from treat_and_extend_des import TreatAndExtendDES
+except ImportError as e:
+    st.error(f"Failed to import simulation modules: {e}")
+    st.info("This may be due to missing dependencies or incorrect import paths.")
 
 
 def create_simulation_config(params):
@@ -217,25 +225,109 @@ def run_simulation(params):
     with st.spinner(f"Running {params['simulation_type']} simulation..."):
         start_time = time.time()
         
-        # Create configuration
-        config = create_simulation_config(params)
+        # Check if simulation modules are available
+        if 'SimulationConfig' not in globals() or SimulationConfig is None:
+            st.warning("Simulation modules not available. Using sample data.")
+            # Create sample data
+            return generate_sample_results(params)
         
-        # Run appropriate simulation type
-        if params["simulation_type"] == "ABS":
-            sim = TreatAndExtendABS(config)
-        else:  # DES
-            sim = TreatAndExtendDES(config)
+        try:
+            # Create configuration
+            config = create_simulation_config(params)
+            
+            # Run appropriate simulation type
+            if params["simulation_type"] == "ABS":
+                sim = TreatAndExtendABS(config)
+            else:  # DES
+                sim = TreatAndExtendDES(config)
+            
+            # Run simulation
+            patient_histories = sim.run()
+            
+            end_time = time.time()
+            
+            # Process results
+            results = process_simulation_results(sim, patient_histories, params)
+            results["runtime_seconds"] = end_time - start_time
+            
+            return results
         
-        # Run simulation
-        patient_histories = sim.run()
-        
-        end_time = time.time()
-        
-        # Process results
-        results = process_simulation_results(sim, patient_histories, params)
-        results["runtime_seconds"] = end_time - start_time
-        
-        return results
+        except Exception as e:
+            st.error(f"Error running simulation: {e}")
+            st.warning("Using sample data instead.")
+            return generate_sample_results(params)
+
+
+def generate_sample_results(params):
+    """
+    Generate sample simulation results when actual simulation can't be run.
+    
+    Parameters
+    ----------
+    params : dict
+        Dictionary of parameters from the UI
+    
+    Returns
+    -------
+    dict
+        Sample simulation results
+    """
+    # Wait a moment to simulate processing time
+    time.sleep(1)
+    
+    # Get parameters
+    simulation_type = params.get("simulation_type", "ABS")
+    population_size = params.get("population_size", 1000)
+    duration_years = params.get("duration_years", 5)
+    planned_discontinue_prob = params.get("planned_discontinue_prob", 0.2)
+    admin_discontinue_prob = params.get("admin_discontinue_prob", 0.05)
+    
+    # Create sample discontinuation counts
+    planned_count = int(population_size * planned_discontinue_prob * 2.5)  # Multiplier to simulate accumulation over time
+    admin_count = int(population_size * admin_discontinue_prob * 5)  # Administrative events accumulate over time
+    time_based_count = int(population_size * 0.2)  # Fixed percentage for sample data
+    premature_count = int(population_size * 0.1)  # Fixed percentage for sample data
+    
+    # Create sample visual acuity data
+    months = np.linspace(0, duration_years * 12, 60)
+    mean_va_data = []
+    
+    for month in months:
+        # Create a realistic VA curve that starts at 65, improves to 75, then declines slowly
+        va = 65 + 10 * (1 - np.exp(-0.3 * month)) if month < 12 else 75 - 0.15 * (month - 12)
+        mean_va_data.append({
+            "time": float(month),
+            "visual_acuity": float(va)
+        })
+    
+    # Create sample results dictionary
+    results = {
+        "simulation_type": simulation_type,
+        "population_size": population_size,
+        "duration_years": duration_years,
+        "planned_discontinue_prob": planned_discontinue_prob,
+        "admin_discontinue_prob": admin_discontinue_prob,
+        "enable_clinician_variation": params.get("enable_clinician_variation", True),
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "patient_count": population_size,
+        "is_sample": True,
+        "discontinuation_counts": {
+            "Planned": planned_count,
+            "Administrative": admin_count,
+            "Time-based": time_based_count,
+            "Premature": premature_count
+        },
+        "total_discontinuations": planned_count + admin_count + time_based_count + premature_count,
+        "recurrences": {
+            "total": int((planned_count + admin_count + time_based_count + premature_count) * 0.4)
+        },
+        "mean_va_data": mean_va_data,
+        "mean_injections": 7.2,
+        "total_injections": int(7.2 * population_size),
+        "runtime_seconds": 1.0
+    }
+    
+    return results
 
 
 def process_simulation_results(sim, patient_histories, params):

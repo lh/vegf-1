@@ -22,18 +22,58 @@ from pathlib import Path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import project modules
-from simulation.config import SimulationConfig
+try:
+    from simulation.config import SimulationConfig
+except ImportError:
+    # Handle missing imports gracefully
+    SimulationConfig = None
+
+# Import local modules
 from streamlit_app.acknowledgments import ACKNOWLEDGMENT_TEXT
-from streamlit_app.amd_protocol_explorer import run_enhanced_discontinuation_dashboard
 from streamlit_app.quarto_utils import get_quarto, render_quarto_report
-from streamlit_app.simulation_runner import (
-    run_simulation, 
-    get_ui_parameters,
-    generate_va_over_time_plot,
-    generate_discontinuation_plot,
-    save_simulation_results,
-    load_simulation_results
-)
+
+try:
+    from streamlit_app.amd_protocol_explorer import run_enhanced_discontinuation_dashboard
+except ImportError:
+    # Define a fallback function if the import fails
+    def run_enhanced_discontinuation_dashboard(config_path=None):
+        st.warning("Dashboard module failed to load correctly.")
+        st.info("This may be due to missing dependencies or incorrect import paths.")
+
+try:
+    from streamlit_app.simulation_runner import (
+        run_simulation, 
+        get_ui_parameters,
+        generate_va_over_time_plot,
+        generate_discontinuation_plot,
+        save_simulation_results,
+        load_simulation_results
+    )
+except ImportError:
+    # Define fallback functions if the imports fail
+    def run_simulation(params):
+        st.error("Simulation module failed to load correctly.")
+        st.info("This may be due to missing dependencies or incorrect import paths.")
+        return {"error": "simulation_module_failed"}
+    
+    def get_ui_parameters():
+        return {}
+    
+    def generate_va_over_time_plot(results):
+        fig, ax = plt.subplots()
+        ax.text(0.5, 0.5, "Simulation module not available", ha='center', va='center')
+        return fig
+    
+    def generate_discontinuation_plot(results):
+        fig, ax = plt.subplots()
+        ax.text(0.5, 0.5, "Simulation module not available", ha='center', va='center')
+        return fig
+    
+    def save_simulation_results(results, filename=None):
+        return None
+    
+    def load_simulation_results(filepath):
+        return {}
 
 
 def display_logo_and_title(title, logo_width=100, column_ratio=[1, 4]):
@@ -124,6 +164,12 @@ if page == "Dashboard":
     if "simulation_results" in st.session_state:
         results = st.session_state["simulation_results"]
         st.subheader("Latest Simulation Results")
+        
+        # Check if these are sample results
+        if results.get("is_sample", False):
+            st.warning("⚠️ **Sample Data**: These are simulated results using sample data, not actual simulation outputs.")
+            st.info("The actual simulation module couldn't be loaded. This is likely because you're viewing the UI without having the full simulation codebase installed.")
+            st.markdown("You can still explore the UI functionality with this sample data.")
         
         # Display metrics
         col1, col2, col3 = st.columns(3)
@@ -274,6 +320,12 @@ elif page == "Run Simulation":
     
     # Store UI parameters in session state
     if st.button("Run Simulation", type="primary"):
+        # Check if SimulationConfig is available
+        if SimulationConfig is None:
+            st.error("Cannot run simulation: required simulation modules are not available.")
+            st.info("This may be due to missing dependencies or incorrect import paths.")
+            return
+        
         # Save all parameters to session state
         st.session_state["simulation_type"] = simulation_type
         st.session_state["duration_years"] = duration_years
@@ -293,21 +345,63 @@ elif page == "Run Simulation":
         with st.spinner(f"Running {simulation_type} simulation with {population_size} patients over {duration_years} years..."):
             st.session_state["simulation_running"] = True
             
-            # Run simulation
-            results = run_simulation(params)
-            
-            # Save results in session state
-            st.session_state["simulation_results"] = results
-            st.session_state["simulation_complete"] = True
-            
-            # Save results to file
-            results_path = save_simulation_results(results)
-            st.session_state["simulation_results_path"] = results_path
-            
-            st.success(f"Simulation complete in {results['runtime_seconds']:.2f} seconds!")
+            try:
+                # Run simulation
+                results = run_simulation(params)
+                
+                # Skip the rest if there was an error
+                if "error" in results:
+                    st.session_state["simulation_running"] = False
+                    return
+                
+                # Save results in session state
+                st.session_state["simulation_results"] = results
+                st.session_state["simulation_complete"] = True
+                
+                # Save results to file
+                results_path = save_simulation_results(results)
+                if results_path:
+                    st.session_state["simulation_results_path"] = results_path
+                
+                # Show success message
+                if "runtime_seconds" in results:
+                    st.success(f"Simulation complete in {results['runtime_seconds']:.2f} seconds!")
+                else:
+                    st.success("Simulation complete!")
+            except Exception as e:
+                st.error(f"Error running simulation: {str(e)}")
+                st.info("Using sample data instead.")
+                
+                # Create sample results for demonstration
+                results = {
+                    "simulation_type": simulation_type,
+                    "population_size": population_size,
+                    "duration_years": duration_years,
+                    "enable_clinician_variation": enable_clinician_variation,
+                    "planned_discontinue_prob": planned_discontinue_prob,
+                    "admin_discontinue_prob": admin_discontinue_prob,
+                    "discontinuation_counts": {
+                        "Planned": int(population_size * 0.25),
+                        "Administrative": int(population_size * 0.12),
+                        "Time-based": int(population_size * 0.18),
+                        "Premature": int(population_size * 0.08)
+                    },
+                    "runtime_seconds": 1.0,
+                    "is_sample": True
+                }
+                
+                # Save sample results in session state
+                st.session_state["simulation_results"] = results
+                st.session_state["simulation_complete"] = True
+                st.session_state["simulation_running"] = False
         
         # Show results
         st.subheader("Simulation Results")
+        
+        # Check if these are sample results
+        if results.get("is_sample", False):
+            st.warning("⚠️ **Sample Data**: These are simulated results using sample data, not actual simulation outputs.")
+            st.info("The actual simulation module couldn't be loaded. This is likely because you're viewing the UI without having the full simulation codebase installed.")
         
         # Display metrics
         col1, col2, col3 = st.columns(3)
@@ -416,6 +510,10 @@ elif page == "Reports":
                             # Use actual simulation results if available, otherwise use sample data
                             if "simulation_results" in st.session_state:
                                 data = st.session_state["simulation_results"]
+                                # Check if these are sample results
+                                if data.get("is_sample", False):
+                                    st.warning("⚠️ **Sample Data**: This report will use sample data, not actual simulation outputs.")
+                                    st.info("The actual simulation module couldn't be loaded. The report will still be generated but with simulated data.")
                             else:
                                 st.warning("Using sample data. Run a simulation first for more accurate reports.")
                                 # Sample data for testing
