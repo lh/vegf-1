@@ -26,11 +26,21 @@ sys.path.append(os.getcwd())
 # Import simulation modules
 try:
     from simulation.config import SimulationConfig
+    
+    # Import simulation classes
     from treat_and_extend_abs import TreatAndExtendABS
     from treat_and_extend_des import TreatAndExtendDES
+    
+    # Import parsing modules
+    from protocols.protocol_parser import ProtocolParser
+    from protocol_models import TreatmentProtocol
+    
+    # Flag that imports were successful
+    simulation_imports_successful = True
 except ImportError as e:
     st.error(f"Failed to import simulation modules: {e}")
     st.info("This may be due to missing dependencies or incorrect import paths.")
+    simulation_imports_successful = False
 
 
 def create_simulation_config(params):
@@ -239,7 +249,7 @@ def run_simulation(params):
         start_time = time.time()
         
         # Check if simulation modules are available
-        if 'SimulationConfig' not in globals() or SimulationConfig is None:
+        if not simulation_imports_successful:
             st.warning("Simulation modules not available. Using sample data.")
             # Create sample data
             return generate_sample_results(params)
@@ -324,9 +334,23 @@ def run_simulation(params):
                 import yaml
                 yaml.dump(config_data, temp_config)
             
-            # Use the from_yaml method to create a proper SimulationConfig object
-            st.info(f"Using configuration file: {config_path}")
-            config = SimulationConfig.from_yaml(config_path)
+            # Use an existing simulation configuration as base
+            # Instead of creating our own, use one of the existing test configurations
+            # that has all the required protocol definitions
+            test_config_path = os.path.join(root_dir, "protocols", "simulation_configs", "test_simulation.yaml")
+            
+            st.info(f"Using configuration file: {test_config_path}")
+            
+            # Create a SimulationConfig from an existing YAML file
+            config = SimulationConfig.from_yaml(test_config_path)
+            
+            # Override specific parameters based on user input
+            config.num_patients = params["population_size"]
+            config.duration_days = params["duration_years"] * 365
+            config.simulation_type = params["simulation_type"].lower()
+            
+            # Delete the temporary file we created but won't use
+            os.unlink(config_path)
             
             # Run appropriate simulation type
             if params["simulation_type"] == "ABS":
