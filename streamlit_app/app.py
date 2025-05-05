@@ -321,10 +321,11 @@ elif page == "Run Simulation":
     # Store UI parameters in session state
     if st.button("Run Simulation", type="primary"):
         # Check if SimulationConfig is available
+        simulation_can_run = True
         if SimulationConfig is None:
             st.error("Cannot run simulation: required simulation modules are not available.")
             st.info("This may be due to missing dependencies or incorrect import paths.")
-            return
+            simulation_can_run = False
         
         # Save all parameters to session state
         st.session_state["simulation_type"] = simulation_type
@@ -341,59 +342,63 @@ elif page == "Run Simulation":
         # Get parameters from session state
         params = get_ui_parameters()
         
-        # Run the simulation
-        with st.spinner(f"Running {simulation_type} simulation with {population_size} patients over {duration_years} years..."):
-            st.session_state["simulation_running"] = True
+        # Initialize results
+        results = None
+        
+        # Run the simulation if possible, otherwise use sample data
+        if simulation_can_run:
+            with st.spinner(f"Running {simulation_type} simulation with {population_size} patients over {duration_years} years..."):
+                st.session_state["simulation_running"] = True
+                
+                try:
+                    # Run simulation
+                    results = run_simulation(params)
+                    
+                    # Check if there was an error
+                    if "error" in results:
+                        st.error(f"Error in simulation: {results['error']}")
+                        results = None
+                    else:
+                        # Save results to file
+                        results_path = save_simulation_results(results)
+                        if results_path:
+                            st.session_state["simulation_results_path"] = results_path
+                        
+                        # Show success message
+                        if "runtime_seconds" in results:
+                            st.success(f"Simulation complete in {results['runtime_seconds']:.2f} seconds!")
+                        else:
+                            st.success("Simulation complete!")
+                except Exception as e:
+                    st.error(f"Error running simulation: {str(e)}")
+                    results = None
+        
+        # If simulation couldn't run or had an error, create sample data
+        if results is None:
+            st.info("Using sample data instead.")
             
-            try:
-                # Run simulation
-                results = run_simulation(params)
-                
-                # Skip the rest if there was an error
-                if "error" in results:
-                    st.session_state["simulation_running"] = False
-                    return
-                
-                # Save results in session state
-                st.session_state["simulation_results"] = results
-                st.session_state["simulation_complete"] = True
-                
-                # Save results to file
-                results_path = save_simulation_results(results)
-                if results_path:
-                    st.session_state["simulation_results_path"] = results_path
-                
-                # Show success message
-                if "runtime_seconds" in results:
-                    st.success(f"Simulation complete in {results['runtime_seconds']:.2f} seconds!")
-                else:
-                    st.success("Simulation complete!")
-            except Exception as e:
-                st.error(f"Error running simulation: {str(e)}")
-                st.info("Using sample data instead.")
-                
-                # Create sample results for demonstration
-                results = {
-                    "simulation_type": simulation_type,
-                    "population_size": population_size,
-                    "duration_years": duration_years,
-                    "enable_clinician_variation": enable_clinician_variation,
-                    "planned_discontinue_prob": planned_discontinue_prob,
-                    "admin_discontinue_prob": admin_discontinue_prob,
-                    "discontinuation_counts": {
-                        "Planned": int(population_size * 0.25),
-                        "Administrative": int(population_size * 0.12),
-                        "Time-based": int(population_size * 0.18),
-                        "Premature": int(population_size * 0.08)
-                    },
-                    "runtime_seconds": 1.0,
-                    "is_sample": True
-                }
-                
-                # Save sample results in session state
-                st.session_state["simulation_results"] = results
-                st.session_state["simulation_complete"] = True
-                st.session_state["simulation_running"] = False
+            # Create sample results for demonstration
+            results = {
+                "simulation_type": simulation_type,
+                "population_size": population_size,
+                "duration_years": duration_years,
+                "enable_clinician_variation": enable_clinician_variation,
+                "planned_discontinue_prob": planned_discontinue_prob,
+                "admin_discontinue_prob": admin_discontinue_prob,
+                "discontinuation_counts": {
+                    "Planned": int(population_size * 0.25),
+                    "Administrative": int(population_size * 0.12),
+                    "Time-based": int(population_size * 0.18),
+                    "Premature": int(population_size * 0.08)
+                },
+                "runtime_seconds": 1.0,
+                "is_sample": True
+            }
+        
+        # Save results in session state
+        st.session_state["simulation_results"] = results
+        st.session_state["simulation_complete"] = True
+        st.session_state["simulation_running"] = False
         
         # Show results
         st.subheader("Simulation Results")
