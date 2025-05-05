@@ -45,9 +45,14 @@ def display_logo_and_title(title, logo_width=100, column_ratio=[1, 4]):
     
     # Try to display logo in the first column
     try:
-        logo_path = os.path.join(os.path.dirname(__file__), "assets", "ape_logo.jpg")
-        if os.path.exists(logo_path):
-            col1.image(logo_path, width=logo_width)
+        # Try SVG first, then fall back to JPG if SVG not found
+        svg_logo_path = os.path.join(os.path.dirname(__file__), "assets", "ape_logo.svg")
+        jpg_logo_path = os.path.join(os.path.dirname(__file__), "assets", "ape_logo.jpg")
+        
+        if os.path.exists(svg_logo_path):
+            col1.image(svg_logo_path, width=logo_width)
+        elif os.path.exists(jpg_logo_path):
+            col1.image(jpg_logo_path, width=logo_width)
     except Exception:
         pass
     
@@ -55,10 +60,19 @@ def display_logo_and_title(title, logo_width=100, column_ratio=[1, 4]):
     col2.title(title)
 
 
+# Determine favicon to use
+favicon = "🦧"  # Default emoji fallback
+try:
+    svg_logo_path = os.path.join(os.path.dirname(__file__), "assets", "ape_logo.svg")
+    if os.path.exists(svg_logo_path):
+        favicon = svg_logo_path
+except Exception:
+    pass
+
 # Set page configuration
 st.set_page_config(
     page_title="APE: AMD Protocol Explorer",
-    page_icon="🦧",  # Fallback emoji if image doesn't load
+    page_icon=favicon,
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -66,9 +80,14 @@ st.set_page_config(
 # --- Sidebar ---
 # Display logo image (if available) with fallback to text
 try:
-    logo_path = os.path.join(os.path.dirname(__file__), "assets", "ape_logo.jpg")
-    if os.path.exists(logo_path):
-        st.sidebar.image(logo_path, width=150)
+    # Try SVG first, then fall back to JPG if SVG not found
+    svg_logo_path = os.path.join(os.path.dirname(__file__), "assets", "ape_logo.svg")
+    jpg_logo_path = os.path.join(os.path.dirname(__file__), "assets", "ape_logo.jpg")
+    
+    if os.path.exists(svg_logo_path):
+        st.sidebar.image(svg_logo_path, width=150)
+    elif os.path.exists(jpg_logo_path):
+        st.sidebar.image(jpg_logo_path, width=150)
     else:
         st.sidebar.title("APE: AMD Protocol Explorer")
 except Exception:
