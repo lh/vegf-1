@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 APE: AMD Protocol Explorer main runner
 
@@ -7,19 +8,18 @@ with correct imports for simulation modules.
 
 import os
 import sys
-import streamlit.web.cli as stcli
+import subprocess
 
-# Ensure we're in the right directory
-if os.path.dirname(__file__) != '':
-    os.chdir(os.path.dirname(__file__))
+# Get the absolute path to the project root directory
+project_root = os.path.dirname(os.path.abspath(__file__))
 
-# Add current directory to Python path
-sys.path.append(os.getcwd())
+# Ensure we're in the project root directory
+os.chdir(project_root)
+print(f"Changed working directory to: {os.getcwd()}")
 
-def run_streamlit():
-    """Run the Streamlit app."""
-    sys.argv = ["streamlit", "run", "streamlit_app/app.py", "--server.port=8502"]
-    sys.exit(stcli.main())
+# Run streamlit command
+app_path = os.path.join(project_root, "streamlit_app", "app.py")
+print(f"Running app from: {app_path}")
 
-if __name__ == "__main__":
-    run_streamlit()
+# Run the Streamlit app using subprocess so we can see any errors immediately
+subprocess.run(["streamlit", "run", app_path, "--server.port=8502"])

@@ -21,11 +21,16 @@ from pathlib import Path
 # Add the project root directory to sys.path to allow importing from the main project
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
-st.write("Using project root:", root_dir)
 
 # Add the current working directory as well for when running directly
 sys.path.append(os.getcwd())
-st.write("Current working directory:", os.getcwd())
+
+# Debug variables to show later
+debug_info = {
+    "root_dir": root_dir,
+    "cwd": os.getcwd(),
+    "sys_path": sys.path
+}
 
 # Import project modules
 try:
@@ -165,6 +170,22 @@ if page == "Dashboard":
     
     Use the sidebar to navigate between different sections of the dashboard.
     """)
+    
+    # Display debug info in an expander
+    with st.expander("Debug Information"):
+        st.write("**Python Path Information**")
+        st.write("Project Root:", debug_info["root_dir"])
+        st.write("Current Working Directory:", debug_info["cwd"])
+        st.write("System Path:")
+        for i, path in enumerate(debug_info["sys_path"]):
+            st.write(f"{i}: {path}")
+        
+        # Display import status
+        st.write("**Import Status**")
+        if SimulationConfig is not None:
+            st.success("SimulationConfig imported successfully")
+        else:
+            st.error("SimulationConfig import failed")
     
     # Check if we have simulation results to display
     if "simulation_results" in st.session_state:
