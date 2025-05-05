@@ -26,6 +26,14 @@ from simulation.config import SimulationConfig
 from streamlit_app.acknowledgments import ACKNOWLEDGMENT_TEXT
 from streamlit_app.amd_protocol_explorer import run_enhanced_discontinuation_dashboard
 from streamlit_app.quarto_utils import get_quarto, render_quarto_report
+from streamlit_app.simulation_runner import (
+    run_simulation, 
+    get_ui_parameters,
+    generate_va_over_time_plot,
+    generate_discontinuation_plot,
+    save_simulation_results,
+    load_simulation_results
+)
 
 
 def display_logo_and_title(title, logo_width=100, column_ratio=[1, 4]):
@@ -112,22 +120,61 @@ if page == "Dashboard":
     Use the sidebar to navigate between different sections of the dashboard.
     """)
     
-    # Display some sample visualizations or statistics
-    st.subheader("Sample Visualization")
-    
-    # TODO: Replace with actual visualization from simulation results
-    # This is a placeholder that will be updated with actual visualizations
-    fig, ax = plt.subplots(figsize=(10, 6))
-    x = np.linspace(0, 10, 100)
-    y1 = np.sin(x)
-    y2 = np.cos(x)
-    ax.plot(x, y1, label="Treatment A")
-    ax.plot(x, y2, label="Treatment B")
-    ax.set_xlabel("Time (years)")
-    ax.set_ylabel("Visual Acuity")
-    ax.set_title("Sample Treatment Comparison")
-    ax.legend()
-    st.pyplot(fig)
+    # Check if we have simulation results to display
+    if "simulation_results" in st.session_state:
+        results = st.session_state["simulation_results"]
+        st.subheader("Latest Simulation Results")
+        
+        # Display metrics
+        col1, col2, col3 = st.columns(3)
+        
+        # Calculate metrics
+        total_patients = results["population_size"]
+        discontinued_patients = results.get("total_discontinuations", 0)
+        discontinued_percent = (discontinued_patients / total_patients * 100) if total_patients > 0 else 0
+        
+        recurrence_count = results.get("recurrences", {}).get("total", 0)
+        recurrence_rate = (recurrence_count / discontinued_patients * 100) if discontinued_patients > 0 else 0
+        
+        with col1:
+            st.metric("Patients Discontinued", f"{discontinued_percent:.1f}%", f"{discontinued_patients} patients")
+        
+        with col2:
+            st.metric("Recurrence Rate", f"{recurrence_rate:.1f}%", f"{recurrence_count} recurrences")
+        
+        with col3:
+            st.metric("Mean Injections", f"{results.get('mean_injections', 0):.1f}", f"{results.get('total_injections', 0)} total")
+        
+        # Show visual acuity over time
+        st.subheader("Visual Acuity Over Time")
+        fig = generate_va_over_time_plot(results)
+        st.pyplot(fig)
+        
+        # Show discontinuation plot if data available
+        if "discontinuation_counts" in results:
+            st.subheader("Discontinuation Types")
+            fig = generate_discontinuation_plot(results)
+            st.pyplot(fig)
+    else:
+        # Display sample visualizations or statistics
+        st.subheader("Sample Visualization")
+        st.info("Run a simulation to see actual results. Below is sample data.")
+        
+        # Sample visualization
+        fig, ax = plt.subplots(figsize=(10, 6))
+        x = np.linspace(0, 10, 100)
+        y1 = 75 + 5 * (1 - np.exp(-0.5 * x)) - 0.1 * x  # Continuous treatment
+        y2 = 75 + 5 * (1 - np.exp(-0.5 * np.minimum(x, 3))) - 0.1 * np.minimum(x, 3) - 0.3 * np.maximum(0, x-3)  # Discontinuation
+        ax.plot(x, y1, label="Continuous Treatment")
+        ax.plot(x, y2, label="With Discontinuation")
+        ax.set_xlabel("Time (years)")
+        ax.set_ylabel("Visual Acuity (letters)")
+        ax.set_title("Sample Treatment Comparison")
+        ax.axvline(x=3, color='gray', linestyle='--', alpha=0.5)
+        ax.text(3.1, 72, "Discontinuation", fontsize=9, alpha=0.7)
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+        st.pyplot(fig)
 
 elif page == "Run Simulation":
     display_logo_and_title("Run AMD Treatment Simulation")
@@ -225,50 +272,98 @@ elif page == "Run Simulation":
                 help="Don't schedule monitoring visits for administrative discontinuations"
             )
     
-    # Run simulation button
+    # Store UI parameters in session state
     if st.button("Run Simulation", type="primary"):
-        with st.spinner("Running simulation..."):
-            st.session_state["simulation_running"] = True
-            # TODO: Actually run the simulation with the selected parameters
-            # This is a placeholder
-            import time
-            time.sleep(3)  # Simulate computation time
-            st.session_state["simulation_complete"] = True
-            st.success("Simulation complete!")
+        # Save all parameters to session state
+        st.session_state["simulation_type"] = simulation_type
+        st.session_state["duration_years"] = duration_years
+        st.session_state["population_size"] = population_size
+        st.session_state["enable_clinician_variation"] = enable_clinician_variation
+        st.session_state["planned_discontinue_prob"] = planned_discontinue_prob
+        st.session_state["admin_discontinue_prob"] = admin_discontinue_prob
+        st.session_state["consecutive_stable_visits"] = consecutive_stable_visits
+        st.session_state["monitoring_schedule"] = monitoring_schedule
+        st.session_state["no_monitoring_for_admin"] = no_monitoring_for_admin
+        st.session_state["recurrence_risk_multiplier"] = recurrence_risk_multiplier
         
-            # Show some results
-            st.subheader("Simulation Results")
+        # Get parameters from session state
+        params = get_ui_parameters()
+        
+        # Run the simulation
+        with st.spinner(f"Running {simulation_type} simulation with {population_size} patients over {duration_years} years..."):
+            st.session_state["simulation_running"] = True
             
-            # These are placeholder metrics and visualizations
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Patients Discontinued", f"{42}%", "5%")
-            with col2:
-                st.metric("Recurrence Rate", f"{23}%", "-2%")
-            with col3:
-                st.metric("Vision Preserved", f"{76}%", "8%")
+            # Run simulation
+            results = run_simulation(params)
             
-            # Display a placeholder results table
-            st.subheader("Discontinuation Types")
-            df = pd.DataFrame({
-                "Type": ["Planned", "Administrative", "Time-based", "Premature"],
-                "Count": [250, 120, 180, 80],
-                "Percentage": ["40%", "19%", "29%", "12%"],
-                "Mean Time to Recurrence (weeks)": [48.2, 32.5, 40.1, 24.8]
-            })
+            # Save results in session state
+            st.session_state["simulation_results"] = results
+            st.session_state["simulation_complete"] = True
+            
+            # Save results to file
+            results_path = save_simulation_results(results)
+            st.session_state["simulation_results_path"] = results_path
+            
+            st.success(f"Simulation complete in {results['runtime_seconds']:.2f} seconds!")
+        
+        # Show results
+        st.subheader("Simulation Results")
+        
+        # Display metrics
+        col1, col2, col3 = st.columns(3)
+        
+        # Calculate metrics
+        total_patients = results["population_size"]
+        discontinued_patients = results.get("total_discontinuations", 0)
+        discontinued_percent = (discontinued_patients / total_patients * 100) if total_patients > 0 else 0
+        
+        recurrence_count = results.get("recurrences", {}).get("total", 0)
+        recurrence_rate = (recurrence_count / discontinued_patients * 100) if discontinued_patients > 0 else 0
+        
+        mean_va_final = 0
+        if "mean_va_data" in results and results["mean_va_data"]:
+            mean_va_final = results["mean_va_data"][-1]["visual_acuity"]
+        
+        with col1:
+            st.metric("Patients Discontinued", f"{discontinued_percent:.1f}%", f"{discontinued_patients} patients")
+        
+        with col2:
+            st.metric("Recurrence Rate", f"{recurrence_rate:.1f}%", f"{recurrence_count} recurrences")
+        
+        with col3:
+            st.metric("Mean Injections", f"{results.get('mean_injections', 0):.1f}", f"{results.get('total_injections', 0)} total")
+        
+        # Display discontinuation types
+        st.subheader("Discontinuation Types")
+        
+        if "discontinuation_counts" in results:
+            disc_counts = results["discontinuation_counts"]
+            total = sum(disc_counts.values())
+            
+            # Create dataframe for display
+            data = []
+            for disc_type, count in disc_counts.items():
+                percentage = (count / total * 100) if total > 0 else 0
+                data.append({
+                    "Type": disc_type,
+                    "Count": count,
+                    "Percentage": f"{percentage:.1f}%",
+                    "Mean Time to Recurrence (weeks)": "-"  # Replace with actual data if available
+                })
+            
+            df = pd.DataFrame(data)
             st.dataframe(df, use_container_width=True)
             
-            # Charts placeholder
-            st.subheader("Visual Acuity Over Time")
-            # This will be replaced with actual simulation results
-            fig, ax = plt.subplots(figsize=(10, 6))
-            x = np.linspace(0, duration_years, 100)
-            y = 80 - 3 * x + 2 * np.sin(x)
-            ax.plot(x, y)
-            ax.set_xlabel("Time (years)")
-            ax.set_ylabel("Visual Acuity (letters)")
-            ax.set_title("Mean Visual Acuity Over Time")
+            # Show discontinuation plot
+            fig = generate_discontinuation_plot(results)
             st.pyplot(fig)
+        else:
+            st.info("No discontinuation data available in simulation results.")
+        
+        # Show visual acuity over time
+        st.subheader("Visual Acuity Over Time")
+        fig = generate_va_over_time_plot(results)
+        st.pyplot(fig)
 
 elif page == "Reports":
     display_logo_and_title("Generate Reports")
@@ -318,15 +413,19 @@ elif page == "Reports":
                     try:
                         # Create temporary directory for report
                         with tempfile.TemporaryDirectory() as tmp_dir:
-                            # Create a temporary data file that would normally contain simulation results
-                            data = {
-                                "simulation_type": "ABS",
-                                "population_size": 1000,
-                                "duration_years": 5,
-                                "planned_discontinue_prob": 0.2,
-                                "admin_discontinue_prob": 0.05,
-                                "enable_clinician_variation": True,
-                                "results": {
+                            # Use actual simulation results if available, otherwise use sample data
+                            if "simulation_results" in st.session_state:
+                                data = st.session_state["simulation_results"]
+                            else:
+                                st.warning("Using sample data. Run a simulation first for more accurate reports.")
+                                # Sample data for testing
+                                data = {
+                                    "simulation_type": "ABS",
+                                    "population_size": 1000,
+                                    "duration_years": 5,
+                                    "planned_discontinue_prob": 0.2,
+                                    "admin_discontinue_prob": 0.05,
+                                    "enable_clinician_variation": True,
                                     "discontinuation_counts": {
                                         "Planned": 250,
                                         "Administrative": 120,
@@ -334,7 +433,6 @@ elif page == "Reports":
                                         "Premature": 80
                                     }
                                 }
-                            }
                             
                             data_path = os.path.join(tmp_dir, "simulation_results.json")
                             with open(data_path, 'w') as f:
