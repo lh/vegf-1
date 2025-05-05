@@ -323,7 +323,8 @@ class TreatAndExtendABS(BaseSimulation):
                 self.discontinuation_manager = EnhancedDiscontinuationManager({"discontinuation": {"enabled": True}})
         else:
             # If no parameter file specified, use the discontinuation config from the parameters
-            self.discontinuation_manager = EnhancedDiscontinuationManager({"discontinuation": {"enabled": True}})
+            discontinuation_params = self.config.get_treatment_discontinuation_params()
+            self.discontinuation_manager = EnhancedDiscontinuationManager({"discontinuation": discontinuation_params})
         
         self.scheduler = ClinicScheduler(
             daily_capacity=20,
