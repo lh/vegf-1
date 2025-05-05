@@ -49,6 +49,15 @@ def create_simulation_config(params):
     """
     # Create a temporary YAML file with the configuration
     config_data = {
+        "name": "APE Simulation",
+        "protocol": {
+            "name": "Enhanced Discontinuation Protocol",
+            "description": "AMD treatment protocol with enhanced discontinuation model"
+        },
+        "output": {
+            "type": "memory",
+            "detail_level": "standard"
+        },
         "simulation": {
             "type": params["simulation_type"],
             "title": "APE Simulation",
@@ -236,14 +245,97 @@ def run_simulation(params):
             return generate_sample_results(params)
         
         try:
-            # Create configuration
-            config = create_simulation_config(params)
+            # Create temporary YAML config file
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as temp_config:
+                config_path = temp_config.name
+                
+                # Create a valid YAML configuration
+                config_data = {
+                    "name": "ape_simulation",
+                    "output": {
+                        "directory": "output",
+                        "format": "csv"
+                    },
+                    "simulation": {
+                        "name": "APE Simulation",
+                        "description": "Simulation generated from APE UI",
+                        "start_date": "2025-01-01",
+                        "duration_days": params["duration_years"] * 365,
+                        "num_patients": params["population_size"],
+                        "random_seed": params.get("random_seed", 42)
+                    },
+                    "protocol": {
+                        "name": "Treat-and-Extend with Enhanced Discontinuation",
+                        "type": "treat_and_extend",
+                        "agent": f"treat_and_extend_{params['simulation_type'].lower()}",
+                        "loading_phase": {
+                            "injections": 3,
+                            "interval_weeks": 4
+                        },
+                        "maintenance_phase": {
+                            "min_interval_weeks": 8,
+                            "max_interval_weeks": 16,
+                            "extension_increment_weeks": 2,
+                            "reduction_increment_weeks": 2
+                        }
+                    },
+                    "discontinuation": {
+                        "enabled": True,
+                        "criteria": {
+                            "stable_max_interval": {
+                                "consecutive_visits": params.get("consecutive_stable_visits", 3),
+                                "probability": params["planned_discontinue_prob"],
+                                "interval_weeks": 16
+                            },
+                            "random_administrative": {
+                                "annual_probability": params["admin_discontinue_prob"]
+                            },
+                            "treatment_duration": {
+                                "threshold_weeks": 52,
+                                "probability": 0.1
+                            },
+                            "premature": {
+                                "min_interval_weeks": 8,
+                                "probability_factor": 2.0
+                            }
+                        },
+                        "monitoring": {
+                            "planned": {
+                                "follow_up_schedule": params.get("monitoring_schedule", [12, 24, 36])
+                            },
+                            "unplanned": {
+                                "follow_up_schedule": [8, 16, 24]
+                            },
+                            "recurrence_detection_probability": 0.87
+                        }
+                    },
+                    "clinicians": {
+                        "enabled": params["enable_clinician_variation"]
+                    }
+                }
+                
+                # Add administrative monitoring configuration based on user preference
+                if params.get("no_monitoring_for_admin", True):
+                    config_data["discontinuation"]["monitoring"]["administrative"] = {
+                        "follow_up_schedule": []
+                    }
+                
+                # Write YAML to the temp file
+                import yaml
+                yaml.dump(config_data, temp_config)
+            
+            # Use the from_yaml method to create a proper SimulationConfig object
+            st.info(f"Using configuration file: {config_path}")
+            config = SimulationConfig.from_yaml(config_path)
             
             # Run appropriate simulation type
             if params["simulation_type"] == "ABS":
                 sim = TreatAndExtendABS(config)
             else:  # DES
                 sim = TreatAndExtendDES(config)
+            
+            # Remove the temporary file
+            os.unlink(config_path)
             
             # Run simulation
             patient_histories = sim.run()
@@ -259,6 +351,12 @@ def run_simulation(params):
         except Exception as e:
             st.error(f"Error running simulation: {e}")
             st.warning("Using sample data instead.")
+            # If a temp file was created, clean it up
+            if 'config_path' in locals():
+                try:
+                    os.unlink(config_path)
+                except:
+                    pass
             return generate_sample_results(params)
 
 
