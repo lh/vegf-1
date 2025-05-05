@@ -37,17 +37,22 @@ input_data/*
 *.swp
 .DS_Store
 
+# Generated output
+*.png
+individual_simulation_results.png
+mean_acuity_comparison.png
+
 #
 .aider*
 .env
 
-# Ignore .html and associated files in the root of docs/
-docs/*.html
-docs/*.txt
-docs/*.doctree
-
-# Do not ignore files in subdirectories of docs/
-!docs/**/
+# Ignore documentation build files
+docs/_build/
+docs/**/*.doctree
+docs/**/*.html
+docs/**/*.txt
+docs/**/*.js
 
 # The Paper folder has its own git repository
 Paper/
+**/.claude/settings.local.json
