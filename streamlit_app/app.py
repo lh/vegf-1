@@ -28,16 +28,52 @@ from streamlit_app.amd_protocol_explorer import run_enhanced_discontinuation_das
 from streamlit_app.quarto_utils import get_quarto, render_quarto_report
 
 
+def display_logo_and_title(title, logo_width=100, column_ratio=[1, 4]):
+    """Display the APE logo and title in columns.
+    
+    Parameters
+    ----------
+    title : str
+        The title to display
+    logo_width : int, optional
+        Width of the logo image, by default 100
+    column_ratio : list, optional
+        Ratio for the columns [logo_col, title_col], by default [1, 4]
+    """
+    # Create columns for logo and title
+    col1, col2 = st.columns(column_ratio)
+    
+    # Try to display logo in the first column
+    try:
+        logo_path = os.path.join(os.path.dirname(__file__), "assets", "ape_logo.jpg")
+        if os.path.exists(logo_path):
+            col1.image(logo_path, width=logo_width)
+    except Exception:
+        pass
+    
+    # Display title in the second column
+    col2.title(title)
+
+
 # Set page configuration
 st.set_page_config(
     page_title="APE: AMD Protocol Explorer",
-    page_icon="🦧",
+    page_icon="🦧",  # Fallback emoji if image doesn't load
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 # --- Sidebar ---
-st.sidebar.title("APE: AMD Protocol Explorer")
+# Display logo image (if available) with fallback to text
+try:
+    logo_path = os.path.join(os.path.dirname(__file__), "assets", "ape_logo.jpg")
+    if os.path.exists(logo_path):
+        st.sidebar.image(logo_path, width=150)
+    else:
+        st.sidebar.title("APE: AMD Protocol Explorer")
+except Exception:
+    st.sidebar.title("APE: AMD Protocol Explorer")
+
 st.sidebar.markdown("Interactive dashboard for exploring AMD treatment protocols")
 
 # Navigation
@@ -48,7 +84,7 @@ page = st.sidebar.radio(
 
 # --- Main Content ---
 if page == "Dashboard":
-    st.title("APE: AMD Protocol Explorer")
+    display_logo_and_title("APE: AMD Protocol Explorer")
     st.markdown("""
     Welcome to APE: AMD Protocol Explorer. This interactive tool allows you
     to explore and visualize AMD treatment protocols through Discrete Event Simulation (DES)
@@ -75,7 +111,7 @@ if page == "Dashboard":
     st.pyplot(fig)
 
 elif page == "Run Simulation":
-    st.title("Run AMD Treatment Simulation")
+    display_logo_and_title("Run AMD Treatment Simulation")
     
     # Configuration options
     st.subheader("Simulation Configuration")
@@ -216,7 +252,7 @@ elif page == "Run Simulation":
             st.pyplot(fig)
 
 elif page == "Reports":
-    st.title("Generate Reports")
+    display_logo_and_title("Generate Reports")
     
     # Ensure Quarto is available
     quarto_path = get_quarto()
@@ -322,7 +358,7 @@ elif page == "Reports":
                         st.error(f"Error generating report: {str(e)}")
 
 elif page == "About":
-    st.title("About APE: AMD Protocol Explorer")
+    display_logo_and_title("About APE: AMD Protocol Explorer")
     
     st.markdown("""
     APE: AMD Protocol Explorer provides an interactive interface for exploring AMD treatment protocols
