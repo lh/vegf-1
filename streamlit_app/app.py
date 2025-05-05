@@ -1,8 +1,9 @@
 """
-Enhanced Discontinuation Model Streamlit Dashboard
+APE: AMD Protocol Explorer
 
 This application provides an interactive dashboard for exploring and visualizing
-the Enhanced Discontinuation Model for AMD treatment simulations.
+AMD treatment protocols using Discrete Event Simulation (DES) and Agent-Based Simulation (ABS),
+including detailed modeling of treatment discontinuation patterns.
 """
 
 import os
@@ -23,21 +24,21 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Import project modules
 from simulation.config import SimulationConfig
 from streamlit_app.acknowledgments import ACKNOWLEDGMENT_TEXT
-from streamlit_app.enhanced_discontinuation_dashboard import run_enhanced_discontinuation_dashboard
+from streamlit_app.amd_protocol_explorer import run_enhanced_discontinuation_dashboard
 from streamlit_app.quarto_utils import get_quarto, render_quarto_report
 
 
 # Set page configuration
 st.set_page_config(
-    page_title="Enhanced Discontinuation Model Dashboard",
-    page_icon="📊",
+    page_title="APE: AMD Protocol Explorer",
+    page_icon="🦧",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 # --- Sidebar ---
-st.sidebar.title("Enhanced Discontinuation Model")
-st.sidebar.markdown("Interactive dashboard for AMD treatment simulations")
+st.sidebar.title("APE: AMD Protocol Explorer")
+st.sidebar.markdown("Interactive dashboard for exploring AMD treatment protocols")
 
 # Navigation
 page = st.sidebar.radio(
@@ -47,11 +48,11 @@ page = st.sidebar.radio(
 
 # --- Main Content ---
 if page == "Dashboard":
-    st.title("Enhanced Discontinuation Model Dashboard")
+    st.title("APE: AMD Protocol Explorer")
     st.markdown("""
-    Welcome to the Enhanced Discontinuation Model Dashboard. This interactive tool allows you
-    to explore and visualize the results of AMD treatment simulations with the enhanced
-    discontinuation model.
+    Welcome to APE: AMD Protocol Explorer. This interactive tool allows you
+    to explore and visualize AMD treatment protocols through Discrete Event Simulation (DES)
+    and Agent-Based Simulation (ABS), including detailed modeling of discontinuation patterns.
     
     Use the sidebar to navigate between different sections of the dashboard.
     """)
@@ -74,7 +75,7 @@ if page == "Dashboard":
     st.pyplot(fig)
 
 elif page == "Run Simulation":
-    st.title("Run Enhanced Discontinuation Simulation")
+    st.title("Run AMD Treatment Simulation")
     
     # Configuration options
     st.subheader("Simulation Configuration")
@@ -321,12 +322,13 @@ elif page == "Reports":
                         st.error(f"Error generating report: {str(e)}")
 
 elif page == "About":
-    st.title("About the Enhanced Discontinuation Model Dashboard")
+    st.title("About APE: AMD Protocol Explorer")
     
     st.markdown("""
-    This dashboard provides an interactive interface for exploring the Enhanced Discontinuation Model
-    for AMD treatment simulations. The model incorporates multiple discontinuation types, clinician
-    variation, and time-dependent recurrence probabilities based on clinical data.
+    APE: AMD Protocol Explorer provides an interactive interface for exploring AMD treatment protocols
+    through simulation. The tool incorporates both Discrete Event Simulation (DES) and Agent-Based Simulation (ABS)
+    approaches, with detailed modeling of discontinuation patterns, clinician variation, and time-dependent
+    recurrence probabilities based on clinical data.
     
     ### Features
     
@@ -337,8 +339,8 @@ elif page == "About":
     
     ### Implementation Details
     
-    The Enhanced Discontinuation Model extends the base discontinuation model to provide a more
-    sophisticated approach to treatment discontinuation and recurrence in AMD simulations.
+    APE includes a sophisticated model of treatment discontinuation and recurrence in AMD treatment.
+    The simulations use both DES and ABS approaches to provide comprehensive insights.
     Key components include:
     
     - Multiple discontinuation types (protocol-based, administrative, time-based, premature)
@@ -361,4 +363,4 @@ elif page == "About":
 
 # Footer
 st.sidebar.markdown("---")
-st.sidebar.markdown("© 2025 Enhanced Discontinuation Model")
+st.sidebar.markdown("© 2025 APE: AMD Protocol Explorer")

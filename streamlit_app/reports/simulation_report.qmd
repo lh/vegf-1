@@ -1,5 +1,5 @@
 ---
-title: "Enhanced Discontinuation Model Simulation Report"
+title: "APE: AMD Protocol Explorer Simulation Report"
 author: "AMD Modeling Team"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 format: 
@@ -57,7 +57,7 @@ if (file.exists(params$dataPath)) {
 
 ## Executive Summary
 
-This report presents the results of an Enhanced Discontinuation Model simulation for Age-related Macular Degeneration (AMD) treatment. The simulation was conducted using a `r sim_data$simulation_type` approach with a population of `r sim_data$population_size` patients over a `r sim_data$duration_years`-year period.
+This report presents the results of an AMD treatment protocol simulation using APE (AMD Protocol Explorer). The simulation was conducted using a `r sim_data$simulation_type` approach with a population of `r sim_data$population_size` patients over a `r sim_data$duration_years`-year period.
 
 ### Key Findings
 

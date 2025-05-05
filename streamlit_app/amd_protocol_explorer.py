@@ -1,8 +1,8 @@
 """
-Enhanced Discontinuation Dashboard Module
+APE: AMD Protocol Explorer Dashboard Module
 
 This module contains the implementation of the dashboard for visualizing
-the enhanced discontinuation model simulation results.
+AMD treatment protocol simulation results using DES and ABS approaches.
 """
 
 import streamlit as st
@@ -22,14 +22,14 @@ from treat_and_extend_des import TreatAndExtendDES
 
 def run_enhanced_discontinuation_dashboard(config_path=None):
     """
-    Main function to run the enhanced discontinuation dashboard.
+    Main function to run the AMD Protocol Explorer dashboard.
     
     Parameters
     ----------
     config_path : str, optional
         Path to the simulation configuration file
     """
-    st.title("Enhanced Discontinuation Model Dashboard")
+    st.title("APE: AMD Protocol Explorer")
     
     # Load configuration
     if config_path:

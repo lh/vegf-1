@@ -1,10 +1,10 @@
-# Enhanced Discontinuation Model Dashboard
+# APE: AMD Protocol Explorer
 
-An interactive Streamlit dashboard for visualizing and analyzing the Enhanced Discontinuation Model for AMD treatment simulations.
+An interactive Streamlit dashboard for exploring and visualizing AMD treatment protocols using Discrete Event Simulation (DES) and Agent-Based Simulation (ABS).
 
 ## Overview
 
-This dashboard provides an interactive interface for exploring simulation results from the Enhanced Discontinuation Model. The model incorporates multiple discontinuation types, clinician variation, and time-dependent recurrence probabilities based on clinical data.
+APE (AMD Protocol Explorer) provides an interactive interface for exploring AMD treatment protocols through simulation. The tool incorporates both DES and ABS approaches with detailed modeling of discontinuation patterns, clinician variation, and time-dependent recurrence probabilities based on clinical data.
 
 ## Features
 
