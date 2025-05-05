@@ -18,8 +18,14 @@ import matplotlib.pyplot as plt
 import tempfile
 from pathlib import Path
 
-# Add the parent directory to sys.path to allow importing from the main project
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add the project root directory to sys.path to allow importing from the main project
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(root_dir)
+st.write("Using project root:", root_dir)
+
+# Add the current working directory as well for when running directly
+sys.path.append(os.getcwd())
+st.write("Current working directory:", os.getcwd())
 
 # Import project modules
 try:
