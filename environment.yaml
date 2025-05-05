@@ -20,3 +20,9 @@ dependencies:
 
   # Optional visualization
   - matplotlib>=3.5.0  # For plotting results
+
+  # Documentation
+  - sphinx>=7.3.7      # Documentation generator
+  - sphinx_rtd_theme>=2.0.0  # Read the Docs theme for Sphinx
+  - sphinx-autodoc-typehints>=2.1.0  # Type hints in documentation
+  - myst-parser>=4.0.1  # Markdown support for Sphinx

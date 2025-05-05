@@ -107,3 +107,4 @@ zipp @ file:///home/conda/feedstock_root/build_artifacts/zipp_1724730934107/work
 sphinx==7.3.7
 sphinx_rtd_theme==2.0.0
 sphinx-autodoc-typehints==2.1.0
+myst-parser==4.0.1
