@@ -15,6 +15,7 @@ Welcome to Macular Simulation's documentation
    simulation/index
    analysis/index
    protocols/index
+   tests/index
 
 API Documentation
 =================

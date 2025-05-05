@@ -30,6 +30,8 @@ from simulation.clinical_model import ClinicalModel, DiseaseState
 from simulation.scheduler import ClinicScheduler
 from simulation.vision_models import SimplifiedVisionModel
 from simulation.discontinuation_manager import DiscontinuationManager
+from simulation.enhanced_discontinuation_manager import EnhancedDiscontinuationManager
+from simulation.clinician import Clinician, ClinicianManager
 
 class Patient:
     """Patient agent in the treat-and-extend ABS simulation.
@@ -71,6 +73,10 @@ class Patient:
         - active: Whether treatment is active
         - recurrence_detected: Whether disease recurrence was detected
         - discontinuation_date: Date when treatment was discontinued (if applicable)
+        - cessation_type: Type of discontinuation (if applicable)
+    disease_characteristics : dict
+        Information about disease characteristics including:
+        - has_PED: Whether patient has pigment epithelial detachment
     history : list
         List of historical visit records
     """
@@ -91,7 +97,12 @@ class Patient:
         self.treatment_status = {
             "active": True,
             "recurrence_detected": False,
-            "discontinuation_date": None
+            "discontinuation_date": None,
+            "cessation_type": None
+        }
+        # Add disease characteristics including risk factors
+        self.disease_characteristics = {
+            "has_PED": np.random.random() < 0.3,  # 30% of patients have PED
         }
         self.history = []
         self.treatment_start = start_date
@@ -289,7 +300,12 @@ class TreatAndExtendABS(BaseSimulation):
         self.clinical_model = ClinicalModel(self.config)
         self.vision_model = SimplifiedVisionModel(self.config)
         
-        # Initialize discontinuation manager
+        # Initialize clinician manager
+        clinician_config = self.config.parameters.get("clinicians", {})
+        clinician_enabled = clinician_config.get("enabled", False)
+        self.clinician_manager = ClinicianManager(self.config.parameters, enabled=clinician_enabled)
+        
+        # Initialize enhanced discontinuation manager
         # Get the parameter file path from the config
         discontinuation_config = self.config.parameters.get("discontinuation", {})
         parameter_file = discontinuation_config.get("parameter_file", "")
@@ -300,14 +316,15 @@ class TreatAndExtendABS(BaseSimulation):
                 with open(parameter_file, 'r') as f:
                     import yaml
                     discontinuation_params = yaml.safe_load(f)
-                    self.discontinuation_manager = DiscontinuationManager(discontinuation_params)
+                    self.discontinuation_manager = EnhancedDiscontinuationManager(discontinuation_params)
             except Exception as e:
                 print(f"Error loading discontinuation parameters: {str(e)}")
                 # Fall back to empty dict with enabled=True
-                self.discontinuation_manager = DiscontinuationManager({"discontinuation": {"enabled": True}})
+                self.discontinuation_manager = EnhancedDiscontinuationManager({"discontinuation": {"enabled": True}})
         else:
             # If no parameter file specified, use the discontinuation config from the parameters
-            self.discontinuation_manager = DiscontinuationManager({"discontinuation": {"enabled": True}})
+            discontinuation_params = self.config.get_treatment_discontinuation_params()
+            self.discontinuation_manager = EnhancedDiscontinuationManager({"discontinuation": discontinuation_params})
         
         self.scheduler = ClinicScheduler(
             daily_capacity=20,
@@ -326,7 +343,11 @@ class TreatAndExtendABS(BaseSimulation):
             "protocol_completions": 0,
             "protocol_discontinuations": 0,
             "monitoring_visits": 0,
-            "retreatments": 0
+            "retreatments": 0,
+            "clinician_decisions": {
+                "protocol_followed": 0,
+                "protocol_overridden": 0
+            }
         }
     
     def generate_patients(self):
@@ -434,6 +455,11 @@ class TreatAndExtendABS(BaseSimulation):
             if "oct_scan" in event.data["actions"]:
                 self.stats["total_oct_scans"] += 1
             
+            # Get the assigned clinician for this visit
+            clinician_id = self.clinician_manager.assign_clinician(patient_id, event.time)
+            clinician = self.clinician_manager.get_clinician(clinician_id)
+            event.data["clinician_id"] = clinician_id  # Store for reference
+            
             # Process visit
             visit_data = patient.process_visit(
                 event.time,
@@ -461,12 +487,37 @@ class TreatAndExtendABS(BaseSimulation):
                 # Convert Patient object to dictionary for discontinuation manager
                 patient_state = {
                     "disease_activity": patient.disease_activity,
-                    "treatment_status": patient.treatment_status
+                    "treatment_status": patient.treatment_status,
+                    "disease_characteristics": patient.disease_characteristics
                 }
-                retreatment, updated_patient = self.discontinuation_manager.process_monitoring_visit(
+                
+                # First get the protocol retreatment decision without clinician influence
+                protocol_retreatment, _ = self.discontinuation_manager.process_monitoring_visit(
                     patient_state=patient_state,
                     actions=event.data["actions"]
                 )
+                
+                # Then get the actual decision with clinician influence
+                retreatment, updated_patient = self.discontinuation_manager.process_monitoring_visit(
+                    patient_state=patient_state,
+                    actions=event.data["actions"],
+                    clinician=clinician
+                )
+                
+                # Track clinician influence on decision
+                if clinician and clinician.profile_name != "perfect":
+                    self.discontinuation_manager.track_clinician_decision(
+                        clinician=clinician,
+                        decision_type="retreatment",
+                        protocol_decision=protocol_retreatment,
+                        actual_decision=retreatment
+                    )
+                    
+                    # Update statistics
+                    if protocol_retreatment != retreatment:
+                        self.stats["clinician_decisions"]["protocol_overridden"] += 1
+                    else:
+                        self.stats["clinician_decisions"]["protocol_followed"] += 1
                 
                 # Record monitoring visit
                 visit_record = {
@@ -477,7 +528,8 @@ class TreatAndExtendABS(BaseSimulation):
                     'vision': patient.current_vision,
                     'disease_state': 'active' if patient.disease_activity["fluid_detected"] else 'stable',
                     'phase': 'monitoring',
-                    'interval': None
+                    'interval': None,
+                    'clinician_id': clinician_id
                 }
                 patient.history.append(visit_record)
                 
@@ -507,22 +559,54 @@ class TreatAndExtendABS(BaseSimulation):
                 # Convert Patient object to dictionary for discontinuation manager
                 patient_state = {
                     "disease_activity": patient.disease_activity,
-                    "treatment_status": patient.treatment_status
+                    "treatment_status": patient.treatment_status,
+                    "disease_characteristics": patient.disease_characteristics
                 }
-                should_discontinue, reason, probability = self.discontinuation_manager.evaluate_discontinuation(
+                
+                # First get the protocol decision without clinician influence
+                protocol_decision, protocol_reason, protocol_probability, protocol_cessation_type = self.discontinuation_manager.evaluate_discontinuation(
                     patient_state=patient_state,
                     current_time=event.time,
                     treatment_start_time=patient.treatment_start
                 )
                 
+                # Then get the actual decision with clinician influence
+                should_discontinue, reason, probability, cessation_type = self.discontinuation_manager.evaluate_discontinuation(
+                    patient_state=patient_state,
+                    current_time=event.time,
+                    clinician_id=clinician_id,
+                    treatment_start_time=patient.treatment_start,
+                    clinician=clinician
+                )
+                
+                # Track clinician influence on decision
+                if clinician and clinician.profile_name != "perfect":
+                    self.discontinuation_manager.track_clinician_decision(
+                        clinician=clinician,
+                        decision_type="discontinuation",
+                        protocol_decision=protocol_decision,
+                        actual_decision=should_discontinue
+                    )
+                    
+                    # Update statistics
+                    if protocol_decision != should_discontinue:
+                        self.stats["clinician_decisions"]["protocol_overridden"] += 1
+                    else:
+                        self.stats["clinician_decisions"]["protocol_followed"] += 1
+                
                 if should_discontinue:
                     patient.treatment_status["active"] = False
                     patient.treatment_status["discontinuation_date"] = event.time
                     patient.treatment_status["discontinuation_reason"] = reason
+                    patient.treatment_status["cessation_type"] = cessation_type
                     self.stats["protocol_discontinuations"] += 1
                     
                     # Schedule monitoring visits
-                    monitoring_events = self.discontinuation_manager.schedule_monitoring(event.time)
+                    monitoring_events = self.discontinuation_manager.schedule_monitoring(
+                        event.time, 
+                        cessation_type=cessation_type,
+                        clinician=clinician
+                    )
                     for monitoring_event in monitoring_events:
                         if monitoring_event["time"] <= self.end_date:
                             self.clock.schedule_event(Event(
@@ -532,7 +616,8 @@ class TreatAndExtendABS(BaseSimulation):
                                 data={
                                     "visit_type": "monitoring_visit",
                                     "actions": monitoring_event["actions"],
-                                    "is_monitoring": True
+                                    "is_monitoring": True,
+                                    "cessation_type": monitoring_event.get("cessation_type")
                                 },
                                 priority=1
                             ))
@@ -609,6 +694,16 @@ class TreatAndExtendABS(BaseSimulation):
             print("-" * 20)
             for stat, value in discontinuation_stats.items():
                 print(f"{stat}: {value}")
+        
+        # Add clinician manager statistics
+        if self.clinician_manager.enabled:
+            clinician_metrics = self.clinician_manager.get_performance_metrics()
+            print("\nClinician Statistics:")
+            print("-" * 20)
+            for metric_type, metrics in clinician_metrics.items():
+                print(f"{metric_type}:")
+                for profile, count in metrics.items():
+                    print(f"  {profile}: {count}")
         
         # Print patient summary
         print("\nPatient Summary:")

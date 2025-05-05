@@ -104,3 +104,4 @@ websockets==13.0.1
 wheel==0.44.0
 widgetsnbextension==4.0.13
 zipp @ file:///home/conda/feedstock_root/build_artifacts/zipp_1724730934107/work
+myst-parser==4.0.1

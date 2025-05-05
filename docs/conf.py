@@ -97,6 +97,23 @@ napoleon_use_ivar = True
 napoleon_use_param = True
 napoleon_use_rtype = True
 
+# MyST Parser settings
+myst_enable_extensions = [
+    "amsmath",          # For LaTeX math
+    "colon_fence",      # For code blocks with colons
+    "deflist",          # For definition lists
+    "dollarmath",       # For inline math with $
+    "html_admonition",  # For HTML-style admonitions
+    "html_image",       # For HTML-style images
+    "linkify",          # For auto-linking URLs
+    "replacements",     # For text replacements
+    "smartquotes",      # For smart quotes
+    "substitution",     # For variable substitution
+    "tasklist",         # For task lists
+]
+myst_heading_anchors = 3  # Generate anchors for h1-h3
+myst_update_mathjax = False  # Don't update MathJax
+
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
