@@ -53,6 +53,6 @@ docs/**/*.html
 docs/**/*.txt
 docs/**/*.js
 
-# The Paper folder has its own git repository
-Paper/
+# Paper directory is now included in this repository
+# Paper/
 **/.claude/settings.local.json
