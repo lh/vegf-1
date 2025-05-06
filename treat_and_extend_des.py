@@ -29,7 +29,7 @@ from simulation import DiscreteEventSimulation, Event
 from simulation.patient_state import PatientState
 from simulation.clinical_model import ClinicalModel
 from simulation.scheduler import ClinicScheduler
-from simulation.vision_models import SimplifiedVisionModel
+from simulation.vision_models import RealisticVisionModel, create_vision_model
 from simulation.discontinuation_manager import DiscontinuationManager
 from simulation.enhanced_discontinuation_manager import EnhancedDiscontinuationManager
 from simulation.clinician import Clinician, ClinicianManager
@@ -63,7 +63,13 @@ class TreatAndExtendDES:
         )
         
         # Initialize vision model
-        self.vision_model = SimplifiedVisionModel(self.config)
+        # Use the new RealisticVisionModel instead of SimplifiedVisionModel
+        # Or use the factory function to allow configuration-based model selection
+        vision_model_type = self.config.parameters.get('vision_model_type', 'realistic')
+        if vision_model_type == 'simplified':
+            self.vision_model = create_vision_model('simplified', self.config)
+        else:
+            self.vision_model = create_vision_model('realistic', self.config)
         
         # Initialize clinician manager
         clinician_config = self.config.parameters.get("clinicians", {})

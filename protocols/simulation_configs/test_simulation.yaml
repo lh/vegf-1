@@ -83,6 +83,21 @@ parameters:
   cost_parameters:
     enabled: false  # Set to true when cost data is available
     parameter_file: ""
+    
+  # Vision model configuration
+  vision_model_type: "realistic"  # Use the new realistic model
+  vision_model:
+    loading_phase:
+      mean: 5.0
+      std: 2.5
+    maintenance_phase:
+      mean: 1.2
+      std: 1.5
+    non_responder_probability: 0.15
+    natural_decline_rate: 0.15
+    vision_fluctuation: 1.0
+    ceiling_vision: 85.0
+    fluid_detection_probability: 0.3
 
 protocols:
   # Define the treatment protocol to use
