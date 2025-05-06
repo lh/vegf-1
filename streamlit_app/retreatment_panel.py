@@ -42,8 +42,14 @@ def display_retreatment_panel(results):
         # Calculate and display retreatment rate
         discontinued_patients = results.get("total_discontinuations", 0)
         if discontinued_patients > 0:
-            retreatment_rate = (unique_retreatments / discontinued_patients) * 100
-            st.write(f"**Retreatment Rate:** {retreatment_rate:.1f}% of discontinued patients")
+            # Patient retreatment rate - unique patients retreated divided by discontinued
+            patient_retreatment_rate = (unique_retreatments / discontinued_patients) * 100
+            st.write(f"**Patient Retreatment Rate:** {patient_retreatment_rate:.1f}% of discontinued patients")
+            
+            # Also show event-based retreatment rate for clarity
+            event_retreatment_rate = (total_retreatments / discontinued_patients) * 100
+            if event_retreatment_rate > patient_retreatment_rate:
+                st.write(f"**Event/Patient Ratio:** {(total_retreatments / discontinued_patients):.2f} retreatments per discontinued patient")
             
             # Calculate average retreatments per patient
             if unique_retreatments > 0:
@@ -103,15 +109,36 @@ def display_retreatment_panel(results):
                     retreatment_key = type_mapping.get(disc_type, "")
                     retreatment_count = retreatment_by_type.get(retreatment_key, 0)
                     
-                    # Calculate rate
-                    rate = (retreatment_count / count * 100) if count > 0 else 0
+                    # Calculate rate - but we need to be careful about comparing patients vs events
+                    # The count is unique patients discontinued, so to calculate proper rate
+                    # we need unique patients retreated, not retreatment events
+                    
+                    # For proper rate calculation, we should use unique_retreatments or estimate per type
+                    # Estimate unique patients retreated per type - we'll use a conservative approach
+                    # assuming multiple retreatments per patient for consistency
+                    
+                    # If we have unique retreatment count, use it for proportional estimation
+                    if unique_retreatments > 0 and total_retreatments > 0:
+                        # Estimate unique patients retreated for this type (proportionally)
+                        est_unique_retreatments = (retreatment_count / total_retreatments) * unique_retreatments
+                        # Cap at the total number of patients for this type to prevent >100% rates
+                        est_unique_retreatments = min(est_unique_retreatments, count)
+                        patient_rate = (est_unique_retreatments / count * 100) if count > 0 else 0
+                    else:
+                        # If we don't have unique data, just cap at 100%
+                        patient_rate = min(100, (retreatment_count / count * 100)) if count > 0 else 0
+                    
+                    # Also calculate event rate for transparency
+                    event_rate = (retreatment_count / count * 100) if count > 0 else 0
                     
                     comparison_data.append({
                         "Discontinuation Type": disc_type,
                         "Patients Discontinued": count,
                         "Retreatment Events": retreatment_count,
-                        "Retreatment Rate": f"{rate:.1f}%",
-                        "Raw Rate": rate  # For sorting
+                        "Est. Unique Patients": round(est_unique_retreatments) if 'est_unique_retreatments' in locals() else "-",
+                        "Patient Retreatment Rate": f"{patient_rate:.1f}%",
+                        "Event/Patient Ratio": f"{(retreatment_count / count):.2f}" if count > 0 else "0",
+                        "Raw Rate": patient_rate  # For sorting
                     })
                 
                 # Create DataFrame and display
@@ -121,12 +148,34 @@ def display_retreatment_panel(results):
                 
                 st.dataframe(comparison_df)
                 
-                # Create a bar chart to visualize retreatment rates
-                st.write("### Retreatment Rate by Discontinuation Type")
+                # Create a bar chart to visualize patient retreatment rates
+                st.write("### Patient Retreatment Rate by Discontinuation Type")
+                st.write("*Estimated unique patients retreated divided by patients discontinued*")
+                
                 rate_df = pd.DataFrame({
                     'Type': [row["Discontinuation Type"] for row in comparison_data],
-                    'Rate (%)': [row["Raw Rate"] for row in comparison_data]
+                    'Patient Rate (%)': [row["Raw Rate"] for row in comparison_data]
                 })
                 st.bar_chart(rate_df.set_index('Type'))
+                
+                # Explanation of the metrics
+                with st.expander("📊 Understanding the Retreatment Metrics"):
+                    st.markdown("""
+                    ### Important Note About Retreatment Statistics
+                    
+                    There's an important distinction between **unique patients** and **retreatment events**:
+                    
+                    - **Patients Discontinued**: The count of unique patients who had treatment discontinued
+                    - **Retreatment Events**: The total number of retreatment events (one patient may have multiple retreatments)
+                    - **Est. Unique Patients**: Estimated number of unique patients retreated per discontinuation type
+                    - **Patient Retreatment Rate**: Estimated percentage of discontinued patients who were retreated
+                    - **Event/Patient Ratio**: Average number of retreatment events per discontinued patient
+                    
+                    When the Event/Patient Ratio exceeds 1.0, it means some patients had multiple retreatments.
+                    This can lead to retreatment event counts exceeding discontinued patient counts.
+                    
+                    The Patient Retreatment Rate uses estimation to account for this and provide a more accurate
+                    representation of the percentage of patients who experienced at least one retreatment.
+                    """)
     else:
         st.warning("No retreatment breakdown by discontinuation type available.")
