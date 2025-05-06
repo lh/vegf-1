@@ -42,6 +42,7 @@ except ImportError:
 # Import local modules
 from streamlit_app.acknowledgments import ACKNOWLEDGMENT_TEXT
 from streamlit_app.quarto_utils import get_quarto, render_quarto_report
+from streamlit_app.patient_explorer import display_patient_explorer
 
 try:
     from streamlit_app.amd_protocol_explorer import run_enhanced_discontinuation_dashboard
@@ -154,10 +155,25 @@ except Exception:
 
 st.sidebar.markdown("Interactive dashboard for exploring AMD treatment protocols")
 
+# Show a notice about fixed implementation if applicable
+try:
+    from streamlit_app.simulation_runner import USING_FIXED_IMPLEMENTATION
+    if USING_FIXED_IMPLEMENTATION:
+        st.sidebar.success("""
+        ### Using Fixed Discontinuation Implementation
+        
+        This app is using the fixed discontinuation implementation that properly tracks 
+        unique patient discontinuations and prevents double-counting.
+        
+        The discontinuation rates shown will be accurate (≤100%).
+        """)
+except ImportError:
+    pass
+
 # Navigation
 page = st.sidebar.radio(
     "Navigate to",
-    ["Dashboard", "Run Simulation", "Reports", "About"]
+    ["Dashboard", "Run Simulation", "Patient Explorer", "Reports", "About"]
 )
 
 # --- Main Content ---
@@ -170,6 +186,28 @@ if page == "Dashboard":
     
     Use the sidebar to navigate between different sections of the dashboard.
     """)
+    
+    # Add protocol configuration debug info
+    with st.expander("Protocol Configuration Debug"):
+        st.write("Protocol directory info:")
+        proto_dir = os.path.join(root_dir, "protocols", "simulation_configs")
+        
+        # Check available protocols
+        if os.path.exists(proto_dir):
+            st.write(f"Protocol directory exists: {proto_dir}")
+            st.write("Available configurations:")
+            try:
+                for config_file in os.listdir(proto_dir):
+                    if config_file.endswith(".yaml"):
+                        st.write(f"- {config_file}")
+                        
+                        # Show the config file content
+                        with open(os.path.join(proto_dir, config_file), 'r') as f:
+                            st.code(f.read(), language="yaml")
+            except Exception as e:
+                st.error(f"Error listing configurations: {e}")
+        else:
+            st.error(f"Protocol directory not found: {proto_dir}")
     
     # Display debug info in an expander
     with st.expander("Debug Information"):
@@ -206,14 +244,36 @@ if page == "Dashboard":
         discontinued_patients = results.get("total_discontinuations", 0)
         discontinued_percent = (discontinued_patients / total_patients * 100) if total_patients > 0 else 0
         
-        recurrence_count = results.get("recurrences", {}).get("total", 0)
-        recurrence_rate = (recurrence_count / discontinued_patients * 100) if discontinued_patients > 0 else 0
+        # Get recurrence data with more details - WITH EMERGENCY DEBUG 
+        recurrence_data = results.get("recurrences", {})
+        # Force using sim stats for retreatments if available from raw_discontinuation_stats
+        if "raw_discontinuation_stats" in results and "unique_patient_retreatments" in results["raw_discontinuation_stats"]:
+            # We have direct stats from simulation
+            unique_recurrence_count = results["raw_discontinuation_stats"]["unique_patient_retreatments"]
+            # If we also have total retreatments, use that
+            if "retreatments" in results["raw_discontinuation_stats"]:
+                recurrence_count = results["raw_discontinuation_stats"]["retreatments"]
+            else:
+                # Otherwise use the unique count or fall back to recurrence_data
+                recurrence_count = recurrence_data.get("total", unique_recurrence_count)
+        else:
+            # Fall back to recurrence_data
+            recurrence_count = recurrence_data.get("total", 0)
+            unique_recurrence_count = recurrence_data.get("unique_count", recurrence_count)
+            
+        # Calculate rate based on unique counts whenever possible
+        recurrence_rate = (unique_recurrence_count / discontinued_patients * 100) if discontinued_patients > 0 else 0
+        
+        # EMERGENCY DEBUG output - force display of retreatment data
+        st.info(f"DEBUG - Recurrence data: count={recurrence_count}, unique={unique_recurrence_count}, rate={recurrence_rate:.2f}%")
         
         with col1:
             st.metric("Patients Discontinued", f"{discontinued_percent:.1f}%", f"{discontinued_patients} patients")
         
         with col2:
-            st.metric("Recurrence Rate", f"{recurrence_rate:.1f}%", f"{recurrence_count} recurrences")
+            # Show unique patient count if available, otherwise total
+            recurrence_detail = f"{unique_recurrence_count} patients" if unique_recurrence_count != recurrence_count else f"{recurrence_count} recurrences"
+            st.metric("Recurrence Rate", f"{recurrence_rate:.1f}%", recurrence_detail)
         
         with col3:
             st.metric("Mean Injections", f"{results.get('mean_injections', 0):.1f}", f"{results.get('total_injections', 0)} total")
@@ -229,25 +289,8 @@ if page == "Dashboard":
             fig = generate_discontinuation_plot(results)
             st.pyplot(fig)
     else:
-        # Display sample visualizations or statistics
-        st.subheader("Sample Visualization")
-        st.info("Run a simulation to see actual results. Below is sample data.")
-        
-        # Sample visualization
-        fig, ax = plt.subplots(figsize=(10, 6))
-        x = np.linspace(0, 10, 100)
-        y1 = 75 + 5 * (1 - np.exp(-0.5 * x)) - 0.1 * x  # Continuous treatment
-        y2 = 75 + 5 * (1 - np.exp(-0.5 * np.minimum(x, 3))) - 0.1 * np.minimum(x, 3) - 0.3 * np.maximum(0, x-3)  # Discontinuation
-        ax.plot(x, y1, label="Continuous Treatment")
-        ax.plot(x, y2, label="With Discontinuation")
-        ax.set_xlabel("Time (years)")
-        ax.set_ylabel("Visual Acuity (letters)")
-        ax.set_title("Sample Treatment Comparison")
-        ax.axvline(x=3, color='gray', linestyle='--', alpha=0.5)
-        ax.text(3.1, 72, "Discontinuation", fontsize=9, alpha=0.7)
-        ax.legend()
-        ax.grid(True, alpha=0.3)
-        st.pyplot(fig)
+        # Display instructions instead of sample visualization
+        st.info("No simulation results available. Please run a simulation in the 'Run Simulation' tab to view results here.")
 
 elif page == "Run Simulation":
     display_logo_and_title("Run AMD Treatment Simulation")
@@ -381,15 +424,20 @@ elif page == "Run Simulation":
                     # Run simulation
                     results = run_simulation(params)
                     
-                    # Check if there was an error
-                    if "error" in results:
-                        st.error(f"Error in simulation: {results['error']}")
-                        results = None
+                    # Check if there was an error or if simulation failed
+                    if "error" in results or results.get("failed", False):
+                        st.error(f"Simulation failed: {results.get('error', 'Unknown error')}")
+                        # Keep the results but mark them as failed for display
+                        results["failed"] = True
                     else:
                         # Save results to file
                         results_path = save_simulation_results(results)
                         if results_path:
                             st.session_state["simulation_results_path"] = results_path
+                        
+                        # Store patient histories in session state if available
+                        if "patient_histories" in results:
+                            st.session_state["patient_histories"] = results["patient_histories"]
                         
                         # Show success message
                         if "runtime_seconds" in results:
@@ -398,29 +446,17 @@ elif page == "Run Simulation":
                             st.success("Simulation complete!")
                 except Exception as e:
                     st.error(f"Error running simulation: {str(e)}")
-                    results = None
-        
-        # If simulation couldn't run or had an error, create sample data
-        if results is None:
-            st.info("Using sample data instead.")
-            
-            # Create sample results for demonstration
-            results = {
-                "simulation_type": simulation_type,
-                "population_size": population_size,
-                "duration_years": duration_years,
-                "enable_clinician_variation": enable_clinician_variation,
-                "planned_discontinue_prob": planned_discontinue_prob,
-                "admin_discontinue_prob": admin_discontinue_prob,
-                "discontinuation_counts": {
-                    "Planned": int(population_size * 0.25),
-                    "Administrative": int(population_size * 0.12),
-                    "Time-based": int(population_size * 0.18),
-                    "Premature": int(population_size * 0.08)
-                },
-                "runtime_seconds": 1.0,
-                "is_sample": True
-            }
+                    # Create a minimal results object
+                    results = {
+                        "simulation_type": simulation_type,
+                        "population_size": population_size,
+                        "duration_years": duration_years,
+                        "enable_clinician_variation": enable_clinician_variation,
+                        "planned_discontinue_prob": planned_discontinue_prob,
+                        "admin_discontinue_prob": admin_discontinue_prob,
+                        "error": str(e),
+                        "failed": True
+                    }
         
         # Save results in session state
         st.session_state["simulation_results"] = results
@@ -435,61 +471,288 @@ elif page == "Run Simulation":
             st.warning("⚠️ **Sample Data**: These are simulated results using sample data, not actual simulation outputs.")
             st.info("The actual simulation module couldn't be loaded. This is likely because you're viewing the UI without having the full simulation codebase installed.")
         
-        # Display metrics
-        col1, col2, col3 = st.columns(3)
-        
-        # Calculate metrics
-        total_patients = results["population_size"]
-        discontinued_patients = results.get("total_discontinuations", 0)
-        discontinued_percent = (discontinued_patients / total_patients * 100) if total_patients > 0 else 0
-        
-        recurrence_count = results.get("recurrences", {}).get("total", 0)
-        recurrence_rate = (recurrence_count / discontinued_patients * 100) if discontinued_patients > 0 else 0
-        
-        mean_va_final = 0
-        if "mean_va_data" in results and results["mean_va_data"]:
-            mean_va_final = results["mean_va_data"][-1]["visual_acuity"]
-        
-        with col1:
-            st.metric("Patients Discontinued", f"{discontinued_percent:.1f}%", f"{discontinued_patients} patients")
-        
-        with col2:
-            st.metric("Recurrence Rate", f"{recurrence_rate:.1f}%", f"{recurrence_count} recurrences")
-        
-        with col3:
-            st.metric("Mean Injections", f"{results.get('mean_injections', 0):.1f}", f"{results.get('total_injections', 0)} total")
-        
-        # Display discontinuation types
-        st.subheader("Discontinuation Types")
-        
-        if "discontinuation_counts" in results:
-            disc_counts = results["discontinuation_counts"]
-            total = sum(disc_counts.values())
+        # Check if simulation failed
+        if results.get("failed", False):
+            st.error("Simulation failed to complete. No results to display.")
             
-            # Create dataframe for display
-            data = []
-            for disc_type, count in disc_counts.items():
-                percentage = (count / total * 100) if total > 0 else 0
-                data.append({
-                    "Type": disc_type,
-                    "Count": count,
-                    "Percentage": f"{percentage:.1f}%",
-                    "Mean Time to Recurrence (weeks)": "-"  # Replace with actual data if available
-                })
-            
-            df = pd.DataFrame(data)
-            st.dataframe(df, use_container_width=True)
-            
-            # Show discontinuation plot
-            fig = generate_discontinuation_plot(results)
-            st.pyplot(fig)
+            # Show error details if available
+            if "error" in results:
+                with st.expander("Error Details"):
+                    st.write(results["error"])
+                    
+            # Provide suggestions for troubleshooting
+            st.info("""
+            **Troubleshooting suggestions:**
+            - Try reducing the population size
+            - Try a different simulation type (ABS or DES)
+            - Check the debug information section for more details
+            """)
+        
         else:
-            st.info("No discontinuation data available in simulation results.")
+            # Only display metrics if simulation succeeded
+            # Display metrics
+            col1, col2, col3 = st.columns(3)
+            
+            # Calculate metrics
+            total_patients = results["population_size"]
+            discontinued_patients = results.get("total_discontinuations", 0)
+            discontinued_percent = (discontinued_patients / total_patients * 100) if total_patients > 0 else 0
+            
+            # Get recurrence data with more details - WITH EMERGENCY DEBUG 
+            recurrence_data = results.get("recurrences", {})
+            # Force using sim stats for retreatments if available from raw_discontinuation_stats
+            if "raw_discontinuation_stats" in results and "unique_patient_retreatments" in results["raw_discontinuation_stats"]:
+                # We have direct stats from simulation
+                unique_recurrence_count = results["raw_discontinuation_stats"]["unique_patient_retreatments"]
+                # If we also have total retreatments, use that
+                if "retreatments" in results["raw_discontinuation_stats"]:
+                    recurrence_count = results["raw_discontinuation_stats"]["retreatments"]
+                else:
+                    # Otherwise use the unique count or fall back to recurrence_data
+                    recurrence_count = recurrence_data.get("total", unique_recurrence_count)
+            else:
+                # Fall back to recurrence_data
+                recurrence_count = recurrence_data.get("total", 0)
+                unique_recurrence_count = recurrence_data.get("unique_count", recurrence_count)
+                
+            # Calculate rate based on unique counts whenever possible
+            recurrence_rate = (unique_recurrence_count / discontinued_patients * 100) if discontinued_patients > 0 else 0
+            
+            # EMERGENCY DEBUG output - force display of retreatment data
+            st.info(f"DEBUG - Run Simulation view - Recurrence data: count={recurrence_count}, unique={unique_recurrence_count}, rate={recurrence_rate:.2f}%")
+            
+            mean_va_final = 0
+            if "mean_va_data" in results and results["mean_va_data"]:
+                mean_va_final = results["mean_va_data"][-1]["visual_acuity"]
+            
+            with col1:
+                st.metric("Patients Discontinued", f"{discontinued_percent:.1f}%", f"{discontinued_patients} patients")
+            
+            with col2:
+                # Show unique patient count if available, otherwise total
+                recurrence_detail = f"{unique_recurrence_count} patients" if unique_recurrence_count != recurrence_count else f"{recurrence_count} recurrences"
+                st.metric("Recurrence Rate", f"{recurrence_rate:.1f}%", recurrence_detail)
+            
+            with col3:
+                st.metric("Mean Injections", f"{results.get('mean_injections', 0):.1f}", f"{results.get('total_injections', 0)} total")
+            
+            # Display discontinuation types
+            st.subheader("Discontinuation Types")
+            
+            # Debug info for discontinuation and retreatment
+            with st.expander("Debug Discontinuation & Retreatment Data"):
+                st.write("Results keys:", list(results.keys()))
+                st.write("Has discontinuation_counts:", "discontinuation_counts" in results)
+                st.write("Has total_discontinuations:", "total_discontinuations" in results)
+                st.write("Has recurrences:", "recurrences" in results)
+                
+                if "discontinuation_counts" in results:
+                    st.write("Discontinuation counts:", results["discontinuation_counts"])
+                    st.write("Total discontinuations:", results.get("total_discontinuations", "Not available"))
+                
+                if "recurrences" in results:
+                    st.write("Recurrence data:", results["recurrences"])
+                
+                # If we got here through stats in the simulation
+                if "simulation_stats" in results:
+                    st.write("Simulation stats:", results["simulation_stats"])
+            
+            if "discontinuation_counts" in results:
+                disc_counts = results["discontinuation_counts"]
+                total = sum(disc_counts.values())
+                
+                # Add debug info
+                st.info(f"Found {total} total discontinuations: {disc_counts}")
+                
+                # Create dataframe for display
+                data = []
+                for disc_type, count in disc_counts.items():
+                    percentage = (count / total * 100) if total > 0 else 0
+                    data.append({
+                        "Type": disc_type,
+                        "Count": count,
+                        "Percentage": f"{percentage:.1f}%",
+                        "Mean Time to Recurrence (weeks)": "-"  # Replace with actual data if available
+                    })
+                
+                df = pd.DataFrame(data)
+                st.dataframe(df, use_container_width=True)
+                
+                # Test with direct display of discontinuation counts
+                st.bar_chart(data=pd.DataFrame({
+                    'Type': list(disc_counts.keys()),
+                    'Count': list(disc_counts.values())
+                }).set_index('Type'))
+                
+                # Show discontinuation plot using matplotlib
+                st.info("Generating matplotlib discontinuation plot...")
+                figures = generate_discontinuation_plot(results)
+                
+                # Handle both single figure and list of figures
+                if isinstance(figures, list):
+                    for i, fig in enumerate(figures):
+                        if i == 0:
+                            st.pyplot(fig)
+                        else:
+                            if i == 1:
+                                st.subheader("Discontinuation Events vs. Unique Patients")
+                            st.pyplot(fig)
+                else:
+                    st.pyplot(figures)
+                    
+                # Display retreatment information if available
+                if "recurrences" in results and results["recurrences"].get("total", 0) > 0:
+                    st.subheader("Retreatment Analysis")
+                    recurrence_data = results["recurrences"]
+                    
+                    # Get retreatment count and unique count
+                    total_retreatments = recurrence_data.get("total", 0)
+                    unique_retreatments = recurrence_data.get("unique_count", total_retreatments)
+                    
+                    # Create columns for metrics
+                    ret_col1, ret_col2 = st.columns(2)
+                    
+                    with ret_col1:
+                        # Display basic metrics
+                        st.write(f"**Total Retreatment Events:** {total_retreatments}")
+                        if unique_retreatments != total_retreatments:
+                            st.write(f"**Unique Patients Retreated:** {unique_retreatments}")
+                        
+                        # Calculate and display retreatment rate
+                        discontinued_patients = results.get("total_discontinuations", 0)
+                        if discontinued_patients > 0:
+                            retreatment_rate = (unique_retreatments / discontinued_patients) * 100
+                            st.write(f"**Retreatment Rate:** {retreatment_rate:.1f}% of discontinued patients")
+                    
+                    # Display breakdown by discontinuation type if available
+                    retreatment_by_type = recurrence_data.get("by_type", {})
+                    if retreatment_by_type and sum(retreatment_by_type.values()) > 0:
+                        with ret_col2:
+                            # Convert to DataFrame for display
+                            retreatment_df = pd.DataFrame({
+                                'Type': [key.replace('_', ' ').title() for key in retreatment_by_type.keys()],
+                                'Count': list(retreatment_by_type.values())
+                            })
+                            
+                            # Create pie chart to show proportion
+                            fig, ax = plt.subplots(figsize=(5, 5))
+                            ax.pie(
+                                retreatment_df['Count'], 
+                                labels=retreatment_df['Type'],
+                                autopct='%1.1f%%',
+                                startangle=90
+                            )
+                            ax.axis('equal')
+                            ax.set_title('Retreatments by Discontinuation Type')
+                            st.pyplot(fig)
+                        
+                        # Display as table and bar chart
+                        st.write("**Retreatments by Discontinuation Type:**")
+                        st.dataframe(retreatment_df)
+                        st.bar_chart(retreatment_df.set_index('Type'))
+            else:
+                st.warning("No discontinuation data available in simulation results. Check simulation configuration.")
+            
+            # Display retreatment information if available
+            if "recurrences" in results and results["recurrences"].get("total", 0) > 0:
+                st.subheader("Retreatment Data")
+                recurrence_data = results["recurrences"]
+                
+                # Get retreatment count and unique count
+                total_retreatments = recurrence_data.get("total", 0)
+                unique_retreatments = recurrence_data.get("unique_count", total_retreatments)
+                
+                # Display basic metrics
+                st.write(f"**Total Retreatment Events:** {total_retreatments}")
+                if unique_retreatments != total_retreatments:
+                    st.write(f"**Unique Patients Retreated:** {unique_retreatments}")
+                
+                # Calculate and display retreatment rate
+                discontinued_patients = results.get("total_discontinuations", 0)
+                if discontinued_patients > 0:
+                    retreatment_rate = (unique_retreatments / discontinued_patients) * 100
+                    st.write(f"**Retreatment Rate:** {retreatment_rate:.1f}% of discontinued patients")
+                
+                # Display breakdown by discontinuation type if available
+                retreatment_by_type = recurrence_data.get("by_type", {})
+                if retreatment_by_type and sum(retreatment_by_type.values()) > 0:
+                    # Convert to DataFrame for display
+                    retreatment_df = pd.DataFrame({
+                        'Type': [key.replace('_', ' ').title() for key in retreatment_by_type.keys()],
+                        'Count': list(retreatment_by_type.values())
+                    })
+                    
+                    # Display as table
+                    st.write("**Retreatments by Discontinuation Type:**")
+                    st.dataframe(retreatment_df)
+                    
+                    # Create bar chart
+                    st.bar_chart(retreatment_df.set_index('Type'))
+            
+            # Display retreatment information if available
+            if "recurrences" in results and results["recurrences"].get("total", 0) > 0:
+                st.subheader("Retreatment Data")
+                recurrence_data = results["recurrences"]
+                
+                # Get retreatment count and unique count
+                total_retreatments = recurrence_data.get("total", 0)
+                unique_retreatments = recurrence_data.get("unique_count", total_retreatments)
+                
+                # Display basic metrics
+                st.write(f"**Total Retreatment Events:** {total_retreatments}")
+                if unique_retreatments != total_retreatments:
+                    st.write(f"**Unique Patients Retreated:** {unique_retreatments}")
+                
+                # Calculate and display retreatment rate
+                discontinued_patients = results.get("total_discontinuations", 0)
+                if discontinued_patients > 0:
+                    retreatment_rate = (unique_retreatments / discontinued_patients) * 100
+                    st.write(f"**Retreatment Rate:** {retreatment_rate:.1f}% of discontinued patients")
+                
+                # Display breakdown by discontinuation type if available
+                retreatment_by_type = recurrence_data.get("by_type", {})
+                if retreatment_by_type and sum(retreatment_by_type.values()) > 0:
+                    # Convert to DataFrame for display
+                    retreatment_df = pd.DataFrame({
+                        'Type': [key.replace('_', ' ').title() for key in retreatment_by_type.keys()],
+                        'Count': list(retreatment_by_type.values())
+                    })
+                    
+                    # Display as table
+                    st.write("**Retreatments by Discontinuation Type:**")
+                    st.dataframe(retreatment_df)
+                    
+                    # Create bar chart
+                    st.bar_chart(retreatment_df.set_index('Type'))
+            
+            # Show visual acuity over time
+            st.subheader("Visual Acuity Over Time")
+            fig = generate_va_over_time_plot(results)
+            st.pyplot(fig)
+
+elif page == "Patient Explorer":
+    display_logo_and_title("Patient Explorer")
+    
+    # Check if we have simulation results to display
+    if "simulation_results" in st.session_state and "patient_histories" in st.session_state:
+        results = st.session_state["simulation_results"]
+        patient_histories = st.session_state["patient_histories"]
         
-        # Show visual acuity over time
-        st.subheader("Visual Acuity Over Time")
-        fig = generate_va_over_time_plot(results)
-        st.pyplot(fig)
+        # Display the patient explorer
+        display_patient_explorer(patient_histories, results)
+    else:
+        st.info("No simulation data available. Please run a simulation first.")
+        st.markdown("""
+        The Patient Explorer allows you to:
+        
+        - Select individual patients from simulation results
+        - View their complete treatment journey
+        - Analyze visual acuity changes over time
+        - Examine treatment phases and decisions
+        - Review detailed visit history
+        
+        Run a simulation in the 'Run Simulation' tab to explore patient data.
+        """)
 
 elif page == "Reports":
     display_logo_and_title("Generate Reports")
