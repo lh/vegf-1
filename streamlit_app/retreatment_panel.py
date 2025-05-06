@@ -158,24 +158,52 @@ def display_retreatment_panel(results):
                 })
                 st.bar_chart(rate_df.set_index('Type'))
                 
-                # Explanation of the metrics
-                with st.expander("📊 Understanding the Retreatment Metrics"):
-                    st.markdown("""
-                    ### Important Note About Retreatment Statistics
-                    
-                    There's an important distinction between **unique patients** and **retreatment events**:
-                    
-                    - **Patients Discontinued**: The count of unique patients who had treatment discontinued
-                    - **Retreatment Events**: The total number of retreatment events (one patient may have multiple retreatments)
-                    - **Est. Unique Patients**: Estimated number of unique patients retreated per discontinuation type
-                    - **Patient Retreatment Rate**: Estimated percentage of discontinued patients who were retreated
-                    - **Event/Patient Ratio**: Average number of retreatment events per discontinued patient
-                    
-                    When the Event/Patient Ratio exceeds 1.0, it means some patients had multiple retreatments.
-                    This can lead to retreatment event counts exceeding discontinued patient counts.
-                    
-                    The Patient Retreatment Rate uses estimation to account for this and provide a more accurate
-                    representation of the percentage of patients who experienced at least one retreatment.
-                    """)
+                # Add the explanations directly without an expander
+                st.write("### Understanding the Retreatment Metrics")
+                st.info("""
+                **Important Notes About Retreatment Statistics**
+                
+                There's an important distinction between **unique patients** and **retreatment events**:
+                
+                - **Patients Discontinued**: The count of unique patients who had treatment discontinued
+                - **Retreatment Events**: The total number of retreatment events (one patient may have multiple retreatments)
+                - **Est. Unique Patients**: Estimated number of unique patients retreated per discontinuation type
+                - **Patient Retreatment Rate**: Estimated percentage of discontinued patients who were retreated
+                - **Event/Patient Ratio**: Average number of retreatment events per discontinued patient
+                
+                When the Event/Patient Ratio exceeds 1.0, it means some patients had multiple retreatments.
+                This can lead to retreatment event counts exceeding discontinued patient counts.
+                
+                The Patient Retreatment Rate uses estimation to account for this and provide a more accurate
+                representation of the percentage of patients who experienced at least one retreatment.
+                """)
     else:
         st.warning("No retreatment breakdown by discontinuation type available.")
+        
+    # Add explanation expander at the bottom (outside all other expanders)
+    with st.expander("📊 Understanding Retreatment vs Discontinuation"):
+        st.markdown("""
+        ### Retreatment Statistics Explained
+        
+        In this dashboard, we track both discontinuations and retreatments:
+        
+        - **Discontinuation**: When a patient stops receiving regular treatment
+        - **Retreatment**: When a previously discontinued patient resumes treatment due to disease recurrence
+        
+        #### Key Metrics:
+        
+        - **Patient Retreatment Rate**: The percentage of discontinued patients who had at least one retreatment
+        - **Event/Patient Ratio**: Average number of retreatment events per patient (can exceed 1.0)
+        
+        #### Why Rates Can Be High:
+        
+        High retreatment rates indicate that many discontinued patients eventually needed to resume treatment.
+        This may suggest that:
+        
+        1. The discontinuation criteria may need revision
+        2. Monitoring after discontinuation is effectively identifying recurrences
+        3. The disease has a natural tendency to recur after treatment cessation
+        
+        A high Event/Patient ratio (>1.0) indicates that some patients are experiencing multiple retreatments,
+        suggesting a cycle of discontinuation and retreatment that might require clinical intervention.
+        """)
