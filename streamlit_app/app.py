@@ -18,6 +18,20 @@ import matplotlib.pyplot as plt
 import tempfile
 from pathlib import Path
 
+# Import Puppeteer helpers
+try:
+    from streamlit_app.puppeteer_helpers import add_puppeteer_support, selectable_radio, selectable_button, selectable_selectbox
+except ImportError:
+    # Fallback functions if puppeteer_helpers is not available
+    def add_puppeteer_support():
+        pass
+    def selectable_radio(label, options, **kwargs):
+        return st.radio(label, options, **kwargs)
+    def selectable_button(label, **kwargs):
+        return st.button(label, **kwargs)
+    def selectable_selectbox(label, options, **kwargs):
+        return st.selectbox(label, options, **kwargs)
+
 # Add the project root directory to sys.path to allow importing from the main project
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
@@ -138,6 +152,13 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# Now add puppeteer support
+try:
+    add_puppeteer_support()
+except Exception as e:
+    # Silently handle errors to avoid breaking the app
+    pass
+
 # --- Sidebar ---
 # Display logo image (if available) with fallback to text
 try:
@@ -171,14 +192,26 @@ try:
 except ImportError:
     pass
 
-# Navigation
+# Navigation - use regular radio for now since we encountered issues
 page = st.sidebar.radio(
     "Navigate to",
-    ["Dashboard", "Run Simulation", "Patient Explorer", "Reports", "About"]
+    ["Dashboard", "Run Simulation", "Patient Explorer", "Reports", "About"],
+    key="navigation",
+    format_func=lambda x: f"{x}",  # For better screen reader support
+    index=0,
+    help="Select an application section to navigate to"
 )
 
+# Add a marker element to make navigation accessible for Puppeteer
+st.sidebar.markdown('<div data-test-id="main-navigation-marker"></div>', unsafe_allow_html=True)
+
 # Add a debug mode toggle in the sidebar (off by default)
-debug_mode = st.sidebar.checkbox("🛠️ Debug Mode", value=False, help="Show detailed diagnostic information")
+debug_mode = st.sidebar.checkbox(
+    "🛠️ Debug Mode", 
+    value=False, 
+    help="Show detailed diagnostic information",
+    key="debug_mode_toggle"  # Added unique key
+)
 
 # Set debug mode in the simulation runner module
 try:
@@ -289,10 +322,13 @@ elif page == "Run Simulation":
     col1, col2 = st.columns(2)
     
     with col1:
+        # Add a marker for Puppeteer
+        st.markdown('<div data-test-id="simulation-type-select-marker"></div>', unsafe_allow_html=True)
         simulation_type = st.selectbox(
             "Simulation Type",
             ["ABS", "DES"],
-            help="Agent-Based Simulation (ABS) or Discrete Event Simulation (DES)"
+            help="Agent-Based Simulation (ABS) or Discrete Event Simulation (DES)",
+            key="simulation_type_select"
         )
         
         duration_years = st.slider(
@@ -300,7 +336,8 @@ elif page == "Run Simulation":
             min_value=1,
             max_value=10,
             value=5,
-            help="Duration of the simulation in years"
+            help="Duration of the simulation in years",
+            key="duration_years_slider"  # Added unique key
         )
         
         population_size = st.slider(
@@ -309,7 +346,8 @@ elif page == "Run Simulation":
             max_value=10000,
             value=1000,
             step=100,
-            help="Number of patients in the simulation"
+            help="Number of patients in the simulation",
+            key="population_size_slider"  # Added unique key
         )
     
     with col2:
@@ -318,7 +356,8 @@ elif page == "Run Simulation":
         enable_clinician_variation = st.checkbox(
             "Enable Clinician Variation",
             value=True,
-            help="Include variation in clinician adherence to protocol"
+            help="Include variation in clinician adherence to protocol",
+            key="enable_clinician_variation_checkbox"  # Added unique key
         )
         
         planned_discontinue_prob = st.slider(
@@ -327,7 +366,8 @@ elif page == "Run Simulation":
             max_value=1.0,
             value=0.2,
             step=0.05,
-            help="Probability of planned discontinuation when criteria are met"
+            help="Probability of planned discontinuation when criteria are met",
+            key="planned_discontinue_prob_slider"  # Added unique key
         )
         
         admin_discontinue_prob = st.slider(
@@ -336,7 +376,8 @@ elif page == "Run Simulation":
             max_value=0.5,
             value=0.05,
             step=0.01,
-            help="Annual probability of random administrative discontinuation"
+            help="Annual probability of random administrative discontinuation",
+            key="admin_discontinue_prob_slider"  # Added unique key
         )
         
         premature_discontinue_prob = st.slider(
@@ -345,9 +386,13 @@ elif page == "Run Simulation":
             max_value=5.0,
             value=2.0,
             step=0.1,
-            help="Probability factor for premature discontinuations (clinician-dependent)"
+            help="Probability factor for premature discontinuations (clinician-dependent)",
+            key="premature_discontinue_prob_slider"  # Added unique key
         )
     
+    # Add a marker div for the expander
+    st.markdown('<div data-test-id="advanced-options-marker"></div>', unsafe_allow_html=True)
+
     # Advanced options in an expander
     with st.expander("Advanced Options"):
         col1, col2 = st.columns(2)
@@ -359,7 +404,8 @@ elif page == "Run Simulation":
                 max_value=2.0,
                 value=1.0,
                 step=0.1,
-                help="Multiplier for disease recurrence rates"
+                help="Multiplier for disease recurrence rates",
+                key="recurrence_risk_multiplier_slider"  # Added unique key
             )
             
             consecutive_stable_visits = st.slider(
@@ -368,7 +414,8 @@ elif page == "Run Simulation":
                 max_value=5,
                 value=3,
                 step=1,
-                help="Number of consecutive stable visits required for discontinuation"
+                help="Number of consecutive stable visits required for discontinuation",
+                key="consecutive_stable_visits_slider"  # Added unique key
             )
         
         with col2:
@@ -376,17 +423,21 @@ elif page == "Run Simulation":
                 "Monitoring Schedule (weeks after discontinuation)",
                 options=[4, 8, 12, 16, 24, 36, 48, 52],
                 default=[12, 24, 36],
-                help="Weeks after discontinuation for follow-up visits"
+                help="Weeks after discontinuation for follow-up visits",
+                key="monitoring_schedule_multiselect"  # Added unique key
             )
             
             no_monitoring_for_admin = st.checkbox(
                 "No Monitoring for Administrative Discontinuation",
                 value=True,
-                help="Don't schedule monitoring visits for administrative discontinuations"
+                help="Don't schedule monitoring visits for administrative discontinuations",
+                key="no_monitoring_for_admin_checkbox"  # Added unique key
             )
     
     # Store UI parameters in session state
-    if st.button("Run Simulation", type="primary"):
+    # Add a marker element for Puppeteer to locate the button
+    st.markdown('<div data-test-id="run-simulation-btn-marker"></div>', unsafe_allow_html=True)
+    if st.button("Run Simulation", type="primary", key="run_simulation_button", help="Run the simulation with current parameters"):
         # Check if SimulationConfig is available
         simulation_can_run = True
         if SimulationConfig is None:
@@ -472,12 +523,13 @@ elif page == "Run Simulation":
         # Check if simulation failed
         if results.get("failed", False):
             st.error("Simulation failed to complete. No results to display.")
-            
+
             # Show error details if available
             if "error" in results:
+                st.markdown('<div data-test-id="error-details-marker"></div>', unsafe_allow_html=True)
                 with st.expander("Error Details"):
                     st.write(results["error"])
-                    
+
             # Provide suggestions for troubleshooting
             st.info("""
             **Troubleshooting suggestions:**
@@ -485,6 +537,70 @@ elif page == "Run Simulation":
             - Try a different simulation type (ABS or DES)
             - Check the debug information section for more details
             """)
+
+        # Show debug information about visualization issues if debug mode is enabled
+        if debug_mode and "va_extraction_stats" in results:
+            va_stats = results["va_extraction_stats"]
+            st.markdown('<div data-test-id="va-debug-marker"></div>', unsafe_allow_html=True)
+            with st.expander("Visual Acuity Data Debug Information", expanded=True):
+                st.markdown("### Visual Acuity Extraction Statistics")
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.metric("Total Patients", va_stats.get("total_patients", 0))
+                    st.metric("Patients With Acuity Data", va_stats.get("patients_with_acuity", 0))
+
+                with col2:
+                    st.metric("Total VA Datapoints", va_stats.get("total_va_datapoints", 0))
+
+                    # Calculate extraction success rate
+                    if va_stats.get("total_patients", 0) > 0:
+                        success_rate = va_stats.get("patients_with_acuity", 0) / va_stats.get("total_patients", 0) * 100
+                        st.metric("Extraction Success Rate", f"{success_rate:.1f}%")
+
+                # Show patient structure info if available
+                if "patient_structure_info" in results:
+                    st.markdown("### Patient Structure Analysis")
+                    for info in results["patient_structure_info"]:
+                        st.text(info)
+
+                # Show failures if any
+                if va_stats.get("extraction_failures"):
+                    st.markdown("### Extraction Failures")
+                    st.write(f"Failed to extract acuity data from {len(va_stats['extraction_failures'])} patients.")
+
+                    # First failure details as sample
+                    first_failure = list(va_stats["extraction_failures"].items())[0] if va_stats["extraction_failures"] else None
+                    if first_failure:
+                        st.markdown("#### Sample Patient Structure:")
+                        st.json(first_failure[1])
+
+                # Show VA data summary if available
+                if "va_data_summary" in results:
+                    st.markdown("### VA Data Summary")
+                    st.json(results["va_data_summary"])
+
+                # Option to sample a patient record to help diagnose format issues
+                if "patient_histories" in st.session_state and st.session_state.get("patient_histories"):
+                    st.markdown("### Sample Patient Record")
+
+                    # Get patient histories from session state
+                    patient_histories = st.session_state["patient_histories"]
+
+                    # Get first patient ID
+                    first_patient_id = next(iter(patient_histories))
+
+                    # Show the first visit record to help debug extraction issues
+                    patient_record = patient_histories[first_patient_id]
+
+                    if isinstance(patient_record, list) and len(patient_record) > 0:
+                        # For list-type records, show first few visits
+                        max_visits = min(3, len(patient_record))
+                        st.markdown(f"**First {max_visits} visits of patient {first_patient_id}:**")
+
+                        for i, visit in enumerate(patient_record[:max_visits]):
+                            st.markdown(f"**Visit {i+1}:**")
+                            st.json(visit)
         
         else:
             # Only display metrics if simulation succeeded
@@ -630,23 +746,26 @@ elif page == "Reports":
             "Report Format",
             ["HTML", "PDF", "Word"],
             horizontal=True,
-            help="Select the output format for the report"
+            help="Select the output format for the report",
+            key="report_format_radio"  # Added unique key
         )
         
         include_code = st.checkbox(
             "Include Code",
             value=False,
-            help="Include the code used to generate the visualizations in the report"
+            help="Include the code used to generate the visualizations in the report",
+            key="include_code_checkbox"  # Added unique key
         )
         
         include_appendix = st.checkbox(
             "Include Appendix",
             value=True,
-            help="Include additional details and methodology in an appendix"
+            help="Include additional details and methodology in an appendix",
+            key="include_appendix_checkbox"  # Added unique key
         )
         
         # Generate report button
-        if st.button("Generate Report", type="primary"):
+        if st.button("Generate Report", type="primary", key="generate_report_button", help="Generate a detailed report of simulation results"):
             if "simulation_complete" not in st.session_state or not st.session_state["simulation_complete"]:
                 st.warning("Please run a simulation first before generating a report.")
             else:
@@ -714,7 +833,8 @@ elif page == "Reports":
                                     label=f"Download {report_format} Report",
                                     data=report_data,
                                     file_name=f"enhanced_discontinuation_report.{file_extension}",
-                                    mime=f"application/{file_extension}"
+                                    mime=f"application/{file_extension}",
+                                    key="download_report_button"  # Added unique key
                                 )
                             else:
                                 st.error("Failed to generate report.")

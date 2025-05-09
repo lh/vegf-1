@@ -902,45 +902,67 @@ def process_simulation_results(sim, patient_histories, params):
     
     # Process patient histories for visual acuity outcomes
     va_data = []
-    
-    # Add debug info to help understand patient data structure (only in debug mode)
-    if patient_histories and DEBUG_MODE:
+    va_extraction_failures = {}
+    patient_count_with_acuity = 0
+
+    # Add debug info to help understand patient data structure (always collect, but only display in debug mode)
+    patient_structure_info = []
+
+    if patient_histories:
         # Examine the structure of patient_histories first
-        debug_info(f"Patient histories type: {type(patient_histories).__name__}")
-        debug_info(f"Patient histories count: {len(patient_histories)}")
-        
+        patient_structure_info.append(f"Patient histories type: {type(patient_histories).__name__}")
+        patient_structure_info.append(f"Patient histories count: {len(patient_histories)}")
+
         # Analyze a sample patient to understand its structure
         if isinstance(patient_histories, dict) and patient_histories:
             # Get a sample patient ID
             sample_id = next(iter(patient_histories))
             sample_patient = patient_histories[sample_id]
-            
-            debug_info(f"Sample patient (ID {sample_id}) type: {type(sample_patient).__name__}")
-            
+
+            patient_structure_info.append(f"Sample patient (ID {sample_id}) type: {type(sample_patient).__name__}")
+
             # Extract sample history
             if isinstance(sample_patient, list):
-                debug_info(f"Sample patient is a list with {len(sample_patient)} records")
+                patient_structure_info.append(f"Sample patient is a list with {len(sample_patient)} records")
                 if sample_patient:
-                    debug_info(f"First record type: {type(sample_patient[0]).__name__}")
+                    patient_structure_info.append(f"First record type: {type(sample_patient[0]).__name__}")
                     if isinstance(sample_patient[0], dict):
-                        debug_info(f"First record keys: {list(sample_patient[0].keys())}")
+                        patient_structure_info.append(f"First record keys: {list(sample_patient[0].keys())}")
             elif hasattr(sample_patient, 'history') and sample_patient.history:
-                debug_info(f"Sample patient history length: {len(sample_patient.history)}")
-                debug_info(f"First record type: {type(sample_patient.history[0]).__name__}")
+                patient_structure_info.append(f"Sample patient history length: {len(sample_patient.history)}")
+                patient_structure_info.append(f"First record type: {type(sample_patient.history[0]).__name__}")
                 if isinstance(sample_patient.history[0], dict):
-                    debug_info(f"First record keys: {list(sample_patient.history[0].keys())}")
-            
+                    patient_structure_info.append(f"First record keys: {list(sample_patient.history[0].keys())}")
+
+            # Check for visual acuity related attributes
+            va_attrs = []
+            if hasattr(sample_patient, 'acuity_history'):
+                va_attrs.append('acuity_history')
+            if hasattr(sample_patient, 'vision_history'):
+                va_attrs.append('vision_history')
+            if isinstance(sample_patient, dict) and "acuity_history" in sample_patient:
+                va_attrs.append('dict:acuity_history')
+
+            patient_structure_info.append(f"Visual acuity attributes found: {va_attrs or 'None'}")
+
             # Show additional attributes
             additional_attrs = []
             if not isinstance(sample_patient, dict) and not isinstance(sample_patient, list):
-                for attr in ['disease_activity', 'treatment_status', 'current_phase']:
+                for attr in ['disease_activity', 'treatment_status', 'current_phase', 'visual_acuity', 'initial_acuity']:
                     if hasattr(sample_patient, attr):
                         additional_attrs.append(attr)
                 if additional_attrs:
-                    debug_info(f"Patient has attributes: {additional_attrs}")
+                    patient_structure_info.append(f"Patient has attributes: {additional_attrs}")
         else:
-            if DEBUG_MODE:
-                st.warning("Unable to extract detailed patient structure")
+            patient_structure_info.append("Unable to extract detailed patient structure")
+
+    # Store the structure info for debugging
+    results["patient_structure_info"] = patient_structure_info
+
+    # Display debug info if enabled
+    if DEBUG_MODE:
+        for info in patient_structure_info:
+            debug_info(info)
     
     # Try different ways to extract visual acuity data
     for patient_id, patient in patient_histories.items() if isinstance(patient_histories, dict) else enumerate(patient_histories):
@@ -951,7 +973,10 @@ def process_simulation_results(sim, patient_histories, params):
         else:
             patient_obj = patient
             pid = getattr(patient, 'id', f"patient_{patient_id}")
-        
+
+        # Track if we found acuity data for this patient
+        patient_has_acuity = False
+
         # Try different attribute/key names for acuity history
         if hasattr(patient_obj, 'acuity_history'):
             # Check what type the acuity_history is
@@ -966,6 +991,7 @@ def process_simulation_results(sim, patient_histories, params):
                             "time": time,
                             "visual_acuity": va
                         })
+                        patient_has_acuity = True
                     elif isinstance(item, dict):
                         # Handle dict entries
                         va_data.append({
@@ -973,6 +999,7 @@ def process_simulation_results(sim, patient_histories, params):
                             "time": item.get("time", 0),
                             "visual_acuity": item.get("acuity", item.get("visual_acuity", 0))
                         })
+                        patient_has_acuity = True
             elif hasattr(acuity_history, 'items'):  # Dict-like
                 for time, va in acuity_history.items():
                     va_data.append({
@@ -980,6 +1007,7 @@ def process_simulation_results(sim, patient_histories, params):
                         "time": time,
                         "visual_acuity": va
                     })
+                    patient_has_acuity = True
         elif isinstance(patient_obj, dict) and "acuity_history" in patient_obj:
             for time_point in patient_obj["acuity_history"]:
                 if isinstance(time_point, dict):
@@ -988,6 +1016,7 @@ def process_simulation_results(sim, patient_histories, params):
                         "time": time_point.get("time", 0),
                         "visual_acuity": time_point.get("acuity", time_point.get("visual_acuity", 0))
                     })
+                    patient_has_acuity = True
                 elif isinstance(time_point, tuple) and len(time_point) == 2:
                     time, va = time_point
                     va_data.append({
@@ -995,6 +1024,7 @@ def process_simulation_results(sim, patient_histories, params):
                         "time": time,
                         "visual_acuity": va
                     })
+                    patient_has_acuity = True
         elif hasattr(patient_obj, 'vision_history'):
             # Alternative attribute name
             vision_history = patient_obj.vision_history
@@ -1007,20 +1037,207 @@ def process_simulation_results(sim, patient_histories, params):
                             "time": time,
                             "visual_acuity": va
                         })
+                        patient_has_acuity = True
                     elif isinstance(item, dict):
                         va_data.append({
                             "patient_id": pid,
                             "time": item.get("time", 0),
                             "visual_acuity": item.get("vision", item.get("visual_acuity", 0))
                         })
+                        patient_has_acuity = True
+
+        # Try to find acuity in regular history if available
+        if not patient_has_acuity and hasattr(patient_obj, 'history') and isinstance(patient_obj.history, list):
+            # Look for visual acuity in history records
+            for i, record in enumerate(patient_obj.history):
+                if isinstance(record, dict) and ('visual_acuity' in record or 'acuity' in record):
+                    time_val = record.get('time', record.get('timestamp', i))
+                    va_val = record.get('visual_acuity', record.get('acuity', 0))
+
+                    va_data.append({
+                        "patient_id": pid,
+                        "time": time_val,
+                        "visual_acuity": va_val
+                    })
+                    patient_has_acuity = True
+
+        # Special case: If the patient is a list of visit records with vision field
+        # This matches the structure found in the debug output
+        if not patient_has_acuity and isinstance(patient_obj, list):
+            # Track cumulative time for ordered visits
+            cumulative_time = 0
+            visit_times = {}
+            baseline_time = None
+
+            # First pass: Build a time series based on the visit structure
+            for i, visit in enumerate(patient_obj):
+                if isinstance(visit, dict) and 'vision' in visit:
+                    # First record is time 0, subsequent records accumulate intervals
+                    if i == 0:
+                        visit_time = 0
+                        if 'date' in visit and isinstance(visit['date'], (int, float)):
+                            baseline_time = visit['date']
+                    else:
+                        # If we have an interval field, use that
+                        if 'interval' in visit and isinstance(visit['interval'], (int, float)):
+                            cumulative_time += visit['interval']
+                            visit_time = cumulative_time / 30.0  # Convert days to months
+                        # Otherwise try to use date
+                        elif 'date' in visit and isinstance(visit['date'], (int, float)) and baseline_time is not None:
+                            # Convert difference in days to months
+                            visit_time = (visit['date'] - baseline_time) / 30.0
+                        # Fall back to visit index as months (approximate)
+                        else:
+                            visit_time = i
+
+                    # Store the vision value at this time point
+                    visit_times[visit_time] = visit['vision']
+                    patient_has_acuity = True
+
+            # Second pass: Add the data points in time order
+            for time_point in sorted(visit_times.keys()):
+                va_data.append({
+                    "patient_id": pid,
+                    "time": time_point,
+                    "visual_acuity": visit_times[time_point]
+                })
+
+        # Count patients with acuity data
+        if patient_has_acuity:
+            patient_count_with_acuity += 1
+        else:
+            # Store information about failures for debugging
+            va_extraction_failures[str(pid)] = {
+                "patient_type": type(patient_obj).__name__,
+                "has_acuity_history": hasattr(patient_obj, 'acuity_history'),
+                "has_vision_history": hasattr(patient_obj, 'vision_history'),
+                "has_dict_acuity": isinstance(patient_obj, dict) and "acuity_history" in patient_obj,
+                "has_history": hasattr(patient_obj, 'history'),
+                "is_list": isinstance(patient_obj, list),
+                "has_vision": isinstance(patient_obj, list) and len(patient_obj) > 0 and isinstance(patient_obj[0], dict) and 'vision' in patient_obj[0]
+            }
     
+    # Track extraction statistics
+    results["va_extraction_stats"] = {
+        "total_patients": len(patient_histories) if patient_histories else 0,
+        "patients_with_acuity": patient_count_with_acuity,
+        "total_va_datapoints": len(va_data),
+        "extraction_failures": va_extraction_failures
+    }
+
     if va_data:
         va_df = pd.DataFrame(va_data)
-        
-        # Calculate mean acuity over time
-        mean_va = va_df.groupby("time")["visual_acuity"].mean().reset_index()
+
+        # Standardize time points by binning into monthly intervals
+        # This prevents excessive volatility from misaligned time points
+        va_df["time_month"] = va_df["time"].round().astype(int)
+
+        # Calculate mean acuity over standardized time bins
+        # Also calculate standard error and sample size at each time point
+        grouped = va_df.groupby("time_month")["visual_acuity"]
+        mean_va_by_month = grouped.mean()
+        std_va_by_month = grouped.std()
+        count_va_by_month = grouped.count()
+
+        # Calculate standard error of the mean (SEM) for each time point
+        # Set a minimum sample size to avoid division by zero
+        std_error = std_va_by_month / (count_va_by_month.clip(lower=1)).apply(lambda x: x ** 0.5)
+
+        # Combine statistics into a dataframe
+        mean_va = pd.DataFrame({
+            "time": mean_va_by_month.index,
+            "visual_acuity": mean_va_by_month.values,
+            "std_error": std_error.values,
+            "sample_size": count_va_by_month.values
+        })
+
+        # Apply a rolling window to smooth the data if we have enough points
+        # Apply smoothing if we have enough data points (at least 5)
+        smoothing_applied = False
+        if len(mean_va) >= 5:
+            # Sort to ensure time ordering
+            mean_va = mean_va.sort_values("time").reset_index(drop=True)
+
+            # Use a custom weighted smoothing approach that accounts for sample sizes
+            if "sample_size" in mean_va.columns:
+                # First create a copy of the raw values
+                mean_va["visual_acuity_raw"] = mean_va["visual_acuity"].copy()
+
+                # Apply a 3-point weighted moving average that respects sample sizes
+                smoothed_values = []
+
+                for i in range(len(mean_va)):
+                    if i == 0 or i == len(mean_va) - 1:
+                        # For first and last points, just use the raw value
+                        smoothed_values.append(mean_va.iloc[i]["visual_acuity"])
+                    else:
+                        # Get values and weights for 3-point weighted average
+                        values = [
+                            mean_va.iloc[i-1]["visual_acuity"],
+                            mean_va.iloc[i]["visual_acuity"],
+                            mean_va.iloc[i+1]["visual_acuity"]
+                        ]
+                        weights = [
+                            mean_va.iloc[i-1]["sample_size"],
+                            mean_va.iloc[i]["sample_size"]*2,  # Double weight for center point
+                            mean_va.iloc[i+1]["sample_size"]
+                        ]
+
+                        # Calculate weighted average (sum of value*weight / sum of weights)
+                        # Handle division by zero
+                        weight_sum = sum(weights)
+                        if weight_sum > 0:
+                            weighted_sum = 0
+                            for j in range(len(values)):
+                                weighted_sum += values[j] * weights[j]
+                            weighted_avg = weighted_sum / weight_sum
+                        else:
+                            weighted_avg = values[1]  # Default to center value
+
+                        smoothed_values.append(weighted_avg)
+
+                # Set the smoothed values
+                mean_va["visual_acuity_smoothed"] = smoothed_values
+                mean_va["visual_acuity"] = mean_va["visual_acuity_smoothed"]
+            else:
+                # Simple rolling average if no sample size data
+                rolling_window = 3
+                # Use pandas' built-in rolling function
+                mean_va["visual_acuity_smoothed"] = mean_va["visual_acuity"].rolling(
+                    window=rolling_window, center=True, min_periods=1).mean()
+
+                # Add the smoothed values to the output
+                mean_va["visual_acuity_raw"] = mean_va["visual_acuity"].copy()
+                mean_va["visual_acuity"] = mean_va["visual_acuity_smoothed"]
+
+            smoothing_applied = True
+
+        # Convert to records for storage
         results["mean_va_data"] = mean_va.to_dict(orient="records")
-    
+
+        # Store some additional stats about the VA data
+        results["va_data_summary"] = {
+            "datapoints_count": len(va_data),
+            "unique_timepoints": len(mean_va),
+            "patients_with_data": va_df["patient_id"].nunique(),
+            "min_va": float(va_df["visual_acuity"].min()),
+            "max_va": float(va_df["visual_acuity"].max()),
+            "mean_va": float(va_df["visual_acuity"].mean()),
+            "time_range_months": int(mean_va["time"].max() - mean_va["time"].min()) if len(mean_va) > 1 else 0,
+            "smoothing_applied": smoothing_applied
+        }
+    else:
+        # Store empty values to indicate no data was found
+        results["mean_va_data"] = []
+        results["va_data_summary"] = {
+            "datapoints_count": 0,
+            "unique_timepoints": 0,
+            "min_va": None,
+            "max_va": None,
+            "mean_va": None,
+            "error": "No visual acuity data found in patient histories"
+        }
+
     # Process injection data
     injection_data = []
     
@@ -1191,13 +1408,62 @@ def generate_va_over_time_plot(results):
     """
     # Check if we have valid data
     if results.get("failed", False) or "mean_va_data" not in results or not results["mean_va_data"]:
-        # Create minimal placeholder visualization
+        # Create more informative placeholder visualization with troubleshooting info
         fig, ax = plt.subplots(figsize=(10, 6))
-        ax.text(0.5, 0.5, "No visual acuity data available", 
-                ha='center', va='center', fontsize=14, transform=ax.transAxes)
+
+        # Main error message
+        ax.text(0.5, 0.65, "No visual acuity data available",
+                ha='center', va='center', fontsize=14, weight='bold', transform=ax.transAxes)
+
+        # Detailed troubleshooting info
+        if results.get("failed", False):
+            error_msg = results.get("error", "Unknown error")
+            ax.text(0.5, 0.5, f"Simulation failed: {error_msg}",
+                    ha='center', va='center', fontsize=12, color='#e74c3c', transform=ax.transAxes)
+        elif "mean_va_data" not in results:
+            ax.text(0.5, 0.5, "Visual acuity data not found in simulation results",
+                    ha='center', va='center', fontsize=12, color='#e74c3c', transform=ax.transAxes)
+        elif not results["mean_va_data"]:
+            ax.text(0.5, 0.5, "Visual acuity data array is empty",
+                    ha='center', va='center', fontsize=12, color='#e74c3c', transform=ax.transAxes)
+
+        # Troubleshooting tips
+        tips = [
+            "1. Check if simulation completed successfully",
+            "2. Verify the simulation is recording visual acuity over time",
+            "3. Enable Debug Mode in the sidebar for more information",
+            "4. Try running the simulation again with different parameters"
+        ]
+
+        for i, tip in enumerate(tips):
+            ax.text(0.5, 0.35 - (i * 0.05), tip,
+                    ha='center', va='center', fontsize=10, color='#3498db', transform=ax.transAxes)
+
+        # Add available simulation info
+        sim_info = [
+            f"Simulation type: {results.get('simulation_type', 'Unknown')}",
+            f"Population size: {results.get('population_size', 'Unknown')}",
+            f"Duration: {results.get('duration_years', 'Unknown')} years"
+        ]
+
+        for i, info in enumerate(sim_info):
+            ax.text(0.5, 0.15 - (i * 0.05), info,
+                    ha='center', va='center', fontsize=9, color='#555555', transform=ax.transAxes)
+
         ax.set_xlabel("Time")
         ax.set_ylabel("Visual Acuity (letters)")
-        ax.set_title("GRAPHIC A: Mean Visual Acuity Over Time")
+        ax.set_title("GRAPHIC A: Mean Visual Acuity Over Time", fontsize=12, color='#333333', loc='left', pad=10)
+
+        # Remove ticks for cleaner empty visualization
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+        # Add simple border
+        for spine in ax.spines.values():
+            spine.set_visible(True)
+            spine.set_color('#dddddd')
+            spine.set_linewidth(0.5)
+
         return fig
     
     # Create DataFrame from the results
@@ -1234,13 +1500,64 @@ def generate_va_over_time_plot(results):
     # Create the plot with Tufte-inspired styling
     fig, ax = plt.subplots(figsize=(10, 6))
     
-    # Plot main VA line with soft blue color
-    ax.plot(df["time_months"], df["visual_acuity"], '-', 
-            color='#3498db', linewidth=2.5, alpha=0.8)
-    
+    # Plot main VA line with soft blue color (either smoothed or raw)
+    # Check if smoothed data is available
+    if "visual_acuity_raw" in df.columns:
+        # Plot smoothed data as main line
+        ax.plot(df["time_months"], df["visual_acuity"], '-',
+                color='#3498db', linewidth=2.5, alpha=0.8, label="Mean VA (smoothed)")
+
+        # Plot raw data as lighter line
+        ax.plot(df["time_months"], df["visual_acuity_raw"], '--',
+                color='#3498db', linewidth=1.0, alpha=0.4, label="Mean VA (raw)")
+    else:
+        # Just plot the main data
+        ax.plot(df["time_months"], df["visual_acuity"], '-',
+                color='#3498db', linewidth=2.5, alpha=0.8, label="Mean VA")
+
     # Add subtle markers
-    ax.scatter(df["time_months"], df["visual_acuity"], 
+    ax.scatter(df["time_months"], df["visual_acuity"],
                s=40, color='#3498db', alpha=0.7, zorder=5)
+
+    # Add confidence intervals if standard error is available
+    if "std_error" in df.columns and "sample_size" in df.columns:
+        # Calculate 95% confidence interval (approx. 2 standard errors)
+        ci_factor = 1.96  # 95% confidence
+        # Calculate upper and lower CI directly without vectorized operations
+        df['upper_ci'] = df.apply(lambda row: row["visual_acuity"] + ci_factor * row["std_error"], axis=1)
+        df['lower_ci'] = df.apply(lambda row: row["visual_acuity"] - ci_factor * row["std_error"], axis=1)
+
+        # Plot confidence interval as shaded area
+        ax.fill_between(df["time_months"], df['lower_ci'], df['upper_ci'],
+                        color='#3498db', alpha=0.15, label="95% Confidence Interval")
+
+        # Plot sample size as a bar chart at the bottom with a separate y-axis on the right
+        # but only if there's notable variation in sample size
+        sample_sizes = df["sample_size"]
+        sample_size_variation = sample_sizes.max() / sample_sizes.min() if sample_sizes.min() > 0 else 0
+
+        if sample_size_variation > 1.5:  # If there's at least 50% difference between min and max
+            # Create twin axis for sample size
+            ax2 = ax.twinx()
+
+            # Plot sample size as bars at the bottom
+            bars = ax2.bar(df["time_months"], sample_sizes, alpha=0.2, color='#2c3e50', width=0.8)
+
+            # Configure the right y-axis
+            ax2.set_ylabel("Sample Size (patients)", color='#2c3e50', fontsize=8)
+            ax2.tick_params(axis='y', colors='#2c3e50')
+            ax2.spines['right'].set_color('#2c3e50')
+            ax2.spines['right'].set_linewidth(0.5)
+
+            # Set y-range to start from 0
+            ax2.set_ylim(bottom=0)
+
+            # Add note about sample size
+            min_sample = int(sample_sizes.min())
+            max_sample = int(sample_sizes.max())
+            ax.text(0.02, 0.02, f"Sample size: {min_sample} - {max_sample} patients",
+                    transform=ax.transAxes, fontsize=8, color='#2c3e50',
+                    bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.2', edgecolor='none'))
     
     # Add a baseline reference line at initial VA with elegant styling
     if len(df) > 0:
@@ -1266,13 +1583,25 @@ def generate_va_over_time_plot(results):
     # Set axis labels with clear typography
     ax.set_xlabel("Months", fontsize=10, color='#555555')
     ax.set_ylabel("Visual Acuity (letters)", fontsize=10, color='#555555')
-    ax.set_title("GRAPHIC A: Mean Visual Acuity Over Time", fontsize=12, color='#333333', loc='left', pad=10)
+
+    # Add smoothing information to the title if applicable
+    if "visual_acuity_raw" in df.columns:
+        # Check if we have sample size data for weighted smoothing
+        if "sample_size" in df.columns:
+            ax.set_title("GRAPHIC A: Mean Visual Acuity Over Time (weighted 3-point average)",
+                        fontsize=12, color='#333333', loc='left', pad=10)
+        else:
+            ax.set_title("GRAPHIC A: Mean Visual Acuity Over Time (3-month rolling average)",
+                        fontsize=12, color='#333333', loc='left', pad=10)
+    else:
+        ax.set_title("GRAPHIC A: Mean Visual Acuity Over Time",
+                    fontsize=12, color='#333333', loc='left', pad=10)
     
     # Use light gray tick labels
     ax.tick_params(colors='#555555')
     
     # Show legend with clean styling
-    ax.legend(frameon=False, fontsize=9, loc='upper right')
+    ax.legend(frameon=True, fontsize=9, loc='upper right', framealpha=0.7, edgecolor='#dddddd')
     
     # Add starting and ending VA annotations with improved styling
     if len(df) > 0:
