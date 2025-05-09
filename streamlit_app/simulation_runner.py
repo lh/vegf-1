@@ -16,6 +16,21 @@ import streamlit as st
 import time
 from datetime import datetime
 
+# Global variable for debug mode - will be set by app.py
+DEBUG_MODE = False
+
+def debug_info(message):
+    """
+    Display info message only when debug mode is enabled
+    
+    Parameters
+    ----------
+    message : str
+        The message to display
+    """
+    if DEBUG_MODE:
+        st.info(message)
+
 # Import custom JSON utilities
 from streamlit_app.json_utils import APEJSONEncoder, save_json, load_json
 
@@ -47,6 +62,211 @@ except ImportError as e:
     st.error(f"Failed to import simulation modules: {e}")
     st.info("This may be due to missing dependencies or incorrect import paths.")
     simulation_imports_successful = False
+
+# Export key functions for other modules to use
+__all__ = [
+    'DEBUG_MODE', 
+    'save_plot_for_debug', 
+    'create_tufte_bar_chart',
+    'run_simulation',
+    'generate_va_over_time_plot',
+    'generate_discontinuation_plot',
+    'get_ui_parameters',
+    'save_simulation_results',
+    'load_simulation_results'
+]
+
+
+def save_plot_for_debug(fig, filename="debug_plot.png"):
+    """
+    Save a matplotlib figure to a file for debugging purposes.
+    
+    Parameters
+    ----------
+    fig : matplotlib.figure.Figure
+        The figure to save
+    filename : str
+        The filename to save the figure to
+    
+    Returns
+    -------
+    str or None
+        Path to the saved file if successful, None otherwise
+    """
+    try:
+        # Create output directory if it doesn't exist
+        import os
+        output_dir = os.path.join(os.getcwd(), "output", "debug")
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Save the figure
+        filepath = os.path.join(output_dir, filename)
+        fig.savefig(filepath, bbox_inches='tight', dpi=300)
+        print(f"DEBUG: Saved plot to {filepath}")
+        return filepath
+    except Exception as e:
+        print(f"ERROR: Failed to save debug plot: {e}")
+        return None
+
+def create_tufte_bar_chart(categories, values, title="", xlabel="", ylabel="", 
+                          color='#3498db', figsize=(10, 6), horizontal=True):
+    """
+    Create a Tufte-inspired bar chart that avoids the half-cut bar issue.
+    
+    Parameters
+    ----------
+    categories : list
+        List of category labels
+    values : list
+        List of values for each category
+    title : str, optional
+        Chart title, by default ""
+    xlabel : str, optional
+        X-axis label, by default ""
+    ylabel : str, optional
+        Y-axis label, by default ""
+    color : str, optional
+        Bar color, by default '#3498db' (blue)
+    figsize : tuple, optional
+        Figure size, by default (10, 6)
+    horizontal : bool, optional
+        Whether to create a horizontal bar chart, by default True
+    
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The created figure
+    """
+    # Create figure and axis
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    # Sort data by value in descending order
+    sorted_indices = np.argsort(values)[::-1]
+    sorted_categories = [categories[i] for i in sorted_indices]
+    sorted_values = [values[i] for i in sorted_indices]
+    
+    # Create positions starting at 1 (not 0) to avoid the half-cut bar issue
+    positions = np.arange(1, len(categories) + 1)
+    
+    # Create bars - horizontal or vertical based on parameter
+    if horizontal:
+        # Create horizontal bars
+        bars = ax.barh(positions, sorted_values, color=color, alpha=0.7, height=0.6)
+        
+        # Set ticks exactly at bar positions
+        ax.set_yticks(positions)
+        ax.set_yticklabels(sorted_categories)
+        
+        # Add labels with count and percentage
+        total = sum(sorted_values)
+        percentages = [(value / total * 100) for value in sorted_values]
+        
+        for i, (bar, value, pct) in enumerate(zip(bars, sorted_values, percentages)):
+            # Determine label position and color
+            if value > (max(sorted_values) * 0.25):
+                # Inside the bar
+                x_pos = bar.get_width() * 0.95
+                text_color = 'white'
+                ha = 'right'
+            else:
+                # Outside the bar
+                x_pos = bar.get_width() + (max(sorted_values) * 0.02)
+                text_color = 'black'
+                ha = 'left'
+                
+            # Add text label
+            ax.text(
+                x_pos, 
+                bar.get_y() + bar.get_height()/2, 
+                f"{value} ({pct:.1f}%)", 
+                va='center',
+                ha=ha,
+                color=text_color,
+                fontsize=9
+            )
+        
+        # Set axis limits with ample space
+        ax.set_ylim(0.5, len(sorted_categories) + 1)
+        
+        # Add subtle horizontal lines to guide the eye
+        for pos in positions:
+            ax.axhline(pos, color='#f0f0f0', zorder=0, linewidth=0.8)
+            
+        # Set axis labels
+        if xlabel:
+            ax.set_xlabel(xlabel, fontsize=10, color='#555555')
+        if ylabel:
+            ax.set_ylabel(ylabel, fontsize=10, color='#555555')
+            
+    else:
+        # Create vertical bars
+        bars = ax.bar(positions, sorted_values, color=color, alpha=0.7, width=0.6)
+        
+        # Set ticks exactly at bar positions
+        ax.set_xticks(positions)
+        ax.set_xticklabels(sorted_categories, rotation=45, ha='right')
+        
+        # Add labels with count and percentage
+        total = sum(sorted_values)
+        percentages = [(value / total * 100) for value in sorted_values]
+        
+        for i, (bar, value, pct) in enumerate(zip(bars, sorted_values, percentages)):
+            # Determine label position and color
+            if value > (max(sorted_values) * 0.5):
+                # Inside the bar
+                y_pos = bar.get_height() * 0.9
+                text_color = 'white'
+                va = 'top'
+            else:
+                # Outside the bar
+                y_pos = bar.get_height() + (max(sorted_values) * 0.02)
+                text_color = 'black'
+                va = 'bottom'
+                
+            # Add text label
+            ax.text(
+                bar.get_x() + bar.get_width()/2, 
+                y_pos, 
+                f"{value}\n({pct:.1f}%)", 
+                ha='center',
+                va=va,
+                color=text_color,
+                fontsize=9
+            )
+        
+        # Set axis limits with ample space
+        ax.set_xlim(0.5, len(sorted_categories) + 1)
+        
+        # Add subtle vertical lines to guide the eye
+        for pos in positions:
+            ax.axvline(pos, color='#f0f0f0', zorder=0, linewidth=0.8)
+            
+        # Set axis labels
+        if xlabel:
+            ax.set_xlabel(xlabel, fontsize=10, color='#555555')
+        if ylabel:
+            ax.set_ylabel(ylabel, fontsize=10, color='#555555')
+    
+    # Clean Tufte-inspired styling
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['left'].set_linewidth(0.5)
+    ax.spines['bottom'].set_linewidth(0.5)
+    
+    # Remove unnecessary gridlines for cleaner look
+    ax.grid(False)
+    
+    # Set clean title
+    if title:
+        ax.set_title(title, fontsize=12, color='#333333', loc='left', pad=10)
+    
+    # Use light gray tick labels
+    ax.tick_params(colors='#555555')
+    
+    # Tight layout to optimize spacing
+    plt.tight_layout()
+    
+    return fig
 
 
 def create_simulation_config(params):
@@ -113,20 +333,20 @@ def run_simulation(params):
         
         try:
             # Display simulation settings
-            st.info(f"Running {params['simulation_type']} simulation with {params['population_size']} patients for {params['duration_years']} years")
+            debug_info(f"Running {params['simulation_type']} simulation with {params['population_size']} patients for {params['duration_years']} years")
             
             # Use an existing simulation configuration as base
             test_config_name = "test_simulation"
             test_config_path = os.path.join(root_dir, "protocols", "simulation_configs", f"{test_config_name}.yaml")
             
-            st.info(f"Using base configuration: {test_config_name}")
+            debug_info(f"Using base configuration: {test_config_name}")
             
             # Create a SimulationConfig from an existing YAML file
             # Note: SimulationConfig.from_yaml expects the config name, not the file path
             config = SimulationConfig.from_yaml(test_config_name)
             
             # Display base config settings
-            st.info(f"Base configuration loaded with {config.num_patients} patients and {config.duration_days} days duration")
+            debug_info(f"Base configuration loaded with {config.num_patients} patients and {config.duration_days} days duration")
             
             # Override specific parameters based on user input
             config.num_patients = params["population_size"]
@@ -166,11 +386,11 @@ def run_simulation(params):
                         'probability': 0.95
                     }
                 }
-                st.info("Created default discontinuation settings")
+                debug_info("Created default discontinuation settings")
             else:
                 # Make sure 'enabled' is True
                 config.parameters['discontinuation']['enabled'] = True
-                st.info("Ensured discontinuation is enabled")
+                debug_info("Ensured discontinuation is enabled")
                 
                 # Ensure criteria structure exists
                 if 'criteria' not in config.parameters['discontinuation']:
@@ -200,18 +420,47 @@ def run_simulation(params):
                     'annual_probability': 0.05
                 }
                 
+            # Ensure premature discontinuation settings exist
+            if 'premature' not in disc_criteria:
+                disc_criteria['premature'] = {
+                    'min_interval_weeks': 8,
+                    'probability_factor': 1.0,
+                    'target_rate': 0.145,
+                    'profile_multipliers': {
+                        'adherent': 0.2,
+                        'average': 1.0,
+                        'non_adherent': 3.0
+                    },
+                    'mean_va_loss': -9.4,
+                    'va_loss_std': 5.0
+                }
+                debug_info("Added premature discontinuation settings")
+            
+            # Ensure time-based (course complete but not renewed) settings exist
+            if 'treatment_duration' not in disc_criteria:
+                disc_criteria['treatment_duration'] = {
+                    'threshold_weeks': 52,
+                    'probability': 0.1
+                }
+                
             # Update stable_max_interval probability from UI
             disc_criteria['stable_max_interval']['probability'] = params["planned_discontinue_prob"]
-            st.info(f"Setting planned discontinuation probability to {params['planned_discontinue_prob']}")
+            debug_info(f"Setting planned discontinuation probability to {params['planned_discontinue_prob']}")
             
             # Update random_administrative probability from UI
             disc_criteria['random_administrative']['annual_probability'] = params["admin_discontinue_prob"]
-            st.info(f"Setting administrative discontinuation probability to {params['admin_discontinue_prob']}")
+            debug_info(f"Setting administrative discontinuation probability to {params['admin_discontinue_prob']}")
+            
+            # Set premature discontinuation probability if provided in UI
+            if "premature_discontinue_prob" in params:
+                premature_prob = params["premature_discontinue_prob"]
+                disc_criteria['premature']['probability_factor'] = premature_prob
+                debug_info(f"Setting premature discontinuation probability factor to {premature_prob}")
             
             # Update consecutive stable visits requirement from UI
             if 'consecutive_stable_visits' in params:
                 disc_criteria['stable_max_interval']['consecutive_visits'] = params["consecutive_stable_visits"]
-                st.info(f"Setting consecutive stable visits to {params['consecutive_stable_visits']}")
+                debug_info(f"Setting consecutive stable visits to {params['consecutive_stable_visits']}")
             
             # Update monitoring settings
             monitoring = config.parameters['discontinuation']['monitoring']
@@ -223,24 +472,40 @@ def run_simulation(params):
             # Update monitoring schedule from UI
             if 'monitoring_schedule' in params:
                 monitoring['follow_up_schedule'] = params["monitoring_schedule"]
-                st.info(f"Setting monitoring schedule to {params['monitoring_schedule']}")
+                debug_info(f"Setting monitoring schedule to {params['monitoring_schedule']}")
             
             # Create or update planned monitoring
             if 'planned' not in monitoring:
                 monitoring['planned'] = {}
             monitoring['planned']['follow_up_schedule'] = monitoring['follow_up_schedule']
             
+            # Create or update unplanned monitoring (for premature discontinuations)
+            if 'unplanned' not in monitoring:
+                monitoring['unplanned'] = {}
+                monitoring['unplanned']['follow_up_schedule'] = [8, 16, 24]  # More frequent monitoring for premature
+            
+            # Ensure cessation_types mappings exist
+            if 'cessation_types' not in monitoring:
+                monitoring['cessation_types'] = {
+                    'stable_max_interval': 'planned',
+                    'premature': 'unplanned',
+                    'treatment_duration': 'unplanned',
+                    'random_administrative': 'none'
+                }
+                debug_info("Added cessation type mappings for monitoring")
+            
             # Set no monitoring for administrative discontinuations if specified
             if params.get("no_monitoring_for_admin", True):
                 if 'administrative' not in monitoring:
                     monitoring['administrative'] = {}
                 monitoring['administrative']['follow_up_schedule'] = []
-                st.info("Disabled monitoring for administrative discontinuations")
+                monitoring['cessation_types']['random_administrative'] = 'none'
+                debug_info("Disabled monitoring for administrative discontinuations")
             
             # Enable/disable clinician variation
             if hasattr(config, 'parameters') and 'clinicians' in config.parameters:
                 config.parameters['clinicians']['enabled'] = params["enable_clinician_variation"]
-                st.info(f"Clinician variation {'enabled' if params['enable_clinician_variation'] else 'disabled'}")
+                debug_info(f"Clinician variation {'enabled' if params['enable_clinician_variation'] else 'disabled'}")
             
             # Run appropriate simulation type
             if params["simulation_type"] == "ABS":
@@ -483,16 +748,16 @@ def process_simulation_results(sim, patient_histories, params):
     discontinuation_counts = {
         "Planned": 0,
         "Administrative": 0,
-        "Time-based": 0,
+        "Not Renewed": 0,
         "Premature": 0
     }
     
-    # Debug output
-    if discontinuation_manager:
-        st.info(f"Found discontinuation manager: {type(discontinuation_manager).__name__}")
-        st.info(f"Discontinuation manager stats: {hasattr(discontinuation_manager, 'stats')}")
+    # Debug output - only shown in debug mode
+    if discontinuation_manager and DEBUG_MODE:
+        debug_info(f"Found discontinuation manager: {type(discontinuation_manager).__name__}")
+        debug_info(f"Discontinuation manager stats: {hasattr(discontinuation_manager, 'stats')}")
         if hasattr(discontinuation_manager, 'stats'):
-            st.info(f"Stats keys: {list(discontinuation_manager.stats.keys())}")
+            debug_info(f"Stats keys: {list(discontinuation_manager.stats.keys())}")
     
     # Process statistics if we have a discontinuation manager
     if discontinuation_manager:
@@ -510,8 +775,8 @@ def process_simulation_results(sim, patient_histories, params):
                             discontinuation_counts["Planned"] = count
                         elif "admin" in disc_type.lower():
                             discontinuation_counts["Administrative"] = count
-                        elif "duration" in disc_type.lower() or "time" in disc_type.lower():
-                            discontinuation_counts["Time-based"] = count
+                        elif "duration" in disc_type.lower() or "time" in disc_type.lower() or "course_complete" in disc_type.lower():
+                            discontinuation_counts["Not Renewed"] = count
                         elif "premature" in disc_type.lower():
                             discontinuation_counts["Premature"] = count
                 # Also look for specific discontinuation type counts
@@ -522,7 +787,9 @@ def process_simulation_results(sim, patient_histories, params):
                     if "random_administrative_discontinuations" in disc_stats:
                         discontinuation_counts["Administrative"] = disc_stats["random_administrative_discontinuations"]
                     if "treatment_duration_discontinuations" in disc_stats:
-                        discontinuation_counts["Time-based"] = disc_stats["treatment_duration_discontinuations"]
+                        discontinuation_counts["Not Renewed"] = disc_stats["treatment_duration_discontinuations"]
+                    if "course_complete_but_not_renewed_discontinuations" in disc_stats:
+                        discontinuation_counts["Not Renewed"] = disc_stats["course_complete_but_not_renewed_discontinuations"]
                     if "premature_discontinuations" in disc_stats:
                         discontinuation_counts["Premature"] = disc_stats["premature_discontinuations"]
         
@@ -533,7 +800,12 @@ def process_simulation_results(sim, patient_histories, params):
             # Extract values from the stats dictionary
             discontinuation_counts["Planned"] = stats.get("stable_max_interval_discontinuations", 0)
             discontinuation_counts["Administrative"] = stats.get("random_administrative_discontinuations", 0)
-            discontinuation_counts["Time-based"] = stats.get("treatment_duration_discontinuations", 0)
+            
+            # Handle both old and new key names for Not Renewed
+            course_complete_count = stats.get("course_complete_but_not_renewed_discontinuations", 0)
+            treatment_duration_count = stats.get("treatment_duration_discontinuations", 0)
+            discontinuation_counts["Not Renewed"] = course_complete_count if course_complete_count > 0 else treatment_duration_count
+            
             discontinuation_counts["Premature"] = stats.get("premature_discontinuations", 0)
             
             # Collect recurrence/retreatment statistics
@@ -541,18 +813,20 @@ def process_simulation_results(sim, patient_histories, params):
             sim_retreatments = stats.get("retreatments", 0)
             unique_retreatments = stats.get("unique_retreatments", 0)
             
-            # Emergency debug output - force display of simulation stats
-            st.info(f"DEBUG - Simulation retreatment stats: total={sim_retreatments}, unique={unique_retreatments}")
+            # Debug output for retreatment stats - only show in debug mode
+            if DEBUG_MODE:
+                debug_info(f"DEBUG - Simulation retreatment stats: total={sim_retreatments}, unique={unique_retreatments}")
             
             # Look for retreatment stats from discontinuation manager
             if "retreatments_by_type" in stats:
                 retreatment_stats = stats["retreatments_by_type"]
-                if sum(retreatment_stats.values()) == 0 and sim_retreatments > 0:
-                    st.warning(f"Found {sim_retreatments} retreatments in simulation but empty retreatment_by_type in manager")
+                if sum(retreatment_stats.values()) == 0 and sim_retreatments > 0 and DEBUG_MODE:
+                    debug_info(f"Found {sim_retreatments} retreatments in simulation but empty retreatment_by_type in manager")
             else:
                 # Initialize with empty dict if not found
                 retreatment_stats = {'stable_max_interval': 0, 'premature': 0, 'random_administrative': 0, 'treatment_duration': 0}
-                st.warning("No retreatment_by_type found in stats, using empty dictionary")
+                if DEBUG_MODE:
+                    debug_info("No retreatment_by_type found in stats, using empty dictionary")
                 
             # Override the zeros in retreatment_stats if we have better data from the simulation
             if sim_retreatments > 0 and sum(retreatment_stats.values()) == 0:
@@ -565,8 +839,8 @@ def process_simulation_results(sim, patient_histories, params):
                             type_key = "stable_max_interval"
                         elif disc_type == "Administrative":
                             type_key = "random_administrative"
-                        elif disc_type == "Time-based":
-                            type_key = "treatment_duration"
+                        elif disc_type == "Not Renewed":
+                            type_key = "course_complete_but_not_renewed"
                         elif disc_type == "Premature":
                             type_key = "premature"
                         else:
@@ -582,7 +856,7 @@ def process_simulation_results(sim, patient_histories, params):
                         'stable_max_interval': even_split,
                         'premature': even_split,
                         'random_administrative': even_split,
-                        'treatment_duration': sim_retreatments - (3 * even_split)  # Remainder to treatment_duration
+                        'course_complete_but_not_renewed': sim_retreatments - (3 * even_split)  # Remainder to course_complete
                     }
             
             # Store both the total and breakdown in results
@@ -594,21 +868,24 @@ def process_simulation_results(sim, patient_histories, params):
                 "unique_count": unique_retreatments
             }
             
-            # Emergency check for recurrence data
+            # Emergency check for recurrence data - only show error in debug mode
             if sim_retreatments > 0 and results["recurrences"]["total"] != sim_retreatments:
-                st.error(f"CRITICAL: Recurrence total mismatch! sim={sim_retreatments}, results={results['recurrences']['total']}")
-                # Force fix
+                if DEBUG_MODE:
+                    st.error(f"CRITICAL: Recurrence total mismatch! sim={sim_retreatments}, results={results['recurrences']['total']}")
+                # Force fix regardless of debug mode
                 results["recurrences"]["total"] = sim_retreatments
         
         # Add additional debugging for discontinuation counts
-        st.info(f"Found discontinuation counts: {discontinuation_counts}")
-        st.info(f"Total discontinuations counted: {sum(discontinuation_counts.values())}")
+        if DEBUG_MODE:
+            debug_info(f"Found discontinuation counts: {discontinuation_counts}")
+            debug_info(f"Total discontinuations counted: {sum(discontinuation_counts.values())}")
         
         # Also check if we can directly extract total discontinuations from stats
         total_discontinuations = 0
         if hasattr(discontinuation_manager, 'stats') and "total_discontinuations" in discontinuation_manager.stats:
             total_discontinuations = discontinuation_manager.stats["total_discontinuations"]
-            st.info(f"Total discontinuations from manager stats: {total_discontinuations}")
+            if DEBUG_MODE:
+                debug_info(f"Total discontinuations from manager stats: {total_discontinuations}")
         
         # Store the discontinuation data in results
         results["discontinuation_counts"] = discontinuation_counts
@@ -626,11 +903,11 @@ def process_simulation_results(sim, patient_histories, params):
     # Process patient histories for visual acuity outcomes
     va_data = []
     
-    # Add debug info to help understand patient data structure
-    if patient_histories:
+    # Add debug info to help understand patient data structure (only in debug mode)
+    if patient_histories and DEBUG_MODE:
         # Examine the structure of patient_histories first
-        st.info(f"Patient histories type: {type(patient_histories).__name__}")
-        st.info(f"Patient histories count: {len(patient_histories)}")
+        debug_info(f"Patient histories type: {type(patient_histories).__name__}")
+        debug_info(f"Patient histories count: {len(patient_histories)}")
         
         # Analyze a sample patient to understand its structure
         if isinstance(patient_histories, dict) and patient_histories:
@@ -638,20 +915,20 @@ def process_simulation_results(sim, patient_histories, params):
             sample_id = next(iter(patient_histories))
             sample_patient = patient_histories[sample_id]
             
-            st.info(f"Sample patient (ID {sample_id}) type: {type(sample_patient).__name__}")
+            debug_info(f"Sample patient (ID {sample_id}) type: {type(sample_patient).__name__}")
             
             # Extract sample history
             if isinstance(sample_patient, list):
-                st.info(f"Sample patient is a list with {len(sample_patient)} records")
+                debug_info(f"Sample patient is a list with {len(sample_patient)} records")
                 if sample_patient:
-                    st.info(f"First record type: {type(sample_patient[0]).__name__}")
+                    debug_info(f"First record type: {type(sample_patient[0]).__name__}")
                     if isinstance(sample_patient[0], dict):
-                        st.info(f"First record keys: {list(sample_patient[0].keys())}")
+                        debug_info(f"First record keys: {list(sample_patient[0].keys())}")
             elif hasattr(sample_patient, 'history') and sample_patient.history:
-                st.info(f"Sample patient history length: {len(sample_patient.history)}")
-                st.info(f"First record type: {type(sample_patient.history[0]).__name__}")
+                debug_info(f"Sample patient history length: {len(sample_patient.history)}")
+                debug_info(f"First record type: {type(sample_patient.history[0]).__name__}")
                 if isinstance(sample_patient.history[0], dict):
-                    st.info(f"First record keys: {list(sample_patient.history[0].keys())}")
+                    debug_info(f"First record keys: {list(sample_patient.history[0].keys())}")
             
             # Show additional attributes
             additional_attrs = []
@@ -660,9 +937,10 @@ def process_simulation_results(sim, patient_histories, params):
                     if hasattr(sample_patient, attr):
                         additional_attrs.append(attr)
                 if additional_attrs:
-                    st.info(f"Patient has attributes: {additional_attrs}")
+                    debug_info(f"Patient has attributes: {additional_attrs}")
         else:
-            st.warning("Unable to extract detailed patient structure")
+            if DEBUG_MODE:
+                st.warning("Unable to extract detailed patient structure")
     
     # Try different ways to extract visual acuity data
     for patient_id, patient in patient_histories.items() if isinstance(patient_histories, dict) else enumerate(patient_histories):
@@ -899,7 +1177,7 @@ def load_simulation_results(filepath):
 
 def generate_va_over_time_plot(results):
     """
-    Generate a plot of visual acuity over time.
+    Generate a Tufte-inspired plot of visual acuity over time.
     
     Parameters
     ----------
@@ -919,7 +1197,7 @@ def generate_va_over_time_plot(results):
                 ha='center', va='center', fontsize=14, transform=ax.transAxes)
         ax.set_xlabel("Time")
         ax.set_ylabel("Visual Acuity (letters)")
-        ax.set_title("Visual Acuity Over Time")
+        ax.set_title("GRAPHIC A: Mean Visual Acuity Over Time")
         return fig
     
     # Create DataFrame from the results
@@ -953,33 +1231,73 @@ def generate_va_over_time_plot(results):
     # Sort by time to ensure proper plotting
     df = df.sort_values("time_months")
     
-    # Create the plot
+    # Create the plot with Tufte-inspired styling
     fig, ax = plt.subplots(figsize=(10, 6))
     
-    # Plot the visual acuity
-    ax.plot(df["time_months"], df["visual_acuity"], marker='o', markersize=4)
+    # Plot main VA line with soft blue color
+    ax.plot(df["time_months"], df["visual_acuity"], '-', 
+            color='#3498db', linewidth=2.5, alpha=0.8)
     
-    # Add a baseline reference line at initial VA
+    # Add subtle markers
+    ax.scatter(df["time_months"], df["visual_acuity"], 
+               s=40, color='#3498db', alpha=0.7, zorder=5)
+    
+    # Add a baseline reference line at initial VA with elegant styling
     if len(df) > 0:
         initial_va = df.iloc[0]["visual_acuity"]
-        ax.axhline(y=initial_va, color='r', linestyle='--', alpha=0.5, label=f"Baseline VA: {initial_va:.1f}")
+        ax.axhline(y=initial_va, color='#e74c3c', linestyle='-', 
+                   linewidth=1.0, alpha=0.3, label=f"Baseline VA: {initial_va:.1f}")
     
-    # Add labels and grid
-    ax.set_xlabel("Months")
-    ax.set_ylabel("Visual Acuity (letters)")
-    ax.set_title("Mean Visual Acuity Over Time")
-    ax.grid(True, linestyle='--', alpha=0.7)
-    ax.legend()
-    
-    # Add starting and ending VA annotations
+    # Calculate y-axis range with padding for better visualization
     if len(df) > 0:
+        min_va = min(df["visual_acuity"]) - 5
+        max_va = max(df["visual_acuity"]) + 5
+        ax.set_ylim(max(0, min_va), min(85, max_va))  # Cap at 0-85 ETDRS range
+    
+    # Clean, minimalist styling - Tufte-inspired
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['left'].set_linewidth(0.5)
+    ax.spines['bottom'].set_linewidth(0.5)
+    
+    # Use lighter grid lines
+    ax.grid(True, linestyle='--', alpha=0.3, color='#cccccc')
+    
+    # Set axis labels with clear typography
+    ax.set_xlabel("Months", fontsize=10, color='#555555')
+    ax.set_ylabel("Visual Acuity (letters)", fontsize=10, color='#555555')
+    ax.set_title("GRAPHIC A: Mean Visual Acuity Over Time", fontsize=12, color='#333333', loc='left', pad=10)
+    
+    # Use light gray tick labels
+    ax.tick_params(colors='#555555')
+    
+    # Show legend with clean styling
+    ax.legend(frameon=False, fontsize=9, loc='upper right')
+    
+    # Add starting and ending VA annotations with improved styling
+    if len(df) > 0:
+        # Initial VA annotation
         ax.annotate(f"Start: {df.iloc[0]['visual_acuity']:.1f}", 
                     xy=(df.iloc[0]["time_months"], df.iloc[0]["visual_acuity"]),
-                    xytext=(10, 10), textcoords="offset points")
+                    xytext=(5, 10), textcoords="offset points",
+                    ha="left", va="center", fontsize=9, color='#555555')
         
+        # Final VA annotation
         ax.annotate(f"End: {df.iloc[-1]['visual_acuity']:.1f}", 
                     xy=(df.iloc[-1]["time_months"], df.iloc[-1]["visual_acuity"]),
-                    xytext=(10, -15), textcoords="offset points")
+                    xytext=(-5, 10), textcoords="offset points",
+                    ha="right", va="center", fontsize=9, color='#555555')
+        
+        # Calculate and annotate net change
+        net_change = df.iloc[-1]["visual_acuity"] - df.iloc[0]["visual_acuity"]
+        change_color = '#2ecc71' if net_change >= 0 else '#e74c3c'  # Green for gain, red for loss
+        
+        # Net change annotation at the bottom center
+        ax.annotate(f"Net change: {net_change:+.1f} letters", 
+                    xy=(0.5, -0.1), xycoords='axes fraction',
+                    ha="center", va="center", fontsize=10, 
+                    color=change_color, weight='bold',
+                    bbox=dict(boxstyle="round,pad=0.3", fc='#f8f9fa', ec='none', alpha=0.6))
     
     return fig
 
@@ -998,288 +1316,65 @@ def generate_discontinuation_plot(results):
     matplotlib.figure.Figure
         Plot figure
     """
-    # Debug output to help diagnose issues
-    st.info(f"Generating discontinuation plot with data: {results.get('discontinuation_counts', 'None')}")
-    st.info(f"Total discontinuations: {results.get('total_discontinuations', 0)}")
-    
     # Check if we have valid data
     if results.get("failed", False) or "discontinuation_counts" not in results:
         # Create minimal placeholder visualization
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.text(0.5, 0.5, "No discontinuation data available", 
                 ha='center', va='center', fontsize=14, transform=ax.transAxes)
-        ax.set_xlabel("Discontinuation Type")
-        ax.set_ylabel("Count")
-        ax.set_title("Discontinuation by Type")
+        ax.set_title("GRAPHIC B: Treatment Discontinuation by Type", 
+                     fontsize=12, color='#333333', loc='left', pad=10)
         return fig
     
-    # Create the plot from actual data
+    # Extract data
     disc_counts = results["discontinuation_counts"]
     types = list(disc_counts.keys())
     counts = list(disc_counts.values())
     
     # Check if we have any non-zero counts
     if sum(counts) == 0:
+        # Create minimal placeholder visualization
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.text(0.5, 0.5, "No discontinuations recorded in simulation", 
                 ha='center', va='center', fontsize=14, transform=ax.transAxes)
-        ax.set_xlabel("Discontinuation Type")
-        ax.set_ylabel("Count")
-        ax.set_title("Discontinuation by Type")
-        
-        # Test with direct display of discontinuation counts
-        st.info("Trying alternative display method for discontinuation data")
-        st.bar_chart(data=pd.DataFrame({
-            'Type': list(disc_counts.keys()),
-            'Count': list(disc_counts.values())
-        }).set_index('Type'))
-        
-        # Also try to display raw stats if available
-        if "raw_discontinuation_stats" in results:
-            st.info("Raw discontinuation stats from manager:")
-            st.json(results["raw_discontinuation_stats"])
-        
+        ax.set_title("GRAPHIC B: Treatment Discontinuation by Type", 
+                     fontsize=12, color='#333333', loc='left', pad=10)
         return fig
     
-    # Create plot with actual data
-    fig, ax = plt.subplots(figsize=(10, 6))
+    # Use our helper function to create a properly formatted bar chart
+    fig = create_tufte_bar_chart(
+        categories=types,
+        values=counts,
+        title="GRAPHIC B: Treatment Discontinuation by Type",
+        xlabel="Number of Patients",
+        color='#3498db',
+        figsize=(10, 6),
+        horizontal=True
+    )
     
-    # Use a colormap to make the bars more visually appealing
-    colors = plt.cm.viridis(np.linspace(0.1, 0.9, len(types)))
-    bars = ax.bar(types, counts, color=colors)
+    # Get the axis from the figure
+    ax = fig.axes[0]
     
-    # Add percentages on top of bars
+    # Calculate total for footer
     total = sum(counts)
-    for bar, count, color in zip(bars, counts, colors):
-        if count > 0:  # Only add text if count is non-zero
-            percentage = count / total * 100 if total > 0 else 0
-            ax.text(
-                bar.get_x() + bar.get_width() / 2,
-                bar.get_height() + 0.1,  # Small offset
-                f"{percentage:.1f}%",
-                ha='center',
-                va='bottom',
-                fontweight='bold',
-                color='black'
-            )
-            
-            # Add count inside bar if it's tall enough
-            if count > total * 0.05:  # If at least 5% of total
-                ax.text(
-                    bar.get_x() + bar.get_width() / 2,
-                    bar.get_height() / 2,
-                    str(count),
-                    ha='center',
-                    va='center',
-                    color='white',
-                    fontweight='bold'
-                )
     
-    ax.set_xlabel("Discontinuation Type")
-    ax.set_ylabel("Count")
-    ax.set_title("Treatment Discontinuation by Type")
-    ax.grid(True, linestyle='--', alpha=0.3, axis='y')
+    # Create space at the bottom for the footer
+    plt.subplots_adjust(bottom=0.15)
     
-    # Calculate patient count and add context to the total
-    patient_count = results.get("patient_count", total)  # Fallback to total if patient count missing
+    # Add footer directly within the plot
+    ax.annotate(
+        f"Total Discontinuation Events: {total} ({(total/results.get('patient_count', total))*100:.1f}% of patients)",
+        xy=(0.5, -0.12),
+        xycoords='axes fraction',
+        ha='center', fontsize=9, color='#555555',
+        annotation_clip=False  # Allow annotation outside the plot area
+    )
     
-    # Use unique discontinued patients if available, otherwise fall back to total events
-    unique_discontinued = results.get("unique_discontinued_patients", 0)
-    if unique_discontinued > 0:
-        # We have unique patient data from the fixed implementation
-        corrected_rate = (unique_discontinued / patient_count) * 100 if patient_count > 0 else 0
-        event_rate = (total / patient_count) * 100 if patient_count > 0 else 0
-        
-        if event_rate > 100:
-            # Show both event count and unique patient count
-            footer_text = f"Events: {total} | Unique Patients: {unique_discontinued} | Corrected Rate: {corrected_rate:.1f}%"
-            
-            # Add message to the plot
-            plt.figtext(0.5, 0.02, "⚠️ Some patients discontinued multiple times - unique patient count is used for rate calculation", 
-                         ha="center", fontsize=8, style='italic', color='red')
-        else:
-            footer_text = f"Total Discontinuation Events: {total} ({corrected_rate:.1f}% of patients)"
-    else:
-        # Fall back to original calculation for backward compatibility
-        discontinuation_rate = (total / patient_count) * 100 if patient_count > 0 else 0
-        
-        if discontinuation_rate > 100:
-            # We have retreatments and multiple discontinuations
-            footer_text = f"Total Discontinuation Events: {total} ({discontinuation_rate:.1f}% of patients - includes multiple discontinuations per patient)"
-        else:
-            footer_text = f"Total Discontinuation Events: {total} ({discontinuation_rate:.1f}% of patients)"
-        
-    fig.text(0.5, 0.01, footer_text, ha='center')
+    # Save for debugging
+    save_plot_for_debug(fig, "graphic_b_debug_simplified.png")
     
-    # Ensure y-axis starts at zero
-    ax.set_ylim(bottom=0)
-    
-    # Make y-axis integers only
-    from matplotlib.ticker import MaxNLocator
-    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-    
-    # Force tight layout to ensure everything is visible
-    plt.tight_layout(rect=[0, 0.03, 1, 0.95])  # Leave room for footer
-    
-    # Add unique patient discontinuation information if available
-    unique_discontinued = results.get("unique_discontinued_patients", 0)
-    if unique_discontinued > 0:
-        # Create a secondary figure to compare event count vs. unique patient count
-        fig2, ax2 = plt.subplots(figsize=(10, 6))
-        
-        # Create comparison data
-        compare_labels = ['Total Events', 'Unique Patients']
-        compare_counts = [total, unique_discontinued]
-        
-        # Calculate corrected rate
-        patient_count = results.get("patient_count", 0)
-        if patient_count > 0:
-            corrected_rate = (unique_discontinued / patient_count) * 100
-            event_rate = (total / patient_count) * 100
-            
-            # Add rates to labels
-            compare_labels = ['Total Events\n({:.1f}%)'.format(event_rate), 
-                              'Unique Patients\n({:.1f}%)'.format(corrected_rate)]
-        
-        # Create bar chart
-        bars = ax2.bar(compare_labels, compare_counts, color=['#FFC107', '#4CAF50'])
-        
-        # Add count annotations
-        for bar, count in zip(bars, compare_counts):
-            ax2.text(
-                bar.get_x() + bar.get_width() / 2,
-                bar.get_height() + 0.1,
-                str(count),
-                ha='center',
-                va='bottom',
-                fontweight='bold'
-            )
-        
-        ax2.set_title('Discontinuation Events vs. Unique Patient Discontinuations')
-        ax2.set_ylabel('Count')
-        ax2.grid(True, linestyle='--', alpha=0.3, axis='y')
-        
-        # Add explanation if event count > unique count
-        if total > unique_discontinued:
-            plt.figtext(0.5, 0.01, 
-                        "Some patients discontinued multiple times during the simulation",
-                        ha='center', fontsize=10, style='italic')
-        
-        # Return a list of figures
-        return [fig, fig2]
-    
-    # Return the original figure if we don't have unique patient data
-    if unique_discontinued <= 0:
-        # Display the interactive streamlit chart
-        st.info("Interactive discontinuation chart:")
-        
-        # Create a simplified chart with just the discontinuation types
-        chart_data = pd.DataFrame({
-            'Type': types,
-            'Count': counts
-        })
-        
-        # Display the chart
-        st.bar_chart(data=chart_data.set_index('Type'))
-        
-        # Count unique patients directly if available
-        if "patient_histories" in results:
-            # Count unique patient discontinuations
-            unique_patient_discontinuations = set()
-            retreated_patients = set()
-            multiple_discontinuations = set()
-            
-            for patient_id, history in results["patient_histories"].items():
-                # Track when discontinuations happen
-                discontinuation_count = 0
-                
-                for visit in history:
-                    if isinstance(visit, dict) and "treatment_status" in visit:
-                        treatment_status = visit.get("treatment_status", {})
-                        
-                        # Check if this visit marks a discontinuation
-                        if not treatment_status.get("active", True) and treatment_status.get("cessation_type"):
-                            discontinuation_count += 1
-                            unique_patient_discontinuations.add(patient_id)
-                            
-                            # Track multiple discontinuations
-                            if discontinuation_count > 1:
-                                multiple_discontinuations.add(patient_id)
-                        
-                        # Check for retreatment
-                        if treatment_status.get("active", False) and treatment_status.get("recurrence_detected", False):
-                            retreated_patients.add(patient_id)
-            
-            # Display unique patient statistics
-            unique_count = len(unique_patient_discontinuations)
-            retreated_count = len(retreated_patients)
-            multiple_count = len(multiple_discontinuations)
-            
-            if unique_count > 0:
-                patient_count = results.get("patient_count", len(results["patient_histories"]))
-                st.success(f"Unique patients discontinued: {unique_count} ({(unique_count / patient_count) * 100:.1f}% of patients)")
-                
-                if multiple_count > 0:
-                    st.warning(f"Patients with multiple discontinuations: {multiple_count} ({(multiple_count / unique_count) * 100:.1f}% of discontinued patients)")
-                
-                if retreated_count > 0:
-                    st.info(f"Patients retreated after discontinuation: {retreated_count} ({(retreated_count / unique_count) * 100:.1f}% of discontinued patients)")
-                
-                # Create a pie chart to show the proportion of multiple discontinuations
-                if multiple_count > 0:
-                    fig3, ax3 = plt.subplots(figsize=(6, 6))
-                    labels = ['Single Discontinuation', 'Multiple Discontinuations']
-                    sizes = [unique_count - multiple_count, multiple_count]
-                    colors = ['#4CAF50', '#FF5722']
-                    
-                    ax3.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
-                    ax3.axis('equal')
-                    plt.title("Proportion of Patients with Multiple Discontinuations")
-                    st.pyplot(fig3)
-        
-        return fig
-    
-    # Display both charts if we have unique patient data
-    else:
-        # Create a DataFrame for the streamlit chart
-        chart_data = pd.DataFrame({
-            'Type': types + ['UNIQUE PATIENTS'],
-            'Count': counts + [unique_discontinued]
-        })
-        
-        # Display the chart
-        st.info("Interactive discontinuation chart:")
-        st.bar_chart(data=chart_data.set_index('Type'))
-        
-        # Calculate patient rate and add context
-        patient_count = results.get("patient_count", 0)
-        if patient_count > 0:
-            corrected_rate = (unique_discontinued / patient_count) * 100
-            event_rate = (total / patient_count) * 100
-            
-            # Display information about the corrected rate
-            if event_rate > 100:
-                st.success(f"✅ CORRECTED RATE: {corrected_rate:.1f}% ({unique_discontinued} unique patients of {patient_count} total)")
-                st.warning(f"⚠️ RAW EVENT RATE: {event_rate:.1f}% ({total} events for {patient_count} patients)")
-                
-                # Add explanation
-                st.info("""
-                ### Why the Difference?
-                
-                The **raw event rate** counts each discontinuation event separately, even if the same patient discontinues multiple times.
-                
-                The **corrected rate** counts each patient only once, which is the medically relevant metric.
-                
-                Multiple discontinuations per patient can occur when:
-                1. A patient discontinues treatment
-                2. Disease recurs and they are retreated
-                3. They discontinue again
-                """)
-            else:
-                st.success(f"Discontinuation rate: {corrected_rate:.1f}% ({unique_discontinued} patients of {patient_count} total)")
-        
-        # Return both figures
-        return [fig, fig2]
+    # Return the figure
+    return fig
 
 
 def get_ui_parameters():
@@ -1300,6 +1395,7 @@ def get_ui_parameters():
     params["enable_clinician_variation"] = st.session_state.get("enable_clinician_variation", True)
     params["planned_discontinue_prob"] = st.session_state.get("planned_discontinue_prob", 0.2)
     params["admin_discontinue_prob"] = st.session_state.get("admin_discontinue_prob", 0.05)
+    params["premature_discontinue_prob"] = st.session_state.get("premature_discontinue_prob", 2.0)
     params["consecutive_stable_visits"] = st.session_state.get("consecutive_stable_visits", 3)
     params["monitoring_schedule"] = st.session_state.get("monitoring_schedule", [12, 24, 36])
     params["no_monitoring_for_admin"] = st.session_state.get("no_monitoring_for_admin", True)

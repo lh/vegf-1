@@ -10,6 +10,31 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+# Import DEBUG_MODE from simulation_runner if available
+try:
+    from streamlit_app.simulation_runner import DEBUG_MODE, create_tufte_bar_chart, save_plot_for_debug
+except ImportError:
+    DEBUG_MODE = False
+    
+    # Define fallback functions if simulation_runner imports fail
+    def create_tufte_bar_chart(categories, values, title="", xlabel="", ylabel="", 
+                              color='#3498db', figsize=(10, 6), horizontal=True):
+        """Fallback implementation of create_tufte_bar_chart"""
+        fig, ax = plt.subplots(figsize=figsize)
+        if horizontal:
+            ax.barh(range(len(categories)), values, color=color)
+            ax.set_yticks(range(len(categories)))
+            ax.set_yticklabels(categories)
+        else:
+            ax.bar(range(len(categories)), values, color=color)
+            ax.set_xticks(range(len(categories)))
+            ax.set_xticklabels(categories, rotation=45)
+        return fig
+        
+    def save_plot_for_debug(fig, filename="debug_plot.png"):
+        """Fallback implementation of save_plot_for_debug"""
+        return None
+
 def display_retreatment_panel(results):
     """
     Display detailed retreatment statistics and visualizations.
@@ -23,7 +48,7 @@ def display_retreatment_panel(results):
         st.warning("No retreatment data available in simulation results.")
         return
         
-    st.subheader("Retreatment Analysis")
+    # Don't display header - we've merged this into the Discontinuation and Retreatment Analysis section
     recurrence_data = results["recurrences"]
     
     # Get retreatment count and unique count
@@ -72,23 +97,36 @@ def display_retreatment_panel(results):
         })
         
         with ret_col2:
-            # Create pie chart to show proportion
-            fig, ax = plt.subplots(figsize=(5, 5))
-            ax.pie(
-                retreatment_df['Count'], 
-                labels=retreatment_df['Type'],
-                autopct='%1.1f%%',
-                startangle=90
+            # Extract data for the chart
+            sorted_indices = np.argsort(retreatment_df['Count'].values)[::-1]
+            sorted_types = [retreatment_df['Type'].values[i] for i in sorted_indices]
+            sorted_counts = [retreatment_df['Count'].values[i] for i in sorted_indices]
+            
+            # Use our helper function to create a properly formatted bar chart
+            # Use a slightly different blue for this chart to distinguish it
+            fig = create_tufte_bar_chart(
+                categories=sorted_types,
+                values=sorted_counts,
+                title="GRAPHIC H: Retreatments by Type",
+                color='#2980b9',  # A slightly different blue
+                figsize=(5, 5),
+                horizontal=True
             )
-            ax.axis('equal')
-            ax.set_title('Retreatments by Discontinuation Type')
+            
+            # Save figure for debugging
+            save_plot_for_debug(fig, "graphic_h_debug.png")
+            
+            # Show the chart
             st.pyplot(fig)
         
         # Display detailed statistics in an expander
         with st.expander("**Detailed Retreatment Statistics**"):
             st.write("### Retreatments by Discontinuation Type")
             st.dataframe(retreatment_df)
-            st.bar_chart(retreatment_df.set_index('Type'))
+            # Only show this bar chart in debug mode since it's redundant with GRAPHIC H
+            if "DEBUG_MODE" in globals() and DEBUG_MODE:
+                st.write("GRAPHIC J: Interactive Retreatment Chart (Debug Only)")
+                st.bar_chart(retreatment_df.set_index('Type'))
             
             # Calculate and display retreatment rates by discontinuation type
             if "discontinuation_counts" in results:
@@ -99,7 +137,7 @@ def display_retreatment_panel(results):
                 type_mapping = {
                     "Planned": "stable_max_interval", 
                     "Administrative": "random_administrative", 
-                    "Time-based": "treatment_duration", 
+                    "Not Renewed": "course_complete_but_not_renewed", 
                     "Premature": "premature"
                 }
                 
@@ -148,15 +186,44 @@ def display_retreatment_panel(results):
                 
                 st.dataframe(comparison_df)
                 
-                # Create a bar chart to visualize patient retreatment rates
+                # Create a horizontal bar chart to visualize patient retreatment rates
                 st.write("### Patient Retreatment Rate by Discontinuation Type")
                 st.write("*Estimated unique patients retreated divided by patients discontinued*")
                 
-                rate_df = pd.DataFrame({
-                    'Type': [row["Discontinuation Type"] for row in comparison_data],
-                    'Patient Rate (%)': [row["Raw Rate"] for row in comparison_data]
-                })
-                st.bar_chart(rate_df.set_index('Type'))
+                # Create data for plotting
+                types = [row["Discontinuation Type"] for row in comparison_data]
+                rates = [row["Raw Rate"] for row in comparison_data]
+                counts = [row["Retreatment Events"] for row in comparison_data]
+                
+                # Format the data for labeling
+                formatted_rates = [f"{rate:.1f}% ({count})" for rate, count in zip(rates, counts)]
+                
+                # Use our helper function to create a properly formatted bar chart
+                # Use a teal color for this chart to distinguish from the other blue charts
+                fig = create_tufte_bar_chart(
+                    categories=types,
+                    values=rates,
+                    title="GRAPHIC I: Patient Retreatment Rate by Discontinuation Type",
+                    xlabel="Retreatment Rate (%)",
+                    color='#16a085',  # A nice teal color
+                    figsize=(10, 5),
+                    horizontal=True
+                )
+                
+                # Get the axis from the figure
+                ax = fig.axes[0]
+                
+                # Set appropriate axis limits
+                ax.set_xlim(0, max(rates) * 1.1)
+                
+                # Force a clear zero line as a reference
+                ax.axhline(y=0, color='#cccccc', linestyle='-', linewidth=0.5, alpha=0.3)
+                
+                # Save for debugging
+                save_plot_for_debug(fig, "graphic_i_debug.png")
+                
+                # Show the chart
+                st.pyplot(fig)
                 
                 # Add the explanations directly without an expander
                 st.write("### Understanding the Retreatment Metrics")
