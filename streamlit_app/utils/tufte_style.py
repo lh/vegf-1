@@ -367,15 +367,11 @@ def create_tufte_enrollment_chart(data, fig=None, ax=None, title: str = 'Patient
         # Assume data is already grouped
         monthly_counts = data
     
-    # Plot bars
+    # Plot bars with lighter blue to match other visualizations
     x = range(len(monthly_counts))
-    bars = ax.bar(x, monthly_counts.values, color=TUFTE_COLORS['primary'], alpha=0.7, edgecolor='none')
-    
-    # Add trend line if requested
-    if add_trend:
-        z = np.polyfit(x, monthly_counts.values, 1)
-        p = np.poly1d(z)
-        trend_line = ax.plot(x, p(x), color=TUFTE_COLORS['secondary'], linewidth=1.5, alpha=0.8)[0]
+    bars = ax.bar(x, monthly_counts.values, color='#a8c4e5', alpha=0.3, edgecolor='none')
+
+    # Trend line has been removed to match request
     
     # Style the chart
     style_axis(ax)

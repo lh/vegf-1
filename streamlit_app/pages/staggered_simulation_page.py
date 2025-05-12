@@ -315,11 +315,11 @@ def display_staggered_simulation():
                                 # Use our Tufte style library for consistent visualization
                                 from streamlit_app.utils.tufte_style import create_tufte_enrollment_chart
 
-                                # Create visualization using our reusable function
+                                # Create visualization using our reusable function with matching styling
                                 fig, ax = create_tufte_enrollment_chart(
                                     enroll_df,
                                     title='Patient Enrollment Over Time',
-                                    add_trend=True,
+                                    add_trend=False,  # No trend line to match other visualizations
                                     figsize=(10, 5)
                                 )
 
@@ -347,9 +347,9 @@ def display_staggered_simulation():
                                     # Create a figure
                                     fig, ax = plt.subplots(figsize=(10, 5))
 
-                                    # Plot bars
+                                    # Plot bars with lighter blue to match other visualizations
                                     ax.bar(range(len(monthly_counts)), monthly_counts.values,
-                                           color='#4682B4', alpha=0.7)
+                                           color='#a8c4e5', alpha=0.3)
 
                                     # Style axis
                                     style_axis(ax)
