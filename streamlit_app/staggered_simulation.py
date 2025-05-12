@@ -423,7 +423,7 @@ def create_dual_timeframe_visualizations(results, output_dir="output/staggered_c
                 })
 
                 # Process calendar data for visualization using a bar chart approach
-                from streamlit_app.utils.tufte_style import set_tufte_style, style_axis, add_reference_line, add_text_annotation
+                from streamlit_app.utils.tufte_style import set_tufte_style, style_axis, add_reference_line, add_text_annotation, TUFTE_COLORS
                 import numpy as np
 
                 # Create figure and axis
