@@ -508,10 +508,10 @@ def create_dual_timeframe_visualizations(results, output_dir="output/staggered_c
                         ax.set_xticks(binned_data['bin_center'])
                         ax.set_xticklabels(date_labels, rotation=45, ha='right')
 
-                    # Add summary statistics at bottom-left to match patient time visualization
+                    # Combine both annotations into one with proper spacing
                     add_text_annotation(
                         fig,
-                        f'Baseline: {baseline_va:.2f} | Mean: {binned_data["visual_acuity"].mean():.2f}',
+                        f'Baseline: {baseline_va:.2f} | Mean: {binned_data["visual_acuity"].mean():.2f} | Data binned in 4-week intervals',
                         position='bottom-left',
                         fontsize=8
                     )
@@ -526,13 +526,7 @@ def create_dual_timeframe_visualizations(results, output_dir="output/staggered_c
                 ax.set_title("Mean Visual Acuity by Calendar Time", fontsize=14, color=TUFTE_COLORS['text'])
                 ax.set_ylabel("Visual Acuity (ETDRS letters)", fontsize=10, color=TUFTE_COLORS['text_secondary'])
 
-                # Add explanation about binning
-                add_text_annotation(
-                    fig,
-                    'Data binned in 4-week intervals to align with treatment protocol cycles',
-                    position='bottom-left',
-                    fontsize=8
-                )
+                # Note: We're removing the redundant annotation since it's covered by the one below
 
                 # Save the figure
                 plt.savefig(calendar_path, dpi=100, bbox_inches='tight')
