@@ -474,7 +474,11 @@ def create_tufte_time_series(data, x_col: str, y_col: str, fig=None, ax=None,
     
     # Style the chart
     style_axis(ax)
-    
+
+    # Set y-axis limits explicitly to 0-85 for visual acuity if applicable
+    if "acuity" in y_label.lower() or "ETDRS" in y_label:
+        ax.set_ylim(0, 85)
+
     # Add labels and formatting
     ax.set_title(title, fontsize=14, color=TUFTE_COLORS['text'])
     ax.set_ylabel(y_label, fontsize=10, color=TUFTE_COLORS['text_secondary'])
@@ -620,11 +624,14 @@ def create_tufte_patient_time_visualization(data, time_col='time_weeks', acuity_
     # Style the main axis
     style_axis(ax)
 
+    # Set y-axis limits explicitly to 0-85 for visual acuity
+    ax.set_ylim(0, 85)
+
     # Add labels and formatting
     ax.set_title(title, fontsize=14, color=TUFTE_COLORS['text'])
     ax.set_xlabel(f'Weeks Since Enrollment (grouped in {bin_width}-week intervals)',
                  fontsize=10, color=TUFTE_COLORS['text_secondary'])
-    ax.set_ylabel('Visual Acuity', fontsize=10, color=TUFTE_COLORS['text_secondary'])
+    ax.set_ylabel('Visual Acuity (ETDRS letters)', fontsize=10, color=TUFTE_COLORS['text_secondary'])
 
     # Add explanation text about binning
     add_text_annotation(

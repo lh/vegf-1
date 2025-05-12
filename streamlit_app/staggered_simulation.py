@@ -422,20 +422,44 @@ def create_dual_timeframe_visualizations(results, output_dir="output/staggered_c
                     'sample_size': calendar_sample_sizes
                 })
 
-                # Create Tufte-style time series visualization with binned data
-                fig, ax = create_tufte_time_series(
-                    calendar_df,
-                    x_col='date',
-                    y_col='visual_acuity',
-                    title="Mean Visual Acuity by Calendar Time",
-                    y_label="Visual Acuity (ETDRS letters)",
-                    add_trend=True,
-                    add_baseline=True,
-                    figsize=(10, 6),
-                    bin_data=True,
-                    bin_width=4,  # 4-week bins to align with treatment protocol
-                    sample_size_col='sample_size'
-                )
+                # Ensure binning is properly applied to calendar time visualization
+                # First check if we have enough data
+                if len(calendar_df) >= 6:
+                    # Create Tufte-style time series visualization with binned data
+                    fig, ax = create_tufte_time_series(
+                        calendar_df,
+                        x_col='date',
+                        y_col='visual_acuity',
+                        title="Mean Visual Acuity by Calendar Time",
+                        y_label="Visual Acuity (ETDRS letters)",
+                        add_trend=True,
+                        add_baseline=True,
+                        figsize=(10, 6),
+                        bin_data=True,
+                        bin_width=4,  # 4-week bins to align with treatment protocol
+                        sample_size_col='sample_size'
+                    )
+
+                    # Annotate to explain binning approach
+                    from streamlit_app.utils.tufte_style import add_text_annotation
+                    add_text_annotation(
+                        fig,
+                        'Data binned in 4-week intervals to align with treatment protocol cycles',
+                        position='bottom-left',
+                        fontsize=8
+                    )
+                else:
+                    # Not enough data points for proper binning, use standard approach
+                    fig, ax = create_tufte_time_series(
+                        calendar_df,
+                        x_col='date',
+                        y_col='visual_acuity',
+                        title="Mean Visual Acuity by Calendar Time",
+                        y_label="Visual Acuity (ETDRS letters)",
+                        add_trend=True,
+                        add_baseline=True,
+                        figsize=(10, 6)
+                    )
 
                 # Save the figure
                 plt.savefig(calendar_path, dpi=100, bbox_inches='tight')

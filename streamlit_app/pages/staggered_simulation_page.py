@@ -303,17 +303,14 @@ def display_staggered_simulation():
                             # Use direct matplotlib visualization instead of complex R integration
                             st.markdown("### Patient Enrollment Visualization")
 
-                            try:
-                                # Create a matplotlib visualization directly
-                                import matplotlib.pyplot as plt
-                                import numpy as np
+                            # Create a Tufte-styled visualization for patient enrollment
+                            import matplotlib.pyplot as plt
+                            import numpy as np
 
-                                # Group by month
+                            try:
+                                # Ensure enrollment_date is datetime
                                 if not pd.api.types.is_datetime64_any_dtype(enroll_df['enrollment_date']):
                                     enroll_df['enrollment_date'] = pd.to_datetime(enroll_df['enrollment_date'])
-
-                                enroll_df['month'] = enroll_df['enrollment_date'].dt.strftime('%Y-%m')
-                                monthly_counts = enroll_df.groupby('month').size()
 
                                 # Use our Tufte style library for consistent visualization
                                 from streamlit_app.utils.tufte_style import create_tufte_enrollment_chart
@@ -331,12 +328,46 @@ def display_staggered_simulation():
 
                             except Exception as e:
                                 if debug_mode:
-                                    st.error(f"Error creating direct visualization: {e}")
+                                    st.error(f"Error creating visualization: {e}")
                                     import traceback
                                     st.code(traceback.format_exc())
-                                # Fall back to the original function if direct approach fails
-                                st.markdown("*Falling back to standard visualization method*")
-                                render_enrollment_visualization(enroll_df, use_r=use_r)
+
+                                # Create a simple fallback visualization without showing an error message
+                                try:
+                                    # Group by month
+                                    enroll_df['month'] = enroll_df['enrollment_date'].dt.strftime('%Y-%m')
+                                    monthly_counts = enroll_df.groupby('month').size()
+
+                                    # Create a simple figure with Tufte-inspired styling
+                                    from streamlit_app.utils.tufte_style import set_tufte_style, style_axis
+
+                                    # Apply Tufte style
+                                    set_tufte_style()
+
+                                    # Create a figure
+                                    fig, ax = plt.subplots(figsize=(10, 5))
+
+                                    # Plot bars
+                                    ax.bar(range(len(monthly_counts)), monthly_counts.values,
+                                           color='#4682B4', alpha=0.7)
+
+                                    # Style axis
+                                    style_axis(ax)
+
+                                    # Add labels
+                                    ax.set_xticks(range(len(monthly_counts)))
+                                    ax.set_xticklabels(monthly_counts.index, rotation=45, ha='right')
+                                    ax.set_title('Patient Enrollment Over Time', fontsize=14)
+                                    ax.set_ylabel('Number of Patients', fontsize=10)
+
+                                    plt.tight_layout()
+                                    st.pyplot(fig)
+
+                                except Exception as fallback_error:
+                                    if debug_mode:
+                                        st.error(f"Fallback visualization also failed: {fallback_error}")
+                                    # As a last resort, use the original function
+                                    render_enrollment_visualization(enroll_df, use_r=use_r)
 
                             # Add additional debug information
                             if debug_mode:
