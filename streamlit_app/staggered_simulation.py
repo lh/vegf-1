@@ -422,7 +422,7 @@ def create_dual_timeframe_visualizations(results, output_dir="output/staggered_c
                     'sample_size': calendar_sample_sizes
                 })
 
-                # Create Tufte-style time series visualization
+                # Create Tufte-style time series visualization with binned data
                 fig, ax = create_tufte_time_series(
                     calendar_df,
                     x_col='date',
@@ -431,7 +431,10 @@ def create_dual_timeframe_visualizations(results, output_dir="output/staggered_c
                     y_label="Visual Acuity (ETDRS letters)",
                     add_trend=True,
                     add_baseline=True,
-                    figsize=(10, 6)
+                    figsize=(10, 6),
+                    bin_data=True,
+                    bin_width=4,  # 4-week bins to align with treatment protocol
+                    sample_size_col='sample_size'
                 )
 
                 # Save the figure

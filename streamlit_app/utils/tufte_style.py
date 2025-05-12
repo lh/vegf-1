@@ -394,10 +394,12 @@ def create_tufte_enrollment_chart(data, fig=None, ax=None, title: str = 'Patient
     return fig, ax
 
 
-def create_tufte_time_series(data, x_col: str, y_col: str, fig=None, ax=None, 
+def create_tufte_time_series(data, x_col: str, y_col: str, fig=None, ax=None,
                             title: str = 'Time Series', y_label: str = 'Value',
                             add_trend: bool = True, add_baseline: bool = True,
-                            figsize: Tuple[int, int] = (10, 5)) -> Tuple:
+                            figsize: Tuple[int, int] = (10, 5),
+                            bin_data: bool = False, bin_width: int = 4,
+                            sample_size_col: Optional[str] = None) -> Tuple:
     """
     Create a Tufte-inspired time series chart.
     
@@ -493,16 +495,16 @@ def create_tufte_time_series(data, x_col: str, y_col: str, fig=None, ax=None,
     return fig, ax
 
 
-def create_tufte_patient_time_visualization(data, time_col='time_weeks', acuity_col='visual_acuity', 
+def create_tufte_patient_time_visualization(data, time_col='time_weeks', acuity_col='visual_acuity',
                                         sample_size_col='sample_size', title='Mean Visual Acuity by Patient Time',
-                                        figsize=(10, 6)):
+                                        figsize=(10, 6), bin_width=4):
     """
     Create a Tufte-inspired visual acuity by patient time visualization.
-    
+
     This visualization shows mean visual acuity by patient time with sample size
     indicated by bar height, eliminating the dilution effect seen in calendar time
-    analysis.
-    
+    analysis. Time is binned into 4-week periods to match treatment protocols.
+
     Parameters
     ----------
     data : pandas.DataFrame
@@ -517,7 +519,9 @@ def create_tufte_patient_time_visualization(data, time_col='time_weeks', acuity_
         Chart title, by default 'Mean Visual Acuity by Patient Time'
     figsize : tuple, optional
         Figure size in inches, by default (10, 6)
-    
+    bin_width : int, optional
+        Width of time bins in weeks, by default 4 (aligns with treatment protocol)
+
     Returns
     -------
     Tuple
@@ -525,77 +529,110 @@ def create_tufte_patient_time_visualization(data, time_col='time_weeks', acuity_
     """
     # Apply Tufte style
     set_tufte_style()
-    
+
     # Create figure and axes
     fig, ax = plt.subplots(figsize=figsize, dpi=100)
-    
-    # Main axis - Visual acuity line plot
-    line = ax.plot(data[time_col], data[acuity_col], 
-                  marker='o', markersize=4, 
-                  color=TUFTE_COLORS['primary'], linewidth=1.5, alpha=0.8)[0]
-    
-    # Add reference line for baseline visual acuity
+
+    # Group data into bins based on treatment protocol cycles
     if len(data) > 0:
-        baseline_va = data[acuity_col].iloc[0] if not data[acuity_col].iloc[0] is None else data[acuity_col].mean()
+        # Make a copy to avoid modification warnings
+        df = data.copy()
+
+        # Create time bins based on protocol intervals
+        df['time_bin'] = (df[time_col] // bin_width) * bin_width
+        # Calculate bin center for plotting (midpoint of the bin)
+        df['bin_center'] = df['time_bin'] + bin_width / 2
+
+        # Group by time bin and calculate mean acuity and total sample size
+        binned_data = df.groupby('time_bin').agg({
+            acuity_col: 'mean',
+            sample_size_col: 'sum' if sample_size_col in df.columns else 'size',
+            'bin_center': 'first'  # Take the first bin center
+        }).reset_index()
+
+        # Main axis - Visual acuity line plot with markers at bin centers
+        line = ax.plot(binned_data['bin_center'], binned_data[acuity_col],
+                      marker='o', markersize=5,
+                      color=TUFTE_COLORS['primary'], linewidth=1.5, alpha=0.8)[0]
+
+        # Add labels to show which weeks are included in each bin
+        for idx, row in binned_data.iterrows():
+            bin_start = int(row['time_bin'])
+            bin_end = bin_start + bin_width - 1
+            ax.annotate(f'W{bin_start}-{bin_end}',
+                       xy=(row['bin_center'], -2),
+                       xytext=(0, -5),
+                       textcoords='offset points',
+                       ha='center',
+                       va='top',
+                       fontsize=7,
+                       color=TUFTE_COLORS['text_secondary'],
+                       alpha=0.7)
+
+        # Add reference line for baseline visual acuity
+        baseline_va = binned_data[acuity_col].iloc[0] if not binned_data[acuity_col].iloc[0] is None else binned_data[acuity_col].mean()
         add_reference_line(ax, baseline_va, 'y', TUFTE_COLORS['text_secondary'])
-    
-    # Add trend line if we have enough data points
-    if len(data) >= 3:
-        try:
-            from scipy import signal
-            # Use LOESS/LOWESS smoothing if enough points
-            if len(data) >= 8:
-                # Window length must be odd and <= data length
-                window_length = min(7, len(data) | 1)  # Ensure odd number
-                smoothed = signal.savgol_filter(data[acuity_col], window_length, 2)
-                ax.plot(data[time_col], smoothed, 
-                       color=TUFTE_COLORS['secondary'], linewidth=1.5, alpha=0.8)
-            else:
-                # Use simple linear trend for small datasets
-                z = np.polyfit(range(len(data)), data[acuity_col], 1)
+
+        # Add trend line if we have enough data points
+        if len(binned_data) >= 3:
+            try:
+                from scipy import signal
+                # Use LOESS/LOWESS smoothing if enough points
+                if len(binned_data) >= 6:
+                    # Window length must be odd and <= data length
+                    window_length = min(5, len(binned_data) | 1)  # Ensure odd number
+                    smoothed = signal.savgol_filter(binned_data[acuity_col], window_length, 2)
+                    ax.plot(binned_data['bin_center'], smoothed,
+                           color=TUFTE_COLORS['secondary'], linewidth=1.5, alpha=0.8,
+                           label='Trend')
+                else:
+                    # Use simple linear trend for small datasets
+                    z = np.polyfit(range(len(binned_data)), binned_data[acuity_col], 1)
+                    p = np.poly1d(z)
+                    ax.plot(binned_data['bin_center'], p(range(len(binned_data))),
+                           color=TUFTE_COLORS['secondary'], linewidth=1.5, alpha=0.8,
+                           label='Trend')
+            except (ImportError, ValueError):
+                # Fallback to simple linear regression
+                z = np.polyfit(range(len(binned_data)), binned_data[acuity_col], 1)
                 p = np.poly1d(z)
-                ax.plot(data[time_col], p(range(len(data))), 
-                       color=TUFTE_COLORS['secondary'], linewidth=1.5, alpha=0.8)
-        except (ImportError, ValueError):
-            # Fallback to simple linear regression
-            z = np.polyfit(range(len(data)), data[acuity_col], 1)
-            p = np.poly1d(z)
-            ax.plot(data[time_col], p(range(len(data))), 
-                   color=TUFTE_COLORS['secondary'], linewidth=1.5, alpha=0.8)
-    
+                ax.plot(binned_data['bin_center'], p(range(len(binned_data))),
+                       color=TUFTE_COLORS['secondary'], linewidth=1.5, alpha=0.8,
+                       label='Trend')
+
+        # Create secondary axis for sample size bars if sample size data is provided
+        if sample_size_col in data.columns:
+            # Second y-axis for sample size
+            ax2 = ax.twinx()
+
+            # Plot sample size as subtle bars with width matching bin width
+            bars = ax2.bar(binned_data['bin_center'], binned_data[sample_size_col],
+                          alpha=0.15, color=TUFTE_COLORS['primary'], edgecolor='none',
+                          width=bin_width * 0.8)  # Slightly narrower than bin width
+
+            # Style secondary axis
+            ax2.spines['top'].set_visible(False)
+            ax2.spines['right'].set_visible(False)
+            ax2.grid(False)
+            ax2.tick_params(axis='y', colors=TUFTE_COLORS['text_secondary'])
+            ax2.set_ylabel('Sample Size', color=TUFTE_COLORS['text_secondary'], fontsize=9)
+
     # Style the main axis
     style_axis(ax)
-    
-    # Create secondary axis for sample size bars if sample size data is provided
-    if sample_size_col in data.columns:
-        # Second y-axis for sample size
-        ax2 = ax.twinx()
-        
-        # Plot sample size as subtle bars
-        bars = ax2.bar(data[time_col], data[sample_size_col], alpha=0.15, 
-                      color=TUFTE_COLORS['primary'], edgecolor='none', width=0.7)
-        
-        # Style secondary axis
-        ax2.spines['top'].set_visible(False)
-        ax2.spines['right'].set_visible(False)
-        ax2.grid(False)
-        ax2.tick_params(axis='y', colors=TUFTE_COLORS['text_secondary'])
-        ax2.set_ylabel('Sample Size', color=TUFTE_COLORS['text_secondary'], fontsize=9)
-    
+
     # Add labels and formatting
     ax.set_title(title, fontsize=14, color=TUFTE_COLORS['text'])
-    ax.set_xlabel('Weeks Since Enrollment', fontsize=10, color=TUFTE_COLORS['text_secondary'])
+    ax.set_xlabel(f'Weeks Since Enrollment (grouped in {bin_width}-week intervals)',
+                 fontsize=10, color=TUFTE_COLORS['text_secondary'])
     ax.set_ylabel('Visual Acuity', fontsize=10, color=TUFTE_COLORS['text_secondary'])
-    
-    # Add summary statistics
-    mean_va = data[acuity_col].mean()
-    if len(data) > 0:
-        baseline_va = data[acuity_col].iloc[0]
-        add_text_annotation(
-            fig, 
-            f'Baseline VA: {baseline_va:.2f} | Mean VA: {mean_va:.2f}',
-            position='bottom-left'
-        )
-    
+
+    # Add explanation text about binning
+    add_text_annotation(
+        fig,
+        f'Data binned in {bin_width}-week intervals to align with treatment protocol cycles',
+        position='bottom-left',
+        fontsize=8
+    )
+
     plt.tight_layout(pad=1.5)
     return fig, ax
