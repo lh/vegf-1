@@ -422,44 +422,117 @@ def create_dual_timeframe_visualizations(results, output_dir="output/staggered_c
                     'sample_size': calendar_sample_sizes
                 })
 
-                # Ensure binning is properly applied to calendar time visualization
-                # First check if we have enough data
-                if len(calendar_df) >= 6:
-                    # Create Tufte-style time series visualization with binned data
-                    fig, ax = create_tufte_time_series(
-                        calendar_df,
-                        x_col='date',
-                        y_col='visual_acuity',
-                        title="Mean Visual Acuity by Calendar Time",
-                        y_label="Visual Acuity (ETDRS letters)",
-                        add_trend=True,
-                        add_baseline=True,
-                        figsize=(10, 6),
-                        bin_data=True,
-                        bin_width=4,  # 4-week bins to align with treatment protocol
-                        sample_size_col='sample_size'
+                # Process calendar data for visualization using a bar chart approach
+                from streamlit_app.utils.tufte_style import set_tufte_style, style_axis, add_reference_line, add_text_annotation
+                import numpy as np
+
+                # Create figure and axis
+                fig, ax = plt.subplots(figsize=(10, 6), dpi=100)
+
+                # Apply Tufte style
+                set_tufte_style()
+
+                # Process calendar data into 4-week bins
+                if len(calendar_df) > 0:
+                    # Make a copy to avoid warnings
+                    df = calendar_df.copy()
+
+                    # Ensure date is datetime
+                    if not pd.api.types.is_datetime64_any_dtype(df['date']):
+                        df['date'] = pd.to_datetime(df['date'])
+
+                    # Get first date as reference
+                    first_date = df['date'].min()
+
+                    # Calculate days since first date
+                    df['days'] = (df['date'] - first_date).dt.days
+
+                    # Create 4-week bins
+                    bin_weeks = 4
+                    days_per_bin = bin_weeks * 7
+                    df['bin'] = (df['days'] // days_per_bin) * days_per_bin
+
+                    # Calculate bin centers
+                    df['bin_center_days'] = df['bin'] + days_per_bin / 2
+                    df['bin_center'] = first_date + pd.to_timedelta(df['bin_center_days'], unit='D')
+
+                    # Group data by bin
+                    binned_data = df.groupby('bin').agg({
+                        'visual_acuity': 'mean',
+                        'sample_size': 'sum',
+                        'bin_center': 'first'
+                    }).reset_index()
+
+                    # Create bar chart
+                    bars = ax.bar(
+                        binned_data['bin_center'],
+                        binned_data['visual_acuity'],
+                        width=pd.Timedelta(days=days_per_bin * 0.8),
+                        color=TUFTE_COLORS['primary'],
+                        alpha=0.7,
+                        edgecolor='none'
                     )
 
-                    # Annotate to explain binning approach
-                    from streamlit_app.utils.tufte_style import add_text_annotation
+                    # Add trend line if enough data points
+                    if len(binned_data) >= 3:
+                        try:
+                            # Simple linear trend
+                            x_numeric = np.arange(len(binned_data))
+                            z = np.polyfit(x_numeric, binned_data['visual_acuity'], 1)
+                            p = np.poly1d(z)
+
+                            ax.plot(
+                                binned_data['bin_center'],
+                                p(x_numeric),
+                                color=TUFTE_COLORS['secondary'],
+                                linewidth=1.8,
+                                alpha=0.9
+                            )
+                        except Exception as e:
+                            print(f"Error creating trend line: {e}")
+
+                    # Add baseline reference
+                    baseline_va = binned_data['visual_acuity'].iloc[0]
+                    add_reference_line(ax, baseline_va, 'y', TUFTE_COLORS['text_secondary'])
+
+                    # Format x-axis with fewer labels
+                    if len(binned_data) > 8:
+                        step = 2 if len(binned_data) < 16 else 3
+                        ticks = np.arange(0, len(binned_data), step)
+
+                        date_labels = [binned_data['bin_center'].iloc[i].strftime('%Y-%m') for i in ticks]
+                        ax.set_xticks([binned_data['bin_center'].iloc[i] for i in ticks])
+                        ax.set_xticklabels(date_labels, rotation=45, ha='right')
+                    else:
+                        date_labels = [d.strftime('%Y-%m') for d in binned_data['bin_center']]
+                        ax.set_xticks(binned_data['bin_center'])
+                        ax.set_xticklabels(date_labels, rotation=45, ha='right')
+
+                    # Add summary statistics
                     add_text_annotation(
                         fig,
-                        'Data binned in 4-week intervals to align with treatment protocol cycles',
-                        position='bottom-left',
+                        f'Baseline: {baseline_va:.2f} | Mean: {binned_data["visual_acuity"].mean():.2f}',
+                        position='bottom-right',
                         fontsize=8
                     )
-                else:
-                    # Not enough data points for proper binning, use standard approach
-                    fig, ax = create_tufte_time_series(
-                        calendar_df,
-                        x_col='date',
-                        y_col='visual_acuity',
-                        title="Mean Visual Acuity by Calendar Time",
-                        y_label="Visual Acuity (ETDRS letters)",
-                        add_trend=True,
-                        add_baseline=True,
-                        figsize=(10, 6)
-                    )
+
+                # Style the chart
+                style_axis(ax)
+
+                # Set y-axis limits to 0-85 for acuity
+                ax.set_ylim(0, 85)
+
+                # Add labels
+                ax.set_title("Mean Visual Acuity by Calendar Time", fontsize=14, color=TUFTE_COLORS['text'])
+                ax.set_ylabel("Visual Acuity (ETDRS letters)", fontsize=10, color=TUFTE_COLORS['text_secondary'])
+
+                # Add explanation about binning
+                add_text_annotation(
+                    fig,
+                    'Data binned in 4-week intervals to align with treatment protocol cycles',
+                    position='bottom-left',
+                    fontsize=8
+                )
 
                 # Save the figure
                 plt.savefig(calendar_path, dpi=100, bbox_inches='tight')
