@@ -463,14 +463,25 @@ def create_dual_timeframe_visualizations(results, output_dir="output/staggered_c
                         'bin_center': 'first'
                     }).reset_index()
 
-                    # Create bar chart
+                    # Create bar chart with lighter bars matching patient time visualization
                     bars = ax.bar(
                         binned_data['bin_center'],
                         binned_data['visual_acuity'],
                         width=pd.Timedelta(days=days_per_bin * 0.8),
-                        color=TUFTE_COLORS['primary'],
-                        alpha=0.7,
+                        color='#a8c4e5',  # Lighter blue that matches patient time viz
+                        alpha=0.3,
                         edgecolor='none'
+                    )
+
+                    # Add data points with connecting line - matching patient time visualization
+                    ax.plot(
+                        binned_data['bin_center'],
+                        binned_data['visual_acuity'],
+                        marker='o',
+                        markersize=5,
+                        color=TUFTE_COLORS['primary'],
+                        linewidth=1.5,
+                        alpha=0.8
                     )
 
                     # Add trend line if enough data points
@@ -508,11 +519,11 @@ def create_dual_timeframe_visualizations(results, output_dir="output/staggered_c
                         ax.set_xticks(binned_data['bin_center'])
                         ax.set_xticklabels(date_labels, rotation=45, ha='right')
 
-                    # Add summary statistics
+                    # Add summary statistics at bottom-left to match patient time visualization
                     add_text_annotation(
                         fig,
                         f'Baseline: {baseline_va:.2f} | Mean: {binned_data["visual_acuity"].mean():.2f}',
-                        position='bottom-right',
+                        position='bottom-left',
                         fontsize=8
                     )
 
