@@ -315,37 +315,16 @@ def display_staggered_simulation():
                                 enroll_df['month'] = enroll_df['enrollment_date'].dt.strftime('%Y-%m')
                                 monthly_counts = enroll_df.groupby('month').size()
 
-                                # Create figure with Tufte-inspired style
-                                plt.style.use('seaborn-v0_8-whitegrid')  # Clean base style
-                                fig, ax = plt.subplots(figsize=(10, 5), dpi=100)
+                                # Use our Tufte style library for consistent visualization
+                                from streamlit_app.utils.tufte_style import create_tufte_enrollment_chart
 
-                                # Plot bars
-                                x = range(len(monthly_counts))
-                                ax.bar(x, monthly_counts.values, color='#4682B4', alpha=0.7, edgecolor='none')
-
-                                # Add trend line
-                                z = np.polyfit(x, monthly_counts.values, 1)
-                                p = np.poly1d(z)
-                                ax.plot(x, p(x), color='#B22222', linewidth=1.5, alpha=0.8)
-
-                                # Clean up the chart (Tufte-inspired)
-                                ax.spines['top'].set_visible(False)  # Remove top border
-                                ax.spines['right'].set_visible(False)  # Remove right border
-                                ax.spines['left'].set_visible(False)  # Remove left border
-                                ax.grid(axis='x', visible=False)  # Remove vertical grid lines
-
-                                # Add labels and formatting
-                                ax.set_xticks(x)
-                                ax.set_xticklabels(monthly_counts.index, rotation=45, ha='right', fontsize=9)
-                                ax.set_title('Patient Enrollment Over Time', fontsize=14)
-                                ax.set_ylabel('Number of Patients', fontsize=10)
-
-                                # Add total patients annotation instead of legend
-                                total_patients = len(enroll_df)
-                                plt.figtext(0.13, 0.02, f'Total of {total_patients} patients enrolled',
-                                           fontsize=9, color='#666666')
-
-                                plt.tight_layout(pad=1.5)
+                                # Create visualization using our reusable function
+                                fig, ax = create_tufte_enrollment_chart(
+                                    enroll_df,
+                                    title='Patient Enrollment Over Time',
+                                    add_trend=True,
+                                    figsize=(10, 5)
+                                )
 
                                 # Display the plot
                                 st.pyplot(fig)
