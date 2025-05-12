@@ -424,13 +424,38 @@ def display_staggered_simulation():
                         """)
                         st.image(viz_paths["dual_timeframe"])
 
+                    # Display calendar time visualization
+                    if "calendar_time" in viz_paths:
+                        st.markdown("#### Mean Visual Acuity by Calendar Time")
+                        st.markdown("""
+                        This Tufte-inspired visualization shows the mean visual acuity across all patients
+                        by calendar date. Key features:
+
+                        - **Date-based analysis**: Shows real-world timeline of the study
+                        - **Trend detection**: Helps identify overall visual acuity patterns
+                        - **Context aware**: Subtle visual elements maintain focus on the data
+                        - **Clear interpretation**: Reduced visual noise for clinical decision-making
+
+                        Note: Calendar time analysis is affected by the "dilution effect" where newer
+                        patients entering the study can mask treatment effects in longer-term patients.
+                        """)
+                        st.image(viz_paths["calendar_time"])
+
                     # Display patient time visualization
                     if "patient_time" in viz_paths:
                         st.markdown("#### Mean Visual Acuity by Patient Time (Weeks Since Enrollment)")
                         st.markdown("""
-                        This visualization shows the mean visual acuity trajectory aligned by patient time,
-                        with sample size indicated by bar height. This approach eliminates the dilution effect
-                        seen in calendar time analysis when new patients continually enter the study.
+                        This Tufte-inspired visualization shows the mean visual acuity trajectory aligned by patient time,
+                        with sample size indicated by bar height. Key features:
+
+                        - **Clear data presentation**: Primary focus on the visual acuity trend
+                        - **Sample size context**: Subtle background bars show patient counts at each timepoint
+                        - **Trend line**: Smoothed trend helps identify the overall pattern
+                        - **Baseline reference**: Horizontal reference line shows initial acuity for comparison
+                        - **Reduced chart junk**: Minimal non-data ink for clearer interpretation
+
+                        This approach eliminates the dilution effect seen in calendar time analysis when new
+                        patients continually enter the study at different timepoints.
                         """)
                         st.image(viz_paths["patient_time"])
 

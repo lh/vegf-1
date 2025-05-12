@@ -491,3 +491,111 @@ def create_tufte_time_series(data, x_col: str, y_col: str, fig=None, ax=None,
     
     plt.tight_layout(pad=1.5)
     return fig, ax
+
+
+def create_tufte_patient_time_visualization(data, time_col='time_weeks', acuity_col='visual_acuity', 
+                                        sample_size_col='sample_size', title='Mean Visual Acuity by Patient Time',
+                                        figsize=(10, 6)):
+    """
+    Create a Tufte-inspired visual acuity by patient time visualization.
+    
+    This visualization shows mean visual acuity by patient time with sample size
+    indicated by bar height, eliminating the dilution effect seen in calendar time
+    analysis.
+    
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        DataFrame with patient time data containing time, acuity, and sample size columns
+    time_col : str, optional
+        Column name for patient time, by default 'time_weeks'
+    acuity_col : str, optional
+        Column name for visual acuity, by default 'visual_acuity'
+    sample_size_col : str, optional
+        Column name for sample size data, by default 'sample_size'
+    title : str, optional
+        Chart title, by default 'Mean Visual Acuity by Patient Time'
+    figsize : tuple, optional
+        Figure size in inches, by default (10, 6)
+    
+    Returns
+    -------
+    Tuple
+        (fig, ax) - The figure and axis objects
+    """
+    # Apply Tufte style
+    set_tufte_style()
+    
+    # Create figure and axes
+    fig, ax = plt.subplots(figsize=figsize, dpi=100)
+    
+    # Main axis - Visual acuity line plot
+    line = ax.plot(data[time_col], data[acuity_col], 
+                  marker='o', markersize=4, 
+                  color=TUFTE_COLORS['primary'], linewidth=1.5, alpha=0.8)[0]
+    
+    # Add reference line for baseline visual acuity
+    if len(data) > 0:
+        baseline_va = data[acuity_col].iloc[0] if not data[acuity_col].iloc[0] is None else data[acuity_col].mean()
+        add_reference_line(ax, baseline_va, 'y', TUFTE_COLORS['text_secondary'])
+    
+    # Add trend line if we have enough data points
+    if len(data) >= 3:
+        try:
+            from scipy import signal
+            # Use LOESS/LOWESS smoothing if enough points
+            if len(data) >= 8:
+                # Window length must be odd and <= data length
+                window_length = min(7, len(data) | 1)  # Ensure odd number
+                smoothed = signal.savgol_filter(data[acuity_col], window_length, 2)
+                ax.plot(data[time_col], smoothed, 
+                       color=TUFTE_COLORS['secondary'], linewidth=1.5, alpha=0.8)
+            else:
+                # Use simple linear trend for small datasets
+                z = np.polyfit(range(len(data)), data[acuity_col], 1)
+                p = np.poly1d(z)
+                ax.plot(data[time_col], p(range(len(data))), 
+                       color=TUFTE_COLORS['secondary'], linewidth=1.5, alpha=0.8)
+        except (ImportError, ValueError):
+            # Fallback to simple linear regression
+            z = np.polyfit(range(len(data)), data[acuity_col], 1)
+            p = np.poly1d(z)
+            ax.plot(data[time_col], p(range(len(data))), 
+                   color=TUFTE_COLORS['secondary'], linewidth=1.5, alpha=0.8)
+    
+    # Style the main axis
+    style_axis(ax)
+    
+    # Create secondary axis for sample size bars if sample size data is provided
+    if sample_size_col in data.columns:
+        # Second y-axis for sample size
+        ax2 = ax.twinx()
+        
+        # Plot sample size as subtle bars
+        bars = ax2.bar(data[time_col], data[sample_size_col], alpha=0.15, 
+                      color=TUFTE_COLORS['primary'], edgecolor='none', width=0.7)
+        
+        # Style secondary axis
+        ax2.spines['top'].set_visible(False)
+        ax2.spines['right'].set_visible(False)
+        ax2.grid(False)
+        ax2.tick_params(axis='y', colors=TUFTE_COLORS['text_secondary'])
+        ax2.set_ylabel('Sample Size', color=TUFTE_COLORS['text_secondary'], fontsize=9)
+    
+    # Add labels and formatting
+    ax.set_title(title, fontsize=14, color=TUFTE_COLORS['text'])
+    ax.set_xlabel('Weeks Since Enrollment', fontsize=10, color=TUFTE_COLORS['text_secondary'])
+    ax.set_ylabel('Visual Acuity', fontsize=10, color=TUFTE_COLORS['text_secondary'])
+    
+    # Add summary statistics
+    mean_va = data[acuity_col].mean()
+    if len(data) > 0:
+        baseline_va = data[acuity_col].iloc[0]
+        add_text_annotation(
+            fig, 
+            f'Baseline VA: {baseline_va:.2f} | Mean VA: {mean_va:.2f}',
+            position='bottom-left'
+        )
+    
+    plt.tight_layout(pad=1.5)
+    return fig, ax
