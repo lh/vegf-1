@@ -10,7 +10,9 @@ The style emphasizes:
 3. Using clear, direct labeling
 4. Using subtle, appropriate colors
 5. Minimizing distracting elements like borders and grid lines
-6. Using color to establish semantic relationships (same color family for related data)
+6. Using color to establish semantic relationships:
+   - Same color family for related data (e.g., bars and their trend line in calendar visualization)
+   - Different colors for different data types (e.g., acuity line vs. sample size bars in patient visualization)
 7. Consistency across visualizations to create a unified visual language
 """
 
@@ -584,25 +586,30 @@ def create_tufte_patient_time_visualization(data, time_col='time_weeks', acuity_
                     # Window length must be odd and <= data length
                     window_length = min(5, len(binned_data) | 1)  # Ensure odd number
                     smoothed = signal.savgol_filter(binned_data[acuity_col], window_length, 2)
-                    # Use same color family as the data points but with higher opacity
+                    # Use different color for trend line since it represents different data than the bars
+                    # (line = visual acuity, bars = sample size)
                     ax.plot(binned_data['bin_center'], smoothed,
-                           color='#4682B4',  # Darker blue from the same family
+                           color=TUFTE_COLORS['secondary'],  # Different color for different data
                            linewidth=1.5, alpha=0.8,
                            label='Trend')
                 else:
                     # Use simple linear trend for small datasets
                     z = np.polyfit(range(len(binned_data)), binned_data[acuity_col], 1)
                     p = np.poly1d(z)
+                    # Use different color for trend line since it represents different data than the bars
+                    # (line = visual acuity, bars = sample size)
                     ax.plot(binned_data['bin_center'], p(range(len(binned_data))),
-                           color='#4682B4',  # Darker blue from the same family
+                           color=TUFTE_COLORS['secondary'],  # Different color for different data
                            linewidth=1.5, alpha=0.8,
                            label='Trend')
             except (ImportError, ValueError):
                 # Fallback to simple linear regression
                 z = np.polyfit(range(len(binned_data)), binned_data[acuity_col], 1)
                 p = np.poly1d(z)
+                # Use different color for trend line since it represents different data than the bars
+                # (line = visual acuity, bars = sample size)
                 ax.plot(binned_data['bin_center'], p(range(len(binned_data))),
-                       color='#4682B4',  # Darker blue from the same family
+                       color=TUFTE_COLORS['secondary'],  # Different color for different data
                        linewidth=1.5, alpha=0.8,
                        label='Trend')
 
