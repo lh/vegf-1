@@ -481,10 +481,12 @@ def create_dual_timeframe_visualizations(results, output_dir="output/staggered_c
                             z = np.polyfit(x_numeric, binned_data['visual_acuity'], 1)
                             p = np.poly1d(z)
 
+                            # Use same color as bars but with higher opacity for trend line
+                            # This creates a visual relationship showing it's the same data
                             ax.plot(
                                 binned_data['bin_center'],
                                 p(x_numeric),
-                                color=TUFTE_COLORS['secondary'],
+                                color='#4682B4',  # Darker blue from the same family as the bars
                                 linewidth=1.8,
                                 alpha=0.9
                             )
