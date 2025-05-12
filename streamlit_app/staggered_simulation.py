@@ -473,17 +473,6 @@ def create_dual_timeframe_visualizations(results, output_dir="output/staggered_c
                         edgecolor='none'
                     )
 
-                    # Add data points with connecting line - matching patient time visualization
-                    ax.plot(
-                        binned_data['bin_center'],
-                        binned_data['visual_acuity'],
-                        marker='o',
-                        markersize=5,
-                        color=TUFTE_COLORS['primary'],
-                        linewidth=1.5,
-                        alpha=0.8
-                    )
-
                     # Add trend line if enough data points
                     if len(binned_data) >= 3:
                         try:
