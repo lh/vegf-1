@@ -11,9 +11,33 @@ The style emphasizes:
 4. Using subtle, appropriate colors
 5. Minimizing distracting elements like borders and grid lines
 6. Using color to establish semantic relationships:
-   - Same color family for related data (e.g., bars and their trend line in calendar visualization)
-   - Different colors for different data types (e.g., acuity line vs. sample size bars in patient visualization)
+   - Same color family for related data (e.g., bars and their trend line)
+   - Different colors for different data types (e.g., acuity data vs. sample counts)
 7. Consistency across visualizations to create a unified visual language
+
+Color System Design Guide
+------------------------
+To maintain semantic consistency across all visualizations, colors are assigned
+to specific data types regardless of chart type:
+
+- Steel Blue (#4682B4): Visual acuity data (primary metric)
+  - Use for acuity bars, lines, and markers
+  - Trend lines should use a darker shade of the same color
+
+- Muted Sage Green (#8FAD91): Patient and sample counts
+  - Use for enrollment bars and sample size indicators
+  - Selected for colorblind safety and visual complementarity
+
+- Firebrick Red (#B22222): Reserved for alerts and critical information
+  - Use sparingly to highlight important trends or thresholds
+  - High visual impact should be reserved for key insights
+
+- Trend Lines: Always use a darker version of the source data color
+  - Acuity trend lines: Darker blue
+  - Patient count trend lines: Darker green
+
+This consistent color language ensures users immediately understand what data
+they're viewing across different visualizations.
 """
 
 import matplotlib.pyplot as plt
@@ -21,17 +45,45 @@ import matplotlib as mpl
 import numpy as np
 from typing import Dict, Any, Optional, Tuple, List, Union
 
-# Default color palette inspired by Tufte's work - subdued, functional colors
-TUFTE_COLORS = {
-    'primary': '#4682B4',    # Steel Blue - for main data
-    'secondary': '#B22222',  # Firebrick - for trend lines and highlights
-    'tertiary': '#228B22',   # Forest Green - for additional series
-    'background': '#FFFFFF', # White background
-    'grid': '#EEEEEE',       # Very light gray for grid lines
-    'text': '#333333',       # Dark gray for titles and labels
-    'text_secondary': '#666666',  # Medium gray for secondary text
-    'border': '#CCCCCC'      # Light gray for necessary borders
-}
+# Import color definitions from the central color system
+try:
+    from visualization.color_system import COLORS as TUFTE_COLORS, SEMANTIC_COLORS, ALPHAS
+except ImportError:
+    # Fallback if the central color system is not available
+    # Default color palette inspired by Tufte's work - subdued, functional colors
+    TUFTE_COLORS = {
+        'primary': '#4682B4',    # Steel Blue - for visual acuity data
+        'primary_dark': '#2a4d6e', # Darker Steel Blue - for acuity trend lines
+        'secondary': '#B22222',  # Firebrick - reserved for critical information and alerts
+        'tertiary': '#228B22',   # Forest Green - for additional data series
+        'patient_counts': '#8FAD91',  # Muted Sage Green - for patient/sample counts
+        'patient_counts_dark': '#5e7260', # Darker Sage Green - for patient count trend lines
+        'background': '#FFFFFF', # White background
+        'grid': '#EEEEEE',       # Very light gray for grid lines
+        'text': '#333333',       # Dark gray for titles and labels
+        'text_secondary': '#666666',  # Medium gray for secondary text
+        'border': '#CCCCCC'      # Light gray for necessary borders
+    }
+
+    # Standardized alpha values for consistent transparency
+    ALPHAS = {
+        'high': 0.8,        # High opacity for primary elements
+        'medium': 0.5,      # Medium opacity for standard elements
+        'low': 0.2,         # Low opacity for background elements
+        'very_low': 0.1,    # Very low opacity for subtle elements
+        'patient_counts': 0.5  # Consistent opacity for all patient/sample count visualizations
+    }
+
+    # Define semantic color uses for the visualization system
+    # This ensures consistent meaning across different charts
+    SEMANTIC_COLORS = {
+        'acuity_data': TUFTE_COLORS['primary'],       # Blue for visual acuity data
+        'acuity_trend': TUFTE_COLORS['primary_dark'],  # Darker blue for acuity trend lines
+        'patient_counts': TUFTE_COLORS['patient_counts'],  # Sage Green for patient/sample counts
+        'patient_counts_trend': TUFTE_COLORS['patient_counts_dark'],  # Darker sage green for patient count trend lines
+        'critical_info': TUFTE_COLORS['secondary'],   # Red for critical information and alerts
+        'additional_series': TUFTE_COLORS['tertiary'] # Green for any additional data series
+    }
 
 def set_tufte_style(base_size: int = 11) -> None:
     """
@@ -146,8 +198,8 @@ def style_axis(ax, hide_spines: List[str] = ['top', 'right', 'left'],
     )
 
 
-def style_bar_chart(ax, bars, color: str = TUFTE_COLORS['primary'], 
-                    alpha: float = 0.7, edge_color: Optional[str] = None) -> None:
+def style_bar_chart(ax, bars, color: str = TUFTE_COLORS['primary'],
+                    alpha: float = ALPHAS['medium'], edge_color: Optional[str] = None) -> None:
     """
     Apply Tufte-inspired styling to bar charts.
     
@@ -175,8 +227,8 @@ def style_bar_chart(ax, bars, color: str = TUFTE_COLORS['primary'],
             bar.set_linewidth(0.5)
 
 
-def style_line(ax, line, color: str = TUFTE_COLORS['primary'], 
-              linewidth: float = 1.5, alpha: float = 0.8,
+def style_line(ax, line, color: str = TUFTE_COLORS['primary'],
+              linewidth: float = 1.5, alpha: float = ALPHAS['high'],
               add_markers: bool = False, marker_size: int = 4) -> None:
     """
     Apply Tufte-inspired styling to lines in a plot.
@@ -371,9 +423,9 @@ def create_tufte_enrollment_chart(data, fig=None, ax=None, title: str = 'Patient
         # Assume data is already grouped
         monthly_counts = data
     
-    # Plot bars with lighter blue to match other visualizations
+    # Plot bars with sage green for patient counts
     x = range(len(monthly_counts))
-    bars = ax.bar(x, monthly_counts.values, color='#a8c4e5', alpha=0.3, edgecolor='none')
+    bars = ax.bar(x, monthly_counts.values, color=SEMANTIC_COLORS['patient_counts'], alpha=ALPHAS['medium'], edgecolor='none')
 
     # Trend line has been removed to match request
     
@@ -554,10 +606,11 @@ def create_tufte_patient_time_visualization(data, time_col='time_weeks', acuity_
             'bin_center': 'first'  # Take the first bin center
         }).reset_index()
 
-        # Main axis - Visual acuity line plot with markers at bin centers
+        # Main axis - Visual acuity line plot with small markers at bin centers
+        # Using subtle styling with smaller markers and reduced opacity
         line = ax.plot(binned_data['bin_center'], binned_data[acuity_col],
-                      marker='o', markersize=5,
-                      color=TUFTE_COLORS['primary'], linewidth=1.5, alpha=0.8)[0]
+                     marker='o', markersize=3,  # Smaller markers
+                     color=SEMANTIC_COLORS['acuity_data'], linewidth=0.8, alpha=ALPHAS['low'])[0]  # Thinner line, lower opacity
 
         # Add labels to show which weeks are included in each bin
         for idx, row in binned_data.iterrows():
@@ -586,31 +639,31 @@ def create_tufte_patient_time_visualization(data, time_col='time_weeks', acuity_
                     # Window length must be odd and <= data length
                     window_length = min(5, len(binned_data) | 1)  # Ensure odd number
                     smoothed = signal.savgol_filter(binned_data[acuity_col], window_length, 2)
-                    # Use different color for trend line since it represents different data than the bars
-                    # (line = visual acuity, bars = sample size)
+                    # Use darker shade of blue for trend line to match visual acuity data
+                    # Make the trend line subtle but still visible
                     ax.plot(binned_data['bin_center'], smoothed,
-                           color=TUFTE_COLORS['secondary'],  # Different color for different data
-                           linewidth=1.5, alpha=0.8,
-                           label='Trend')
+                           color=SEMANTIC_COLORS['acuity_trend'],  # Darker blue for acuity trend
+                           linewidth=1.2, alpha=ALPHAS['medium'],  # Thinner line with medium opacity
+                           label='Visual Acuity Trend')
                 else:
                     # Use simple linear trend for small datasets
                     z = np.polyfit(range(len(binned_data)), binned_data[acuity_col], 1)
                     p = np.poly1d(z)
-                    # Use different color for trend line since it represents different data than the bars
-                    # (line = visual acuity, bars = sample size)
+                    # Use darker shade of blue for trend line to match visual acuity data
+                    # Make the trend line subtle but still visible
                     ax.plot(binned_data['bin_center'], p(range(len(binned_data))),
-                           color=TUFTE_COLORS['secondary'],  # Different color for different data
-                           linewidth=1.5, alpha=0.8,
-                           label='Trend')
+                           color=SEMANTIC_COLORS['acuity_trend'],  # Darker blue for acuity trend
+                           linewidth=1.2, alpha=ALPHAS['medium'],  # Thinner line with medium opacity
+                           label='Visual Acuity Trend')
             except (ImportError, ValueError):
                 # Fallback to simple linear regression
                 z = np.polyfit(range(len(binned_data)), binned_data[acuity_col], 1)
                 p = np.poly1d(z)
-                # Use different color for trend line since it represents different data than the bars
-                # (line = visual acuity, bars = sample size)
+                # Use darker shade of blue for trend line to match visual acuity data
+                # Follows the design principle that trend lines use darker versions of the source data color
                 ax.plot(binned_data['bin_center'], p(range(len(binned_data))),
-                       color=TUFTE_COLORS['secondary'],  # Different color for different data
-                       linewidth=1.5, alpha=0.8,
+                       color=SEMANTIC_COLORS['acuity_trend'],  # Darker blue for acuity trend
+                       linewidth=1.2, alpha=ALPHAS['medium'],  # Thinner line with medium opacity
                        label='Trend')
 
         # Create secondary axis for sample size bars if sample size data is provided
@@ -618,9 +671,10 @@ def create_tufte_patient_time_visualization(data, time_col='time_weeks', acuity_
             # Second y-axis for sample size
             ax2 = ax.twinx()
 
-            # Plot sample size as subtle bars with width matching bin width
+            # Plot sample size as bars with width matching bin width
+            # Use sage green with consistent alpha for all patient count visualizations
             bars = ax2.bar(binned_data['bin_center'], binned_data[sample_size_col],
-                          alpha=0.15, color=TUFTE_COLORS['primary'], edgecolor='none',
+                          alpha=ALPHAS['patient_counts'], color=SEMANTIC_COLORS['patient_counts'], edgecolor='none',
                           width=bin_width * 0.8)  # Slightly narrower than bin width
 
             # Style secondary axis
