@@ -99,7 +99,8 @@ The following standard templates are available:
 1. **`patient_time`** - Visual acuity by patient time with sample size indicators
 2. **`enrollment_chart`** - Patient enrollment over time
 3. **`acuity_time_series`** - Visual acuity time series with trend
-4. **`protocol_comparison`** - Treatment protocol comparison chart
+4. **`discontinuation_retreatment`** - Combined visualization of discontinuation reasons and retreatment status
+5. **`protocol_comparison`** - Treatment protocol comparison chart
 
 ## Adding New Templates
 

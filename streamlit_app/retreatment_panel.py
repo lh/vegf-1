@@ -10,23 +10,51 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Import DEBUG_MODE from simulation_runner if available
+# Import visualization functions
 try:
+    from visualization.visualization_templates import create_discontinuation_retreatment_chart
     from streamlit_app.simulation_runner import DEBUG_MODE, create_tufte_bar_chart, save_plot_for_debug
 except ImportError:
     DEBUG_MODE = False
+
+# Import the central color system
+try:
+    from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
+except ImportError:
+    # Fallback if the central color system is not available
+    COLORS = {
+        'primary': '#4682B4',    # Steel Blue - for visual acuity data
+        'secondary': '#B22222',  # Firebrick - for critical information
+        'patient_counts': '#8FAD91',  # Muted Sage Green - for patient counts
+    }
+    ALPHAS = {
+        'high': 0.8,        # High opacity for primary elements
+        'medium': 0.5,      # Medium opacity for standard elements
+        'low': 0.2,         # Low opacity for background elements
+        'very_low': 0.1,    # Very low opacity for subtle elements
+        'patient_counts': 0.5  # Consistent opacity for all patient/sample count visualizations
+    }
+    SEMANTIC_COLORS = {
+        'acuity_data': COLORS['primary'],
+        'patient_counts': COLORS['patient_counts'],
+        'critical_info': COLORS['secondary'],
+    }
     
     # Define fallback functions if simulation_runner imports fail
-    def create_tufte_bar_chart(categories, values, title="", xlabel="", ylabel="", 
-                              color='#3498db', figsize=(10, 6), horizontal=True):
+    def create_tufte_bar_chart(categories, values, title="", xlabel="", ylabel="",
+                              color=None, figsize=(10, 6), horizontal=True):
         """Fallback implementation of create_tufte_bar_chart"""
+        # Use patient_counts color from semantic system if available
+        if color is None:
+            color = SEMANTIC_COLORS['patient_counts']
+
         fig, ax = plt.subplots(figsize=figsize)
         if horizontal:
-            ax.barh(range(len(categories)), values, color=color)
+            ax.barh(range(len(categories)), values, color=color, alpha=ALPHAS['patient_counts'])
             ax.set_yticks(range(len(categories)))
             ax.set_yticklabels(categories)
         else:
-            ax.bar(range(len(categories)), values, color=color)
+            ax.bar(range(len(categories)), values, color=color, alpha=ALPHAS['patient_counts'])
             ax.set_xticks(range(len(categories)))
             ax.set_xticklabels(categories, rotation=45)
         return fig
@@ -59,27 +87,30 @@ def display_retreatment_panel(results):
     ret_col1, ret_col2 = st.columns(2)
     
     with ret_col1:
-        # Display basic metrics
-        st.write(f"**Total Retreatment Events:** {total_retreatments}")
+        # Display basic metrics with descriptions for screen readers
+        st.write(f"**Total Retreatment Events:** {total_retreatments}", help="Total number of retreatment events recorded")
         if unique_retreatments != total_retreatments:
-            st.write(f"**Unique Patients Retreated:** {unique_retreatments}")
+            st.write(f"**Unique Patients Retreated:** {unique_retreatments}", help="Number of distinct patients who required retreatment")
         
         # Calculate and display retreatment rate
         discontinued_patients = results.get("total_discontinuations", 0)
         if discontinued_patients > 0:
             # Patient retreatment rate - unique patients retreated divided by discontinued
             patient_retreatment_rate = (unique_retreatments / discontinued_patients) * 100
-            st.write(f"**Patient Retreatment Rate:** {patient_retreatment_rate:.1f}% of discontinued patients")
+            st.write(f"**Patient Retreatment Rate:** {patient_retreatment_rate:.1f}% of discontinued patients", 
+                    help="Percentage of discontinued patients who later required retreatment")
             
             # Also show event-based retreatment rate for clarity
             event_retreatment_rate = (total_retreatments / discontinued_patients) * 100
             if event_retreatment_rate > patient_retreatment_rate:
-                st.write(f"**Event/Patient Ratio:** {(total_retreatments / discontinued_patients):.2f} retreatments per discontinued patient")
+                st.write(f"**Event/Patient Ratio:** {(total_retreatments / discontinued_patients):.2f} retreatments per discontinued patient",
+                        help="Average number of retreatment events per discontinued patient")
             
             # Calculate average retreatments per patient
             if unique_retreatments > 0:
                 avg_retreatments = total_retreatments / unique_retreatments
-                st.write(f"**Avg Retreatments per Patient:** {avg_retreatments:.2f}")
+                st.write(f"**Avg Retreatments per Patient:** {avg_retreatments:.2f}",
+                        help="Average number of retreatment events per unique retreated patient")
     
     # First check if we have raw_discontinuation_stats with retreatments_by_type
     if "raw_discontinuation_stats" in results and "retreatments_by_type" in results["raw_discontinuation_stats"]:
@@ -88,41 +119,156 @@ def display_retreatment_panel(results):
     else:
         # Fallback to recurrence data
         retreatment_by_type = recurrence_data.get("by_type", {})
-        
-    if retreatment_by_type and sum(retreatment_by_type.values()) > 0:
-        # Convert to DataFrame for display
-        retreatment_df = pd.DataFrame({
-            'Type': [key.replace('_', ' ').title() for key in retreatment_by_type.keys()],
-            'Count': list(retreatment_by_type.values())
-        })
-        
-        with ret_col2:
-            # Extract data for the chart
-            sorted_indices = np.argsort(retreatment_df['Count'].values)[::-1]
-            sorted_types = [retreatment_df['Type'].values[i] for i in sorted_indices]
-            sorted_counts = [retreatment_df['Count'].values[i] for i in sorted_indices]
-            
-            # Use our helper function to create a properly formatted bar chart
-            # Use a slightly different blue for this chart to distinguish it
-            fig = create_tufte_bar_chart(
-                categories=sorted_types,
-                values=sorted_counts,
-                title="GRAPHIC H: Retreatments by Type",
-                color='#2980b9',  # A slightly different blue
-                figsize=(5, 5),
-                horizontal=True
+
+    # Get discontinuation counts for combined visualization
+    if "discontinuation_counts" in results:
+        disc_counts = results["discontinuation_counts"]
+        type_mapping = {
+            "Planned": "stable_max_interval",
+            "Administrative": "random_administrative",
+            "Not Renewed": "course_complete_but_not_renewed",
+            "Premature": "premature"
+        }
+
+        # Create combined dataset for visualization
+        combined_data = []
+        for disc_type, disc_count in disc_counts.items():
+            retreatment_key = type_mapping.get(disc_type, "")
+            retreated_count = retreatment_by_type.get(retreatment_key, 0)
+
+            # Estimate unique patients retreated
+            if unique_retreatments > 0 and total_retreatments > 0:
+                # Proportional estimation of unique patients
+                est_unique_retreated = (retreated_count / total_retreatments) * unique_retreatments
+                # Cap at total patients
+                est_unique_retreated = min(est_unique_retreated, disc_count)
+            else:
+                est_unique_retreated = retreated_count
+
+            # Add retreated patients
+            combined_data.append({
+                'reason': disc_type,
+                'retreated': True,
+                'count': int(round(est_unique_retreated))
+            })
+
+            # Add non-retreated patients
+            combined_data.append({
+                'reason': disc_type,
+                'retreated': False,
+                'count': disc_count - int(round(est_unique_retreated))
+            })
+
+        # Convert to DataFrame
+        combined_df = pd.DataFrame(combined_data)
+
+        # Create and display the combined visualization
+        try:
+            # Create the combined discontinuation-retreatment chart
+            fig, ax = create_discontinuation_retreatment_chart(
+                combined_df,
+                title="Discontinuation Reasons and Retreatment Status",
+                figsize=(10, 6)
             )
-            
-            # Save figure for debugging
-            save_plot_for_debug(fig, "graphic_h_debug.png")
-            
-            # Show the chart
+
+            # Save for debugging
+            save_plot_for_debug(fig, "discontinuation_retreatment_chart.png")
+
+            # Show the chart in the main area
             st.pyplot(fig)
+        except Exception as e:
+            st.error(f"Failed to create combined visualization: {str(e)}")
+            # Fallback to the old visualizations
+            if retreatment_by_type and sum(retreatment_by_type.values()) > 0:
+                # Convert to DataFrame for display
+                retreatment_df = pd.DataFrame({
+                    'Type': [key.replace('_', ' ').title() for key in retreatment_by_type.keys()],
+                    'Count': list(retreatment_by_type.values())
+                })
+
+                with ret_col2:
+                    # Extract data for the chart
+                    sorted_indices = np.argsort(retreatment_df['Count'].values)[::-1]
+                    sorted_types = [retreatment_df['Type'].values[i] for i in sorted_indices]
+                    sorted_counts = [retreatment_df['Count'].values[i] for i in sorted_indices]
+
+                    # Try to import semantic colors if available
+                    try:
+                        from streamlit_app.utils.tufte_style import SEMANTIC_COLORS
+                        patient_counts_color = SEMANTIC_COLORS['patient_counts']  # Use sage green for patient counts
+                    except ImportError:
+                        patient_counts_color = '#8FAD91'  # Fallback to sage green directly
+
+                    # Use our helper function to create a properly formatted bar chart
+                    # Use sage green for patient counts as per our semantic color system
+                    fig = create_tufte_bar_chart(
+                        categories=sorted_types,
+                        values=sorted_counts,
+                        title="GRAPHIC H: Retreatments by Type",
+                        color=patient_counts_color,  # Use sage green for patient counts
+                        figsize=(5, 5),
+                        horizontal=True
+                    )
+
+                    # Add accessibility features to the figure
+                    ax = fig.axes[0]
+                    ax.set_xlabel("Number of Retreatments", fontsize=10, color="#555555")
+                    ax.set_ylabel("Discontinuation Type", fontsize=10, color="#555555")
+
+                    # Save figure for debugging
+                    save_plot_for_debug(fig, "graphic_h_debug.png")
+
+                    # Show the chart
+                    st.pyplot(fig)
+    else:
+        # Fallback if we don't have discontinuation counts
+        if retreatment_by_type and sum(retreatment_by_type.values()) > 0:
+            # Convert to DataFrame for display
+            retreatment_df = pd.DataFrame({
+                'Type': [key.replace('_', ' ').title() for key in retreatment_by_type.keys()],
+                'Count': list(retreatment_by_type.values())
+            })
+
+            with ret_col2:
+                # Extract data for the chart
+                sorted_indices = np.argsort(retreatment_df['Count'].values)[::-1]
+                sorted_types = [retreatment_df['Type'].values[i] for i in sorted_indices]
+                sorted_counts = [retreatment_df['Count'].values[i] for i in sorted_indices]
+
+                # Try to import semantic colors if available
+                try:
+                    from streamlit_app.utils.tufte_style import SEMANTIC_COLORS
+                    patient_counts_color = SEMANTIC_COLORS['patient_counts']  # Use sage green for patient counts
+                except ImportError:
+                    patient_counts_color = '#8FAD91'  # Fallback to sage green directly
+
+                # Use our helper function to create a properly formatted bar chart
+                # Use sage green for patient counts as per our semantic color system
+                fig = create_tufte_bar_chart(
+                    categories=sorted_types,
+                    values=sorted_counts,
+                    title="GRAPHIC H: Retreatments by Type",
+                    color=patient_counts_color,  # Use sage green for patient counts
+                    figsize=(5, 5),
+                    horizontal=True
+                )
+
+                # Add accessibility features to the figure
+                ax = fig.axes[0]
+                ax.set_xlabel("Number of Retreatments", fontsize=10, color="#555555")
+                ax.set_ylabel("Discontinuation Type", fontsize=10, color="#555555")
+
+                # Save figure for debugging
+                save_plot_for_debug(fig, "graphic_h_debug.png")
+
+                # Show the chart
+                st.pyplot(fig)
         
         # Display detailed statistics in an expander
+        st.markdown('<div data-test-id="detailed-retreatment-stats-marker"></div>', unsafe_allow_html=True)
         with st.expander("**Detailed Retreatment Statistics**"):
             st.write("### Retreatments by Discontinuation Type")
-            st.dataframe(retreatment_df)
+            st.dataframe(retreatment_df, use_container_width=True)
             # Only show this bar chart in debug mode since it's redundant with GRAPHIC H
             if "DEBUG_MODE" in globals() and DEBUG_MODE:
                 st.write("GRAPHIC J: Interactive Retreatment Chart (Debug Only)")
@@ -184,7 +330,7 @@ def display_retreatment_panel(results):
                 comparison_df = comparison_df.sort_values(by="Raw Rate", ascending=False)
                 comparison_df = comparison_df.drop(columns=["Raw Rate"])
                 
-                st.dataframe(comparison_df)
+                st.dataframe(comparison_df, use_container_width=True)
                 
                 # Create a horizontal bar chart to visualize patient retreatment rates
                 st.write("### Patient Retreatment Rate by Discontinuation Type")
@@ -199,13 +345,19 @@ def display_retreatment_panel(results):
                 formatted_rates = [f"{rate:.1f}% ({count})" for rate, count in zip(rates, counts)]
                 
                 # Use our helper function to create a properly formatted bar chart
-                # Use a teal color for this chart to distinguish from the other blue charts
+                # Use the standard patient counts color for consistency
+                try:
+                    from streamlit_app.utils.tufte_style import SEMANTIC_COLORS
+                    patient_counts_color = SEMANTIC_COLORS['patient_counts']  # Use sage green for patient counts
+                except ImportError:
+                    patient_counts_color = '#8FAD91'  # Fallback to sage green directly
+
                 fig = create_tufte_bar_chart(
                     categories=types,
                     values=rates,
                     title="GRAPHIC I: Patient Retreatment Rate by Discontinuation Type",
                     xlabel="Retreatment Rate (%)",
-                    color='#16a085',  # A nice teal color
+                    color=patient_counts_color,  # Use sage green for patient counts
                     figsize=(10, 5),
                     horizontal=True
                 )
@@ -218,6 +370,10 @@ def display_retreatment_panel(results):
                 
                 # Force a clear zero line as a reference
                 ax.axhline(y=0, color='#cccccc', linestyle='-', linewidth=0.5, alpha=0.3)
+                
+                # Add accessibility features to the figure
+                ax.set_xlabel("Retreatment Rate (%)", fontsize=10, color="#555555")
+                ax.set_ylabel("Discontinuation Type", fontsize=10, color="#555555")
                 
                 # Save for debugging
                 save_plot_for_debug(fig, "graphic_i_debug.png")
@@ -248,6 +404,7 @@ def display_retreatment_panel(results):
         st.warning("No retreatment breakdown by discontinuation type available.")
         
     # Add explanation expander at the bottom (outside all other expanders)
+    st.markdown('<div data-test-id="retreatment-explanation-marker"></div>', unsafe_allow_html=True)
     with st.expander("📊 Understanding Retreatment vs Discontinuation"):
         st.markdown("""
         ### Retreatment Statistics Explained

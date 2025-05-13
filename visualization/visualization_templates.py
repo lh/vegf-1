@@ -35,7 +35,8 @@ import pandas as pd
 from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
 from streamlit_app.utils.tufte_style import (
     set_tufte_style, style_axis, style_bar_chart, style_line,
-    add_data_label, add_reference_line, add_text_annotation
+    add_data_label, add_reference_line, add_text_annotation,
+    TUFTE_COLORS
 )
 
 # ===============================================================
@@ -98,7 +99,7 @@ TEMPLATES = {
             'show_binning_explanation': True,
         }
     },
-    
+
     # -------------------------------------------------------
     # Enrollment Chart Template
     # -------------------------------------------------------
@@ -137,7 +138,7 @@ TEMPLATES = {
             'show_total_patients': True,
         }
     },
-    
+
     # -------------------------------------------------------
     # Visual Acuity Time Series Template
     # -------------------------------------------------------
@@ -177,7 +178,60 @@ TEMPLATES = {
             'show_statistics': True,
         }
     },
-    
+
+    # -------------------------------------------------------
+    # Discontinuation-Retreatment Chart Template
+    # -------------------------------------------------------
+    'discontinuation_retreatment': {
+        'description': 'Combined chart showing discontinuation reasons and retreatment status',
+        'figure_params': {
+            'figsize': (10, 6),
+            'dpi': 100,
+            'tight_layout_pad': 1.5
+        },
+        'data_representation': {
+            'total_bars': {
+                'style': 'background_bars',
+                'color': TUFTE_COLORS['grid'],
+                'alpha': 0.3,
+                'width_ratio': 2.5,  # Width multiplier
+                'zorder': 1,  # Background
+            },
+            'retreated_bars': {
+                'style': 'grouped_bars',
+                'color': SEMANTIC_COLORS['acuity_data'],
+                'alpha': ALPHAS['medium'],
+                'width_ratio': 0.4,  # Width as fraction of x unit
+                'position': -0.5,  # Offset from center (x - bar_width/2)
+                'zorder': 2,  # Foreground
+            },
+            'not_retreated_bars': {
+                'style': 'grouped_bars',
+                'color': SEMANTIC_COLORS['patient_counts'],
+                'alpha': ALPHAS['patient_counts'],
+                'width_ratio': 0.4,  # Width as fraction of x unit
+                'position': 0.5,  # Offset from center (x + bar_width/2)
+                'zorder': 2,  # Foreground
+            }
+        },
+        'axis_settings': {
+            'main': {
+                'ylabel': 'Number of patients',
+                'hide_spines': ['top', 'right', 'left'],
+                'grid': ['y'],
+            }
+        },
+        'annotations': {
+            'show_percentages': True,
+            'show_counts': True,
+            'show_explanation': True,
+        },
+        'legend': {
+            'location': 'upper right',
+            'frameon': False,
+        }
+    },
+
     # -------------------------------------------------------
     # Treatment Protocol Comparison Template
     # -------------------------------------------------------
@@ -390,5 +444,130 @@ def create_enrollment_chart(data, title='Patient Enrollment Over Time', **kwargs
     from streamlit_app.utils.tufte_style import create_tufte_enrollment_chart
     return create_tufte_enrollment_chart(data, title=title, **kwargs)
 
+
+# Discontinuation Retreatment Chart
+def create_discontinuation_retreatment_chart(data, fig=None, ax=None,
+                                            title="Discontinuation Reasons and Retreatment",
+                                            figsize=(10, 6)):
+    """
+    Create a Tufte-inspired visualization showing discontinuation reasons with retreatment overlays.
+
+    This chart combines discontinuation reasons and retreatment status into a unified visualization
+    using an "unstacked" approach:
+    - Grey rectangle shows total discontinued patients for each reason
+    - Blue bars show retreated patients for each discontinuation type
+    - Sage green bars show non-retreated patients for each discontinuation type
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        DataFrame with columns:
+        - 'reason': Discontinuation reason (Administrative, Planned, etc.)
+        - 'retreated': Boolean or numeric (1/0) indicating retreatment
+        - 'count': Number of patients
+    fig : matplotlib.figure.Figure, optional
+        Existing figure to use, by default None
+    ax : matplotlib.axes.Axes, optional
+        Existing axis to use, by default None
+    title : str, optional
+        Chart title, by default "Discontinuation Reasons and Retreatment"
+    figsize : tuple, optional
+        Figure size (width, height) in inches, by default (10, 6)
+
+    Returns
+    -------
+    tuple
+        (fig, ax) - Figure and axes objects
+    """
+    # Apply Tufte style
+    set_tufte_style()
+
+    # Create figure and axes if not provided
+    if fig is None or ax is None:
+        fig, ax = plt.subplots(figsize=figsize, dpi=100)
+
+    # Prepare data
+    # Calculate total for each reason
+    totals = data.groupby('reason')['count'].sum().reset_index()
+
+    # Calculate counts for retreated and not retreated
+    retreated = data[data['retreated'] == True].groupby('reason')['count'].sum().reset_index()
+    not_retreated = data[data['retreated'] == False].groupby('reason')['count'].sum().reset_index()
+
+    # Set up plotting parameters
+    reasons = totals['reason'].tolist()
+    x = np.arange(len(reasons))
+    bar_width = 0.4
+
+    # Plot grey background rectangles for total counts
+    ax.bar(x, totals['count'], width=bar_width*2.5,
+           color=TUFTE_COLORS['grid'], alpha=0.3, zorder=1,
+           label='Total Discontinued')
+
+    # Plot retreated bars (blue)
+    retreated_counts = [retreated[retreated['reason'] == r]['count'].values[0]
+                        if r in retreated['reason'].values else 0
+                        for r in reasons]
+
+    ax.bar(x - bar_width/2, retreated_counts, width=bar_width,
+          color=SEMANTIC_COLORS['acuity_data'], alpha=ALPHAS['medium'], zorder=2,
+          label='Retreated')
+
+    # Plot not retreated bars (sage green)
+    not_retreated_counts = [not_retreated[not_retreated['reason'] == r]['count'].values[0]
+                           if r in not_retreated['reason'].values else 0
+                           for r in reasons]
+
+    ax.bar(x + bar_width/2, not_retreated_counts, width=bar_width,
+          color=SEMANTIC_COLORS['patient_counts'], alpha=ALPHAS['patient_counts'], zorder=2,
+          label='Not Retreated')
+
+    # Add percentage labels on each bar
+    for i, (r_count, nr_count) in enumerate(zip(retreated_counts, not_retreated_counts)):
+        total = r_count + nr_count
+        if total > 0:
+            # Retreated percentage
+            r_pct = r_count / total * 100
+            ax.annotate(f'{r_pct:.1f}%',
+                      xy=(x[i] - bar_width/2, r_count/2),
+                      ha='center', va='center',
+                      color='white' if r_pct > 15 else TUFTE_COLORS['text'])
+
+            # Not retreated percentage
+            nr_pct = nr_count / total * 100
+            ax.annotate(f'{nr_pct:.1f}%',
+                      xy=(x[i] + bar_width/2, nr_count/2),
+                      ha='center', va='center',
+                      color='white' if nr_pct > 15 else TUFTE_COLORS['text'])
+
+    # Add styling
+    style_axis(ax)
+
+    # Add total counts above each bar
+    for i, total in enumerate(totals['count']):
+        ax.annotate(f'n={total}',
+                   xy=(x[i], total),
+                   xytext=(0, 5),
+                   textcoords='offset points',
+                   ha='center', va='bottom',
+                   color=TUFTE_COLORS['text_secondary'],
+                   fontsize=9)
+
+    # Add labels and formatting
+    ax.set_title(title, fontsize=14, color=TUFTE_COLORS['text'])
+    ax.set_ylabel('Number of patients', fontsize=10, color=TUFTE_COLORS['text_secondary'])
+    ax.set_xticks(x)
+    ax.set_xticklabels(reasons)
+
+    # Add a legend
+    ax.legend(frameon=False, loc='upper right')
+
+    # Add description
+    fig.text(0.02, 0.02,
+            "Bar height represents patient count. Grey rectangles show total patients for each discontinuation reason.\nBlue bars show patients who retreated; sage green bars show patients who did not retreat after discontinuation.",
+            fontsize=8, color=TUFTE_COLORS['text_secondary'])
+
+    fig.tight_layout(pad=1.5)
+    return fig, ax
 
 # Add more specific visualization functions as needed
