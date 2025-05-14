@@ -105,45 +105,50 @@ def create_discontinuation_retreatment_chart(
     
     # Set up positions
     x = np.arange(len(reasons))
-    bar_width = 0.75
-    segment_width = bar_width / 2  # Width for each segment
-    
+    bar_width = 0.75  # Width of the background (total) bar
+
+    # For the segments, use a narrower width with spacing between them
+    segment_width = bar_width * 0.4  # Each segment takes 40% of total width
+    segment_spacing = bar_width * 0.1  # 10% spacing between segments
+
     # Draw background bars for totals
-    bg_bars = ax.bar(x, reason_totals, width=bar_width, color=bg_color, 
+    bg_bars = ax.bar(x, reason_totals, width=bar_width, color=bg_color,
                     edgecolor='none', alpha=0.8, zorder=1)
-    
+
     # Add retreated and not retreated segments
     for i, reason in enumerate(reasons):
         # Get data for this reason
         retreated_count = data[(data['reason'] == reason) & (data['retreated'] == True)]['count'].sum()
         not_retreated_count = data[(data['reason'] == reason) & (data['retreated'] == False)]['count'].sum()
-        
-        # Position segments inside the total bar (left and right)
-        retreated_x = x[i] - segment_width/2
-        not_retreated_x = x[i] + segment_width/2
+
+        # Position segments inside the total bar with proper spacing
+        # For retreated (left segment)
+        left_pos = x[i] - (segment_width + segment_spacing/2)
+        # For not retreated (right segment)
+        right_pos = x[i] + segment_spacing/2
         
         # Draw retreated segment (blue)
         if retreated_count > 0:
-            ax.bar(retreated_x, retreated_count, width=segment_width, color=retreated_color, 
-                   edgecolor='white', linewidth=0.5, zorder=2, 
+            ax.bar(left_pos, retreated_count, width=segment_width, color=retreated_color,
+                   edgecolor='white', linewidth=0.5, zorder=2,
                    label='Retreated' if i == 0 else None)
-            
+
             # Add value label inside retreated segment
-            ax.text(retreated_x, retreated_count/2, str(retreated_count), 
-                   ha='center', va='center', 
-                   color='white' if retreated_count >= 50 else 'black', 
+            ax.text(left_pos, retreated_count/2, str(retreated_count),
+                   ha='center', va='center',
+                   color='white' if retreated_count >= 50 else 'black',
                    fontweight='bold')
-        
+
         # Draw not retreated segment (sage green)
         if not_retreated_count > 0:
-            ax.bar(not_retreated_x, not_retreated_count, width=segment_width, color=not_retreated_color, 
+            ax.bar(right_pos, not_retreated_count, width=segment_width, color=not_retreated_color,
                    edgecolor='white', linewidth=0.5, zorder=2,
                    label='Not Retreated' if i == 0 else None)
-            
+
             # Add value label inside not retreated segment
-            ax.text(not_retreated_x, not_retreated_count/2, str(not_retreated_count), 
-                   ha='center', va='center', 
-                   color='white' if not_retreated_count >= 50 else 'black', 
+            ax.text(right_pos, not_retreated_count/2, str(not_retreated_count),
+                   ha='center', va='center',
+                   color='white' if not_retreated_count >= 50 else 'black',
                    fontweight='bold')
         
         # Add reason and total above each bar
