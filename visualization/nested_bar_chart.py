@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import matplotlib.patheffects as path_effects
 
 # Import our centralized styling systems if available
 try:
@@ -181,12 +182,34 @@ def create_nested_discontinuation_chart(data, fig=None, ax=None,
                                   edgecolor='white', linewidth=0.5,
                                   label='Retreated' if i == 0 else "")
             
-            # Add value label
-            ax.text(retreated_x, retreated_count/2,
-                   f"{retreated_count:,}",
-                   ha='center', va='center',
-                   color='white' if retreated_count / total_counts[i] > 0.3 else TUFTE_COLORS['text'],
-                   fontsize=10, fontweight='bold')
+            # Always show the count regardless of size
+            label_text = f"{retreated_count:,}"
+
+            # No debug output
+
+            # Force labels to be visible for large counts (more than 50)
+            text_color = 'white' if retreated_count >= 50 else 'black'
+
+            # Position label in the middle of the bar with outline for better visibility
+            if retreated_count >= 50:
+                # For large bars, add white text with outline
+                ax.text(retreated_x, retreated_count/2,
+                       label_text,
+                       ha='center', va='center',
+                       color='white',
+                       fontsize=10, fontweight='bold',
+                       path_effects=[
+                           path_effects.withStroke(linewidth=3, foreground='black')
+                       ],
+                       zorder=10)  # Bring text to front
+            else:
+                # For small bars, regular black text
+                ax.text(retreated_x, retreated_count/2,
+                       label_text,
+                       ha='center', va='center',
+                       color='black',
+                       fontsize=10, fontweight='bold',
+                       zorder=10)
         
         # Add the not retreated segment (sage green)
         if not_retreated_count > 0:
@@ -195,43 +218,66 @@ def create_nested_discontinuation_chart(data, fig=None, ax=None,
                                       edgecolor='white', linewidth=0.5,
                                       label='Not Retreated' if i == 0 else "")
             
-            # Add value label
-            ax.text(not_retreated_x, not_retreated_count/2,
-                   f"{not_retreated_count:,}",
-                   ha='center', va='center',
-                   color='white' if not_retreated_count / total_counts[i] > 0.3 else TUFTE_COLORS['text'],
-                   fontsize=10, fontweight='bold')
+            # Always show the count value
+            label_text = f"{not_retreated_count:,}"
+
+            # Position label in the middle of the bar with outline for better visibility
+            if not_retreated_count >= 50:
+                # For large bars, add white text with outline
+                ax.text(not_retreated_x, not_retreated_count/2,
+                       label_text,
+                       ha='center', va='center',
+                       color='white',
+                       fontsize=10, fontweight='bold',
+                       path_effects=[
+                           path_effects.withStroke(linewidth=3, foreground='black')
+                       ],
+                       zorder=10)  # Bring text to front
+            else:
+                # For small bars, regular black text
+                ax.text(not_retreated_x, not_retreated_count/2,
+                       label_text,
+                       ha='center', va='center',
+                       color='black',
+                       fontsize=10, fontweight='bold',
+                       zorder=10)
     
     # Add small sample size warning where appropriate
     for i, total in enumerate(total_counts):
         if total < small_sample_threshold:  # Threshold for statistical reliability warning
-            # Position based on scale type
-            y_pos = 1.5 if use_log_scale else total * 0.5
-            # Use plain text to avoid font issues
+            # Position small sample warning near the bottom of the chart with fixed y position
+            if use_log_scale:
+                y_pos = 1.2  # Just above the 1.0 line in log scale
+            else:
+                y_pos = 0.05 * max(total_counts)  # 5% of the max height in linear scale
+
+            # Use plain text with better contrast background
             ax.text(x[i], y_pos, 'Small sample',
-                   ha='center', va='bottom',
-                   color=TUFTE_COLORS['secondary'],
+                   ha='center', va='center',
+                   color='#D81B60',  # Brighter red for better visibility
                    fontsize=8, fontweight='bold',
-                   bbox=dict(facecolor='white', alpha=0.7, pad=2, boxstyle='round,pad=0.2'))
+                   bbox=dict(facecolor='white', alpha=0.9, pad=3, boxstyle='round,pad=0.3',
+                            edgecolor='#D81B60', linewidth=1))
     
     # Add legend directly at the top of the chart
     legend_colors = [
         patches.Patch(facecolor=SEMANTIC_COLORS['acuity_data'], label='Retreated'),
         patches.Patch(facecolor=SEMANTIC_COLORS['patient_counts'], label='Not Retreated')
     ]
+    # Move the legend well above the plot to avoid overlaps
     ax.legend(handles=legend_colors, loc='upper center', frameon=False,
-             bbox_to_anchor=(0.5, 1.05), ncol=2)
+             bbox_to_anchor=(0.5, 1.15), ncol=2)
     
     # Setting up the axes
     ax.set_title(title, fontsize=14, fontweight='bold', color=TUFTE_COLORS['text'])
-    
+
     # Set y-axis label
     y_label = 'Number of patients (log scale)' if use_log_scale else 'Number of patients'
     ax.set_ylabel(y_label, fontsize=10, color=TUFTE_COLORS['text_secondary'])
-    
+
     # Configure x-axis
     ax.set_xticks([])  # Remove x-ticks since we have labels on the bars
-    
+
     # Add reference line for overall average retreatment rate
     total_retreated = sum(retreated_counts)
     total_patients = sum(total_counts)
@@ -242,12 +288,12 @@ def create_nested_discontinuation_chart(data, fig=None, ax=None,
                ha='center', va='bottom',
                color=TUFTE_COLORS['text_secondary'],
                fontsize=9)
-    
+
     # Set grid for y-axis only
     ax.grid(axis='y', linestyle='--', alpha=0.3, color='#cccccc')
-    
-    # Use figure adjustments instead of tight_layout to avoid warnings
-    plt.subplots_adjust(left=0.1, right=0.9, top=0.85, bottom=0.15)
+
+    # Create more space at the top for the legend
+    plt.subplots_adjust(left=0.1, right=0.9, top=0.8, bottom=0.15)
     return fig, ax
 
 
