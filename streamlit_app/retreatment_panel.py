@@ -164,15 +164,133 @@ def display_retreatment_panel(results):
 
         # Create and display the combined visualization
         try:
-            # Create the combined discontinuation-retreatment chart
-            fig, ax = create_discontinuation_retreatment_chart(
-                combined_df,
-                title="Discontinuation Reasons and Retreatment Status",
-                figsize=(10, 6),
-                use_log_scale=True,  # Use log scale for better visualization of different sizes
-                sort_by_total=True,  # Sort categories by total count (descending)
-                small_sample_threshold=10  # Show warning for categories with fewer than 10 patients
-            )
+            # Force direct implementation of the nested bar chart to guarantee the correct styling
+            st.write("Note: Using direct visualization implementation for consistency")
+
+            # Create custom implementation right here to ensure correct styling
+            def create_direct_nested_chart(data, title="Discontinuation Reasons and Retreatment Status"):
+                """Direct implementation of the nested bar chart with proper spacing."""
+                import matplotlib.pyplot as plt
+                import numpy as np
+
+                # Calculate totals for each category
+                totals = data.groupby('reason')['count'].sum().reset_index()
+                totals = totals.sort_values('count', ascending=False)  # Sort by total count
+                reasons = totals['reason'].tolist()
+                reason_totals = totals['count'].tolist()
+
+                # Set up plot
+                fig, ax = plt.subplots(figsize=(10, 6))
+
+                # Use log scale
+                ax.set_yscale('log')
+                ax.set_ylim(bottom=0.9)  # Start log scale at just below 1
+
+                # Add grid for better readability
+                ax.grid(axis='y', linestyle='--', alpha=0.3, color='#cccccc')
+
+                # Define colors
+                bg_color = '#E0E0E0'  # Light grey for background
+                retreated_color = '#4682B4'  # Steel Blue for retreated
+                not_retreated_color = '#8FAD91'  # Sage green for not retreated
+
+                # Set up positions
+                x = np.arange(len(reasons))
+                bar_width = 0.75  # Width of background bar
+
+                # For segments, use narrower width with spacing
+                segment_width = bar_width * 0.4  # 40% of total width per segment
+                segment_spacing = bar_width * 0.1  # 10% spacing between segments
+
+                # Draw background bars for totals
+                bg_bars = ax.bar(x, reason_totals, width=bar_width, color=bg_color,
+                                edgecolor='none', alpha=0.8, zorder=1)
+
+                # Add segments
+                for i, reason in enumerate(reasons):
+                    # Get data for this reason
+                    retreated_count = data[(data['reason'] == reason) & (data['retreated'] == True)]['count'].sum()
+                    not_retreated_count = data[(data['reason'] == reason) & (data['retreated'] == False)]['count'].sum()
+
+                    # Position segments with proper spacing
+                    left_pos = x[i] - (segment_width + segment_spacing/2)  # For retreated (left)
+                    right_pos = x[i] + segment_spacing/2  # For not retreated (right)
+
+                    # Draw retreated segment (blue)
+                    if retreated_count > 0:
+                        ax.bar(left_pos, retreated_count, width=segment_width, color=retreated_color,
+                              edgecolor='white', linewidth=0.5, zorder=2,
+                              label='Retreated' if i == 0 else None)
+
+                        # Label
+                        ax.text(left_pos, retreated_count/2, str(retreated_count),
+                               ha='center', va='center',
+                               color='white' if retreated_count >= 50 else 'black',
+                               fontweight='bold')
+
+                    # Draw not retreated segment (sage green)
+                    if not_retreated_count > 0:
+                        ax.bar(right_pos, not_retreated_count, width=segment_width, color=not_retreated_color,
+                              edgecolor='white', linewidth=0.5, zorder=2,
+                              label='Not Retreated' if i == 0 else None)
+
+                        # Label
+                        ax.text(right_pos, not_retreated_count/2, str(not_retreated_count),
+                               ha='center', va='center',
+                               color='white' if not_retreated_count >= 50 else 'black',
+                               fontweight='bold')
+
+                    # Add reason and total above bar
+                    ax.text(x[i], reason_totals[i] * 2.0,
+                           f'{reason}\n{reason_totals[i]}',
+                           ha='center', va='bottom', fontweight='bold')
+
+                # Small sample warning
+                for i, (reason, total) in enumerate(zip(reasons, reason_totals)):
+                    if total < 15:  # Small sample threshold
+                        ax.text(x[i], 1.2, 'Small sample',
+                               ha='center', va='center', color='#D81B60', fontsize=8, fontweight='bold',
+                               bbox=dict(facecolor='white', alpha=0.9, pad=2,
+                                        boxstyle='round,pad=0.3', edgecolor='#D81B60', linewidth=1),
+                               zorder=10)
+
+                # Configure axes
+                ax.set_xticks([])  # Hide x-ticks
+                ax.set_ylabel('Number of Patients (log scale)')
+                ax.set_title(title)
+                ax.legend(loc='upper right')
+
+                # Remove spines
+                for spine in ['top', 'right', 'bottom']:
+                    ax.spines[spine].set_visible(False)
+
+                # Add retreatment rate
+                total_patients = data['count'].sum()
+                retreated_patients = data[data['retreated'] == True]['count'].sum()
+                rate = (retreated_patients / total_patients) * 100
+                fig.text(0.5, 0.01, f'Overall retreatment rate: {rate:.1f}%',
+                        ha='center', va='bottom', fontsize=10)
+
+                plt.subplots_adjust(left=0.1, right=0.9, top=0.85, bottom=0.15)
+                return fig, ax
+
+            # Use our direct implementation instead of the imported one
+            try:
+                fig, ax = create_direct_nested_chart(
+                    combined_df,
+                    title="Discontinuation Reasons and Retreatment Status"
+                )
+            except Exception as e:
+                st.error(f"Direct implementation failed: {str(e)}")
+                # Fall back to the imported implementation
+                fig, ax = create_discontinuation_retreatment_chart(
+                    combined_df,
+                    title="Discontinuation Reasons and Retreatment Status",
+                    figsize=(10, 6),
+                    use_log_scale=True,  # Use log scale for better visualization of different sizes
+                    sort_by_total=True,  # Sort categories by total count (descending)
+                    small_sample_threshold=10  # Show warning for categories with fewer than 10 patients
+                )
 
             # Save for debugging
             save_plot_for_debug(fig, "discontinuation_retreatment_chart.png")
