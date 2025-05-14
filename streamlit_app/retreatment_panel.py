@@ -400,9 +400,10 @@ def display_retreatment_panel(results):
                 The Patient Retreatment Rate uses estimation to account for this and provide a more accurate
                 representation of the percentage of patients who experienced at least one retreatment.
                 """)
-    else:
+
+    if not (retreatment_by_type and sum(retreatment_by_type.values()) > 0):
         st.warning("No retreatment breakdown by discontinuation type available.")
-        
+
     # Add explanation expander at the bottom (outside all other expanders)
     st.markdown('<div data-test-id="retreatment-explanation-marker"></div>', unsafe_allow_html=True)
     with st.expander("📊 Understanding Retreatment vs Discontinuation"):
