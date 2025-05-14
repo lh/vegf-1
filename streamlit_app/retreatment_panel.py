@@ -12,7 +12,7 @@ import numpy as np
 
 # Import visualization functions
 try:
-    from visualization.nested_bar_chart import create_nested_discontinuation_chart
+    from visualization.clean_nested_bar_chart import create_discontinuation_retreatment_chart
     from streamlit_app.simulation_runner import DEBUG_MODE, create_tufte_bar_chart, save_plot_for_debug
 except ImportError:
     DEBUG_MODE = False
@@ -165,7 +165,7 @@ def display_retreatment_panel(results):
         # Create and display the combined visualization
         try:
             # Create the combined discontinuation-retreatment chart
-            fig, ax = create_nested_discontinuation_chart(
+            fig, ax = create_discontinuation_retreatment_chart(
                 combined_df,
                 title="Discontinuation Reasons and Retreatment Status",
                 figsize=(10, 6),
