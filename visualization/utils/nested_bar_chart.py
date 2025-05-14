@@ -227,7 +227,10 @@ def create_nested_bar_chart(
     
     # Add legend only if requested
     if show_legend:
-        ax.legend(title=subcategory_col)
+        # Format the legend title to remove underscores and capitalize
+        title = subcategory_col.replace('_', ' ').title()
+        # Create legend without frame (no box/line around it)
+        ax.legend(title=title, frameon=False)
     else:
         ax.get_legend().remove() if ax.get_legend() else None
     
