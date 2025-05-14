@@ -16,6 +16,29 @@ import streamlit as st
 import time
 from datetime import datetime
 
+# Import the central color system
+try:
+    from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
+except ImportError:
+    # Fallback if the central color system is not available
+    COLORS = {
+        'primary': '#4682B4',    # Steel Blue - for visual acuity data
+        'secondary': '#B22222',  # Firebrick - for critical information
+        'patient_counts': '#8FAD91',  # Muted Sage Green - for patient counts
+    }
+    ALPHAS = {
+        'high': 0.8,        # High opacity for primary elements
+        'medium': 0.5,      # Medium opacity for standard elements
+        'low': 0.2,         # Low opacity for background elements
+        'very_low': 0.1,    # Very low opacity for subtle elements
+        'patient_counts': 0.5  # Consistent opacity for all patient/sample count visualizations
+    }
+    SEMANTIC_COLORS = {
+        'acuity_data': COLORS['primary'],
+        'patient_counts': COLORS['patient_counts'],
+        'critical_info': COLORS['secondary'],
+    }
+
 # Global variable for debug mode - will be set by app.py
 DEBUG_MODE = False
 
@@ -108,11 +131,11 @@ def save_plot_for_debug(fig, filename="debug_plot.png"):
         print(f"ERROR: Failed to save debug plot: {e}")
         return None
 
-def create_tufte_bar_chart(categories, values, title="", xlabel="", ylabel="", 
-                          color='#3498db', figsize=(10, 6), horizontal=True):
+def create_tufte_bar_chart(categories, values, title="", xlabel="", ylabel="",
+                          color=None, figsize=(10, 6), horizontal=True):
     """
     Create a Tufte-inspired bar chart that avoids the half-cut bar issue.
-    
+
     Parameters
     ----------
     categories : list
@@ -126,17 +149,21 @@ def create_tufte_bar_chart(categories, values, title="", xlabel="", ylabel="",
     ylabel : str, optional
         Y-axis label, by default ""
     color : str, optional
-        Bar color, by default '#3498db' (blue)
+        Bar color, by default uses the patient_counts semantic color (muted sage green)
     figsize : tuple, optional
         Figure size, by default (10, 6)
     horizontal : bool, optional
         Whether to create a horizontal bar chart, by default True
-    
+
     Returns
     -------
     matplotlib.figure.Figure
         The created figure
     """
+    # Use the patient_counts color from semantic color system if no color specified
+    if color is None:
+        color = SEMANTIC_COLORS['patient_counts']
+
     # Create figure and axis
     fig, ax = plt.subplots(figsize=figsize)
     
@@ -150,8 +177,13 @@ def create_tufte_bar_chart(categories, values, title="", xlabel="", ylabel="",
     
     # Create bars - horizontal or vertical based on parameter
     if horizontal:
-        # Create horizontal bars
-        bars = ax.barh(positions, sorted_values, color=color, alpha=0.7, height=0.6)
+        # Create horizontal bars - if patient counts, use the consistent alpha
+        if color == SEMANTIC_COLORS.get('patient_counts'):
+            alpha_value = ALPHAS['patient_counts']
+        else:
+            alpha_value = ALPHAS['medium']
+
+        bars = ax.barh(positions, sorted_values, color=color, alpha=alpha_value, height=0.6)
         
         # Set ticks exactly at bar positions
         ax.set_yticks(positions)
@@ -1634,12 +1666,45 @@ def generate_va_over_time_plot(results):
 def generate_discontinuation_plot(results):
     """
     Generate a plot of discontinuation types.
-    
+
     Parameters
     ----------
     results : dict
         Simulation results
-    
+
+    Returns
+    -------
+    matplotlib.figure.Figure or list
+        Plot figure or list of figures
+    """
+    # First try to use the enhanced implementation if available
+    try:
+        from streamlit_app.discontinuation_chart import generate_enhanced_discontinuation_plot
+
+        # Create the enhanced chart showing discontinuation by retreatment status
+        enhanced_fig = generate_enhanced_discontinuation_plot(results)
+
+        # Also create the original simple bar chart for comparison
+        original_fig = generate_simple_discontinuation_plot(results)
+
+        # Return both figures as a list
+        return [enhanced_fig, original_fig]
+    except ImportError:
+        # Fall back to the original implementation if enhanced version not available
+        return generate_simple_discontinuation_plot(results)
+
+
+def generate_simple_discontinuation_plot(results):
+    """
+    Generate a simple bar chart of discontinuation types.
+
+    This is the original implementation without retreatment status.
+
+    Parameters
+    ----------
+    results : dict
+        Simulation results
+
     Returns
     -------
     matplotlib.figure.Figure
@@ -1649,27 +1714,27 @@ def generate_discontinuation_plot(results):
     if results.get("failed", False) or "discontinuation_counts" not in results:
         # Create minimal placeholder visualization
         fig, ax = plt.subplots(figsize=(10, 6))
-        ax.text(0.5, 0.5, "No discontinuation data available", 
+        ax.text(0.5, 0.5, "No discontinuation data available",
                 ha='center', va='center', fontsize=14, transform=ax.transAxes)
-        ax.set_title("GRAPHIC B: Treatment Discontinuation by Type", 
+        ax.set_title("GRAPHIC B: Treatment Discontinuation by Type",
                      fontsize=12, color='#333333', loc='left', pad=10)
         return fig
-    
+
     # Extract data
     disc_counts = results["discontinuation_counts"]
     types = list(disc_counts.keys())
     counts = list(disc_counts.values())
-    
+
     # Check if we have any non-zero counts
     if sum(counts) == 0:
         # Create minimal placeholder visualization
         fig, ax = plt.subplots(figsize=(10, 6))
-        ax.text(0.5, 0.5, "No discontinuations recorded in simulation", 
+        ax.text(0.5, 0.5, "No discontinuations recorded in simulation",
                 ha='center', va='center', fontsize=14, transform=ax.transAxes)
-        ax.set_title("GRAPHIC B: Treatment Discontinuation by Type", 
+        ax.set_title("GRAPHIC B: Treatment Discontinuation by Type",
                      fontsize=12, color='#333333', loc='left', pad=10)
         return fig
-    
+
     # Use our helper function to create a properly formatted bar chart
     fig = create_tufte_bar_chart(
         categories=types,
@@ -1680,16 +1745,16 @@ def generate_discontinuation_plot(results):
         figsize=(10, 6),
         horizontal=True
     )
-    
+
     # Get the axis from the figure
     ax = fig.axes[0]
-    
+
     # Calculate total for footer
     total = sum(counts)
-    
+
     # Create space at the bottom for the footer
     plt.subplots_adjust(bottom=0.15)
-    
+
     # Add footer directly within the plot
     ax.annotate(
         f"Total Discontinuation Events: {total} ({(total/results.get('patient_count', total))*100:.1f}% of patients)",
@@ -1698,10 +1763,10 @@ def generate_discontinuation_plot(results):
         ha='center', fontsize=9, color='#555555',
         annotation_clip=False  # Allow annotation outside the plot area
     )
-    
+
     # Save for debugging
     save_plot_for_debug(fig, "graphic_b_debug_simplified.png")
-    
+
     # Return the figure
     return fig
 

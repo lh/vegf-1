@@ -415,13 +415,27 @@ def display_simulation_results(results):
     if "discontinuation_counts" in results:
         st.subheader("Discontinuation and Retreatment Analysis")
         figs = generate_discontinuation_plot(results)
-        # Display the discontinuation plot
+
+        # Display the discontinuation plots
         if isinstance(figs, list):
-            for fig in figs:
-                st.pyplot(fig)
+            # Multiple figures returned - show enhanced version first
+            cols = st.columns(1)  # Single column layout initially
+
+            # If we have 2 or more figures, show the first one (enhanced) with full width
+            if len(figs) >= 1:
+                with st.container():
+                    st.pyplot(figs[0])
+                    st.caption("Discontinuation Reasons by Retreatment Status")
+
+            # Use expander for the original version
+            if len(figs) >= 2:
+                with st.expander("Show original discontinuation type chart"):
+                    st.pyplot(figs[1])
+                    st.caption("Simple view of discontinuation counts without retreatment status")
         else:
+            # Single figure returned (original implementation)
             st.pyplot(figs)
-        
+
         # Show retreatment analysis
         display_retreatment_panel(results)
     
