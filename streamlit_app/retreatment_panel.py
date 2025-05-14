@@ -12,7 +12,7 @@ import numpy as np
 
 # Import visualization functions
 try:
-    from visualization.visualization_templates import create_discontinuation_retreatment_chart
+    from visualization.discontinuation_chart import create_discontinuation_retreatment_chart
     from streamlit_app.simulation_runner import DEBUG_MODE, create_tufte_bar_chart, save_plot_for_debug
 except ImportError:
     DEBUG_MODE = False
@@ -168,7 +168,10 @@ def display_retreatment_panel(results):
             fig, ax = create_discontinuation_retreatment_chart(
                 combined_df,
                 title="Discontinuation Reasons and Retreatment Status",
-                figsize=(10, 6)
+                figsize=(10, 6),
+                use_log_scale=True,  # Use log scale for better visualization of different sizes
+                sort_by_total=True,  # Sort categories by total count (descending)
+                small_sample_threshold=10  # Show warning for categories with fewer than 10 patients
             )
 
             # Save for debugging
