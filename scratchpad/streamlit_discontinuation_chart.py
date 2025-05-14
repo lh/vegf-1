@@ -35,10 +35,14 @@ def create_discontinuation_retreatment_chart(
     tuple
         (fig, ax) matplotlib figure and axes objects
     """
-    # Define colors
-    retreat_color = "#4878A6"  # Muted blue
-    not_retreat_color = "#A65C48"  # Muted red
+    # Define colors with reduced alpha - even more muted
+    retreat_color = "#5686B3"  # Lighter muted blue
+    not_retreat_color = "#B37866"  # Lighter muted red
     bg_color = "#e5e5e5"  # Light grey
+
+    # Alpha values (further reduced)
+    bg_alpha = 0.15      # Very transparent background
+    bar_alpha = 0.65     # Slightly more transparent bars
     
     # Sort and prepare data
     reason_order = ["Administrative", "Not Renewed", "Planned", "Premature"]
@@ -89,7 +93,7 @@ def create_discontinuation_retreatment_chart(
         totals,
         width=background_width,
         color=bg_color,
-        alpha=0.3,
+        alpha=bg_alpha,  # Using the reduced alpha value
         zorder=0,
         label="_nolegend_"  # Don't include in legend
     )
@@ -104,10 +108,10 @@ def create_discontinuation_retreatment_chart(
         width=bar_width,
         label="Retreated",
         color=retreat_color,
-        alpha=0.9,
+        alpha=bar_alpha,  # Using the reduced alpha value
         zorder=1
     )
-    
+
     # Draw bars for non-retreated patients
     not_retreated_bars = ax.bar(
         x_adjusted + offset_start + bar_width,
@@ -115,7 +119,7 @@ def create_discontinuation_retreatment_chart(
         width=bar_width,
         label="Not Retreated",
         color=not_retreat_color,
-        alpha=0.9,
+        alpha=bar_alpha,  # Using the reduced alpha value
         zorder=1
     )
     
@@ -137,24 +141,7 @@ def create_discontinuation_retreatment_chart(
     add_labels(retreated_bars)
     add_labels(not_retreated_bars)
     
-    # Calculate percentage labels
-    for i, (reason, total) in enumerate(totals.items()):
-        if total > 0:  # Avoid division by zero
-            retreated = pivot_df.loc[reason, "Retreated"]
-            not_retreated = pivot_df.loc[reason, "Not Retreated"]
-            retreat_pct = retreated / total * 100
-            
-            # Add percentage label above the background bar
-            ax.text(
-                x_adjusted[i],
-                total + (max(totals) * 0.03),  # Small offset above the total bar
-                f"{retreat_pct:.1f}%",
-                ha='center',
-                va='bottom',
-                fontsize=9,
-                alpha=0.8,
-                color='#555555'
-            )
+    # No percentage labels as requested
     
     # Set up labels and formatting
     ax.set_xlabel("")
@@ -172,17 +159,7 @@ def create_discontinuation_retreatment_chart(
         edgecolor='lightgrey'
     )
     
-    # Add info about percentages
-    ax.text(
-        0.01, 0.01,
-        "Percentages show retreat rate",
-        transform=ax.transAxes,
-        ha='left',
-        va='bottom',
-        fontsize=8,
-        alpha=0.7,
-        style='italic'
-    )
+    # No percentage explanation text
     
     # Ensure tight layout
     fig.tight_layout()
