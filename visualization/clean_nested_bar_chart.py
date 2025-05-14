@@ -48,6 +48,8 @@ def create_discontinuation_retreatment_chart(
     sort_by_total: bool = True,
     small_sample_threshold: int = 10
 ) -> Tuple[plt.Figure, plt.Axes]:
+    # Debug marker to indicate this is the clean_nested_bar_chart implementation
+    print("DEBUG: Using clean_nested_bar_chart implementation with the correct spacing")
     """
     Create a clean nested bar chart showing discontinuation reasons with retreatment status.
     
