@@ -1784,11 +1784,57 @@ def generate_va_over_time_plot(results):
             )
         
         # Add individual data points for low sample sizes
-        if use_individual_indices and "patient_data" in results:
+        if use_individual_indices:
             added_to_legend = False
             
-            # Draw individual patient points at these timepoints
-            patient_data = results["patient_data"]
+            # Check if we have patient data
+            has_patient_data = "patient_data" in results and results["patient_data"]
+            
+            # For debugging - show a message if no patient data is available
+            if not has_patient_data:
+                # Add a debug note to the top of the chart
+                ax_acuity.text(0.5, 0.95, 
+                              "Note: Individual data points not available - patient_data missing",
+                              transform=ax_acuity.transAxes,
+                              fontsize=10, ha='center', color='red', alpha=0.7)
+                # But continue to draw the means
+            
+            # Draw individual patient points at these timepoints if available
+            patient_data = results.get("patient_data", {})
+            
+            # For debugging - check patient data structure
+            if has_patient_data:
+                # Get a sample of the patient data to understand its structure
+                sample_patient_id = next(iter(patient_data))
+                sample_patient = patient_data[sample_patient_id]
+                
+                if sample_patient:
+                    if isinstance(sample_patient, list) and sample_patient:
+                        sample_visit = sample_patient[0]
+                        # Check what attributes are available
+                        visit_attrs = list(sample_visit.keys()) if isinstance(sample_visit, dict) else []
+                        
+                        # If we don't have the expected attributes, show debug info
+                        has_time = "time" in visit_attrs or "time_months" in visit_attrs
+                        has_va = "visual_acuity" in visit_attrs or "vision" in visit_attrs
+                        
+                        if not (has_time and has_va):
+                            # Add debug message about visit structure
+                            visit_attr_str = ", ".join(visit_attrs[:5])
+                            if len(visit_attrs) > 5:
+                                visit_attr_str += "..."
+                                
+                            ax_acuity.text(0.5, 0.9, 
+                                          f"Note: Patient visit structure missing required fields. Has: {visit_attr_str}",
+                                          transform=ax_acuity.transAxes,
+                                          fontsize=9, ha='center', color='red', alpha=0.7)
+                    else:
+                        # Not a list type as expected
+                        patient_type = type(sample_patient).__name__
+                        ax_acuity.text(0.5, 0.9, 
+                                      f"Note: Unexpected patient data structure. Type: {patient_type}",
+                                      transform=ax_acuity.transAxes,
+                                      fontsize=9, ha='center', color='red', alpha=0.7)
             
             for i in use_individual_indices:
                 time_month = df["time_months"].iloc[i]
@@ -1810,15 +1856,16 @@ def generate_va_over_time_plot(results):
                 # Plot individual points with jitter and very light alpha
                 if matched_data:
                     # Add some jitter to x-position
-                    x_jitter = np.random.normal(0, 0.1, len(matched_data))
+                    x_jitter = np.random.normal(0, 0.2, len(matched_data))  # Increased jitter
                     x_positions = [time_month + j for j in x_jitter]
                     
-                    # Plot with very light alpha
+                    # Plot with higher alpha for better visibility
                     scatter = ax_acuity.scatter(
                         x_positions, matched_data, 
-                        s=10, marker='o', 
+                        s=15,  # Slightly larger points
+                        marker='o', 
                         color=acuity_color, 
-                        alpha=0.15,  # Slightly increased from 0.1 for better visibility
+                        alpha=0.4,  # Significantly increased from 0.15 for better visibility
                         zorder=3
                     )
                     
@@ -1826,6 +1873,12 @@ def generate_va_over_time_plot(results):
                     if not added_to_legend:
                         scatter.set_label("Individual Patients")
                         added_to_legend = True
+                else:
+                    # Debug: Add a text marker showing no data was found at this timepoint
+                    time_label = f"{time_month:.1f}m"
+                    ax_acuity.text(time_month, df["visual_acuity"].iloc[i], 
+                                  f"•", fontsize=12, ha='center', va='center',
+                                  color='red', alpha=0.7)
         elif not use_mean_indices and "std_error" in df.columns:
             # Default behavior when sample sizes are not available
             ax_acuity.fill_between(df["time_months"], 
