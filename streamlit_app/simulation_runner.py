@@ -1624,35 +1624,103 @@ def generate_va_over_time_plot(results):
     # Get colors for visual acuity
     acuity_color = SEMANTIC_COLORS['acuity_data']
     
-    # Plot main visual acuity line 
+    # Calculate variable alpha based on cohort size if sample sizes are available
+    has_variable_alpha = False
+    if sample_sizes is not None and len(sample_sizes) > 0:
+        # Get peak sample size for scaling
+        peak_sample_size = max(sample_sizes)
+        min_sample_threshold = 100  # Below this we use minimum alpha
+        
+        # Only use variable alpha if there's significant variation in sample size
+        if peak_sample_size > min_sample_threshold:
+            has_variable_alpha = True
+            
+            # Calculate alpha values for each point based on sample size
+            min_alpha = 0.3
+            max_alpha = 1.0
+            
+            alpha_values = []
+            for size in sample_sizes:
+                if size <= min_sample_threshold:
+                    alpha_values.append(min_alpha)
+                else:
+                    # Scale linearly between min_alpha and max_alpha
+                    alpha_scale = (size - min_sample_threshold) / (peak_sample_size - min_sample_threshold)
+                    alpha = min_alpha + alpha_scale * (max_alpha - min_alpha)
+                    alpha_values.append(alpha)
+    
+    # Plot visual acuity lines
     if "visual_acuity_raw" in df.columns:
-        # Plot smoothed data as main line
-        ax_acuity.plot(df["time_months"], df["visual_acuity"], '-',
-                      color=acuity_color, 
-                      linewidth=2.5, 
-                      alpha=ALPHAS['high'], 
-                      label="Mean VA (smoothed)")
+        if has_variable_alpha:
+            # Plot smoothed data as segments with varying alpha
+            for i in range(len(df) - 1):
+                segment_alpha = (alpha_values[i] + alpha_values[i+1]) / 2
+                ax_acuity.plot(df["time_months"].iloc[i:i+2], df["visual_acuity"].iloc[i:i+2], '-',
+                              color=acuity_color, 
+                              linewidth=2.5, 
+                              alpha=segment_alpha)
+            
+            # Add a single entry to legend
+            ax_acuity.plot([], [], '-', color=acuity_color, linewidth=2.5, 
+                          alpha=max_alpha, label="Mean VA (smoothed)")
+                
+            # Plot raw data as lighter line with constant alpha
+            ax_acuity.plot(df["time_months"], df["visual_acuity_raw"], '--',
+                          color=acuity_color, 
+                          linewidth=1.0, 
+                          alpha=ALPHAS['low'], 
+                          label="Mean VA (raw)")
+        else:
+            # Standard non-variable alpha plots
+            ax_acuity.plot(df["time_months"], df["visual_acuity"], '-',
+                          color=acuity_color, 
+                          linewidth=2.5, 
+                          alpha=ALPHAS['high'], 
+                          label="Mean VA (smoothed)")
 
-        # Plot raw data as lighter line
-        ax_acuity.plot(df["time_months"], df["visual_acuity_raw"], '--',
-                      color=acuity_color, 
-                      linewidth=1.0, 
-                      alpha=ALPHAS['low'], 
-                      label="Mean VA (raw)")
+            ax_acuity.plot(df["time_months"], df["visual_acuity_raw"], '--',
+                          color=acuity_color, 
+                          linewidth=1.0, 
+                          alpha=ALPHAS['low'], 
+                          label="Mean VA (raw)")
     else:
         # Just plot the main data
-        ax_acuity.plot(df["time_months"], df["visual_acuity"], '-',
-                      color=acuity_color, 
-                      linewidth=2.5, 
-                      alpha=ALPHAS['high'], 
-                      label="Mean VA")
+        if has_variable_alpha:
+            # Plot with varying alpha
+            for i in range(len(df) - 1):
+                segment_alpha = (alpha_values[i] + alpha_values[i+1]) / 2
+                ax_acuity.plot(df["time_months"].iloc[i:i+2], df["visual_acuity"].iloc[i:i+2], '-',
+                              color=acuity_color, 
+                              linewidth=2.5, 
+                              alpha=segment_alpha)
+            
+            # Add a single entry to legend
+            ax_acuity.plot([], [], '-', color=acuity_color, linewidth=2.5, 
+                          alpha=max_alpha, label="Mean VA")
+        else:
+            # Standard non-variable alpha plot
+            ax_acuity.plot(df["time_months"], df["visual_acuity"], '-',
+                          color=acuity_color, 
+                          linewidth=2.5, 
+                          alpha=ALPHAS['high'], 
+                          label="Mean VA")
 
-    # Add subtle markers
-    ax_acuity.scatter(df["time_months"], df["visual_acuity"],
-                     s=40, 
-                     color=acuity_color, 
-                     alpha=ALPHAS['medium'], 
-                     zorder=5)
+    # Add markers with variable alpha if applicable
+    if has_variable_alpha:
+        # Plot markers with varying alpha
+        for i in range(len(df)):
+            ax_acuity.scatter(df["time_months"].iloc[i], df["visual_acuity"].iloc[i],
+                             s=40, 
+                             color=acuity_color, 
+                             alpha=alpha_values[i],
+                             zorder=5)
+    else:
+        # Add subtle markers with constant alpha
+        ax_acuity.scatter(df["time_months"], df["visual_acuity"],
+                         s=40, 
+                         color=acuity_color, 
+                         alpha=ALPHAS['medium'], 
+                         zorder=5)
 
     # Add confidence intervals if standard error is available
     if "std_error" in df.columns:
