@@ -1636,7 +1636,7 @@ def generate_va_over_time_plot(results):
             has_variable_alpha = True
             
             # Calculate alpha values for each point based on sample size
-            min_alpha = 0.3
+            min_alpha = 0.2  # Reduced from 0.3 for stronger visual emphasis
             max_alpha = 1.0
             
             alpha_values = []
