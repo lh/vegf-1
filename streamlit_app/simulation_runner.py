@@ -1722,20 +1722,96 @@ def generate_va_over_time_plot(results):
                          alpha=ALPHAS['medium'], 
                          zorder=5)
 
-    # Add confidence intervals if standard error is available
+    # Handle confidence intervals and individual data points based on sample size
     if "std_error" in df.columns:
         # Calculate 95% confidence interval (approx. 2 standard errors)
         ci_factor = 1.96  # 95% confidence
         df['upper_ci'] = df.apply(lambda row: row["visual_acuity"] + ci_factor * row["std_error"], axis=1)
         df['lower_ci'] = df.apply(lambda row: row["visual_acuity"] - ci_factor * row["std_error"], axis=1)
-
-        # Plot confidence interval as shaded area
-        ax_acuity.fill_between(df["time_months"], 
-                              df['lower_ci'], 
-                              df['upper_ci'],
-                              color=acuity_color, 
-                              alpha=ALPHAS['very_low'], 
-                              label="95% Confidence Interval")
+        
+        # Define threshold for showing individual data points
+        individual_point_threshold = 50  # Show individual points when sample size <= 50
+        
+        # Process data points differently based on sample size
+        if sample_sizes is not None:
+            # Determine which points should use CI vs individual points
+            use_ci = []
+            use_individual = []
+            
+            for i, size in enumerate(sample_sizes):
+                if size > individual_point_threshold:
+                    use_ci.append(i)
+                else:
+                    use_individual.append(i)
+            
+            # Plot CI only for points with sample size > threshold
+            if use_ci:
+                # Get the subset of data for CI
+                ci_mask = df.index.isin(use_ci)
+                
+                # Plot confidence interval as shaded area only where sample size is large enough
+                ax_acuity.fill_between(
+                    df.loc[ci_mask, "time_months"], 
+                    df.loc[ci_mask, 'lower_ci'], 
+                    df.loc[ci_mask, 'upper_ci'],
+                    color=acuity_color, 
+                    alpha=ALPHAS['very_low'], 
+                    label="95% Confidence Interval"
+                )
+            
+            # Add individual data points for low sample sizes
+            if use_individual and "patient_data" in results:
+                added_to_legend = False
+                
+                # Extract timepoints where we need individual points
+                timepoints_for_individual = df.loc[use_individual, "time_months"].tolist()
+                
+                # Draw individual patient points at these timepoints
+                patient_data = results["patient_data"]
+                
+                for i, (time_month, sample_size) in enumerate(zip(df.loc[use_individual, "time_months"], 
+                                                                [sample_sizes[i] for i in use_individual])):
+                    # Find patient data for this timepoint (within some tolerance)
+                    time_tolerance = 0.5  # Half-month tolerance
+                    
+                    # Find all patient data points for this month
+                    matched_data = []
+                    for patient_id, visits in patient_data.items():
+                        for visit in visits:
+                            visit_month = visit.get("time_months", visit.get("time", 0))
+                            va = visit.get("visual_acuity", visit.get("vision", None))
+                            
+                            if (abs(visit_month - time_month) <= time_tolerance and 
+                                va is not None):
+                                matched_data.append(va)
+                    
+                    # Plot individual points with jitter and very light alpha
+                    if matched_data:
+                        # Add some jitter to x-position
+                        x_jitter = np.random.normal(0, 0.1, len(matched_data))
+                        x_positions = [time_month + j for j in x_jitter]
+                        
+                        # Plot with very light alpha
+                        scatter = ax_acuity.scatter(
+                            x_positions, matched_data, 
+                            s=10, marker='o', 
+                            color=acuity_color, 
+                            alpha=0.1,  # Very transparent
+                            zorder=3
+                        )
+                        
+                        # Add to legend only once
+                        if not added_to_legend:
+                            scatter.set_label("Individual Patients")
+                            added_to_legend = True
+        else:
+            # Default behavior when sample sizes are not available
+            ax_acuity.fill_between(df["time_months"], 
+                                  df['lower_ci'], 
+                                  df['upper_ci'],
+                                  color=acuity_color, 
+                                  alpha=ALPHAS['very_low'], 
+                                  label="95% Confidence Interval")
     
     # Add baseline reference line - increased alpha for better visibility
     if len(df) > 0:
