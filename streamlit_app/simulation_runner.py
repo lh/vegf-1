@@ -1790,14 +1790,58 @@ def generate_va_over_time_plot(results):
             # Check if we have patient data
             has_patient_data = "patient_data" in results and results["patient_data"]
             
-            # For debugging - show a message if no patient data is available
+            # For small sample sizes, if patient data is not available, use a faint weighted moving average
             if not has_patient_data:
-                # Add a debug note to the top of the chart
-                ax_acuity.text(0.5, 0.95, 
-                              "Note: Individual data points not available - patient_data missing",
-                              transform=ax_acuity.transAxes,
-                              fontsize=10, ha='center', color='red', alpha=0.7)
-                # But continue to draw the means
+                # Calculate a weighted moving average for small sample sizes
+                # This will be a separate, very faint line on portions with small sample size
+                
+                # Create a subset for each type
+                small_sample_mask = df.index.isin(use_individual_indices)
+                df_small = df[small_sample_mask].copy()
+                
+                if len(df_small) > 3:  # Only if we have enough points
+                    # Sort by time to ensure proper order
+                    df_small = df_small.sort_values("time_months")
+                    
+                    # Calculate weighted moving average with window size of 5
+                    window_size = min(5, len(df_small))
+                    
+                    # Use Exponential Moving Average (weights recent points more)
+                    smoothed_values = []
+                    times = []
+                    
+                    # For each point, calculate a weighted average of nearby points
+                    for i in range(len(df_small)):
+                        # Determine window indices (centered on current point)
+                        start_idx = max(0, i - window_size // 2)
+                        end_idx = min(len(df_small) - 1, i + window_size // 2)
+                        
+                        # Calculate exponentially weighted average
+                        weights = np.exp(-0.5 * np.abs(np.arange(start_idx, end_idx + 1) - i))
+                        weighted_sum = 0
+                        weight_sum = 0
+                        
+                        for j, w in zip(range(start_idx, end_idx + 1), weights):
+                            weighted_sum += df_small["visual_acuity"].iloc[j] * w
+                            weight_sum += w
+                        
+                        smoothed_value = weighted_sum / weight_sum if weight_sum > 0 else df_small["visual_acuity"].iloc[i]
+                        smoothed_values.append(smoothed_value)
+                        times.append(df_small["time_months"].iloc[i])
+                    
+                    # Plot the very faint weighted average line
+                    ax_acuity.plot(times, smoothed_values, '-',
+                                  linewidth=1.5,
+                                  color=acuity_color,
+                                  alpha=0.25,  # Very faint
+                                  label="Small Sample Trend")
+                
+                # No need for debug message in production, but useful during development
+                if DEBUG_MODE:
+                    ax_acuity.text(0.5, 0.95, 
+                                  "Note: Individual data points not available - patient_data missing",
+                                  transform=ax_acuity.transAxes,
+                                  fontsize=10, ha='center', color='red', alpha=0.7)
             
             # Draw individual patient points at these timepoints if available
             patient_data = results.get("patient_data", {})
@@ -1874,11 +1918,14 @@ def generate_va_over_time_plot(results):
                         scatter.set_label("Individual Patients")
                         added_to_legend = True
                 else:
-                    # Debug: Add a text marker showing no data was found at this timepoint
-                    time_label = f"{time_month:.1f}m"
-                    ax_acuity.text(time_month, df["visual_acuity"].iloc[i], 
-                                  f"•", fontsize=12, ha='center', va='center',
-                                  color='red', alpha=0.7)
+                    # Add a discrete point for small sample sizes instead of red dot
+                    # This shows the individual mean value for that timepoint
+                    ax_acuity.scatter(time_month, df["visual_acuity"].iloc[i],
+                                     s=20,  # Slightly larger than the mean line points
+                                     marker='o',
+                                     color=acuity_color,
+                                     alpha=0.6,  # More visible than the trend line
+                                     zorder=4)
         elif not use_mean_indices and "std_error" in df.columns:
             # Default behavior when sample sizes are not available
             ax_acuity.fill_between(df["time_months"], 
