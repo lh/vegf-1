@@ -1426,7 +1426,15 @@ def load_simulation_results(filepath):
 
 def generate_va_over_time_plot(results):
     """
-    Generate a Tufte-inspired plot of visual acuity over time.
+    Generate a Tufte-inspired plot of visual acuity over time with swapped axes.
+    
+    This function follows proper matplotlib isolation best practices:
+    - Creates a new figure within the function
+    - Uses explicit axis objects
+    - Returns the complete figure
+    - Uses the central color system
+    - Places patient counts (green) on left axis
+    - Places visual acuity (blue) on right axis
     
     Parameters
     ----------
@@ -1438,9 +1446,44 @@ def generate_va_over_time_plot(results):
     matplotlib.figure.Figure
         Plot figure
     """
+    # Import the central color system
+    try:
+        from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
+    except ImportError:
+        # Fallback if the central color system is not available
+        COLORS = {
+            'primary': '#4682B4',    # Steel Blue - for visual acuity data
+            'primary_dark': '#2a4d6e', # Darker Steel Blue - for acuity trend lines
+            'secondary': '#B22222',  # Firebrick - for critical information
+            'tertiary': '#228B22',   # Forest Green - for additional data series
+            'patient_counts': '#8FAD91',  # Muted Sage Green - for patient counts
+            'patient_counts_dark': '#5e7260', # Darker Sage Green - for patient count trend lines
+            'background': '#FFFFFF', # White background
+            'grid': '#EEEEEE',       # Very light gray for grid lines
+            'text': '#333333',       # Dark gray for titles and labels
+            'text_secondary': '#666666',  # Medium gray for secondary text
+            'border': '#CCCCCC'      # Light gray for necessary borders
+        }
+        ALPHAS = {
+            'high': 0.8,        # High opacity for primary elements
+            'medium': 0.5,      # Medium opacity for standard elements
+            'low': 0.2,         # Low opacity for background elements
+            'very_low': 0.1,    # Very low opacity for subtle elements
+            'patient_counts': 0.35  # Consistent opacity for all patient/sample count visualizations
+        }
+        SEMANTIC_COLORS = {
+            'acuity_data': COLORS['primary'],       # Blue for visual acuity data
+            'acuity_trend': COLORS['primary_dark'],  # Darker blue for acuity trend lines
+            'patient_counts': COLORS['patient_counts'],  # Sage Green for patient/sample counts
+            'patient_counts_trend': COLORS['patient_counts_dark'],  # Darker sage green for patient count trend lines
+            'critical_info': COLORS['secondary'],   # Red for critical information and alerts
+            'additional_series': COLORS['tertiary'] # Green for any additional data series
+        }
+    
     # Check if we have valid data
     if results.get("failed", False) or "mean_va_data" not in results or not results["mean_va_data"]:
-        # Create more informative placeholder visualization with troubleshooting info
+        # Create a NEW informative placeholder visualization with troubleshooting info
+        # Use proper isolation (new figure created here)
         fig, ax = plt.subplots(figsize=(10, 6))
 
         # Main error message
@@ -1451,13 +1494,13 @@ def generate_va_over_time_plot(results):
         if results.get("failed", False):
             error_msg = results.get("error", "Unknown error")
             ax.text(0.5, 0.5, f"Simulation failed: {error_msg}",
-                    ha='center', va='center', fontsize=12, color='#e74c3c', transform=ax.transAxes)
+                    ha='center', va='center', fontsize=12, color=SEMANTIC_COLORS['critical_info'], transform=ax.transAxes)
         elif "mean_va_data" not in results:
             ax.text(0.5, 0.5, "Visual acuity data not found in simulation results",
-                    ha='center', va='center', fontsize=12, color='#e74c3c', transform=ax.transAxes)
+                    ha='center', va='center', fontsize=12, color=SEMANTIC_COLORS['critical_info'], transform=ax.transAxes)
         elif not results["mean_va_data"]:
             ax.text(0.5, 0.5, "Visual acuity data array is empty",
-                    ha='center', va='center', fontsize=12, color='#e74c3c', transform=ax.transAxes)
+                    ha='center', va='center', fontsize=12, color=SEMANTIC_COLORS['critical_info'], transform=ax.transAxes)
 
         # Troubleshooting tips
         tips = [
@@ -1469,7 +1512,7 @@ def generate_va_over_time_plot(results):
 
         for i, tip in enumerate(tips):
             ax.text(0.5, 0.35 - (i * 0.05), tip,
-                    ha='center', va='center', fontsize=10, color='#3498db', transform=ax.transAxes)
+                    ha='center', va='center', fontsize=10, color=SEMANTIC_COLORS['acuity_data'], transform=ax.transAxes)
 
         # Add available simulation info
         sim_info = [
@@ -1480,11 +1523,11 @@ def generate_va_over_time_plot(results):
 
         for i, info in enumerate(sim_info):
             ax.text(0.5, 0.15 - (i * 0.05), info,
-                    ha='center', va='center', fontsize=9, color='#555555', transform=ax.transAxes)
+                    ha='center', va='center', fontsize=9, color=COLORS['text_secondary'], transform=ax.transAxes)
 
         ax.set_xlabel("Time")
         ax.set_ylabel("Visual Acuity (letters)")
-        ax.set_title("GRAPHIC A: Mean Visual Acuity Over Time", fontsize=12, color='#333333', loc='left', pad=10)
+        ax.set_title("GRAPHIC A: Mean Visual Acuity Over Time", fontsize=12, color=COLORS['text'], loc='left', pad=10)
 
         # Remove ticks for cleaner empty visualization
         ax.set_xticks([])
@@ -1493,7 +1536,7 @@ def generate_va_over_time_plot(results):
         # Add simple border
         for spine in ax.spines.values():
             spine.set_visible(True)
-            spine.set_color('#dddddd')
+            spine.set_color(COLORS['border'])
             spine.set_linewidth(0.5)
 
         return fig
@@ -1529,136 +1572,210 @@ def generate_va_over_time_plot(results):
     # Sort by time to ensure proper plotting
     df = df.sort_values("time_months")
     
-    # Create the plot with Tufte-inspired styling
-    fig, ax = plt.subplots(figsize=(10, 6))
+    # Determine if we have sample size data
+    has_sample_sizes = "sample_size" in df.columns
+    sample_size_variation = False
     
-    # Plot main VA line with soft blue color (either smoothed or raw)
-    # Check if smoothed data is available
+    if has_sample_sizes:
+        sample_sizes = df["sample_size"]
+        if sample_sizes.min() > 0:
+            sample_size_variation = sample_sizes.max() / sample_sizes.min() > 1.5
+    
+    # Select smoothing title suffix
+    title_suffix = ""
+    if "visual_acuity_raw" in df.columns:
+        # Check if we have sample size data for weighted smoothing
+        if has_sample_sizes:
+            title_suffix = " (weighted 3-point average)"
+        else:
+            title_suffix = " (3-month rolling average)"
+    
+    # --------- CREATE NEW FIGURE WITH SWAPPED AXES ---------
+    # Create a new figure with patient counts on left, visual acuity on right
+    fig, ax_counts = plt.subplots(figsize=(10, 6))
+    
+    # Configure the primary (left) axis for patient counts
+    patient_counts_color = SEMANTIC_COLORS['patient_counts']
+    
+    # Plot the sample size bars on the left axis if we have them
+    if has_sample_sizes and sample_size_variation:
+        bars = ax_counts.bar(df["time_months"], sample_sizes, 
+                            alpha=ALPHAS['patient_counts'], 
+                            color=patient_counts_color, 
+                            width=0.8)
+        
+        # Set up left y-axis for patient counts - increased font size and alpha for better legibility
+        ax_counts.set_ylabel("Sample Size (patients)", 
+                           color=patient_counts_color, 
+                           fontsize=10,
+                           alpha=1.0)
+        ax_counts.tick_params(axis='y', colors=patient_counts_color)
+        ax_counts.set_ylim(bottom=0)
+        
+        # Removed redundant sample size text as requested
+    else:
+        # Hide the left axis if there are no sample sizes to show
+        ax_counts.set_yticks([])
+        ax_counts.spines['left'].set_visible(False)
+    
+    # Create the secondary (right) axis for visual acuity
+    ax_acuity = ax_counts.twinx()
+    
+    # Get colors for visual acuity
+    acuity_color = SEMANTIC_COLORS['acuity_data']
+    
+    # Plot main visual acuity line 
     if "visual_acuity_raw" in df.columns:
         # Plot smoothed data as main line
-        ax.plot(df["time_months"], df["visual_acuity"], '-',
-                color='#3498db', linewidth=2.5, alpha=0.8, label="Mean VA (smoothed)")
+        ax_acuity.plot(df["time_months"], df["visual_acuity"], '-',
+                      color=acuity_color, 
+                      linewidth=2.5, 
+                      alpha=ALPHAS['high'], 
+                      label="Mean VA (smoothed)")
 
         # Plot raw data as lighter line
-        ax.plot(df["time_months"], df["visual_acuity_raw"], '--',
-                color='#3498db', linewidth=1.0, alpha=0.4, label="Mean VA (raw)")
+        ax_acuity.plot(df["time_months"], df["visual_acuity_raw"], '--',
+                      color=acuity_color, 
+                      linewidth=1.0, 
+                      alpha=ALPHAS['low'], 
+                      label="Mean VA (raw)")
     else:
         # Just plot the main data
-        ax.plot(df["time_months"], df["visual_acuity"], '-',
-                color='#3498db', linewidth=2.5, alpha=0.8, label="Mean VA")
+        ax_acuity.plot(df["time_months"], df["visual_acuity"], '-',
+                      color=acuity_color, 
+                      linewidth=2.5, 
+                      alpha=ALPHAS['high'], 
+                      label="Mean VA")
 
     # Add subtle markers
-    ax.scatter(df["time_months"], df["visual_acuity"],
-               s=40, color='#3498db', alpha=0.7, zorder=5)
+    ax_acuity.scatter(df["time_months"], df["visual_acuity"],
+                     s=40, 
+                     color=acuity_color, 
+                     alpha=ALPHAS['medium'], 
+                     zorder=5)
 
     # Add confidence intervals if standard error is available
-    if "std_error" in df.columns and "sample_size" in df.columns:
+    if "std_error" in df.columns:
         # Calculate 95% confidence interval (approx. 2 standard errors)
         ci_factor = 1.96  # 95% confidence
-        # Calculate upper and lower CI directly without vectorized operations
         df['upper_ci'] = df.apply(lambda row: row["visual_acuity"] + ci_factor * row["std_error"], axis=1)
         df['lower_ci'] = df.apply(lambda row: row["visual_acuity"] - ci_factor * row["std_error"], axis=1)
 
         # Plot confidence interval as shaded area
-        ax.fill_between(df["time_months"], df['lower_ci'], df['upper_ci'],
-                        color='#3498db', alpha=0.15, label="95% Confidence Interval")
-
-        # Plot sample size as a bar chart at the bottom with a separate y-axis on the right
-        # but only if there's notable variation in sample size
-        sample_sizes = df["sample_size"]
-        sample_size_variation = sample_sizes.max() / sample_sizes.min() if sample_sizes.min() > 0 else 0
-
-        if sample_size_variation > 1.5:  # If there's at least 50% difference between min and max
-            # Create twin axis for sample size
-            ax2 = ax.twinx()
-
-            # Plot sample size as bars at the bottom
-            bars = ax2.bar(df["time_months"], sample_sizes, alpha=0.2, color='#2c3e50', width=0.8)
-
-            # Configure the right y-axis
-            ax2.set_ylabel("Sample Size (patients)", color='#2c3e50', fontsize=8)
-            ax2.tick_params(axis='y', colors='#2c3e50')
-            ax2.spines['right'].set_color('#2c3e50')
-            ax2.spines['right'].set_linewidth(0.5)
-
-            # Set y-range to start from 0
-            ax2.set_ylim(bottom=0)
-
-            # Add note about sample size
-            min_sample = int(sample_sizes.min())
-            max_sample = int(sample_sizes.max())
-            ax.text(0.02, 0.02, f"Sample size: {min_sample} - {max_sample} patients",
-                    transform=ax.transAxes, fontsize=8, color='#2c3e50',
-                    bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.2', edgecolor='none'))
+        ax_acuity.fill_between(df["time_months"], 
+                              df['lower_ci'], 
+                              df['upper_ci'],
+                              color=acuity_color, 
+                              alpha=ALPHAS['very_low'], 
+                              label="95% Confidence Interval")
     
-    # Add a baseline reference line at initial VA with elegant styling
+    # Add baseline reference line - increased alpha for better visibility
     if len(df) > 0:
         initial_va = df.iloc[0]["visual_acuity"]
-        ax.axhline(y=initial_va, color='#e74c3c', linestyle='-', 
-                   linewidth=1.0, alpha=0.3, label=f"Baseline VA: {initial_va:.1f}")
+        ax_acuity.axhline(y=initial_va, 
+                         color=SEMANTIC_COLORS['critical_info'], 
+                         linestyle='-', 
+                         linewidth=1.0, 
+                         alpha=0.4,  # Increased from ALPHAS['low'] for better visibility
+                         label=f"Baseline VA: {initial_va:.1f}")
     
-    # Calculate y-axis range with padding for better visualization
+    # Configure visual acuity axis (right) - increased font size and alpha for better legibility
+    ax_acuity.set_ylabel("Visual Acuity (letters)", 
+                        color=acuity_color, 
+                        fontsize=10,
+                        alpha=1.0)
+    ax_acuity.tick_params(axis='y', colors=acuity_color)
+    
+    # Calculate y-axis range with padding
     if len(df) > 0:
         min_va = min(df["visual_acuity"]) - 5
         max_va = max(df["visual_acuity"]) + 5
-        ax.set_ylim(max(0, min_va), min(85, max_va))  # Cap at 0-85 ETDRS range
+        ax_acuity.set_ylim(max(0, min_va), min(85, max_va))  # Cap at 0-85 ETDRS range
     
     # Clean, minimalist styling - Tufte-inspired
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    ax.spines['left'].set_linewidth(0.5)
-    ax.spines['bottom'].set_linewidth(0.5)
+    # Make all visible spines light but keep them for context
     
-    # Use lighter grid lines
-    ax.grid(True, linestyle='--', alpha=0.3, color='#cccccc')
+    # Remove top spines as they're not needed
+    ax_counts.spines['top'].set_visible(False)
+    ax_acuity.spines['top'].set_visible(False)
     
-    # Set axis labels with clear typography
-    ax.set_xlabel("Months", fontsize=10, color='#555555')
-    ax.set_ylabel("Visual Acuity (letters)", fontsize=10, color='#555555')
-
-    # Add smoothing information to the title if applicable
-    if "visual_acuity_raw" in df.columns:
-        # Check if we have sample size data for weighted smoothing
-        if "sample_size" in df.columns:
-            ax.set_title("GRAPHIC A: Mean Visual Acuity Over Time (weighted 3-point average)",
-                        fontsize=12, color='#333333', loc='left', pad=10)
-        else:
-            ax.set_title("GRAPHIC A: Mean Visual Acuity Over Time (3-month rolling average)",
-                        fontsize=12, color='#333333', loc='left', pad=10)
-    else:
-        ax.set_title("GRAPHIC A: Mean Visual Acuity Over Time",
-                    fontsize=12, color='#333333', loc='left', pad=10)
+    # Make all remaining spines light gray, thin, and semi-transparent
+    light_spine_color = '#cccccc'  # Light gray
+    light_spine_alpha = 0.3
+    light_spine_width = 0.5
     
-    # Use light gray tick labels
-    ax.tick_params(colors='#555555')
+    # Configure left spine (for patient counts)
+    ax_counts.spines['left'].set_visible(True)
+    ax_counts.spines['left'].set_linewidth(light_spine_width)
+    ax_counts.spines['left'].set_alpha(light_spine_alpha)
+    ax_counts.spines['left'].set_color(light_spine_color)
     
-    # Show legend with clean styling
-    ax.legend(frameon=True, fontsize=9, loc='upper right', framealpha=0.7, edgecolor='#dddddd')
+    # Configure bottom spine (shared x-axis)
+    ax_counts.spines['bottom'].set_visible(True)
+    ax_counts.spines['bottom'].set_linewidth(light_spine_width)
+    ax_counts.spines['bottom'].set_alpha(light_spine_alpha)
+    ax_counts.spines['bottom'].set_color(light_spine_color)
     
-    # Add starting and ending VA annotations with improved styling
+    # Configure right spine (for visual acuity)
+    ax_acuity.spines['right'].set_visible(True)
+    ax_acuity.spines['right'].set_linewidth(light_spine_width)
+    ax_acuity.spines['right'].set_alpha(light_spine_alpha)
+    ax_acuity.spines['right'].set_color(light_spine_color)
+    
+    # Hide unnecessary spines
+    ax_acuity.spines['bottom'].set_visible(False)
+    ax_acuity.spines['left'].set_visible(False)
+    ax_counts.spines['right'].set_visible(False)
+    
+    # Use lighter grid lines only for visual acuity
+    ax_counts.grid(False)
+    ax_acuity.grid(True, axis='y', linestyle='--', alpha=ALPHAS['very_low'], color=COLORS['grid'])
+    ax_acuity.grid(False, axis='x')
+    
+    # Set common axis labels
+    ax_counts.set_xlabel("Months", fontsize=10, color=COLORS['text_secondary'])
+    
+    # Add title
+    fig.suptitle("Mean Visual Acuity and Cohort Size Over Time", 
+               fontsize=12, 
+               color=COLORS['text'], 
+               x=0.1,  # Left-aligned
+               y=0.98,  # Near the top
+               ha='left')
+    
+    # Use light gray tick labels for x-axis
+    ax_counts.tick_params(axis='x', colors=COLORS['text_secondary'])
+    
+    # Show legend with clean styling (no frame) at top center
+    # Only show it on the visual acuity axis
+    ax_acuity.legend(frameon=False, fontsize=9, loc='upper center', bbox_to_anchor=(0.5, 1.05), 
+                     ncol=4)  # Use ncol=4 to arrange items horizontally
+    
+    # Add starting and ending VA annotations
     if len(df) > 0:
         # Initial VA annotation
-        ax.annotate(f"Start: {df.iloc[0]['visual_acuity']:.1f}", 
-                    xy=(df.iloc[0]["time_months"], df.iloc[0]["visual_acuity"]),
-                    xytext=(5, 10), textcoords="offset points",
-                    ha="left", va="center", fontsize=9, color='#555555')
+        ax_acuity.annotate(f"Start: {df.iloc[0]['visual_acuity']:.1f}", 
+                          xy=(df.iloc[0]["time_months"], df.iloc[0]["visual_acuity"]),
+                          xytext=(5, 10), 
+                          textcoords="offset points",
+                          ha="left", 
+                          va="center", 
+                          fontsize=9, 
+                          color=COLORS['text_secondary'])
         
         # Final VA annotation
-        ax.annotate(f"End: {df.iloc[-1]['visual_acuity']:.1f}", 
-                    xy=(df.iloc[-1]["time_months"], df.iloc[-1]["visual_acuity"]),
-                    xytext=(-5, 10), textcoords="offset points",
-                    ha="right", va="center", fontsize=9, color='#555555')
-        
-        # Calculate and annotate net change
-        net_change = df.iloc[-1]["visual_acuity"] - df.iloc[0]["visual_acuity"]
-        change_color = '#2ecc71' if net_change >= 0 else '#e74c3c'  # Green for gain, red for loss
-        
-        # Net change annotation at the bottom center
-        ax.annotate(f"Net change: {net_change:+.1f} letters", 
-                    xy=(0.5, -0.1), xycoords='axes fraction',
-                    ha="center", va="center", fontsize=10, 
-                    color=change_color, weight='bold',
-                    bbox=dict(boxstyle="round,pad=0.3", fc='#f8f9fa', ec='none', alpha=0.6))
+        ax_acuity.annotate(f"End: {df.iloc[-1]['visual_acuity']:.1f}", 
+                          xy=(df.iloc[-1]["time_months"], df.iloc[-1]["visual_acuity"]),
+                          xytext=(-5, 10), 
+                          textcoords="offset points",
+                          ha="right", 
+                          va="center", 
+                          fontsize=9, 
+                          color=COLORS['text_secondary'])
+    
+    # Optimize spacing around the chart for better Streamlit rendering
+    fig.subplots_adjust(left=0.12, right=0.88, top=0.92, bottom=0.12)
+    plt.tight_layout(rect=[0, 0, 1, 0.95]) 
     
     return fig
 
