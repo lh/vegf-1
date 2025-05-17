@@ -1658,33 +1658,20 @@ def generate_va_over_time_plot(results):
     # Get colors for visual acuity
     acuity_color = SEMANTIC_COLORS['acuity_data']
     
-    # Define threshold for showing individual data points
-    # We'll show individual points when sample size is below 30 (more conservative)
-    individual_point_threshold = 30  # Show individual points when sample size <= 30
+    # Now that simulation is running properly, we always have enough data
+    # No need to show individual points anymore - just plot the mean and CI
     
-    # Determine which points should show mean vs individual points
-    # Based on sample size at each timepoint
+    # Prepare for alpha calculations based on sample size
     has_variable_alpha = False
-    show_individual_points = False
-    use_mean_indices = []
-    use_individual_indices = []
+    alpha_values = []
     
     if sample_sizes is not None and len(sample_sizes) > 0:
         # Get peak sample size for scaling
         peak_sample_size = max(sample_sizes)
         min_sample_threshold = 100  # Below this we use minimum alpha
         
-        # Categorize each timepoint based on sample size
-        alpha_values = []
-        
-        for i, size in enumerate(sample_sizes):
-            # Determine if this timepoint should show mean or individual points
-            if size <= individual_point_threshold:
-                use_individual_indices.append(i)
-                show_individual_points = True
-            else:
-                use_mean_indices.append(i)
-            
+        # Calculate alpha values for variable transparency
+        for size in sample_sizes:
             # Calculate alpha for variable transparency
             if peak_sample_size > min_sample_threshold:
                 has_variable_alpha = True
@@ -1700,430 +1687,113 @@ def generate_va_over_time_plot(results):
                 # Use constant alpha if not enough variation
                 alpha_values.append(ALPHAS['high'])
     
-    # Plot mean visual acuity lines ONLY for timepoints above the individual threshold
-    if use_mean_indices:
-        # Create subsets of data for mean visualization
-        mean_mask = df.index.isin(use_mean_indices)
-        df_mean = df[mean_mask]
-        
-        # Plot means only where sample size is large enough
-        if "visual_acuity_raw" in df.columns:
-            if has_variable_alpha:
-                # Plot smoothed data as segments with varying alpha
-                for i in range(len(df_mean) - 1):
-                    if i+1 < len(df_mean):
-                        idx1 = df_mean.index[i]
-                        idx2 = df_mean.index[i+1]
-                        
-                        if idx1 in use_mean_indices and idx2 in use_mean_indices:
-                            segment_alpha = (alpha_values[idx1] + alpha_values[idx2]) / 2
-                            ax_acuity.plot(df_mean["time_months"].iloc[i:i+2], 
-                                          df_mean["visual_acuity"].iloc[i:i+2], '-',
-                                          color=acuity_color, 
-                                          linewidth=2.5, 
-                                          alpha=segment_alpha)
-                
-                # Add a single entry to legend
-                ax_acuity.plot([], [], '-', color=acuity_color, linewidth=2.5, 
-                              alpha=1.0, label="Mean VA (smoothed)")
-                    
-                # Plot raw data as lighter line with constant alpha
-                ax_acuity.plot(df_mean["time_months"], df_mean["visual_acuity_raw"], '--',
-                              color=acuity_color, 
-                              linewidth=1.0, 
-                              alpha=ALPHAS['low'], 
-                              label="Mean VA (raw)")
-            else:
-                # Standard non-variable alpha plots
-                ax_acuity.plot(df_mean["time_months"], df_mean["visual_acuity"], '-',
-                              color=acuity_color, 
-                              linewidth=2.5, 
-                              alpha=ALPHAS['high'], 
-                              label="Mean VA (smoothed)")
-
-                ax_acuity.plot(df_mean["time_months"], df_mean["visual_acuity_raw"], '--',
-                              color=acuity_color, 
-                              linewidth=1.0, 
-                              alpha=ALPHAS['low'], 
-                              label="Mean VA (raw)")
-        else:
-            # Just plot the main data
-            if has_variable_alpha:
-                # Plot with varying alpha
-                for i in range(len(df_mean) - 1):
-                    if i+1 < len(df_mean):
-                        idx1 = df_mean.index[i]
-                        idx2 = df_mean.index[i+1]
-                        
-                        if idx1 in use_mean_indices and idx2 in use_mean_indices:
-                            segment_alpha = (alpha_values[idx1] + alpha_values[idx2]) / 2
-                            ax_acuity.plot(df_mean["time_months"].iloc[i:i+2], 
-                                          df_mean["visual_acuity"].iloc[i:i+2], '-',
-                                          color=acuity_color, 
-                                          linewidth=2.5, 
-                                          alpha=segment_alpha)
-                
-                # Add a single entry to legend
-                ax_acuity.plot([], [], '-', color=acuity_color, linewidth=2.5, 
-                              alpha=1.0, label="Mean VA")
-            else:
-                # Standard non-variable alpha plot
-                ax_acuity.plot(df_mean["time_months"], df_mean["visual_acuity"], '-',
-                              color=acuity_color, 
-                              linewidth=2.5, 
-                              alpha=ALPHAS['high'], 
-                              label="Mean VA")
-
-        # Add markers with variable alpha if applicable
+    # Plot mean visual acuity lines for all timepoints
+    if "visual_acuity_raw" in df.columns:
         if has_variable_alpha:
-            # Plot markers with varying alpha
-            for i, idx in enumerate(df_mean.index):
-                if idx in use_mean_indices:
-                    ax_acuity.scatter(df_mean["time_months"].iloc[i], 
-                                     df_mean["visual_acuity"].iloc[i],
-                                     s=40, 
-                                     color=acuity_color, 
-                                     alpha=alpha_values[idx],
-                                     zorder=5)
+            # Plot smoothed data as segments with varying alpha
+            for i in range(len(df) - 1):
+                if i+1 < len(df):
+                    segment_alpha = (alpha_values[i] + alpha_values[i+1]) / 2
+                    ax_acuity.plot(df["time_months"].iloc[i:i+2], 
+                                  df["visual_acuity"].iloc[i:i+2], '-',
+                                  color=acuity_color, 
+                                  linewidth=2.5, 
+                                  alpha=segment_alpha)
+            
+            # Add a single entry to legend
+            ax_acuity.plot([], [], '-', color=acuity_color, linewidth=2.5, 
+                          alpha=1.0, label="Mean VA (smoothed)")
+                
+            # Plot raw data as lighter line with constant alpha
+            ax_acuity.plot(df["time_months"], df["visual_acuity_raw"], '--',
+                          color=acuity_color, 
+                          linewidth=1.0, 
+                          alpha=ALPHAS['low'], 
+                          label="Mean VA (raw)")
         else:
-            # Add subtle markers with constant alpha
-            ax_acuity.scatter(df_mean["time_months"], df_mean["visual_acuity"],
+            # Standard non-variable alpha plots
+            ax_acuity.plot(df["time_months"], df["visual_acuity"], '-',
+                          color=acuity_color, 
+                          linewidth=2.5, 
+                          alpha=ALPHAS['high'], 
+                          label="Mean VA (smoothed)")
+
+            ax_acuity.plot(df["time_months"], df["visual_acuity_raw"], '--',
+                          color=acuity_color, 
+                          linewidth=1.0, 
+                          alpha=ALPHAS['low'], 
+                          label="Mean VA (raw)")
+    else:
+        # Just plot the main data
+        if has_variable_alpha:
+            # Plot with varying alpha
+            for i in range(len(df) - 1):
+                if i+1 < len(df):
+                    segment_alpha = (alpha_values[i] + alpha_values[i+1]) / 2
+                    ax_acuity.plot(df["time_months"].iloc[i:i+2], 
+                                  df["visual_acuity"].iloc[i:i+2], '-',
+                                  color=acuity_color, 
+                                  linewidth=2.5, 
+                                  alpha=segment_alpha)
+            
+            # Add a single entry to legend
+            ax_acuity.plot([], [], '-', color=acuity_color, linewidth=2.5, 
+                          alpha=1.0, label="Mean VA")
+        else:
+            # Standard non-variable alpha plot
+            ax_acuity.plot(df["time_months"], df["visual_acuity"], '-',
+                          color=acuity_color, 
+                          linewidth=2.5, 
+                          alpha=ALPHAS['high'], 
+                          label="Mean VA")
+
+    # Add markers with variable alpha if applicable
+    if has_variable_alpha:
+        # Plot markers with varying alpha
+        for i in range(len(df)):
+            ax_acuity.scatter(df["time_months"].iloc[i], 
+                             df["visual_acuity"].iloc[i],
                              s=40, 
                              color=acuity_color, 
-                             alpha=ALPHAS['medium'], 
+                             alpha=alpha_values[i],
                              zorder=5)
+    else:
+        # Add subtle markers with constant alpha
+        ax_acuity.scatter(df["time_months"], df["visual_acuity"],
+                         s=40, 
+                         color=acuity_color, 
+                         alpha=ALPHAS['medium'], 
+                         zorder=5)
 
-    # Handle confidence intervals and individual data points based on sample size
+    # Handle confidence intervals (no individual data points anymore)
     if "std_error" in df.columns:
         # Calculate 95% confidence interval (approx. 2 standard errors)
         ci_factor = 1.96  # 95% confidence
         df['upper_ci'] = df.apply(lambda row: row["visual_acuity"] + ci_factor * row["std_error"], axis=1)
         df['lower_ci'] = df.apply(lambda row: row["visual_acuity"] - ci_factor * row["std_error"], axis=1)
         
-        # Process data points differently based on sample size
-        # We've already calculated use_mean_indices and use_individual_indices above
-        
-        # Plot CI only for points with sample size > threshold (use_mean_indices)
-        if use_mean_indices and len(use_mean_indices) > 0:
-            # Get the subset of data for CI
-            ci_mask = df.index.isin(use_mean_indices)
-            
-            # Only plot if we have some data to show
-            if ci_mask.any():
-                # Plot confidence interval as shaded area only where sample size is large enough
-                ax_acuity.fill_between(
-                    df.loc[ci_mask, "time_months"], 
-                    df.loc[ci_mask, 'lower_ci'], 
-                    df.loc[ci_mask, 'upper_ci'],
-                    color=acuity_color, 
-                    alpha=ALPHAS['very_low'], 
-                    label="95% Confidence Interval"
-                )
-        
-        # Add individual data points for low sample sizes
-        if use_individual_indices:
-            added_to_legend = False
-            
-            # Check if we have patient data - look for patient_data or patient_histories
-            patient_data = results.get("patient_data", {})
-            if not patient_data:
-                # Check for patient_histories as an alias
-                patient_data = results.get("patient_histories", {})
-            
-            has_patient_data = bool(patient_data)
-            
-            # For small sample sizes, if patient data is not available, use a faint weighted moving average
-            if not has_patient_data:
-                # Calculate a weighted moving average for small sample sizes
-                # This will be a separate, very faint line on portions with small sample size
-                
-                # Create a subset for each type
-                small_sample_mask = df.index.isin(use_individual_indices)
-                df_small = df[small_sample_mask].copy()
-                
-                if len(df_small) > 3:  # Only if we have enough points
-                    # Sort by time to ensure proper order
-                    df_small = df_small.sort_values("time_months")
-                    
-                    # Calculate weighted moving average with window size of 5
-                    window_size = min(5, len(df_small))
-                    
-                    # Use Exponential Moving Average (weights recent points more)
-                    smoothed_values = []
-                    times = []
-                    
-                    # For each point, calculate a weighted average of nearby points
-                    for i in range(len(df_small)):
-                        # Determine window indices (centered on current point)
-                        start_idx = max(0, i - window_size // 2)
-                        end_idx = min(len(df_small) - 1, i + window_size // 2)
-                        
-                        # Calculate exponentially weighted average
-                        weights = np.exp(-0.5 * np.abs(np.arange(start_idx, end_idx + 1) - i))
-                        weighted_sum = 0
-                        weight_sum = 0
-                        
-                        for j, w in zip(range(start_idx, end_idx + 1), weights):
-                            weighted_sum += df_small["visual_acuity"].iloc[j] * w
-                            weight_sum += w
-                        
-                        smoothed_value = weighted_sum / weight_sum if weight_sum > 0 else df_small["visual_acuity"].iloc[i]
-                        smoothed_values.append(smoothed_value)
-                        times.append(df_small["time_months"].iloc[i])
-                    
-                    # Plot the very faint weighted average line
-                    ax_acuity.plot(times, smoothed_values, '-',
-                                  linewidth=1.5,
-                                  color=acuity_color,
-                                  alpha=0.25,  # Very faint
-                                  label="Small Sample Trend")
-                
-                # No need for debug message in production, but useful during development
-                if DEBUG_MODE:
-                    ax_acuity.text(0.5, 0.95, 
-                                  f"Note: Individual data points not available - patient_data missing. Keys: {list(results.keys())[:5]}",
-                                  transform=ax_acuity.transAxes,
-                                  fontsize=10, ha='center', color='red', alpha=0.7)
-            else:
-                # We have patient data - plot individual points
-                
-                # Find the simulation start date for proper time conversion
-                simulation_start_date = results.get("simulation_start_date", results.get("start_date"))
-                if simulation_start_date:
-                    simulation_start_date = pd.to_datetime(simulation_start_date)
-                else:
-                    # Fallback: assume simulation started 2023-01-01 if not specified
-                    simulation_start_date = pd.to_datetime("2023-01-01")
-                    if DEBUG_MODE:
-                        print("Warning: No simulation_start_date found, using default 2023-01-01")
-            
-            # For debugging - check patient data structure only in DEBUG_MODE
-            if has_patient_data and DEBUG_MODE:
-                # Get a sample of the patient data to understand its structure
-                sample_patient_id = next(iter(patient_data))
-                sample_patient = patient_data[sample_patient_id]
-                
-                if sample_patient:
-                    if isinstance(sample_patient, list) and sample_patient:
-                        sample_visit = sample_patient[0]
-                        # Check what attributes are available
-                        visit_attrs = list(sample_visit.keys()) if isinstance(sample_visit, dict) else []
-                        
-                        # If we don't have the expected attributes, show debug info
-                        has_time = "time" in visit_attrs or "time_months" in visit_attrs or "date" in visit_attrs
-                        has_va = "visual_acuity" in visit_attrs or "vision" in visit_attrs or "va" in visit_attrs
-                        
-                        if not (has_time and has_va):
-                            # Log the issue instead of showing on chart
-                            print(f"Warning: Patient visit structure may be missing fields. Has: {visit_attrs}")
-            
-            for i in use_individual_indices:
-                # Get the time value - check which column exists
-                time_col = "time_months" if "time_months" in df.columns else "time"
-                time_month = df[time_col].iloc[i]
-                current_sample_size = df["sample_size"].iloc[i] if "sample_size" in df.columns else 30
-                
-                if DEBUG_MODE:
-                    print(f"\nProcessing time {time_month} with sample size {current_sample_size}")
-                
-                # Only plot individual points if we truly have small sample sizes
-                if current_sample_size > individual_point_threshold:
-                    if DEBUG_MODE:
-                        print(f"  Skipping: sample size {current_sample_size} > threshold {individual_point_threshold}")
-                    continue
-                
-                # Find patient data for this timepoint (within some tolerance)
-                time_tolerance = 0.5  # Back to smaller tolerance
-                
-                # Collect visit data only for this specific time point
-                # We should only get visits that are truly at this time point
-                individual_visits = []
-                
-                if DEBUG_MODE:
-                    print(f"  Checking {len(patient_data)} patients for visits near time {time_month}")
-                    # Sample a patient to see the data structure
-                    if patient_data:
-                        sample_id = next(iter(patient_data))
-                        sample_visits = patient_data[sample_id]
-                        if isinstance(sample_visits, list) and sample_visits:
-                            print(f"  Sample patient {sample_id} has {len(sample_visits)} visits")
-                            print(f"  First visit: {sample_visits[0]}")
-                            if len(sample_visits) > 10:
-                                print(f"  10th visit: {sample_visits[9]}")
-                
-                patients_checked = 0
-                visits_found = 0
-                
-                # Use binary search for better performance
-                import bisect
-                
-                for patient_id, visits in patient_data.items():
-                    patients_checked += 1
-                    if not isinstance(visits, list):
-                        if DEBUG_MODE and patients_checked < 5:
-                            print(f"    Patient {patient_id} data is not a list: {type(visits)}")
-                        continue
-                    
-                    # Sort visits by time once for efficient searching
-                    sorted_visits = []
-                    for visit in visits:
-                        if not isinstance(visit, dict):
-                            continue
-                        
-                        # Get visit time
-                        visit_month = None
-                        
-                        if "date" in visit:
-                            try:
-                                visit_date_str = visit["date"]
-                                # Handle different date formats
-                                if isinstance(visit_date_str, str):
-                                    visit_date = pd.to_datetime(visit_date_str.replace('T', ' '))
-                                elif isinstance(visit_date_str, datetime):
-                                    visit_date = visit_date_str
-                                else:
-                                    visit_date = pd.to_datetime(visit_date_str)
-                                
-                                # Calculate months from simulation start
-                                visit_month = (visit_date - simulation_start_date).days / 30.44
-                            except Exception as e:
-                                if DEBUG_MODE and patients_checked < 3:
-                                    print(f"    Error parsing date '{visit.get('date')}': {e}")
-                                continue
-                        
-                        if visit_month is None:
-                            if "time_months" in visit:
-                                visit_month = visit["time_months"]
-                            elif "time" in visit:
-                                visit_month = visit["time"] / 30.44 if visit["time"] > 100 else visit["time"]
-                            else:
-                                continue
-                        
-                        sorted_visits.append((visit_month, visit))
-                    
-                    if not sorted_visits:
-                        continue
-                    
-                    # Sort by time for binary search
-                    sorted_visits.sort(key=lambda x: x[0])
-                    
-                    # Find visits within tolerance using binary search
-                    left_time = time_month - time_tolerance
-                    right_time = time_month + time_tolerance
-                    
-                    # Find the first visit >= left_time
-                    visit_times = [v[0] for v in sorted_visits]
-                    left_idx = bisect.bisect_left(visit_times, left_time)
-                    # Find the first visit > right_time
-                    right_idx = bisect.bisect_right(visit_times, right_time)
-                    
-                    # Get all visits in the tolerance window
-                    window_visits = sorted_visits[left_idx:right_idx]
-                    
-                    if window_visits:
-                        # Find the closest visit
-                        best_visit = min(window_visits, key=lambda x: abs(x[0] - time_month))
-                        visit_month, visit = best_visit
-                        
-                        va = None
-                        if "visual_acuity" in visit:
-                            va = visit["visual_acuity"]
-                        elif "vision" in visit:
-                            va = visit["vision"]
-                        elif "va" in visit:
-                            va = visit["va"]
-                        
-                        if va is not None:
-                            individual_visits.append((visit_month, va))
-                            visits_found += 1
-                            
-                            if DEBUG_MODE and visits_found <= 5:
-                                print(f"    Found visit at month {visit_month:.1f}, VA: {va:.1f}")
-                
-                if DEBUG_MODE:
-                    print(f"  Checked {patients_checked} patients, found {visits_found} visits")
-                
-                # Plot individual points with jitter
-                if individual_visits:
-                    x_positions = []
-                    y_values = []
-                    
-                    for actual_time, va in individual_visits:
-                        # Add smaller jitter now that we have the correct number of points
-                        jitter = np.random.normal(0, 0.1)
-                        x_positions.append(actual_time + jitter)
-                        y_values.append(va)
-                    
-                    # Get alpha for this time point
-                    current_alpha = alpha_values[i] if has_variable_alpha else 0.5
-                    
-                    # Plot individual patient points
-                    point_alpha = max(0.3, 0.5 * current_alpha)  # Back to original alpha
-                    scatter = ax_acuity.scatter(
-                        x_positions, y_values, 
-                        s=25,  # Back to original size
-                        marker='o', 
-                        color=acuity_color, 
-                        alpha=point_alpha,
-                        edgecolor='none',  # No edge for cleaner look
-                        zorder=5  # Above lines but below legend
-                    )
-                    
-                    # Add to legend only once
-                    if not added_to_legend:
-                        scatter.set_label("Individual Patients")
-                        added_to_legend = True
-                    
-                    if DEBUG_MODE:
-                        print(f"Month {time_month}: Plotted {len(x_positions)} individual points (sample size: {current_sample_size})")
-                        if len(x_positions) > 50:
-                            print(f"  WARNING: Too many points ({len(x_positions)}) for sample size {current_sample_size}")
-                else:
-                    if DEBUG_MODE:
-                        print(f"  No individual visits found for time {time_month}")
-                    
-                    # As a fallback, plot the mean as an individual point
-                    scatter = ax_acuity.scatter(
-                        [time_month], [df["visual_acuity"].iloc[i]], 
-                        s=30,  
-                        marker='o', 
-                        color=acuity_color, 
-                        alpha=0.6,
-                        edgecolor='none',
-                        zorder=5,
-                        label="Individual Patients" if not added_to_legend else None
-                    )
-                    if not added_to_legend:
-                        added_to_legend = True
-                
-                # Also plot the mean as a faint dashed line for continuity
-                if i > 0 and i - 1 in df.index:
-                    current_alpha = alpha_values[i] if has_variable_alpha else 0.5
-                    adjusted_alpha = current_alpha * 0.3  # Very faint for mean when showing individuals
-                    ax_acuity.plot([df["time_months"].iloc[i-1], df["time_months"].iloc[i]], 
-                                  [df["visual_acuity"].iloc[i-1], df["visual_acuity"].iloc[i]], 
-                                  color=acuity_color, 
-                                  alpha=adjusted_alpha, 
-                                  linestyle='--',  # Dashed to indicate reduced confidence
-                                  linewidth=1)
-        elif not use_mean_indices and "std_error" in df.columns:
-            # Default behavior when sample sizes are not available
-            ax_acuity.fill_between(df["time_months"], 
-                                  df['lower_ci'], 
-                                  df['upper_ci'],
-                                  color=acuity_color, 
-                                  alpha=ALPHAS['very_low'], 
-                                  label="95% Confidence Interval")
+        # Plot confidence interval as shaded area for all timepoints
+        ax_acuity.fill_between(df["time_months"], 
+                              df['lower_ci'], 
+                              df['upper_ci'],
+                              color=acuity_color, 
+                              alpha=ALPHAS['very_low'], 
+                              label="95% Confidence Interval")
     
-    # Add baseline reference line - increased alpha for better visibility
+    # Add baseline reference as a subtle line from first point to right axis
     if len(df) > 0:
         initial_va = df.iloc[0]["visual_acuity"]
-        ax_acuity.axhline(y=initial_va, 
-                         color=SEMANTIC_COLORS['critical_info'], 
-                         linestyle='-', 
-                         linewidth=1.0, 
-                         alpha=0.4,  # Increased from ALPHAS['low'] for better visibility
-                         label=f"Baseline VA: {initial_va:.1f}")
+        initial_time = df.iloc[0]["time_months"]
+        # Draw a thin, dark line from the first point to the right axis
+        # Using transform to ensure it reaches the axis
+        line = ax_acuity.axhline(y=initial_va, 
+                                xmin=initial_time / max(df["time_months"]),  # Start from first point
+                                xmax=1.0,  # Extend all the way to right axis
+                                color=COLORS['text_secondary'],
+                                linewidth=0.75,
+                                alpha=0.4,
+                                linestyle='--',  # Dashed for subtlety
+                                clip_on=False)  # Allow line to extend to axis
     
     # Configure visual acuity axis (right) - increased font size and alpha for better legibility
     ax_acuity.set_ylabel("Visual Acuity (letters)", 
@@ -2197,30 +1867,10 @@ def generate_va_over_time_plot(results):
     ax_acuity.legend(frameon=False, fontsize=9, loc='upper center', bbox_to_anchor=(0.5, 1.05), 
                      ncol=4)  # Use ncol=4 to arrange items horizontally
     
-    # Add starting and ending VA annotations
-    if len(df) > 0:
-        # Initial VA annotation
-        ax_acuity.annotate(f"Start: {df.iloc[0]['visual_acuity']:.1f}", 
-                          xy=(df.iloc[0]["time_months"], df.iloc[0]["visual_acuity"]),
-                          xytext=(5, 10), 
-                          textcoords="offset points",
-                          ha="left", 
-                          va="center", 
-                          fontsize=9, 
-                          color=COLORS['text_secondary'])
-        
-        # Final VA annotation
-        ax_acuity.annotate(f"End: {df.iloc[-1]['visual_acuity']:.1f}", 
-                          xy=(df.iloc[-1]["time_months"], df.iloc[-1]["visual_acuity"]),
-                          xytext=(-5, 10), 
-                          textcoords="offset points",
-                          ha="right", 
-                          va="center", 
-                          fontsize=9, 
-                          color=COLORS['text_secondary'])
     
     # Optimize spacing around the chart for better Streamlit rendering
-    fig.subplots_adjust(left=0.12, right=0.88, top=0.92, bottom=0.12)
+    # Add extra space on the right for the baseline annotation
+    fig.subplots_adjust(left=0.12, right=0.85, top=0.92, bottom=0.12)
     plt.tight_layout(rect=[0, 0, 1, 0.95]) 
     
     return fig
