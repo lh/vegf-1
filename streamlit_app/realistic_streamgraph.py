@@ -264,23 +264,34 @@ def extract_interpolated_timeline(results: Dict) -> pd.DataFrame:
                 retreat_t = retreat_delay / (duration_months - 6)
                 
                 total_retreats = retreatments_by_type.get(retreat_key, 0)
-                # Retreatments follow a delayed sigmoid
-                retreat_curve = sigmoid(retreat_t, steepness=6, midpoint=0.5)
                 
-                cumulative_retreat[disc_type] = total_retreats * retreat_curve
+                # Calculate retreatment rate for this discontinuation type
+                total_disc_of_type = disc_counts.get(disc_type, 0)
+                if total_disc_of_type > 0:
+                    retreat_rate = min(total_retreats / total_disc_of_type, 1.0)
+                else:
+                    retreat_rate = 0
+                
+                # Apply the retreatment rate to cumulative discontinuations
+                # with a delayed sigmoid curve
+                retreat_curve = sigmoid(retreat_t, steepness=6, midpoint=0.5)
+                cumulative_retreat[disc_type] = cumulative_disc.get(disc_type, 0) * retreat_rate * retreat_curve
         
         # Calculate current states
         total_ever_discontinued = sum(cumulative_disc.values())
+        total_retreated = sum(cumulative_retreat.values())
+        
+        # Never discontinued = Original population - Ever discontinued
         never_discontinued = population_size - total_ever_discontinued
         
-        # Add active count
+        # Add never discontinued count
         timeline_data.append({
             "time_months": month,
-            "state": "Active",
+            "state": "Active (Never Discontinued)",
             "count": never_discontinued
         })
         
-        # Add discontinued states
+        # Add discontinued states (but not retreated)
         for disc_type in cumulative_disc.keys():
             disc_count = cumulative_disc[disc_type] - cumulative_retreat.get(disc_type, 0)
             if disc_count > 0:
@@ -327,7 +338,7 @@ def create_realistic_streamgraph(
     """
     # Define traffic light color scheme
     color_scheme = {
-        "Active": "#2E7D32",  # Strong forest green
+        "Active (Never Discontinued)": "#2E7D32",  # Strong forest green
         
         "Discontinued Planned": "#FFA000",  # Amber
         "Discontinued Administrative": "#D32F2F",  # Red
@@ -356,7 +367,7 @@ def create_realistic_streamgraph(
     
     # Define state order for consistent stacking
     state_order = [
-        "Active",
+        "Active (Never Discontinued)",
         "Discontinued Planned",
         "Discontinued Administrative",
         "Discontinued Not Renewed",
@@ -394,6 +405,9 @@ def create_realistic_streamgraph(
     ax.set_xlabel("Time (Months)")
     ax.set_ylabel("Number of Patients")
     ax.set_title(title, fontsize=14, loc="left")
+    
+    # Set y-axis to start at 0
+    ax.set_ylim(bottom=0)
     
     # Clean style
     ax.spines['top'].set_visible(False)
