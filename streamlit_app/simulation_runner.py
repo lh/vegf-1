@@ -1823,7 +1823,7 @@ def generate_va_over_time_plot(results):
     ax_acuity.grid(False, axis='x')
     
     # Set common axis labels
-    ax_counts.set_xlabel("Time", fontsize=10, color=COLORS['text_secondary'])
+    ax_counts.set_xlabel("Months", fontsize=10, color=COLORS['text_secondary'])
     
     # Set yearly x-axis ticks
     set_yearly_x_ticks(ax_counts)
@@ -1997,7 +1997,7 @@ def generate_va_distribution_plot(results):
            label='Mean', zorder=4)
     
     # Configure axes labels with consistent styling from first chart
-    ax_counts.set_xlabel("Time", fontsize=10, color=COLORS['text_secondary'])
+    ax_counts.set_xlabel("Months", fontsize=10, color=COLORS['text_secondary'])
     ax_counts.set_ylabel("Number of Measurements", fontsize=10, color=counts_color)
     
     # Set yearly x-axis ticks
