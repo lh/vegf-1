@@ -47,5 +47,13 @@ Use Git and github  for version control. You have access to the gh command. Use 
   8. Refactoring Priority: Consider inconsistent styling as a bug that needs immediate attention, not as a feature to be
   worked around.
 
+# Critical Scientific Tool Principles
+
+**NEVER GENERATE SYNTHETIC DATA**: This is a scientific analysis tool, not a demo
+- If data is missing, FAIL FAST with clear error messages
+- NEVER create fallback data, synthetic timelines, or mock values
+- NEVER add try/except blocks that hide missing data
+- The integrity of the analysis depends on using only real simulation data
+
 # Workflow Reminder
 - Every summary should be followed by an offer to git commit and push and update documentation

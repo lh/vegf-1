@@ -416,12 +416,19 @@ def display_simulation_results(results):
         st.subheader("Discontinuation and Retreatment Analysis")
         figs = generate_discontinuation_plot(results)
 
-        # Display the discontinuation chart
+        # Display the discontinuation charts
         if isinstance(figs, list) and len(figs) > 0:
-            # Show the enhanced chart with full width
+            # Show the streamgraph first
+            st.write("**Patient Cohort Flow**")
             with st.container():
                 st.pyplot(figs[0])
-                st.caption("Discontinuation Reasons by Retreatment Status")
+                st.caption("Streamgraph showing patient lifecycle through treatment states")
+                
+            # Show the bar chart for detailed breakdown
+            st.write("**Discontinuation Breakdown**")
+            with st.container():
+                st.pyplot(figs[1])
+                st.caption("Discontinuation reasons by retreatment status")
         else:
             # Fallback in case figs is not a list (should never happen with updated code)
             st.pyplot(figs)
