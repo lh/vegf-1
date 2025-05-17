@@ -56,3 +56,8 @@ docs/**/*.js
 # Paper directory is now included in this repository
 # Paper/
 **/.claude/settings.local.json
+
+**/CLAUDE.local.md
+
+# Large simulation result files
+output/simulation_results/ape_simulation_*.json

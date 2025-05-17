@@ -15,6 +15,16 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 from streamlit_app.json_utils import convert_datetimes_in_dict
 
+# Import Puppeteer helpers if available
+try:
+    from streamlit_app.puppeteer_helpers import selectable_radio, selectable_selectbox
+except ImportError:
+    # Fallback functions if puppeteer_helpers is not available
+    def selectable_radio(label, options, **kwargs):
+        return st.radio(label, options, **kwargs)
+    def selectable_selectbox(label, options, **kwargs):
+        return st.selectbox(label, options, **kwargs)
+
 def display_patient_explorer(patient_histories: Dict[str, List[Dict]], simulation_stats: Optional[Dict] = None):
     """
     Display the Interactive Patient Explorer.
@@ -107,17 +117,23 @@ def display_patient_explorer(patient_histories: Dict[str, List[Dict]], simulatio
         # Only show filters if we have data
         if not summary_df.empty:
             # VA change filter
-            va_change_filter = st.radio(
+            va_change_filter = selectable_radio(
                 "VA Change Filter",
                 options=["All", "Improved", "Stable", "Worsened"],
-                horizontal=True
+                horizontal=True,
+                key="va_change_filter",
+                test_id="va-change-filter",
+                help="Filter patients by visual acuity change"
             )
             
             # Discontinuation filter
-            discontinued_filter = st.radio(
+            discontinued_filter = selectable_radio(
                 "Discontinuation Filter",
                 options=["All", "Discontinued", "Active"],
-                horizontal=True
+                horizontal=True,
+                key="discontinued_filter",
+                test_id="discontinued-filter",
+                help="Filter patients by treatment discontinuation status"
             )
             
             # Apply filters
@@ -136,9 +152,12 @@ def display_patient_explorer(patient_histories: Dict[str, List[Dict]], simulatio
             patient_options = filtered_df['patient_id'].tolist()
             
             if patient_options:
-                selected_patient = st.selectbox(
+                selected_patient = selectable_selectbox(
                     "Select a patient to explore:",
-                    options=patient_options
+                    options=patient_options,
+                    key="patient_selector",
+                    test_id="patient-selector",
+                    help="Choose a patient to view detailed treatment history"
                 )
             else:
                 st.warning("No patients match the selected filters.")
@@ -342,6 +361,7 @@ def display_patient_explorer(patient_histories: Dict[str, List[Dict]], simulatio
                 st.markdown(f"**Clinical Outcome:** <span style='color:{color}'>{outcome}</span>", unsafe_allow_html=True)
         
         # Debug section
+        st.markdown('<div data-test-id="patient-debug-info-marker"></div>', unsafe_allow_html=True)
         with st.expander("Debug Information"):
             st.subheader("Raw Patient Data")
             st.json(patient_data[0] if patient_data else {})
@@ -641,7 +661,7 @@ def create_patient_timeline(timeline_data: Dict) -> go.Figure:
                     line_width=0,
                 )
     
-    # Update layout
+    # Update layout with better accessibility properties
     fig.update_layout(
         title="Patient Treatment Timeline",
         xaxis_title="Date",
@@ -653,7 +673,11 @@ def create_patient_timeline(timeline_data: Dict) -> go.Figure:
         hoverlabel=dict(
             bgcolor="white",
             font_size=14
-        )
+        ),
+        # Improved accessibility for colorblind users
+        colorway=["#3498db", "#e74c3c", "#2ecc71", "#9b59b6", "#f39c12"],
+        # Add ARIA role
+        meta={"aria-role": "img", "aria-label": "Patient treatment timeline chart showing visual acuity over time"}
     )
     
     # Set y-axis range to 0-85 (ETDRS letters)

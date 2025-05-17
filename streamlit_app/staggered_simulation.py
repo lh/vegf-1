@@ -15,6 +15,29 @@ import streamlit as st
 import time
 from datetime import datetime, timedelta
 
+# Import the central color system
+try:
+    from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
+except ImportError:
+    # Fallback if the central color system is not available
+    COLORS = {
+        'primary': '#4682B4',    # Steel Blue - for visual acuity data
+        'secondary': '#B22222',  # Firebrick - for critical information
+        'patient_counts': '#8FAD91',  # Muted Sage Green - for patient counts
+    }
+    ALPHAS = {
+        'high': 0.8,        # High opacity for primary elements
+        'medium': 0.5,      # Medium opacity for standard elements
+        'low': 0.2,         # Low opacity for background elements
+        'very_low': 0.1,    # Very low opacity for subtle elements
+        'patient_counts': 0.5  # Consistent opacity for all patient/sample count visualizations
+    }
+    SEMANTIC_COLORS = {
+        'acuity_data': COLORS['primary'],
+        'patient_counts': COLORS['patient_counts'],
+        'critical_info': COLORS['secondary'],
+    }
+
 # Add the project root directory to sys.path to allow importing from the main project
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
@@ -217,8 +240,8 @@ def create_enrollment_histogram_disabled(enrollment_dates):
     # Plot connecting line (subtle)
     ax.plot(x, quarterly_counts.values, color='#999999', linewidth=0.75, alpha=0.7)
     
-    # Add data points
-    scatter = ax.scatter(x, quarterly_counts.values, s=30, color='#3498db', alpha=0.8, zorder=3)
+    # Add data points - use sage green for patient counts from semantic color system
+    scatter = ax.scatter(x, quarterly_counts.values, s=30, color=SEMANTIC_COLORS['patient_counts'], alpha=ALPHAS['patient_counts'], zorder=3)
     
     # Keep only bottom spine
     for spine in ['top', 'right', 'left']:
@@ -463,13 +486,13 @@ def create_dual_timeframe_visualizations(results, output_dir="output/staggered_c
                         'bin_center': 'first'
                     }).reset_index()
 
-                    # Create bar chart with lighter bars matching patient time visualization
+                    # Create bar chart with the proper semantic color for the visualization
                     bars = ax.bar(
                         binned_data['bin_center'],
                         binned_data['visual_acuity'],
                         width=pd.Timedelta(days=days_per_bin * 0.8),
-                        color='#a8c4e5',  # Lighter blue that matches patient time viz
-                        alpha=0.3,
+                        color=SEMANTIC_COLORS['acuity_data'],  # Use the primary blue for acuity data
+                        alpha=ALPHAS['low'],  # Use standardized alpha for background elements
                         edgecolor='none'
                     )
 
@@ -481,12 +504,12 @@ def create_dual_timeframe_visualizations(results, output_dir="output/staggered_c
                             z = np.polyfit(x_numeric, binned_data['visual_acuity'], 1)
                             p = np.poly1d(z)
 
-                            # Use same color as bars but with higher opacity for trend line
-                            # This creates a visual relationship showing it's the same data
+                            # Use darker shade of blue for acuity trend line
+                            # Follows the design principle that trend lines use darker versions of the source data color
                             ax.plot(
                                 binned_data['bin_center'],
                                 p(x_numeric),
-                                color='#4682B4',  # Darker blue from the same family as the bars
+                                color=SEMANTIC_COLORS['acuity_trend'],  # Darker blue for acuity trend
                                 linewidth=1.8,
                                 alpha=0.9
                             )

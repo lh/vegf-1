@@ -447,16 +447,18 @@ def create_enrollment_chart(data, title='Patient Enrollment Over Time', **kwargs
 
 # Discontinuation Retreatment Chart
 def create_discontinuation_retreatment_chart(data, fig=None, ax=None,
-                                            title="Discontinuation Reasons and Retreatment",
-                                            figsize=(10, 6)):
+                                            title="Discontinuation Reasons and Retreatment Status",
+                                            figsize=(10, 6), use_log_scale=True,
+                                            sort_by_total=True, small_sample_threshold=10):
     """
-    Create a Tufte-inspired visualization showing discontinuation reasons with retreatment overlays.
+    Create a Tufte-inspired visualization showing discontinuation reasons with retreatment status.
 
     This chart combines discontinuation reasons and retreatment status into a unified visualization
-    using an "unstacked" approach:
+    using a nested bar approach with optional log scale:
     - Grey rectangle shows total discontinued patients for each reason
-    - Blue bars show retreated patients for each discontinuation type
-    - Sage green bars show non-retreated patients for each discontinuation type
+    - Blue segments show retreated patients for each discontinuation type
+    - Sage green segments show non-retreated patients for each discontinuation type
+    - Log scale option for better visualization when counts vary widely
 
     Parameters
     ----------
@@ -470,9 +472,15 @@ def create_discontinuation_retreatment_chart(data, fig=None, ax=None,
     ax : matplotlib.axes.Axes, optional
         Existing axis to use, by default None
     title : str, optional
-        Chart title, by default "Discontinuation Reasons and Retreatment"
+        Chart title, by default "Discontinuation Reasons and Retreatment Status"
     figsize : tuple, optional
         Figure size (width, height) in inches, by default (10, 6)
+    use_log_scale : bool, optional
+        Whether to use a logarithmic y-axis scale, by default True
+    sort_by_total : bool, optional
+        Whether to sort categories by total count (descending), by default True
+    small_sample_threshold : int, optional
+        Threshold below which to show a small sample warning, by default 10
 
     Returns
     -------

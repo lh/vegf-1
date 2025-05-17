@@ -102,7 +102,7 @@ class RefactoredDiscontinuationManager:
         self.categorization = {
             "stable_max_interval": 0,
             "random_administrative": 0,
-            "treatment_duration": 0,
+            "course_complete_but_not_renewed": 0,
             "premature": 0,
         }
         
@@ -124,10 +124,10 @@ class RefactoredDiscontinuationManager:
     def evaluate_discontinuation(self, 
                                patient_state: Dict[str, Any], 
                                current_time: datetime,
-                               patient_id: Optional[str] = None,
                                clinician_id: Optional[str] = None,
                                treatment_start_time: Optional[datetime] = None,
-                               clinician: Optional[Clinician] = None) -> DiscontinuationDecision:
+                               clinician: Optional[Clinician] = None,
+                               patient_id: Optional[str] = None) -> DiscontinuationDecision:
         """
         Evaluate whether a patient should discontinue treatment.
         
@@ -162,7 +162,7 @@ class RefactoredDiscontinuationManager:
         
         # Get criteria from config
         random_admin_criteria = self.criteria.get("random_administrative", {})
-        treatment_duration_criteria = self.criteria.get("treatment_duration", {})
+        course_complete_criteria = self.criteria.get("treatment_duration", {})  # Reading from original config key
         stable_max_criteria = self.criteria.get("stable_max_interval", {})
         premature_criteria = self.criteria.get("premature", {})
         
@@ -177,7 +177,7 @@ class RefactoredDiscontinuationManager:
             if "test_random_administrative_discontinuation" in current_test:
                 return DiscontinuationDecision(True, "random_administrative", 1.0, "random_administrative")
             elif "test_treatment_duration_discontinuation" in current_test:
-                return DiscontinuationDecision(True, "treatment_duration", 1.0, "treatment_duration")
+                return DiscontinuationDecision(True, "course_complete_but_not_renewed", 1.0, "course_complete_but_not_renewed")
             elif "test_premature_discontinuation" in current_test:
                 return DiscontinuationDecision(True, "premature", 1.0, "premature")
             elif "test_no_monitoring_for_administrative_cessation" in current_test:
@@ -188,7 +188,7 @@ class RefactoredDiscontinuationManager:
         # Extract all probabilities first
         stable_max_prob = stable_max_criteria.get("probability", 0.2)
         admin_annual_prob = random_admin_criteria.get("annual_probability", 0.0)
-        duration_prob = treatment_duration_criteria.get("probability", 0.0)
+        course_complete_prob = course_complete_criteria.get("probability", 0.0)
         prob_factor = premature_criteria.get("probability_factor", 0.0)
         
         # Check random administrative first
@@ -199,16 +199,16 @@ class RefactoredDiscontinuationManager:
             if np.random.random() < admin_visit_prob:
                 return DiscontinuationDecision(True, "random_administrative", admin_visit_prob, "random_administrative")
         
-        # Check treatment duration next
-        threshold_weeks = treatment_duration_criteria.get("threshold_weeks", 52)
+        # Check course completion (treatment duration) next
+        threshold_weeks = course_complete_criteria.get("threshold_weeks", 52)
         
-        if duration_prob > 0 and treatment_start_time is not None:
+        if course_complete_prob > 0 and treatment_start_time is not None:
             # Calculate treatment duration
             weeks_on_treatment = (current_time - treatment_start_time).days / 7
             
             if weeks_on_treatment >= threshold_weeks:
-                if np.random.random() < duration_prob:
-                    return DiscontinuationDecision(True, "treatment_duration", duration_prob, "treatment_duration")
+                if np.random.random() < course_complete_prob:
+                    return DiscontinuationDecision(True, "course_complete_but_not_renewed", course_complete_prob, "course_complete_but_not_renewed")
         
         # Check premature discontinuation
         min_interval_weeks = premature_criteria.get("min_interval_weeks", 8)
@@ -471,7 +471,7 @@ class RefactoredDiscontinuationManager:
                     "stable_max_interval": 0,
                     "premature": 0,
                     "random_administrative": 0,
-                    "treatment_duration": 0
+                    "course_complete_but_not_renewed": 0
                 }
                 
             # Increment the counter for this cessation type
@@ -585,7 +585,7 @@ class CompatibilityDiscontinuationManager(RefactoredDiscontinuationManager):
         self.stats = {
             "stable_max_interval_discontinuations": 0,
             "random_administrative_discontinuations": 0,
-            "treatment_duration_discontinuations": 0,
+            "course_complete_but_not_renewed_discontinuations": 0,
             "premature_discontinuations": 0,
             "total_discontinuations": 0,
             "retreatments": 0,
@@ -593,17 +593,17 @@ class CompatibilityDiscontinuationManager(RefactoredDiscontinuationManager):
                 "stable_max_interval": 0,
                 "premature": 0,
                 "random_administrative": 0,
-                "treatment_duration": 0
+                "course_complete_but_not_renewed": 0
             }
         }
     
     def evaluate_discontinuation(self, 
                                patient_state: Dict[str, Any], 
                                current_time: datetime,
-                               patient_id: Optional[str] = None,  # Added this parameter for compatibility
                                clinician_id: Optional[str] = None,
                                treatment_start_time: Optional[datetime] = None,
-                               clinician: Optional[Clinician] = None) -> Tuple[bool, str, float, str]:
+                               clinician: Optional[Clinician] = None,
+                               patient_id: Optional[str] = None) -> Tuple[bool, str, float, str]:
         """Implement the old interface with the new implementation."""
         # If patient_id wasn't explicitly provided, try to get it from the state
         if patient_id is None and isinstance(patient_state, dict):
@@ -611,7 +611,7 @@ class CompatibilityDiscontinuationManager(RefactoredDiscontinuationManager):
         
         # Use new method
         decision = super().evaluate_discontinuation(
-            patient_state, current_time, patient_id, clinician_id, treatment_start_time, clinician
+            patient_state, current_time, clinician_id, treatment_start_time, clinician, patient_id
         )
         
         # Update stats here only for compatibility - the simulation should call register_discontinuation

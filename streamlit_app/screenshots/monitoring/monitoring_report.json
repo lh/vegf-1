@@ -1,0 +1,21 @@
+{
+  "timestamp": "2025-05-11T20:06:11.212Z",
+  "consoleLogs": {
+    "error": [],
+    "warning": [],
+    "info": [
+      "Gather usage stats:  false"
+    ]
+  },
+  "failedRequests": [],
+  "uiIssues": [
+    {
+      "type": "info",
+      "message": "Using Fixed Discontinuation Implementation\nThis app is using the fixed discontinuation implementation that properly tracks\nunique patient discontinuations and prevents double-counting.\nThe discontinuation rates shown will be accurate (≤100%)."
+    },
+    {
+      "type": "info",
+      "message": "No simulation results available. Please run a simulation to view results."
+    }
+  ]
+}

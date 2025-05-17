@@ -281,5 +281,5 @@ class AgentBasedSimulation(BaseSimulation):
         """
         return {
             'patients': self.agents,
-            'events': self.clock.event_history
+            'events': self.clock.event_list if hasattr(self.clock, 'event_list') else []
         }

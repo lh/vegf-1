@@ -2,7 +2,7 @@
 title: "APE: AMD Protocol Explorer Simulation Report"
 author: "AMD Modeling Team"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-format: 
+format:
   html:
     toc: true
     toc-depth: 3
@@ -116,7 +116,7 @@ ggplot(disc_counts, aes(x = "", y = Count, fill = Type)) +
   coord_polar("y", start = 0) +
   theme_void() +
   labs(title = "Distribution of Discontinuation Types") +
-  geom_text(aes(label = paste0(Percentage, "%")), 
+  geom_text(aes(label = paste0(Percentage, "%")),
             position = position_stack(vjust = 0.5)) +
   scale_fill_brewer(palette = "Set2")
 ```
@@ -235,7 +235,7 @@ recurrence_data <- data.frame(
   Type = c(
     rep("Planned", length(years)),
     rep("Administrative", length(years)),
-    rep("Time-based", length(years)),
+    rep("Not Renewed", length(years)),
     rep("Premature", length(years))
   )
 )
@@ -272,7 +272,7 @@ kable(clinician_profiles, caption = "Clinician Profiles") %>%
 # Create sample data for discontinuation rates by profile
 disc_rates <- data.frame(
   Profile = rep(clinician_profiles$Profile, each = 4),
-  Type = rep(c("Planned", "Premature", "Administrative", "Time-based"), 3),
+  Type = rep(c("Planned", "Premature", "Administrative", "Not Renewed"), 3),
   Rate = c(
     0.25, 0.05, 0.05, 0.15,  # Adherent
     0.18, 0.12, 0.05, 0.20,  # Average

@@ -1,0 +1,21 @@
+{
+  "name": "amd-protocol-explorer-puppeteer",
+  "version": "1.0.0",
+  "description": "Puppeteer testing tools for AMD Protocol Explorer",
+  "main": "test_puppeteer_integration.js",
+  "scripts": {
+    "test": "node test_puppeteer_integration.js",
+    "test:improved": "node improved_puppeteer_test.js",
+    "visual:baseline": "node visual_regression.js --mode=baseline",
+    "visual:test": "node visual_regression.js --mode=test"
+  },
+  "dependencies": {
+    "pixelmatch": "^5.3.0",
+    "pngjs": "^7.0.0",
+    "puppeteer": "^19.11.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "private": true
+}

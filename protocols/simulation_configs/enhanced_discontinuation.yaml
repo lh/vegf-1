@@ -57,7 +57,7 @@ discontinuation:
     random_administrative:
       annual_probability: 0.05    # Annual probability of random discontinuation
     
-    # Unplanned discontinuations - time-based
+    # Course complete but not renewed (end of standard treatment course)
     treatment_duration:
       threshold_weeks: 52         # Weeks of treatment before considering discontinuation
       probability: 0.1            # Probability of discontinuation after threshold
@@ -65,7 +65,15 @@ discontinuation:
     # Premature discontinuation (non-adherence to protocol)
     premature:
       min_interval_weeks: 8       # Minimum interval where premature discontinuation might occur
-      probability_factor: 2.0     # Multiplier for discontinuation probability (relative to planned)
+      probability_factor: 0.05    # Base multiplier for discontinuation probability (much lower to achieve target rate)
+      target_rate: 0.145          # Target overall premature discontinuation rate (14.5%)
+      profile_multipliers:        # Profile-specific multipliers (relative to base rate)
+        adherent: 0.2             # Adherent clinicians rarely trigger premature discontinuations
+        average: 1.0              # Average clinicians use the base rate
+        non_adherent: 3.0         # Non-adherent clinicians are 3x more likely to discontinue prematurely
+      # Visual acuity impact parameters (based on real-world analysis)
+      mean_va_loss: -9.4          # Mean VA loss in letters (negative value = loss)
+      va_loss_std: 5.0            # Standard deviation of VA loss
   
   # Post-discontinuation monitoring schedules by cessation type
   monitoring:

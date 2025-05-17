@@ -11,6 +11,29 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from typing import Dict, Any, Optional, List, Tuple, Union
 
+# Import the central color system
+try:
+    from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
+except ImportError:
+    # Fallback if the central color system is not available
+    COLORS = {
+        'primary': '#4682B4',    # Steel Blue - for visual acuity data
+        'secondary': '#B22222',  # Firebrick - for critical information
+        'patient_counts': '#8FAD91',  # Muted Sage Green - for patient counts
+    }
+    ALPHAS = {
+        'high': 0.8,        # High opacity for primary elements
+        'medium': 0.5,      # Medium opacity for standard elements
+        'low': 0.2,         # Low opacity for background elements
+        'very_low': 0.1,    # Very low opacity for subtle elements
+        'patient_counts': 0.5  # Consistent opacity for all patient/sample count visualizations
+    }
+    SEMANTIC_COLORS = {
+        'acuity_data': COLORS['primary'],
+        'patient_counts': COLORS['patient_counts'],
+        'critical_info': COLORS['secondary'],
+    }
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -48,8 +71,10 @@ def create_enrollment_visualization_matplotlib(
         # Create figure
         fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
         
-        # Simple bar chart
-        ax.bar(range(len(monthly_counts)), monthly_counts.values, color='#4682B4')
+        # Simple bar chart - use sage green with consistent alpha for patient counts
+        ax.bar(range(len(monthly_counts)), monthly_counts.values,
+               color=SEMANTIC_COLORS['patient_counts'],
+               alpha=ALPHAS['patient_counts'])
         
         # Clean up the appearance
         ax.spines['top'].set_visible(False)
@@ -185,7 +210,7 @@ def create_discontinuation_plot_matplotlib(
         values = [values[i] for i in sorted_indices]
         
         # Plot
-        bars = ax.bar(labels, values, color='#4682B4')
+        bars = ax.bar(labels, values, color=SEMANTIC_COLORS['acuity_data'], alpha=ALPHAS['medium'])
         
         # Clean up the appearance
         ax.spines['top'].set_visible(False)

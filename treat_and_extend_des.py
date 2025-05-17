@@ -94,7 +94,18 @@ class TreatAndExtendDES:
                 self.discontinuation_manager = EnhancedDiscontinuationManager({"discontinuation": {"enabled": True}})
         else:
             # If no parameter file specified, use the discontinuation config from the parameters
-            self.discontinuation_manager = EnhancedDiscontinuationManager({"discontinuation": {"enabled": True}})
+            discontinuation_params = self.config.get_treatment_discontinuation_params()
+            
+            # Fix: Create the correct structure with enabled=True
+            if "enabled" not in discontinuation_params:
+                # Ensure enabled flag is present and set to true
+                discontinuation_params["enabled"] = True
+            else:
+                # Ensure it's explicitly True even if present
+                discontinuation_params["enabled"] = True
+                
+            # Directly pass the properly structured parameters
+            self.discontinuation_manager = EnhancedDiscontinuationManager({"discontinuation": discontinuation_params})
         
         # Patient state management
         self.patients = {}
@@ -464,6 +475,27 @@ class TreatAndExtendDES:
                         patient["treatment_status"]["discontinuation_reason"] = reason
                         patient["treatment_status"]["cessation_type"] = cessation_type
                         self.stats["protocol_discontinuations"] += 1
+                        
+                        # Apply vision changes specific to this type of discontinuation
+                        # Convert patient dictionary to expected format for discontinuation manager
+                        patient_state = {
+                            "disease_activity": patient["disease_activity"],
+                            "treatment_status": patient["treatment_status"],
+                            "disease_characteristics": patient["disease_characteristics"],
+                            "vision": {
+                                "current_va": patient["current_vision"]
+                            }
+                        }
+                        
+                        # Apply vision changes based on cessation type
+                        updated_patient_state = self.discontinuation_manager.apply_vision_changes_after_discontinuation(
+                            patient_state=patient_state,
+                            cessation_type=cessation_type
+                        )
+                        
+                        # Update patient with any vision changes
+                        if "vision" in updated_patient_state and "current_va" in updated_patient_state["vision"]:
+                            patient["current_vision"] = updated_patient_state["vision"]["current_va"]
                         
                         # Schedule monitoring visits
                         monitoring_events = self.discontinuation_manager.schedule_monitoring(

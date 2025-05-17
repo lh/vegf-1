@@ -13,6 +13,29 @@ from pathlib import Path
 import sqlite3
 from datetime import timedelta
 
+# Import the central color system
+try:
+    from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
+except ImportError:
+    # Fallback if the central color system is not available
+    COLORS = {
+        'primary': '#4682B4',    # Steel Blue - for visual acuity data
+        'secondary': '#B22222',  # Firebrick - for critical information
+        'patient_counts': '#8FAD91',  # Muted Sage Green - for patient counts
+    }
+    ALPHAS = {
+        'high': 0.8,        # High opacity for primary elements
+        'medium': 0.5,      # Medium opacity for standard elements
+        'low': 0.2,         # Low opacity for background elements
+        'very_low': 0.1,    # Very low opacity for subtle elements
+        'patient_counts': 0.5  # Consistent opacity for all patient/sample count visualizations
+    }
+    SEMANTIC_COLORS = {
+        'acuity_data': COLORS['primary'],
+        'patient_counts': COLORS['patient_counts'],
+        'critical_info': COLORS['secondary'],
+    }
+
 # Set up output directory
 output_dir = Path("output/analysis_results")
 output_dir.mkdir(exist_ok=True, parents=True)
@@ -239,14 +262,15 @@ def visualize_long_gap_patients(long_gap_data: pl.DataFrame) -> None:
         std_after = np.std(va_after_gaps)
         mean_change = np.mean(va_changes)
         
-        # Create bar chart
+        # Create bar chart with sage green to match our semantic color system
         plt.bar(
-            ["Before Gap", "After Gap"], 
+            ["Before Gap", "After Gap"],
             [mean_before, mean_after],
             yerr=[std_before, std_after],
             capsize=10,
             width=0.5,
-            alpha=0.7
+            color=SEMANTIC_COLORS['patient_counts'],  # Use central color definition
+            alpha=ALPHAS['patient_counts']  # Use standardized alpha specifically for patient counts
         )
         
         # Add text labels

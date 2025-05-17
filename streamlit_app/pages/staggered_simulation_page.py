@@ -14,6 +14,29 @@ import matplotlib.pyplot as plt
 import time
 from typing import Dict, Any, Optional
 
+# Import the central color system
+try:
+    from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
+except ImportError:
+    # Fallback if the central color system is not available
+    COLORS = {
+        'primary': '#4682B4',    # Steel Blue - for visual acuity data
+        'secondary': '#B22222',  # Firebrick - for critical information
+        'patient_counts': '#8FAD91',  # Muted Sage Green - for patient counts
+    }
+    ALPHAS = {
+        'high': 0.8,        # High opacity for primary elements
+        'medium': 0.5,      # Medium opacity for standard elements
+        'low': 0.2,         # Low opacity for background elements
+        'very_low': 0.1,    # Very low opacity for subtle elements
+        'patient_counts': 0.5  # Consistent opacity for all patient/sample count visualizations
+    }
+    SEMANTIC_COLORS = {
+        'acuity_data': COLORS['primary'],
+        'patient_counts': COLORS['patient_counts'],
+        'critical_info': COLORS['secondary'],
+    }
+
 from streamlit_app.components.layout import display_logo_and_title
 from streamlit_app.utils.session_state import get_debug_mode
 from streamlit_app.components.visualizations.r_integration import render_enrollment_visualization
@@ -347,9 +370,9 @@ def display_staggered_simulation():
                                     # Create a figure
                                     fig, ax = plt.subplots(figsize=(10, 5))
 
-                                    # Plot bars with lighter blue to match other visualizations
+                                    # Plot bars using the semantic color for patient counts from our central system
                                     ax.bar(range(len(monthly_counts)), monthly_counts.values,
-                                           color='#a8c4e5', alpha=0.3)
+                                           color=SEMANTIC_COLORS['patient_counts'], alpha=ALPHAS['patient_counts'])
 
                                     # Style axis
                                     style_axis(ax)

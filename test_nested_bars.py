@@ -19,7 +19,7 @@ retreated_counts = {
     'Premature': 455,
     'Planned': 60,
     'Not Renewed': 6,
-    'Administrative': 1
+    'Administrative': 2
 }
 
 # Add not retreated patients

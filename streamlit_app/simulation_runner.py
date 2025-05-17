@@ -16,6 +16,9 @@ import streamlit as st
 import time
 from datetime import datetime
 
+# Import data normalization
+from streamlit_app.data_normalizer import DataNormalizer
+
 # Import the central color system
 try:
     from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
@@ -746,6 +749,17 @@ def process_simulation_results(sim, patient_histories, params):
     dict
         Processed results for visualization
     """
+    # Normalize data at system boundary
+    patient_histories = DataNormalizer.normalize_patient_histories(patient_histories)
+    
+    # Validate normalization if in debug mode
+    if DEBUG_MODE:
+        try:
+            DataNormalizer.validate_normalized_data(patient_histories)
+            debug_info("Patient histories successfully normalized and validated")
+        except ValueError as e:
+            debug_info(f"Data normalization validation failed: {e}")
+    
     results = {
         "simulation_type": params["simulation_type"],
         "population_size": params["population_size"],
@@ -931,6 +945,10 @@ def process_simulation_results(sim, patient_histories, params):
             
         # Add raw stats for debugging
         results["raw_discontinuation_stats"] = disc_stats
+        
+    # Create alias for patient data - visualization expects "patient_data" but simulation provides "patient_histories"
+    if "patient_histories" in results and "patient_data" not in results:
+        results["patient_data"] = results["patient_histories"]
     
     # Process patient histories for visual acuity outcomes
     va_data = []
@@ -1105,22 +1123,26 @@ def process_simulation_results(sim, patient_histories, params):
             for i, visit in enumerate(patient_obj):
                 if isinstance(visit, dict) and 'vision' in visit:
                     # First record is time 0, subsequent records accumulate intervals
+                    # All visits must have a date (already normalized to datetime)
+                    if 'date' not in visit:
+                        raise ValueError(
+                            f"Visit {i} of patient {pid} is missing required 'date' field. "
+                            f"Visit data: {visit}"
+                        )
+                    
+                    # Date is already normalized to datetime by DataNormalizer
+                    visit_date = visit['date']
+                    
+                    # First visit establishes baseline
                     if i == 0:
+                        baseline_time = visit_date
                         visit_time = 0
-                        if 'date' in visit and isinstance(visit['date'], (int, float)):
-                            baseline_time = visit['date']
                     else:
-                        # If we have an interval field, use that
-                        if 'interval' in visit and isinstance(visit['interval'], (int, float)):
-                            cumulative_time += visit['interval']
-                            visit_time = cumulative_time / 30.0  # Convert days to months
-                        # Otherwise try to use date
-                        elif 'date' in visit and isinstance(visit['date'], (int, float)) and baseline_time is not None:
-                            # Convert difference in days to months
-                            visit_time = (visit['date'] - baseline_time) / 30.0
-                        # Fall back to visit index as months (approximate)
-                        else:
-                            visit_time = i
+                        # Calculate time from baseline (both are datetime objects)
+                        if baseline_time is None:
+                            raise ValueError(f"No baseline time established for patient {pid}")
+                        
+                        visit_time = (visit_date - baseline_time).days / 30.44
 
                     # Store the vision value at this time point
                     visit_times[visit_time] = visit['vision']
@@ -1544,16 +1566,28 @@ def generate_va_over_time_plot(results):
     # Create DataFrame from the results
     df = pd.DataFrame(results["mean_va_data"])
     
+    # Filter out data points beyond simulation duration
+    duration_years = results.get("duration_years", 5)
+    max_months = duration_years * 12
+    
+    # Use the appropriate time column
+    time_col = "time_months" if "time_months" in df.columns else "time"
+    df = df[df[time_col] <= max_months]
+    
+    if DEBUG_MODE:
+        print(f"Filtered data to {max_months} months (simulation duration: {duration_years} years)")
+        print(f"Data points before filter: {len(results['mean_va_data'])}, after filter: {len(df)}")
+    
     # Make sure we have the required columns
-    if "time" not in df.columns or "visual_acuity" not in df.columns:
+    if time_col not in df.columns or "visual_acuity" not in df.columns:
         available_cols = list(df.columns)
         
         # Try to guess which columns might be time and visual acuity
-        time_col = next((col for col in available_cols if "time" in col.lower()), None)
+        time_col_guess = next((col for col in available_cols if "time" in col.lower()), None)
         va_col = next((col for col in available_cols if "visual" in col.lower() or "acuity" in col.lower() or "va" == col.lower()), None)
         
-        if time_col and va_col:
-            df["time"] = df[time_col]
+        if time_col_guess and va_col:
+            df[time_col] = df[time_col_guess]
             df["visual_acuity"] = df[va_col]
         else:
             # Create minimal placeholder visualization
@@ -1625,7 +1659,8 @@ def generate_va_over_time_plot(results):
     acuity_color = SEMANTIC_COLORS['acuity_data']
     
     # Define threshold for showing individual data points
-    individual_point_threshold = 50  # Show individual points when sample size <= 50
+    # We'll show individual points when sample size is below 30 (more conservative)
+    individual_point_threshold = 30  # Show individual points when sample size <= 30
     
     # Determine which points should show mean vs individual points
     # Based on sample size at each timepoint
@@ -1769,26 +1804,33 @@ def generate_va_over_time_plot(results):
         # We've already calculated use_mean_indices and use_individual_indices above
         
         # Plot CI only for points with sample size > threshold (use_mean_indices)
-        if use_mean_indices:
+        if use_mean_indices and len(use_mean_indices) > 0:
             # Get the subset of data for CI
             ci_mask = df.index.isin(use_mean_indices)
             
-            # Plot confidence interval as shaded area only where sample size is large enough
-            ax_acuity.fill_between(
-                df.loc[ci_mask, "time_months"], 
-                df.loc[ci_mask, 'lower_ci'], 
-                df.loc[ci_mask, 'upper_ci'],
-                color=acuity_color, 
-                alpha=ALPHAS['very_low'], 
-                label="95% Confidence Interval"
-            )
+            # Only plot if we have some data to show
+            if ci_mask.any():
+                # Plot confidence interval as shaded area only where sample size is large enough
+                ax_acuity.fill_between(
+                    df.loc[ci_mask, "time_months"], 
+                    df.loc[ci_mask, 'lower_ci'], 
+                    df.loc[ci_mask, 'upper_ci'],
+                    color=acuity_color, 
+                    alpha=ALPHAS['very_low'], 
+                    label="95% Confidence Interval"
+                )
         
         # Add individual data points for low sample sizes
         if use_individual_indices:
             added_to_legend = False
             
-            # Check if we have patient data
-            has_patient_data = "patient_data" in results and results["patient_data"]
+            # Check if we have patient data - look for patient_data or patient_histories
+            patient_data = results.get("patient_data", {})
+            if not patient_data:
+                # Check for patient_histories as an alias
+                patient_data = results.get("patient_histories", {})
+            
+            has_patient_data = bool(patient_data)
             
             # For small sample sizes, if patient data is not available, use a faint weighted moving average
             if not has_patient_data:
@@ -1839,15 +1881,24 @@ def generate_va_over_time_plot(results):
                 # No need for debug message in production, but useful during development
                 if DEBUG_MODE:
                     ax_acuity.text(0.5, 0.95, 
-                                  "Note: Individual data points not available - patient_data missing",
+                                  f"Note: Individual data points not available - patient_data missing. Keys: {list(results.keys())[:5]}",
                                   transform=ax_acuity.transAxes,
                                   fontsize=10, ha='center', color='red', alpha=0.7)
+            else:
+                # We have patient data - plot individual points
+                
+                # Find the simulation start date for proper time conversion
+                simulation_start_date = results.get("simulation_start_date", results.get("start_date"))
+                if simulation_start_date:
+                    simulation_start_date = pd.to_datetime(simulation_start_date)
+                else:
+                    # Fallback: assume simulation started 2023-01-01 if not specified
+                    simulation_start_date = pd.to_datetime("2023-01-01")
+                    if DEBUG_MODE:
+                        print("Warning: No simulation_start_date found, using default 2023-01-01")
             
-            # Draw individual patient points at these timepoints if available
-            patient_data = results.get("patient_data", {})
-            
-            # For debugging - check patient data structure
-            if has_patient_data:
+            # For debugging - check patient data structure only in DEBUG_MODE
+            if has_patient_data and DEBUG_MODE:
                 # Get a sample of the patient data to understand its structure
                 sample_patient_id = next(iter(patient_data))
                 sample_patient = patient_data[sample_patient_id]
@@ -1859,73 +1910,202 @@ def generate_va_over_time_plot(results):
                         visit_attrs = list(sample_visit.keys()) if isinstance(sample_visit, dict) else []
                         
                         # If we don't have the expected attributes, show debug info
-                        has_time = "time" in visit_attrs or "time_months" in visit_attrs
-                        has_va = "visual_acuity" in visit_attrs or "vision" in visit_attrs
+                        has_time = "time" in visit_attrs or "time_months" in visit_attrs or "date" in visit_attrs
+                        has_va = "visual_acuity" in visit_attrs or "vision" in visit_attrs or "va" in visit_attrs
                         
                         if not (has_time and has_va):
-                            # Add debug message about visit structure
-                            visit_attr_str = ", ".join(visit_attrs[:5])
-                            if len(visit_attrs) > 5:
-                                visit_attr_str += "..."
-                                
-                            ax_acuity.text(0.5, 0.9, 
-                                          f"Note: Patient visit structure missing required fields. Has: {visit_attr_str}",
-                                          transform=ax_acuity.transAxes,
-                                          fontsize=9, ha='center', color='red', alpha=0.7)
-                    else:
-                        # Not a list type as expected
-                        patient_type = type(sample_patient).__name__
-                        ax_acuity.text(0.5, 0.9, 
-                                      f"Note: Unexpected patient data structure. Type: {patient_type}",
-                                      transform=ax_acuity.transAxes,
-                                      fontsize=9, ha='center', color='red', alpha=0.7)
+                            # Log the issue instead of showing on chart
+                            print(f"Warning: Patient visit structure may be missing fields. Has: {visit_attrs}")
             
             for i in use_individual_indices:
-                time_month = df["time_months"].iloc[i]
+                # Get the time value - check which column exists
+                time_col = "time_months" if "time_months" in df.columns else "time"
+                time_month = df[time_col].iloc[i]
+                current_sample_size = df["sample_size"].iloc[i] if "sample_size" in df.columns else 30
+                
+                if DEBUG_MODE:
+                    print(f"\nProcessing time {time_month} with sample size {current_sample_size}")
+                
+                # Only plot individual points if we truly have small sample sizes
+                if current_sample_size > individual_point_threshold:
+                    if DEBUG_MODE:
+                        print(f"  Skipping: sample size {current_sample_size} > threshold {individual_point_threshold}")
+                    continue
                 
                 # Find patient data for this timepoint (within some tolerance)
-                time_tolerance = 0.5  # Half-month tolerance
+                time_tolerance = 0.5  # Back to smaller tolerance
                 
-                # Find all patient data points for this month
-                matched_data = []
+                # Collect visit data only for this specific time point
+                # We should only get visits that are truly at this time point
+                individual_visits = []
+                
+                if DEBUG_MODE:
+                    print(f"  Checking {len(patient_data)} patients for visits near time {time_month}")
+                    # Sample a patient to see the data structure
+                    if patient_data:
+                        sample_id = next(iter(patient_data))
+                        sample_visits = patient_data[sample_id]
+                        if isinstance(sample_visits, list) and sample_visits:
+                            print(f"  Sample patient {sample_id} has {len(sample_visits)} visits")
+                            print(f"  First visit: {sample_visits[0]}")
+                            if len(sample_visits) > 10:
+                                print(f"  10th visit: {sample_visits[9]}")
+                
+                patients_checked = 0
+                visits_found = 0
+                
+                # Use binary search for better performance
+                import bisect
+                
                 for patient_id, visits in patient_data.items():
-                    for visit in visits:
-                        visit_month = visit.get("time_months", visit.get("time", 0))
-                        va = visit.get("visual_acuity", visit.get("vision", None))
-                        
-                        if (abs(visit_month - time_month) <= time_tolerance and 
-                            va is not None):
-                            matched_data.append(va)
-                
-                # Plot individual points with jitter and very light alpha
-                if matched_data:
-                    # Add some jitter to x-position
-                    x_jitter = np.random.normal(0, 0.2, len(matched_data))  # Increased jitter
-                    x_positions = [time_month + j for j in x_jitter]
+                    patients_checked += 1
+                    if not isinstance(visits, list):
+                        if DEBUG_MODE and patients_checked < 5:
+                            print(f"    Patient {patient_id} data is not a list: {type(visits)}")
+                        continue
                     
-                    # Plot with higher alpha for better visibility
+                    # Sort visits by time once for efficient searching
+                    sorted_visits = []
+                    for visit in visits:
+                        if not isinstance(visit, dict):
+                            continue
+                        
+                        # Get visit time
+                        visit_month = None
+                        
+                        if "date" in visit:
+                            try:
+                                visit_date_str = visit["date"]
+                                # Handle different date formats
+                                if isinstance(visit_date_str, str):
+                                    visit_date = pd.to_datetime(visit_date_str.replace('T', ' '))
+                                elif isinstance(visit_date_str, datetime):
+                                    visit_date = visit_date_str
+                                else:
+                                    visit_date = pd.to_datetime(visit_date_str)
+                                
+                                # Calculate months from simulation start
+                                visit_month = (visit_date - simulation_start_date).days / 30.44
+                            except Exception as e:
+                                if DEBUG_MODE and patients_checked < 3:
+                                    print(f"    Error parsing date '{visit.get('date')}': {e}")
+                                continue
+                        
+                        if visit_month is None:
+                            if "time_months" in visit:
+                                visit_month = visit["time_months"]
+                            elif "time" in visit:
+                                visit_month = visit["time"] / 30.44 if visit["time"] > 100 else visit["time"]
+                            else:
+                                continue
+                        
+                        sorted_visits.append((visit_month, visit))
+                    
+                    if not sorted_visits:
+                        continue
+                    
+                    # Sort by time for binary search
+                    sorted_visits.sort(key=lambda x: x[0])
+                    
+                    # Find visits within tolerance using binary search
+                    left_time = time_month - time_tolerance
+                    right_time = time_month + time_tolerance
+                    
+                    # Find the first visit >= left_time
+                    visit_times = [v[0] for v in sorted_visits]
+                    left_idx = bisect.bisect_left(visit_times, left_time)
+                    # Find the first visit > right_time
+                    right_idx = bisect.bisect_right(visit_times, right_time)
+                    
+                    # Get all visits in the tolerance window
+                    window_visits = sorted_visits[left_idx:right_idx]
+                    
+                    if window_visits:
+                        # Find the closest visit
+                        best_visit = min(window_visits, key=lambda x: abs(x[0] - time_month))
+                        visit_month, visit = best_visit
+                        
+                        va = None
+                        if "visual_acuity" in visit:
+                            va = visit["visual_acuity"]
+                        elif "vision" in visit:
+                            va = visit["vision"]
+                        elif "va" in visit:
+                            va = visit["va"]
+                        
+                        if va is not None:
+                            individual_visits.append((visit_month, va))
+                            visits_found += 1
+                            
+                            if DEBUG_MODE and visits_found <= 5:
+                                print(f"    Found visit at month {visit_month:.1f}, VA: {va:.1f}")
+                
+                if DEBUG_MODE:
+                    print(f"  Checked {patients_checked} patients, found {visits_found} visits")
+                
+                # Plot individual points with jitter
+                if individual_visits:
+                    x_positions = []
+                    y_values = []
+                    
+                    for actual_time, va in individual_visits:
+                        # Add smaller jitter now that we have the correct number of points
+                        jitter = np.random.normal(0, 0.1)
+                        x_positions.append(actual_time + jitter)
+                        y_values.append(va)
+                    
+                    # Get alpha for this time point
+                    current_alpha = alpha_values[i] if has_variable_alpha else 0.5
+                    
+                    # Plot individual patient points
+                    point_alpha = max(0.3, 0.5 * current_alpha)  # Back to original alpha
                     scatter = ax_acuity.scatter(
-                        x_positions, matched_data, 
-                        s=15,  # Slightly larger points
+                        x_positions, y_values, 
+                        s=25,  # Back to original size
                         marker='o', 
                         color=acuity_color, 
-                        alpha=0.4,  # Significantly increased from 0.15 for better visibility
-                        zorder=3
+                        alpha=point_alpha,
+                        edgecolor='none',  # No edge for cleaner look
+                        zorder=5  # Above lines but below legend
                     )
                     
                     # Add to legend only once
                     if not added_to_legend:
                         scatter.set_label("Individual Patients")
                         added_to_legend = True
+                    
+                    if DEBUG_MODE:
+                        print(f"Month {time_month}: Plotted {len(x_positions)} individual points (sample size: {current_sample_size})")
+                        if len(x_positions) > 50:
+                            print(f"  WARNING: Too many points ({len(x_positions)}) for sample size {current_sample_size}")
                 else:
-                    # Add a discrete point for small sample sizes instead of red dot
-                    # This shows the individual mean value for that timepoint
-                    ax_acuity.scatter(time_month, df["visual_acuity"].iloc[i],
-                                     s=20,  # Slightly larger than the mean line points
-                                     marker='o',
-                                     color=acuity_color,
-                                     alpha=0.6,  # More visible than the trend line
-                                     zorder=4)
+                    if DEBUG_MODE:
+                        print(f"  No individual visits found for time {time_month}")
+                    
+                    # As a fallback, plot the mean as an individual point
+                    scatter = ax_acuity.scatter(
+                        [time_month], [df["visual_acuity"].iloc[i]], 
+                        s=30,  
+                        marker='o', 
+                        color=acuity_color, 
+                        alpha=0.6,
+                        edgecolor='none',
+                        zorder=5,
+                        label="Individual Patients" if not added_to_legend else None
+                    )
+                    if not added_to_legend:
+                        added_to_legend = True
+                
+                # Also plot the mean as a faint dashed line for continuity
+                if i > 0 and i - 1 in df.index:
+                    current_alpha = alpha_values[i] if has_variable_alpha else 0.5
+                    adjusted_alpha = current_alpha * 0.3  # Very faint for mean when showing individuals
+                    ax_acuity.plot([df["time_months"].iloc[i-1], df["time_months"].iloc[i]], 
+                                  [df["visual_acuity"].iloc[i-1], df["visual_acuity"].iloc[i]], 
+                                  color=acuity_color, 
+                                  alpha=adjusted_alpha, 
+                                  linestyle='--',  # Dashed to indicate reduced confidence
+                                  linewidth=1)
         elif not use_mean_indices and "std_error" in df.columns:
             # Default behavior when sample sizes are not available
             ax_acuity.fill_between(df["time_months"], 
