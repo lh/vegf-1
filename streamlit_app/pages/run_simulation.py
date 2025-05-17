@@ -431,8 +431,24 @@ def display_simulation_results(results):
     
     # Show visual acuity over time
     st.subheader("Visual Acuity Over Time")
-    fig = generate_va_over_time_plot(results)
-    st.pyplot(fig)
+    
+    # Create two columns for side-by-side display
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**Mean Visual Acuity with Confidence Intervals**")
+        fig = generate_va_over_time_plot(results)
+        st.pyplot(fig)
+        
+    with col2:
+        st.write("**Distribution of Visual Acuity**")
+        # Only show distribution plot if we have patient-level data
+        if "patient_data" in results or "patient_histories" in results:
+            from streamlit_app.simulation_runner import generate_va_distribution_plot
+            fig2 = generate_va_distribution_plot(results)
+            st.pyplot(fig2)
+        else:
+            st.info("Individual patient data not available for distribution plot.")
 
 
 if __name__ == "__main__":

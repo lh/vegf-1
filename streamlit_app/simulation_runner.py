@@ -15,6 +15,7 @@ from pathlib import Path
 import streamlit as st
 import time
 from datetime import datetime
+from collections import defaultdict
 
 # Import data normalization
 from streamlit_app.data_normalizer import DataNormalizer
@@ -1868,11 +1869,195 @@ def generate_va_over_time_plot(results):
     ax_acuity.legend(frameon=False, fontsize=9, loc='upper center', bbox_to_anchor=(0.5, 1.05), 
                      ncol=4)  # Use ncol=4 to arrange items horizontally
     
+    # Add explanatory text about the confidence interval
+    fig.text(0.5, 0.01, 
+            "Note: The 95% confidence interval shows our statistical confidence in the mean value, not the range of patient vision scores.",
+            ha='center', va='bottom', fontsize=9, color=COLORS['text_secondary'],
+            style='italic', wrap=True)
     
     # Optimize spacing around the chart for better Streamlit rendering
-    # Add extra space on the right for the baseline annotation
-    fig.subplots_adjust(left=0.12, right=0.85, top=0.92, bottom=0.12)
-    plt.tight_layout(rect=[0, 0, 1, 0.95]) 
+    # Add extra space on the right for the baseline annotation and bottom for the note
+    fig.subplots_adjust(left=0.12, right=0.85, top=0.92, bottom=0.15)
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95]) 
+    
+    return fig
+
+
+def generate_va_distribution_plot(results):
+    """
+    Generate a percentile bands plot showing the distribution of visual acuity over time.
+    
+    This plot shows the actual range of patient vision values, not statistical confidence.
+    It displays multiple percentile bands to show how the distribution evolves over time.
+    
+    Parameters
+    ----------
+    results : dict
+        Simulation results containing patient-level visual acuity data
+    
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Plot figure showing VA distribution over time
+    """
+    # Import the central color system
+    try:
+        from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
+    except ImportError:
+        # Fallback colors
+        COLORS = {
+            'primary': '#4682B4',
+            'primary_dark': '#2a4d6e',
+            'text': '#333333',
+            'text_secondary': '#666666',
+            'grid': '#EEEEEE',
+        }
+        ALPHAS = {
+            'high': 0.8,
+            'medium': 0.5,
+            'low': 0.2,
+            'very_low': 0.1,
+        }
+    
+    # Get the raw patient data
+    if "patient_data" not in results and "patient_histories" not in results:
+        # Create a placeholder figure
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.text(0.5, 0.5, "No patient-level data available for distribution plot",
+                ha='center', va='center', fontsize=14, transform=ax.transAxes)
+        return fig
+    
+    patient_histories = results.get("patient_data", results.get("patient_histories", {}))
+    
+    # Extract all patient VA values at each time point
+    time_va_map = defaultdict(list)  # time -> list of VA values
+    
+    for patient_id, patient in patient_histories.items() if isinstance(patient_histories, dict) else enumerate(patient_histories):
+        # Extract VA data based on patient structure (similar to aggregate_vision_data)
+        if isinstance(patient, list):
+            # Patient is a list of visits
+            cumulative_time = 0
+            baseline_time = None
+            
+            for i, visit in enumerate(patient):
+                if isinstance(visit, dict) and 'vision' in visit:
+                    # Calculate time from baseline
+                    if i == 0:
+                        baseline_time = visit.get('date')
+                        visit_time = 0
+                    else:
+                        if baseline_time and 'date' in visit:
+                            visit_time = (visit['date'] - baseline_time).days / 30.44
+                        else:
+                            visit_time = i  # fallback to visit index
+                    
+                    # Round to nearest month
+                    time_month = round(visit_time)
+                    time_va_map[time_month].append(visit['vision'])
+        
+        elif hasattr(patient, 'acuity_history'):
+            # Use acuity_history attribute
+            for record in patient.acuity_history:
+                time_month = round(record.get('time', 0))
+                va_value = record.get('visual_acuity', record.get('vision', 0))
+                time_va_map[time_month].append(va_value)
+    
+    # Calculate percentiles at each time point
+    percentile_data = []
+    percentiles_to_calculate = [5, 10, 25, 50, 75, 90, 95]
+    
+    for time_month in sorted(time_va_map.keys()):
+        va_values = time_va_map[time_month]
+        if len(va_values) >= 5:  # Need minimum sample size for reliable percentiles
+            percentile_results = {
+                'time': time_month,
+                'count': len(va_values),
+                'mean': np.mean(va_values)
+            }
+            
+            for p in percentiles_to_calculate:
+                percentile_results[f'p{p}'] = np.percentile(va_values, p)
+            
+            percentile_data.append(percentile_results)
+    
+    if not percentile_data:
+        # Not enough data
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.text(0.5, 0.5, "Insufficient data points for distribution plot",
+                ha='center', va='center', fontsize=14, transform=ax.transAxes)
+        return fig
+    
+    # Convert to DataFrame for easier plotting
+    df = pd.DataFrame(percentile_data)
+    
+    # Create the plot
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Plot percentile bands from widest to narrowest
+    # 90% band (5th to 95th percentile) - lightest
+    ax.fill_between(df['time'], df['p5'], df['p95'], 
+                   color=COLORS['primary'], alpha=0.15, 
+                   label='90% of patients (5th-95th percentile)')
+    
+    # 80% band (10th to 90th percentile)
+    ax.fill_between(df['time'], df['p10'], df['p90'], 
+                   color=COLORS['primary'], alpha=0.25, 
+                   label='80% of patients (10th-90th percentile)')
+    
+    # 50% band (25th to 75th percentile) - interquartile range
+    ax.fill_between(df['time'], df['p25'], df['p75'], 
+                   color=COLORS['primary'], alpha=0.4, 
+                   label='50% of patients (25th-75th percentile)')
+    
+    # Median line
+    ax.plot(df['time'], df['p50'], 
+           color=COLORS['primary_dark'], linewidth=2.5, 
+           label='Median', zorder=5)
+    
+    # Mean line (for comparison)
+    ax.plot(df['time'], df['mean'], '--',
+           color=COLORS['primary_dark'], linewidth=1.5, alpha=0.7,
+           label='Mean', zorder=4)
+    
+    # Add sample size as text annotations at regular intervals
+    interval = max(1, len(df) // 10)  # Show ~10 sample size labels
+    for idx in range(0, len(df), interval):
+        row = df.iloc[idx]
+        ax.text(row['time'], ax.get_ylim()[0] + 2, f"n={row['count']}", 
+               ha='center', va='bottom', fontsize=8, 
+               color=COLORS['text_secondary'], alpha=0.7)
+    
+    # Styling
+    ax.set_xlabel("Months", fontsize=10, color=COLORS['text_secondary'])
+    ax.set_ylabel("Visual Acuity (letters)", fontsize=10, color=COLORS['text_secondary'])
+    ax.set_ylim(0, 85)  # Standard ETDRS range
+    
+    # Title
+    fig.suptitle("Distribution of Patient Visual Acuity Over Time", 
+                fontsize=12, color=COLORS['text'], 
+                x=0.1, y=0.98, ha='left')
+    
+    # Legend
+    ax.legend(frameon=False, fontsize=9, loc='upper right')
+    
+    # Clean Tufte-inspired styling
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['left'].set_linewidth(0.5)
+    ax.spines['bottom'].set_linewidth(0.5)
+    ax.grid(True, axis='y', linestyle='--', alpha=0.2, color=COLORS['grid'])
+    ax.grid(False, axis='x')
+    ax.tick_params(colors=COLORS['text_secondary'])
+    
+    # Add explanatory text
+    fig.text(0.5, 0.01, 
+            "This plot shows the actual distribution of patient vision scores, not statistical confidence intervals.",
+            ha='center', va='bottom', fontsize=9, color=COLORS['text_secondary'],
+            style='italic', wrap=True)
+    
+    # Adjust layout
+    fig.subplots_adjust(left=0.12, right=0.88, top=0.92, bottom=0.12)
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     
     return fig
 
