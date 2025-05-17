@@ -20,28 +20,16 @@ from collections import defaultdict
 # Import data normalization
 from streamlit_app.data_normalizer import DataNormalizer
 
-# Import the central color system
-try:
-    from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
-except ImportError:
-    # Fallback if the central color system is not available
-    COLORS = {
-        'primary': '#4682B4',    # Steel Blue - for visual acuity data
-        'secondary': '#B22222',  # Firebrick - for critical information
-        'patient_counts': '#8FAD91',  # Muted Sage Green - for patient counts
-    }
-    ALPHAS = {
-        'high': 0.8,        # High opacity for primary elements
-        'medium': 0.5,      # Medium opacity for standard elements
-        'low': 0.2,         # Low opacity for background elements
-        'very_low': 0.1,    # Very low opacity for subtle elements
-        'patient_counts': 0.5  # Consistent opacity for all patient/sample count visualizations
-    }
-    SEMANTIC_COLORS = {
-        'acuity_data': COLORS['primary'],
-        'patient_counts': COLORS['patient_counts'],
-        'critical_info': COLORS['secondary'],
-    }
+# Import the central color system and templates - fail fast, no fallbacks
+from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
+from visualization.chart_templates import (
+    apply_dual_axis_style, 
+    apply_standard_layout, 
+    apply_horizontal_legend,
+    set_standard_y_axis_range,
+    set_yearly_x_ticks,
+    add_explanatory_note
+)
 
 # Global variable for debug mode - will be set by app.py
 DEBUG_MODE = False
@@ -1469,42 +1457,11 @@ def generate_va_over_time_plot(results):
     matplotlib.figure.Figure
         Plot figure
     """
-    # Import the central color system
-    try:
-        from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
-    except ImportError:
-        # Fallback if the central color system is not available
-        COLORS = {
-            'primary': '#4682B4',    # Steel Blue - for visual acuity data
-            'primary_dark': '#2a4d6e', # Darker Steel Blue - for acuity trend lines
-            'secondary': '#B22222',  # Firebrick - for critical information
-            'tertiary': '#228B22',   # Forest Green - for additional data series
-            'patient_counts': '#8FAD91',  # Muted Sage Green - for patient counts
-            'patient_counts_dark': '#5e7260', # Darker Sage Green - for patient count trend lines
-            'background': '#FFFFFF', # White background
-            'grid': '#EEEEEE',       # Very light gray for grid lines
-            'text': '#333333',       # Dark gray for titles and labels
-            'text_secondary': '#666666',  # Medium gray for secondary text
-            'border': '#CCCCCC'      # Light gray for necessary borders
-        }
-        ALPHAS = {
-            'high': 0.8,        # High opacity for primary elements
-            'medium': 0.5,      # Medium opacity for standard elements
-            'low': 0.2,         # Low opacity for background elements
-            'very_low': 0.1,    # Very low opacity for subtle elements
-            'patient_counts': 0.35  # Consistent opacity for all patient/sample count visualizations
-        }
-        SEMANTIC_COLORS = {
-            'acuity_data': COLORS['primary'],       # Blue for visual acuity data
-            'acuity_trend': COLORS['primary_dark'],  # Darker blue for acuity trend lines
-            'patient_counts': COLORS['patient_counts'],  # Sage Green for patient/sample counts
-            'patient_counts_trend': COLORS['patient_counts_dark'],  # Darker sage green for patient count trend lines
-            'critical_info': COLORS['secondary'],   # Red for critical information and alerts
-            'additional_series': COLORS['tertiary'] # Green for any additional data series
-        }
+    # Import the central color system - fail fast, no fallbacks
+    from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
     
     # Check if we have valid data
-    if results.get("failed", False) or "mean_va_data" not in results or not results["mean_va_data"]:
+    if results.get("failed", False):
         # Create a NEW informative placeholder visualization with troubleshooting info
         # Use proper isolation (new figure created here)
         fig, ax = plt.subplots(figsize=(10, 6))
@@ -1564,6 +1521,13 @@ def generate_va_over_time_plot(results):
 
         return fig
     
+    # Validate required data exists
+    if "mean_va_data" not in results:
+        raise KeyError("mean_va_data is required but not found in results")
+    
+    if not results["mean_va_data"]:
+        raise ValueError("mean_va_data is empty")
+    
     # Create DataFrame from the results
     df = pd.DataFrame(results["mean_va_data"])
     
@@ -1571,8 +1535,14 @@ def generate_va_over_time_plot(results):
     duration_years = results.get("duration_years", 5)
     max_months = duration_years * 12
     
-    # Use the appropriate time column
-    time_col = "time_months" if "time_months" in df.columns else "time"
+    # Use the appropriate time column - fail early if not found
+    if "time_months" in df.columns:
+        time_col = "time_months"
+    elif "time" in df.columns:
+        time_col = "time"
+    else:
+        raise ValueError(f"No time column found in data. Available columns: {list(df.columns)}")
+    
     df = df[df[time_col] <= max_months]
     
     if DEBUG_MODE:
@@ -1642,10 +1612,11 @@ def generate_va_over_time_plot(results):
         bars = ax_counts.bar(df["time_months"], sample_sizes, 
                             alpha=ALPHAS['patient_counts'], 
                             color=patient_counts_color, 
-                            width=0.8)
+                            width=0.8,
+                            label='Number of Measurements')
         
-        # Set up left y-axis for patient counts - increased font size and alpha for better legibility
-        ax_counts.set_ylabel("Sample Size (patients)", 
+        # Set up left y-axis for measurement counts - increased font size and alpha for better legibility
+        ax_counts.set_ylabel("Number of Measurements", 
                            color=patient_counts_color, 
                            fontsize=10,
                            alpha=1.0)
@@ -1808,11 +1779,8 @@ def generate_va_over_time_plot(results):
                         alpha=1.0)
     ax_acuity.tick_params(axis='y', colors=acuity_color)
     
-    # Calculate y-axis range with padding
-    if len(df) > 0:
-        min_va = min(df["visual_acuity"]) - 5
-        max_va = max(df["visual_acuity"]) + 5
-        ax_acuity.set_ylim(max(0, min_va), min(85, max_va))  # Cap at 0-85 ETDRS range
+    # Set consistent y-axis range per design principles
+    ax_acuity.set_ylim(0, 85)  # Always use 0-85 ETDRS range for consistency
     
     # Clean, minimalist styling - Tufte-inspired
     # Make all visible spines light but keep them for context
@@ -1855,10 +1823,13 @@ def generate_va_over_time_plot(results):
     ax_acuity.grid(False, axis='x')
     
     # Set common axis labels
-    ax_counts.set_xlabel("Months", fontsize=10, color=COLORS['text_secondary'])
+    ax_counts.set_xlabel("Time", fontsize=10, color=COLORS['text_secondary'])
+    
+    # Set yearly x-axis ticks
+    set_yearly_x_ticks(ax_counts)
     
     # Add title
-    fig.suptitle("Mean Visual Acuity and Cohort Size Over Time", 
+    fig.suptitle("Mean Visual Acuity and Number of Measurements Over Time", 
                fontsize=12, 
                color=COLORS['text'], 
                x=0.1,  # Left-aligned
@@ -1868,10 +1839,12 @@ def generate_va_over_time_plot(results):
     # Use light gray tick labels for x-axis
     ax_counts.tick_params(axis='x', colors=COLORS['text_secondary'])
     
-    # Show legend with clean styling (no frame) at top center
-    # Only show it on the visual acuity axis
-    ax_acuity.legend(frameon=False, fontsize=9, loc='upper center', bbox_to_anchor=(0.5, 1.05), 
-                     ncol=4)  # Use ncol=4 to arrange items horizontally
+    # Show combined legend for both axes with clean styling (no frame) at top center
+    lines1, labels1 = ax_counts.get_legend_handles_labels()
+    lines2, labels2 = ax_acuity.get_legend_handles_labels()
+    ax_acuity.legend(lines1 + lines2, labels1 + labels2, 
+                     frameon=False, fontsize=9, loc='upper center', bbox_to_anchor=(0.5, 1.05), 
+                     ncol=3)  # Use ncol=3 to arrange items appropriately
     
     # Add explanatory text about the confidence interval
     fig.text(0.5, 0.01, 
@@ -1881,7 +1854,7 @@ def generate_va_over_time_plot(results):
     
     # Optimize spacing around the chart for better Streamlit rendering
     # Add extra space on the right for the baseline annotation and bottom for the note
-    fig.subplots_adjust(left=0.12, right=0.85, top=0.92, bottom=0.15)
+    fig.subplots_adjust(left=0.12, right=0.88, top=0.92, bottom=0.15)
     plt.tight_layout(rect=[0, 0.03, 1, 0.95]) 
     
     return fig
@@ -1909,24 +1882,8 @@ def generate_va_distribution_plot(results):
     ValueError
         If patient data is not available in the results
     """
-    # Import the central color system
-    try:
-        from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
-    except ImportError:
-        # Fallback colors
-        COLORS = {
-            'primary': '#4682B4',
-            'primary_dark': '#2a4d6e',
-            'text': '#333333',
-            'text_secondary': '#666666',
-            'grid': '#EEEEEE',
-        }
-        ALPHAS = {
-            'high': 0.8,
-            'medium': 0.5,
-            'low': 0.2,
-            'very_low': 0.1,
-        }
+    # Import the central color system - fail fast, no fallbacks
+    from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
     
     # Get the raw patient data
     if "patient_data" not in results and "patient_histories" not in results:
@@ -1997,64 +1954,118 @@ def generate_va_distribution_plot(results):
     # Convert to DataFrame for easier plotting
     df = pd.DataFrame(percentile_data)
     
-    # Create the plot
-    fig, ax = plt.subplots(figsize=(10, 6))
+    # Create the plot with dual axes for consistency
+    fig = plt.figure(figsize=(10, 6))
+    ax_counts = fig.add_subplot(111)  # Primary axis for patient counts
+    ax_acuity = ax_counts.twinx()  # Secondary axis for visual acuity
     
-    # Plot percentile bands from widest to narrowest
+    # Use consistent colors from the color system
+    counts_color = COLORS.get('patient_counts', '#8FAD91')  # Muted Sage Green
+    
+    # Plot measurement counts as bars on the left axis
+    sample_sizes = df['count'].values
+    bar_width = 0.8 if len(df) > 1 else 1.0
+    bars = ax_counts.bar(df["time"], sample_sizes, 
+                        alpha=ALPHAS.get('patient_counts', 0.35),
+                        color=counts_color, width=bar_width,
+                        label='Number of Measurements', zorder=1)
+    
+    # Plot percentile bands from widest to narrowest on the right axis
     # 90% band (5th to 95th percentile) - lightest
-    ax.fill_between(df['time'], df['p5'], df['p95'], 
+    ax_acuity.fill_between(df['time'], df['p5'], df['p95'], 
                    color=COLORS['primary'], alpha=0.15, 
                    label='90% of patients (5th-95th percentile)')
     
     # 80% band (10th to 90th percentile)
-    ax.fill_between(df['time'], df['p10'], df['p90'], 
+    ax_acuity.fill_between(df['time'], df['p10'], df['p90'], 
                    color=COLORS['primary'], alpha=0.25, 
                    label='80% of patients (10th-90th percentile)')
     
     # 50% band (25th to 75th percentile) - interquartile range
-    ax.fill_between(df['time'], df['p25'], df['p75'], 
+    ax_acuity.fill_between(df['time'], df['p25'], df['p75'], 
                    color=COLORS['primary'], alpha=0.4, 
                    label='50% of patients (25th-75th percentile)')
     
     # Median line
-    ax.plot(df['time'], df['p50'], 
+    ax_acuity.plot(df['time'], df['p50'], 
            color=COLORS['primary_dark'], linewidth=2.5, 
            label='Median', zorder=5)
     
     # Mean line (for comparison)
-    ax.plot(df['time'], df['mean'], '--',
+    ax_acuity.plot(df['time'], df['mean'], '--',
            color=COLORS['primary_dark'], linewidth=1.5, alpha=0.7,
            label='Mean', zorder=4)
     
-    # Add sample size as text annotations at regular intervals
-    interval = max(1, len(df) // 10)  # Show ~10 sample size labels
-    for idx in range(0, len(df), interval):
-        row = df.iloc[idx]
-        ax.text(row['time'], ax.get_ylim()[0] + 2, f"n={row['count']}", 
-               ha='center', va='bottom', fontsize=8, 
-               color=COLORS['text_secondary'], alpha=0.7)
+    # Configure axes labels with consistent styling from first chart
+    ax_counts.set_xlabel("Time", fontsize=10, color=COLORS['text_secondary'])
+    ax_counts.set_ylabel("Number of Measurements", fontsize=10, color=counts_color)
     
-    # Styling
-    ax.set_xlabel("Months", fontsize=10, color=COLORS['text_secondary'])
-    ax.set_ylabel("Visual Acuity (letters)", fontsize=10, color=COLORS['text_secondary'])
-    ax.set_ylim(0, 85)  # Standard ETDRS range
+    # Set yearly x-axis ticks
+    set_yearly_x_ticks(ax_counts)
     
-    # Title
+    # Use the same blue for acuity as the first chart
+    acuity_color = SEMANTIC_COLORS.get('acuity_data', COLORS['primary'])
+    ax_acuity.set_ylabel("Visual Acuity (letters)", fontsize=10, color=acuity_color)
+    ax_acuity.set_ylim(0, 85)  # Standard ETDRS range
+    
+    # Apply light spine styling from first chart
+    light_spine_color = '#cccccc'  # Light gray
+    light_spine_alpha = 0.3
+    light_spine_width = 0.5
+    
+    # Remove top spines as they're not needed
+    ax_counts.spines['top'].set_visible(False)
+    ax_acuity.spines['top'].set_visible(False)
+    
+    # Configure left spine for patient counts
+    ax_counts.spines['left'].set_visible(True)
+    ax_counts.spines['left'].set_linewidth(light_spine_width)
+    ax_counts.spines['left'].set_alpha(light_spine_alpha)
+    ax_counts.spines['left'].set_color(light_spine_color)
+    
+    # Configure bottom spine
+    ax_counts.spines['bottom'].set_visible(True)
+    ax_counts.spines['bottom'].set_linewidth(light_spine_width)
+    ax_counts.spines['bottom'].set_alpha(light_spine_alpha)
+    ax_counts.spines['bottom'].set_color(light_spine_color)
+    
+    # Configure right spine for visual acuity 
+    ax_acuity.spines['right'].set_visible(True)
+    ax_acuity.spines['right'].set_linewidth(light_spine_width)
+    ax_acuity.spines['right'].set_alpha(light_spine_alpha)
+    ax_acuity.spines['right'].set_color(light_spine_color)
+    
+    # Hide unnecessary spines
+    ax_acuity.spines['bottom'].set_visible(False)
+    ax_acuity.spines['left'].set_visible(False)
+    ax_counts.spines['right'].set_visible(False)
+    
+    # Use lighter grid lines only for visual acuity
+    ax_counts.grid(False)
+    ax_acuity.grid(True, axis='y', linestyle='--', alpha=ALPHAS['very_low'], color=COLORS['grid'])
+    ax_acuity.grid(False, axis='x')
+    
+    # Tick parameters - matching first chart
+    ax_counts.tick_params(axis='y', colors=counts_color)
+    ax_counts.tick_params(axis='x', colors=COLORS['text_secondary'])
+    ax_acuity.tick_params(axis='y', colors=acuity_color)
+    
+    # Add title with same positioning as first chart
     fig.suptitle("Distribution of Patient Visual Acuity Over Time", 
-                fontsize=12, color=COLORS['text'], 
-                x=0.1, y=0.98, ha='left')
+                fontsize=12, 
+                color=COLORS['text'], 
+                x=0.1,  # Left-aligned  
+                y=0.98,  # Near the top
+                ha='left')
     
-    # Legend
-    ax.legend(frameon=False, fontsize=9, loc='upper right')
-    
-    # Clean Tufte-inspired styling
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    ax.spines['left'].set_linewidth(0.5)
-    ax.spines['bottom'].set_linewidth(0.5)
-    ax.grid(True, axis='y', linestyle='--', alpha=0.2, color=COLORS['grid'])
-    ax.grid(False, axis='x')
-    ax.tick_params(colors=COLORS['text_secondary'])
+    # Combined legend for both axes - use 2 rows to avoid compression
+    lines1, labels1 = ax_counts.get_legend_handles_labels()
+    lines2, labels2 = ax_acuity.get_legend_handles_labels()
+    ax_acuity.legend(lines1 + lines2, labels1 + labels2, 
+                    frameon=False, fontsize=9, 
+                    loc='upper center', bbox_to_anchor=(0.5, 1.08),
+                    ncol=3,  # Use 3 columns, will wrap to 2 rows
+                    columnspacing=1.5)
     
     # Add explanatory text
     fig.text(0.5, 0.01, 
@@ -2062,9 +2073,9 @@ def generate_va_distribution_plot(results):
             ha='center', va='bottom', fontsize=9, color=COLORS['text_secondary'],
             style='italic', wrap=True)
     
-    # Adjust layout
-    fig.subplots_adjust(left=0.12, right=0.88, top=0.92, bottom=0.12)
-    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    # Optimize spacing around the chart for better Streamlit rendering - match first chart
+    fig.subplots_adjust(left=0.12, right=0.88, top=0.88, bottom=0.15)
+    plt.tight_layout(rect=[0, 0.03, 1, 0.92])
     
     return fig
 
@@ -2083,33 +2094,57 @@ def generate_va_over_time_thumbnail(results):
     matplotlib.figure.Figure
         Thumbnail plot figure
     """
-    # Import the central color system
-    try:
-        from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
-    except ImportError:
-        COLORS = {'primary': '#4682B4', 'primary_dark': '#2a4d6e'}
-        ALPHAS = {'very_low': 0.1}
-        SEMANTIC_COLORS = {'acuity_data': COLORS['primary']}
+    # Import the central color system - fail fast, no fallbacks
+    from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
     
     # Check if we have valid data
-    if results.get("failed", False) or "mean_va_data" not in results or not results["mean_va_data"]:
+    if results.get("failed", False):
         fig, ax = plt.subplots(figsize=(3, 2))
-        ax.text(0.5, 0.5, "No data", ha='center', va='center', fontsize=8, transform=ax.transAxes)
+        ax.text(0.5, 0.5, "Failed", ha='center', va='center', fontsize=8, transform=ax.transAxes)
         ax.set_xticks([])
         ax.set_yticks([])
         return fig
     
+    # Validate required data exists
+    if "mean_va_data" not in results:
+        raise KeyError("mean_va_data is required but not found in results")
+    
+    if not results["mean_va_data"]:
+        raise ValueError("mean_va_data is empty")
+    
     # Create DataFrame from the results
     df = pd.DataFrame(results["mean_va_data"])
+    
+    # Debug info for troubleshooting
+    if DEBUG_MODE:
+        print(f"Thumbnail: DataFrame columns: {list(df.columns)}")
+        if len(df) > 0:
+            print(f"Thumbnail: First row data: {df.iloc[0].to_dict()}")
     
     # Filter out data points beyond simulation duration
     duration_years = results.get("duration_years", 5)
     max_months = duration_years * 12
-    time_col = "time_months" if "time_months" in df.columns else "time"
-    df = df[df[time_col] <= max_months]
     
-    if time_col not in df.columns and "time" in df.columns:
+    # Determine the time column - fail fast if invalid
+    if "time_months" in df.columns:
+        time_col = "time_months"
+    elif "time" in df.columns:
+        time_col = "time"
         df["time_months"] = df["time"]
+    else:
+        raise ValueError(f"No time column found in data. Available columns: {list(df.columns)}")
+    
+    # Ensure we have visual_acuity column
+    if "visual_acuity" not in df.columns:
+        raise ValueError(f"No visual_acuity column found in data. Available columns: {list(df.columns)}")
+    
+    # Filter to simulation duration
+    df["time_months"] = pd.to_numeric(df[time_col], errors='coerce')
+    df = df.dropna(subset=["time_months", "visual_acuity"])
+    df = df[df["time_months"] <= max_months]
+    
+    if df.empty:
+        raise ValueError("No valid data points after filtering")
     
     # Create small figure
     fig, ax = plt.subplots(figsize=(3, 2))
@@ -2162,11 +2197,8 @@ def generate_va_distribution_thumbnail(results):
     ValueError
         If patient data is not available in the results
     """
-    # Import the central color system
-    try:
-        from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
-    except ImportError:
-        COLORS = {'primary': '#4682B4', 'primary_dark': '#2a4d6e'}
+    # Import the central color system - fail fast, no fallbacks
+    from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
     
     # Get the raw patient data
     if "patient_data" not in results and "patient_histories" not in results:

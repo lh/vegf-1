@@ -24,7 +24,8 @@ Use Git and github  for version control. You have access to the gh command. Use 
 - "When modifying Streamlit components, test changes with test scripts and show the user the results before updating the app"
 
 # Visualization Guidelines
-- For visual acuity graphs use an x axis scale running from 0 to 85 and so far as is possible make sure they all have the same vertical height for the scale. This is to maintain a consistent mental model for the user.
+- For visual acuity graphs use a y-axis scale running from 0 to 85 and so far as is possible make sure they all have the same vertical height for the scale. This is to maintain a consistent mental model for the user.
+- X-axis ticks should be at yearly intervals (0, 12, 24, 36, 48, 60 months) for better readability and understanding of time progression
 - "For all visualizations, follow Tufte principles documented in meta/visualization_templates.md"
 - "Maintain consistent styling across charts with the established color system"
 
@@ -45,3 +46,6 @@ Use Git and github  for version control. You have access to the gh command. Use 
   7. Error Handling: If a styling element is missing, report the issue rather than creating a local fallback.
   8. Refactoring Priority: Consider inconsistent styling as a bug that needs immediate attention, not as a feature to be
   worked around.
+
+# Workflow Reminder
+- Every summary should be followed by an offer to git commit and push and update documentation
