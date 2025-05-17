@@ -90,17 +90,6 @@ def extract_patient_states_timeline(results: Dict) -> pd.DataFrame:
     
     # Generate timeline month by month
     for month in range(duration_months + 1):
-        # Calculate active patients
-        total_discontinued = sum(cumulative_disc.values())
-        active_count = population_size - total_discontinued
-        
-        # Add active patient count
-        timeline_data.append({
-            "time_months": month,
-            "state": "Active",
-            "count": active_count
-        })
-        
         # Update discontinuations for this month
         for disc_type, monthly_rate in monthly_disc_rate.items():
             new_disc = monthly_rate
@@ -109,8 +98,22 @@ def extract_patient_states_timeline(results: Dict) -> pd.DataFrame:
             # Calculate retreatments
             new_retreat = new_disc * retreat_rates.get(disc_type, 0)
             cumulative_retreat[disc_type] += new_retreat
-            
-            # Add discontinued (not retreated) count
+        
+        # Calculate active patients (remaining after discontinuations but adding back retreatments)
+        total_discontinued = sum(cumulative_disc.values())
+        total_retreated = sum(cumulative_retreat.values())
+        # Active = Original - Discontinued + Retreated
+        active_count = population_size - total_discontinued + total_retreated
+        
+        # Add active patient count
+        timeline_data.append({
+            "time_months": month,
+            "state": "Active",
+            "count": active_count
+        })
+        
+        # Add discontinued states (those who left and didn't return)
+        for disc_type in cumulative_disc.keys():
             disc_not_retreated = cumulative_disc[disc_type] - cumulative_retreat[disc_type]
             if disc_not_retreated > 0:
                 timeline_data.append({
@@ -118,8 +121,9 @@ def extract_patient_states_timeline(results: Dict) -> pd.DataFrame:
                     "state": f"Discontinued {disc_type}",
                     "count": disc_not_retreated
                 })
-            
-            # Add retreated count
+        
+        # Add retreated states (those who returned after discontinuation)
+        for disc_type in cumulative_retreat.keys():
             if cumulative_retreat[disc_type] > 0:
                 timeline_data.append({
                     "time_months": month,
