@@ -41,11 +41,9 @@ def extract_patient_states_timeline(results: Dict) -> pd.DataFrame:
     
     # Get discontinuation counts
     disc_counts = results.get("discontinuation_counts", {})
-    total_disc = sum(disc_counts.values())
     
     # Get retreatment data
     recurrences = results.get("recurrences", {})
-    total_retreatments = recurrences.get("total", 0)
     retreatments_by_type = recurrences.get("by_type", {})
     
     # Initialize timeline data
@@ -95,40 +93,48 @@ def extract_patient_states_timeline(results: Dict) -> pd.DataFrame:
             new_disc = monthly_rate
             cumulative_disc[disc_type] += new_disc
             
-            # Calculate retreatments
-            new_retreat = new_disc * retreat_rates.get(disc_type, 0)
-            cumulative_retreat[disc_type] += new_retreat
+            # Calculate retreatments (with some delay)
+            # Retreatments happen after discontinuation, so apply with a lag
+            if month > 6:  # Start retreatments after 6 months
+                retreat_from_earlier = cumulative_disc[disc_type] * retreat_rates.get(disc_type, 0)
+                cumulative_retreat[disc_type] = min(retreat_from_earlier, cumulative_disc[disc_type])
         
-        # Calculate active patients (remaining after discontinuations but adding back retreatments)
-        total_discontinued = sum(cumulative_disc.values())
-        total_retreated = sum(cumulative_retreat.values())
-        # Active = Original - Discontinued + Retreated
-        active_count = population_size - total_discontinued + total_retreated
+        # Calculate patient states
+        # 1. Never discontinued (active from start)
+        total_ever_discontinued = sum(cumulative_disc.values())
+        never_discontinued = population_size - total_ever_discontinued
         
-        # Add active patient count
+        # 2. Currently discontinued (discontinued but not retreated)
+        currently_discontinued = {}
+        for disc_type in cumulative_disc.keys():
+            currently_discontinued[disc_type] = cumulative_disc[disc_type] - cumulative_retreat[disc_type]
+        
+        # 3. Retreated (back on treatment)
+        # These are already tracked in cumulative_retreat
+        
+        # Add never discontinued count
         timeline_data.append({
             "time_months": month,
             "state": "Active",
-            "count": active_count
+            "count": never_discontinued
         })
         
-        # Add discontinued states (those who left and didn't return)
-        for disc_type in cumulative_disc.keys():
-            disc_not_retreated = cumulative_disc[disc_type] - cumulative_retreat[disc_type]
-            if disc_not_retreated > 0:
+        # Add currently discontinued states
+        for disc_type, count in currently_discontinued.items():
+            if count > 0:
                 timeline_data.append({
                     "time_months": month,
                     "state": f"Discontinued {disc_type}",
-                    "count": disc_not_retreated
+                    "count": count
                 })
         
-        # Add retreated states (those who returned after discontinuation)
-        for disc_type in cumulative_retreat.keys():
-            if cumulative_retreat[disc_type] > 0:
+        # Add retreated states
+        for disc_type, count in cumulative_retreat.items():
+            if count > 0:
                 timeline_data.append({
                     "time_months": month,
                     "state": f"Retreated {disc_type}",
-                    "count": cumulative_retreat[disc_type]
+                    "count": count
                 })
     
     return pd.DataFrame(timeline_data)
