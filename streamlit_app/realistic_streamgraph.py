@@ -57,8 +57,8 @@ def extract_timeline_from_histories(patient_histories: Dict) -> pd.DataFrame:
     pd.DataFrame
         Timeline data with realistic transitions
     """
-    # Initialize timeline tracking
-    timeline_data = defaultdict(lambda: defaultdict(int))
+    # Track patient states over time
+    patient_states = {}  # patient_id -> [(time_months, state)]
     
     # Process each patient's history
     for patient_id, patient in patient_histories.items():
@@ -67,7 +67,9 @@ def extract_timeline_from_histories(patient_histories: Dict) -> pd.DataFrame:
         
         if not history:
             continue
-            
+        
+        patient_timeline = []
+        
         for visit in history:
             # Convert time to months
             time_data = visit.get('time', visit.get('time_weeks', 0))
@@ -89,20 +91,43 @@ def extract_timeline_from_histories(patient_histories: Dict) -> pd.DataFrame:
             # Determine patient state from visit data
             state = determine_state_from_visit(visit)
             
-            # Increment count for this state at this time
-            timeline_data[time_months][state] += 1
+            patient_timeline.append((time_months, state))
+        
+        patient_states[patient_id] = patient_timeline
     
-    # Convert to DataFrame format
-    rows = []
-    for month in sorted(timeline_data.keys()):
-        for state, count in timeline_data[month].items():
-            rows.append({
+    # Check if we have any patient data
+    if not patient_states:
+        return pd.DataFrame(columns=['time_months', 'state', 'count'])
+    
+    # Now create timeline data counting patients in each state at each time
+    max_months = max(max(t for t, s in timeline) for timeline in patient_states.values() if timeline)
+    timeline_data = []
+    
+    for month in range(max_months + 1):
+        month_states = defaultdict(int)
+        
+        # For each patient, find their state at this month
+        for patient_id, timeline in patient_states.items():
+            # Find the most recent state for this patient at this time
+            current_state = "Active"  # Default state
+            
+            for t, state in timeline:
+                if t <= month:
+                    current_state = state
+                else:
+                    break
+            
+            month_states[current_state] += 1
+        
+        # Add rows for each state present this month
+        for state, count in month_states.items():
+            timeline_data.append({
                 "time_months": month,
                 "state": state,
                 "count": count
             })
     
-    return pd.DataFrame(rows)
+    return pd.DataFrame(timeline_data)
 
 
 def determine_state_from_visit(visit: Dict) -> str:
