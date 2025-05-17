@@ -2298,12 +2298,12 @@ def generate_discontinuation_plot(results):
     matplotlib.figure.Figure or list
         Plot figure or list of figures
     """
-    # First try to use the enhanced streamgraph implementation
+    # First try to use the realistic streamgraph implementation
     try:
-        from streamlit_app.enhanced_streamgraph import generate_cohort_flow_streamgraph
+        from streamlit_app.realistic_streamgraph import generate_realistic_streamgraph
 
-        # Create the streamgraph showing patient cohort flow
-        streamgraph_fig = generate_cohort_flow_streamgraph(results)
+        # Create the streamgraph showing patient cohort flow with realistic timing
+        streamgraph_fig = generate_realistic_streamgraph(results)
 
         # Also create the enhanced bar chart for comparison
         from streamlit_app.discontinuation_chart import generate_enhanced_discontinuation_plot
@@ -2312,7 +2312,17 @@ def generate_discontinuation_plot(results):
         # Return both figures as a list
         return [streamgraph_fig, bar_chart_fig]
     except ImportError:
-        # Fall back to the original implementations if streamgraph not available
+        # Fall back to the enhanced streamgraph if realistic version not available
+        try:
+            from streamlit_app.enhanced_streamgraph import generate_cohort_flow_streamgraph
+            streamgraph_fig = generate_cohort_flow_streamgraph(results)
+            
+            from streamlit_app.discontinuation_chart import generate_enhanced_discontinuation_plot
+            bar_chart_fig = generate_enhanced_discontinuation_plot(results)
+            
+            return [streamgraph_fig, bar_chart_fig]
+        except ImportError:
+            # Fall back to the original implementations if streamgraph not available
         try:
             from streamlit_app.discontinuation_chart import generate_enhanced_discontinuation_plot
             enhanced_fig = generate_enhanced_discontinuation_plot(results)
