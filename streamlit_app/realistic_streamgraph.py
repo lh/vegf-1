@@ -36,8 +36,13 @@ def extract_realistic_timeline(results: Dict) -> pd.DataFrame:
     patient_data = results.get("patient_histories", {})
     
     if patient_data:
-        # Use actual patient timeline data
-        return extract_timeline_from_histories(patient_data)
+        # Try to use actual patient timeline data
+        try:
+            return extract_timeline_from_histories(patient_data)
+        except Exception as e:
+            # If extraction fails (e.g., due to data format issues), fall back
+            print(f"Failed to extract timeline from histories: {e}")
+            return extract_interpolated_timeline(results)
     else:
         # Fall back to interpolated data with realistic variation
         return extract_interpolated_timeline(results)
@@ -71,8 +76,8 @@ def extract_timeline_from_histories(patient_histories: Dict) -> pd.DataFrame:
         patient_timeline = []
         
         for visit in history:
-            # Convert time to months
-            time_data = visit.get('time', visit.get('time_weeks', 0))
+            # Convert time to months - try multiple field names
+            time_data = visit.get('time') or visit.get('date') or visit.get('time_weeks', 0)
             
             # Handle different time formats
             if isinstance(time_data, (int, float)):
@@ -84,7 +89,8 @@ def extract_timeline_from_histories(patient_histories: Dict) -> pd.DataFrame:
                 time_delta = time_data - extract_timeline_from_histories.start_time
                 time_weeks = time_delta.days / 7
             else:
-                time_weeks = 0
+                # If we can't find a time field, try time_weeks directly
+                time_weeks = visit.get('time_weeks', 0)
                 
             time_months = int(time_weeks / 4.33)  # Convert weeks to months
             

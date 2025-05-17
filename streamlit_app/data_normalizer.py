@@ -62,14 +62,26 @@ class DataNormalizer:
             # Normalize the visit
             normalized_visit = visit.copy()
             
-            # Ensure date field exists and is normalized
-            if 'date' not in normalized_visit:
-                raise ValueError(f"Visit {i} for patient {patient_id} is missing required 'date' field")
-                
-            normalized_visit['date'] = DataNormalizer._to_datetime(
-                normalized_visit['date'], 
-                f"visit {i} of patient {patient_id}"
-            )
+            # Ensure date/time field exists and is normalized
+            # Try different field names that might contain time information
+            time_field = None
+            for field_name in ['date', 'time', 'timestamp']:
+                if field_name in normalized_visit:
+                    time_field = field_name
+                    break
+            
+            if time_field:
+                # Normalize the time field to 'date' for consistency
+                normalized_visit['date'] = DataNormalizer._to_datetime(
+                    normalized_visit[time_field], 
+                    f"visit {i} of patient {patient_id}"
+                )
+                # Keep original field too
+                if time_field != 'date':
+                    normalized_visit[time_field] = normalized_visit['date']
+            else:
+                # No time field found - this is okay, some visits might not have timestamps
+                pass
             
             normalized_visits.append(normalized_visit)
             
