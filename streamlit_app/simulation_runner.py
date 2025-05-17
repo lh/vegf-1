@@ -1609,6 +1609,7 @@ def generate_va_over_time_plot(results):
     # Determine if we have sample size data
     has_sample_sizes = "sample_size" in df.columns
     sample_size_variation = False
+    sample_sizes = None  # Initialize to prevent UnboundLocalError
     
     if has_sample_sizes:
         sample_sizes = df["sample_size"]
