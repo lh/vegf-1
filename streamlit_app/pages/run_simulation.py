@@ -432,23 +432,45 @@ def display_simulation_results(results):
     # Show visual acuity over time
     st.subheader("Visual Acuity Over Time")
     
-    # Create two columns for side-by-side display
-    col1, col2 = st.columns(2)
+    # Show thumbnail previews
+    st.write("**Quick Comparison**")
+    thumb_col1, thumb_col2 = st.columns([1, 1])
     
-    with col1:
-        st.write("**Mean Visual Acuity with Confidence Intervals**")
-        fig = generate_va_over_time_plot(results)
-        st.pyplot(fig)
-        
-    with col2:
-        st.write("**Distribution of Visual Acuity**")
-        # Only show distribution plot if we have patient-level data
-        if "patient_data" in results or "patient_histories" in results:
-            from streamlit_app.simulation_runner import generate_va_distribution_plot
-            fig2 = generate_va_distribution_plot(results)
-            st.pyplot(fig2)
-        else:
-            st.info("Individual patient data not available for distribution plot.")
+    with thumb_col1:
+        from streamlit_app.simulation_runner import generate_va_over_time_thumbnail
+        thumb_fig1 = generate_va_over_time_thumbnail(results)
+        st.pyplot(thumb_fig1)
+        st.caption("Mean + 95% CI", unsafe_allow_html=True)
+    
+    with thumb_col2:
+        from streamlit_app.simulation_runner import generate_va_distribution_thumbnail
+        try:
+            thumb_fig2 = generate_va_distribution_thumbnail(results)
+            st.pyplot(thumb_fig2)
+            st.caption("Patient Distribution", unsafe_allow_html=True)
+        except ValueError:
+            # This should never happen in production since we control data generation
+            st.error("Patient data missing - simulation error")
+    
+    # Add some spacing
+    st.write("")
+    
+    # Show full plots stacked
+    st.write("**Mean Visual Acuity with Confidence Intervals**")
+    fig1 = generate_va_over_time_plot(results)
+    st.pyplot(fig1)
+    
+    # Show distribution plot
+    st.write("**Distribution of Visual Acuity**")
+    from streamlit_app.simulation_runner import generate_va_distribution_plot
+    try:
+        fig2 = generate_va_distribution_plot(results)
+        st.pyplot(fig2)
+    except ValueError as e:
+        # This should never happen in production since we control data generation
+        st.error(f"Cannot generate distribution plot: {e}")
+        if st.session_state.get("debug_mode", False):
+            st.exception(e)
 
 
 if __name__ == "__main__":

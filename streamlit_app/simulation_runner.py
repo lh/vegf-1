@@ -1599,10 +1599,14 @@ def generate_va_over_time_plot(results):
     
     # Convert time to months if it's in different units
     # This depends on how time is stored in your simulation
-    if "time" in df.columns and df["time"].max() > 1000:  # Likely in days or hours
-        df["time_months"] = df["time"] / 30  # Approximate days to months
-    else:
-        df["time_months"] = df["time"]
+    if "time" in df.columns:
+        if df["time"].max() > 1000:  # Likely in days or hours
+            df["time_months"] = df["time"] / 30  # Approximate days to months
+        else:
+            df["time_months"] = df["time"]
+    elif "time_months" not in df.columns:
+        # If neither time nor time_months exists, this is an error
+        raise ValueError(f"Missing time column in data. Available columns: {list(df.columns)}")
     
     # Sort by time to ensure proper plotting
     df = df.sort_values("time_months")
@@ -1899,6 +1903,11 @@ def generate_va_distribution_plot(results):
     -------
     matplotlib.figure.Figure
         Plot figure showing VA distribution over time
+    
+    Raises
+    ------
+    ValueError
+        If patient data is not available in the results
     """
     # Import the central color system
     try:
@@ -1921,11 +1930,9 @@ def generate_va_distribution_plot(results):
     
     # Get the raw patient data
     if "patient_data" not in results and "patient_histories" not in results:
-        # Create a placeholder figure
-        fig, ax = plt.subplots(figsize=(10, 6))
-        ax.text(0.5, 0.5, "No patient-level data available for distribution plot",
-                ha='center', va='center', fontsize=14, transform=ax.transAxes)
-        return fig
+        # Since we're generating the data, this should never happen
+        raise ValueError("Patient-level data is required for distribution plot but not found in results. "
+                        "This indicates a data generation error since we control the simulation output.")
     
     patient_histories = results.get("patient_data", results.get("patient_histories", {}))
     
@@ -2059,6 +2066,189 @@ def generate_va_distribution_plot(results):
     fig.subplots_adjust(left=0.12, right=0.88, top=0.92, bottom=0.12)
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     
+    return fig
+
+
+def generate_va_over_time_thumbnail(results):
+    """
+    Generate a thumbnail version of the mean VA plot without labels.
+    
+    Parameters
+    ----------
+    results : dict
+        Simulation results
+    
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Thumbnail plot figure
+    """
+    # Import the central color system
+    try:
+        from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
+    except ImportError:
+        COLORS = {'primary': '#4682B4', 'primary_dark': '#2a4d6e'}
+        ALPHAS = {'very_low': 0.1}
+        SEMANTIC_COLORS = {'acuity_data': COLORS['primary']}
+    
+    # Check if we have valid data
+    if results.get("failed", False) or "mean_va_data" not in results or not results["mean_va_data"]:
+        fig, ax = plt.subplots(figsize=(3, 2))
+        ax.text(0.5, 0.5, "No data", ha='center', va='center', fontsize=8, transform=ax.transAxes)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        return fig
+    
+    # Create DataFrame from the results
+    df = pd.DataFrame(results["mean_va_data"])
+    
+    # Filter out data points beyond simulation duration
+    duration_years = results.get("duration_years", 5)
+    max_months = duration_years * 12
+    time_col = "time_months" if "time_months" in df.columns else "time"
+    df = df[df[time_col] <= max_months]
+    
+    if time_col not in df.columns and "time" in df.columns:
+        df["time_months"] = df["time"]
+    
+    # Create small figure
+    fig, ax = plt.subplots(figsize=(3, 2))
+    
+    # Plot mean line
+    ax.plot(df["time_months"], df["visual_acuity"], '-',
+           color=SEMANTIC_COLORS['acuity_data'], 
+           linewidth=2, alpha=0.8)
+    
+    # Plot confidence interval if available
+    if "std_error" in df.columns:
+        ci_factor = 1.96
+        upper_ci = df["visual_acuity"] + ci_factor * df["std_error"]
+        lower_ci = df["visual_acuity"] - ci_factor * df["std_error"]
+        
+        ax.fill_between(df["time_months"], lower_ci, upper_ci,
+                       color=SEMANTIC_COLORS['acuity_data'], 
+                       alpha=ALPHAS['very_low'])
+    
+    # Minimal styling - no labels, no ticks
+    ax.set_xlim(0, max_months)
+    ax.set_ylim(0, 85)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    
+    # Remove all spines for clean look
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    
+    plt.tight_layout(pad=0.1)
+    return fig
+
+
+def generate_va_distribution_thumbnail(results):
+    """
+    Generate a thumbnail version of the distribution plot without labels.
+    
+    Parameters
+    ----------
+    results : dict
+        Simulation results
+    
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Thumbnail plot figure
+        
+    Raises
+    ------
+    ValueError
+        If patient data is not available in the results
+    """
+    # Import the central color system
+    try:
+        from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
+    except ImportError:
+        COLORS = {'primary': '#4682B4', 'primary_dark': '#2a4d6e'}
+    
+    # Get the raw patient data
+    if "patient_data" not in results and "patient_histories" not in results:
+        # Since we're generating the data, this should never happen
+        raise ValueError("Patient-level data is required for distribution thumbnail but not found in results.")
+    
+    patient_histories = results.get("patient_data", results.get("patient_histories", {}))
+    
+    # Extract all patient VA values at each time point
+    time_va_map = defaultdict(list)
+    
+    for patient_id, patient in patient_histories.items() if isinstance(patient_histories, dict) else enumerate(patient_histories):
+        if isinstance(patient, list):
+            baseline_time = None
+            
+            for i, visit in enumerate(patient):
+                if isinstance(visit, dict) and 'vision' in visit:
+                    if i == 0:
+                        baseline_time = visit.get('date')
+                        visit_time = 0
+                    else:
+                        if baseline_time and 'date' in visit:
+                            visit_time = (visit['date'] - baseline_time).days / 30.44
+                        else:
+                            visit_time = i
+                    
+                    time_month = round(visit_time)
+                    time_va_map[time_month].append(visit['vision'])
+    
+    # Calculate percentiles at each time point
+    percentile_data = []
+    
+    for time_month in sorted(time_va_map.keys()):
+        va_values = time_va_map[time_month]
+        if len(va_values) >= 5:
+            percentile_results = {
+                'time': time_month,
+                'p5': np.percentile(va_values, 5),
+                'p25': np.percentile(va_values, 25),
+                'p50': np.percentile(va_values, 50),
+                'p75': np.percentile(va_values, 75),
+                'p95': np.percentile(va_values, 95),
+            }
+            percentile_data.append(percentile_results)
+    
+    if not percentile_data:
+        fig, ax = plt.subplots(figsize=(3, 2))
+        ax.text(0.5, 0.5, "Insufficient data", ha='center', va='center', fontsize=8, transform=ax.transAxes)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        return fig
+    
+    # Convert to DataFrame
+    df = pd.DataFrame(percentile_data)
+    
+    # Create small figure
+    fig, ax = plt.subplots(figsize=(3, 2))
+    
+    # Plot percentile bands
+    ax.fill_between(df['time'], df['p5'], df['p95'], 
+                   color=COLORS['primary'], alpha=0.15)
+    
+    ax.fill_between(df['time'], df['p25'], df['p75'], 
+                   color=COLORS['primary'], alpha=0.4)
+    
+    # Median line
+    ax.plot(df['time'], df['p50'], 
+           color=COLORS['primary_dark'], linewidth=2)
+    
+    # Minimal styling
+    duration_years = results.get("duration_years", 5)
+    max_months = duration_years * 12
+    ax.set_xlim(0, max_months)
+    ax.set_ylim(0, 85)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    
+    # Remove all spines
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    
+    plt.tight_layout(pad=0.1)
     return fig
 
 
