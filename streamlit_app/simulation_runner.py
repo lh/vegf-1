@@ -2323,14 +2323,14 @@ def generate_discontinuation_plot(results):
             return [streamgraph_fig, bar_chart_fig]
         except ImportError:
             # Fall back to the original implementations if streamgraph not available
-        try:
-            from streamlit_app.discontinuation_chart import generate_enhanced_discontinuation_plot
-            enhanced_fig = generate_enhanced_discontinuation_plot(results)
-            original_fig = generate_simple_discontinuation_plot(results)
-            return [enhanced_fig, original_fig]
-        except ImportError:
-            # Fall back to the original implementation if enhanced version not available
-            return generate_simple_discontinuation_plot(results)
+            try:
+                from streamlit_app.discontinuation_chart import generate_enhanced_discontinuation_plot
+                enhanced_fig = generate_enhanced_discontinuation_plot(results)
+                original_fig = generate_simple_discontinuation_plot(results)
+                return [enhanced_fig, original_fig]
+            except ImportError:
+                # Fall back to the original implementation if enhanced version not available
+                return generate_simple_discontinuation_plot(results)
 
 
 def generate_simple_discontinuation_plot(results):
