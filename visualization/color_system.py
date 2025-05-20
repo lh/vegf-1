@@ -37,7 +37,7 @@ COLORS = {
     # Patient state colors for streamgraph visualization
     'active': '#1b7a3d',      # Strong green for active treatment
     'retreated': '#7fbf7f',   # Pale green for retreated patients
-    'monitoring': '#4682b4',  # Blue for monitoring (non-treatment phases)
+    'discontinued': '#ff69b4', # Hot pink for discontinued (monitored) patients
     'disc_planned': '#ffd700', # Gold for planned discontinuation
     'disc_admin': '#ff4500',   # OrangeRed for administrative discontinuation
     'disc_premature': '#cd5c5c', # IndianRed for premature discontinuation
@@ -65,7 +65,7 @@ SEMANTIC_COLORS = {
     # Patient state colors for streamgraph visualization
     'patient_state_active': COLORS['active'],
     'patient_state_retreated': COLORS['retreated'],
-    'patient_state_monitoring': COLORS['monitoring'],
+    'patient_state_discontinued': COLORS['discontinued'],  # Updated from monitoring to discontinued
     'patient_state_discontinued_planned': COLORS['disc_planned'],
     'patient_state_discontinued_administrative': COLORS['disc_admin'],
     'patient_state_discontinued_premature': COLORS['disc_premature'],
@@ -109,7 +109,7 @@ Semantic color scheme for patient states in streamgraph visualizations:
   - Strong Green (#1b7a3d): Active patients receiving treatment
   - Pale Green (#7fbf7f): Retreated patients who returned to treatment
 
-- Blue (#4682b4): Monitoring phase (non-treatment but still active in study)
+- Pink (#ff69b4): Discontinued but monitored patients (not on active treatment but still followed)
 
 - Yellow/Gold (#ffd700): Planned discontinuation (expected/desired)
   - Used for patients who completed treatment successfully

@@ -209,10 +209,10 @@ def prepare_patient_state_data(visits_df, metadata_df):
                 # Default to planned if type not recognized
                 return "discontinued_planned"
                 
-        # Check phase for monitoring
+        # Check phase for monitoring - renamed to discontinued (monitored)
         phase = row.get("phase", "").lower()
         if phase == "monitoring":
-            return "monitoring"
+            return "discontinued"  # Renamed from "monitoring" to "discontinued"
             
         # Default to active if no other state detected
         return "active"
@@ -291,7 +291,7 @@ def prepare_patient_state_data(visits_df, metadata_df):
         "discontinued_administrative",
         "discontinued_premature",  # Added premature discontinuation state
         "discontinued_duration",
-        "monitoring",
+        "discontinued",  # Renamed from "monitoring" to "discontinued"
         "retreated"
     ]
     
@@ -349,7 +349,7 @@ def create_streamgraph(state_counts_df, state_categories, metadata_df, stats_df)
     state_colors = {
         "active": SEMANTIC_COLORS['patient_state_active'],
         "retreated": SEMANTIC_COLORS['patient_state_retreated'],
-        "monitoring": SEMANTIC_COLORS['patient_state_monitoring'],
+        "discontinued": SEMANTIC_COLORS['patient_state_discontinued'],  # Updated from monitoring to discontinued
         "discontinued_planned": SEMANTIC_COLORS['patient_state_discontinued_planned'],
         "discontinued_administrative": SEMANTIC_COLORS['patient_state_discontinued_administrative'],
         "discontinued_premature": SEMANTIC_COLORS['patient_state_discontinued_premature'],
