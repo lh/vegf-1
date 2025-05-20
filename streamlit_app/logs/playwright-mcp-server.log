@@ -1,0 +1,39 @@
+2025-05-20T08:55:22.060Z - Starting custom MCP Playwright server...
+2025-05-20T08:55:22.060Z - Current directory: /Users/rose/Code/CC/streamlit_app
+2025-05-20T08:55:22.060Z - Node version: v20.9.0
+2025-05-20T08:55:22.060Z - Platform: darwin
+2025-05-20T08:55:22.061Z - Playwright MCP server started successfully
+2025-05-20T08:55:32.294Z - Starting custom MCP Playwright server...
+2025-05-20T08:55:32.295Z - Current directory: /Users/rose/Code/CC/streamlit_app
+2025-05-20T08:55:32.295Z - Node version: v20.9.0
+2025-05-20T08:55:32.295Z - Platform: darwin
+2025-05-20T08:55:32.295Z - Playwright MCP server started successfully
+2025-05-20T08:55:42.462Z - Starting custom MCP Playwright server...
+2025-05-20T08:55:42.463Z - Current directory: /Users/rose/Code/CC/streamlit_app
+2025-05-20T08:55:42.463Z - Node version: v20.9.0
+2025-05-20T08:55:42.463Z - Platform: darwin
+2025-05-20T08:55:42.464Z - Playwright MCP server started successfully
+2025-05-20T08:55:52.634Z - Starting custom MCP Playwright server...
+2025-05-20T08:55:52.635Z - Current directory: /Users/rose/Code/CC/streamlit_app
+2025-05-20T08:55:52.635Z - Node version: v20.9.0
+2025-05-20T08:55:52.635Z - Platform: darwin
+2025-05-20T08:55:52.635Z - Playwright MCP server started successfully
+2025-05-20T08:56:02.803Z - Starting custom MCP Playwright server...
+2025-05-20T08:56:02.804Z - Current directory: /Users/rose/Code/CC/streamlit_app
+2025-05-20T08:56:02.804Z - Node version: v20.9.0
+2025-05-20T08:56:02.804Z - Platform: darwin
+2025-05-20T08:56:02.804Z - Playwright MCP server started successfully
+2025-05-20T08:56:02.805Z - Playwright MCP server running on http://localhost:5006
+2025-05-20T08:56:02.805Z - Available endpoints:
+2025-05-20T08:56:02.805Z - - Health check: http://localhost:5006/healthz
+2025-05-20T08:56:02.805Z - - Playwright API: http://localhost:5006/playwright
+2025-05-20T08:56:07.139Z - Received SIGTERM signal, shutting down gracefully...
+2025-05-20T08:56:07.298Z - Starting custom MCP Playwright server...
+2025-05-20T08:56:07.299Z - Current directory: /Users/rose/Code/CC/streamlit_app
+2025-05-20T08:56:07.299Z - Node version: v20.9.0
+2025-05-20T08:56:07.299Z - Platform: darwin
+2025-05-20T08:56:07.300Z - Playwright MCP server started successfully
+2025-05-20T08:56:07.300Z - Playwright MCP server running on http://localhost:5006
+2025-05-20T08:56:07.300Z - Available endpoints:
+2025-05-20T08:56:07.300Z - - Health check: http://localhost:5006/healthz
+2025-05-20T08:56:07.300Z - - Playwright API: http://localhost:5006/playwright
