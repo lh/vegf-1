@@ -6,6 +6,7 @@
     <string>com.rose.mcpservers</string>
     <key>ProgramArguments</key>
     <array>
+        <string>/bin/bash</string>
         <string>/Users/rose/Code/CC/start-mcp-servers-fixed.sh</string>
     </array>
     <key>RunAtLoad</key>
@@ -19,7 +20,13 @@
     <key>EnvironmentVariables</key>
     <dict>
         <key>PATH</key>
-        <string>/Users/rose/.nvm/versions/node/v20.9.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <string>/Users/rose/.nvm/versions/node/v20.9.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin</string>
+        <key>HOME</key>
+        <string>/Users/rose</string>
+        <key>USER</key>
+        <string>rose</string>
+        <key>NODE_PATH</key>
+        <string>/Users/rose/.nvm/versions/node/v20.9.0/lib/node_modules</string>
     </dict>
 </dict>
 </plist>
