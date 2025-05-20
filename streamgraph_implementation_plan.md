@@ -22,22 +22,22 @@
    - Verify conservation principle: total patient count remains constant across all time points
    - Export transformed data to intermediary format for visualization
 
-## Phase 2: Core Visualization Development
-1. **Basic Streamgraph Implementation**
+## Phase 2: Core Visualization Development ✅
+1. **Basic Streamgraph Implementation** ✅
    - Develop a standalone script to create streamgraph from transformed data
-   - Use matplotlib/seaborn for initial implementation
+   - Use Plotly for implementation with proper stacking (`stackgroup='one'`)
    - Ensure proper patient state categories and transitions
    - Apply color system and visualization standards from project guidelines
-   - Save visualization to output/debug directory
+   - Save visualization to output/visualizations directory
 
-2. **Visualization Verification**
+2. **Visualization Verification** ✅
    - Create validation tests to ensure visualization accurately represents data
    - Check all patient states are represented correctly
    - Verify x-axis time points match simulation duration
    - Ensure stack order preserves key state transitions
    - Validate conservation: width at each time point equals total patient count
 
-3. **Enhance Visualization**
+3. **Enhance Visualization** ✅
    - Add clear labels and legends for state categories
    - Implement yearly tick marks (0, 12, 24, 36, 48, 60 months)
    - Apply Tufte principles for clarity and data focus

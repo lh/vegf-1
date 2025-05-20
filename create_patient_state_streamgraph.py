@@ -181,24 +181,39 @@ def prepare_patient_state_data(visits_df, metadata_df):
     
     # Define state determination function
     def determine_state(row):
-        """Determine patient state from visit data"""
-        if row.get("is_retreatment", False):
+        """
+        Determine patient state from visit data using only explicit flags.
+        
+        This function relies exclusively on flags set by the simulation, without
+        attempting to infer states from other data points.
+        """
+        # Check explicit retreatment flag
+        if row.get("is_retreatment_visit", False):
             return "retreated"
-        elif row.get("is_discontinuation", False):
-            # Get discontinuation type
+            
+        # Check explicit discontinuation flags
+        if row.get("is_discontinuation_visit", False):
+            # Get discontinuation type for categorization
             disc_type = row.get("discontinuation_type", "").lower()
+            
+            # Categorize based on discontinuation type
             if "stable" in disc_type or "planned" in disc_type or "max_interval" in disc_type:
                 return "discontinued_planned"
             elif "admin" in disc_type:
-                return "discontinued_administrative"
+                return "discontinued_administrative" 
             elif "duration" in disc_type or "course" in disc_type:
                 return "discontinued_duration"
             else:
-                return "discontinued_planned"  # Default
-        elif row.get("phase", "").lower() == "monitoring":
+                # Default to planned if type not recognized
+                return "discontinued_planned"
+                
+        # Check phase for monitoring
+        phase = row.get("phase", "").lower()
+        if phase == "monitoring":
             return "monitoring"
-        else:
-            return "active"
+            
+        # Default to active if no other state detected
+        return "active"
     
     # Add state column
     visits_df["state"] = visits_df.apply(determine_state, axis=1)
@@ -359,13 +374,13 @@ def create_streamgraph(state_counts_df, state_categories, metadata_df, stats_df)
             # Create more readable display name
             display_name = state.replace("_", " ").title()
             
-            # Add trace
+            # Add trace using proper stackgroup parameter for true streamgraph
             fig.add_trace(go.Scatter(
                 x=months,
                 y=values,
                 mode='lines',
                 line=dict(width=0.5, color=color),
-                fill='tonexty',
+                stackgroup='one',  # This enables proper stacking
                 fillcolor=color,
                 name=display_name,
                 hovertemplate=f"{display_name}: %{{y:.0f}} patients<br>Month: %{{x:.0f}}<extra></extra>"
@@ -403,7 +418,9 @@ def create_streamgraph(state_counts_df, state_categories, metadata_df, stats_df)
         ),
         yaxis=dict(
             gridcolor='lightgrey',
-            gridwidth=0.5
+            gridwidth=0.5,
+            # Ensure y-axis starts at 0 to show full stacked areas
+            rangemode='nonnegative'
         ),
         # Add margins for readability
         margin=dict(l=50, r=50, t=80, b=120)
