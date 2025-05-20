@@ -1,13 +1,20 @@
 """
-Retreatment panel for AMD Protocol Explorer.
+Retreatment visualization panel for AMD Protocol Explorer.
 
-This module provides detailed analysis of retreatment data with a clean visualization
-of retreatment status by discontinuation reason.
+This module provides detailed visualization and analysis of retreatment data,
+showing retreatment rates by discontinuation type and other retreatment statistics.
 """
 
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
+
+# Try to import the fixed streamgraph implementation
+try:
+    from streamlit_app.streamgraph_patient_states_fixed import visualize_retreatment_by_discontinuation_type
+except ImportError:
+    pass
 
 # Import the visualization function
 try:
@@ -92,10 +99,35 @@ def display_retreatment_panel(results):
     # Create the chart
     chart_df = pd.DataFrame(chart_data)
     
+    # Try to use the fixed streamgraph implementation first
     try:
-        # Add debug output
-        st.write("Creating discontinuation chart...")
+        if 'visualize_retreatment_by_discontinuation_type' in globals() or 'visualize_retreatment_by_discontinuation_type' in locals():
+            st.write("### Enhanced Retreatment Visualization")
+            
+            # Check if we have the raw data needed
+            if 'raw_discontinuation_stats' in results and 'retreatments_by_type' in results['raw_discontinuation_stats']:
+                # Create the enhanced visualization
+                fig = visualize_retreatment_by_discontinuation_type(results)
+                st.pyplot(fig)
+                
+                # Add a caption to explain the enhanced chart
+                st.caption("This visualization shows retreatment patterns by discontinuation type using the fixed implementation.")
+                
+                # Skip the old chart if we've successfully shown the enhanced one
+                st.write("### Standard Discontinuation Chart (Fallback)")
+            else:
+                # If we don't have raw data, fall back to standard chart
+                st.write("### Standard Discontinuation Chart")
+    except Exception as e:
+        # Log the exception but continue to standard chart
+        if 'DEBUG_MODE' in globals() and DEBUG_MODE:
+            st.error(f"Could not create enhanced visualization: {e}")
+            import traceback
+            st.code(traceback.format_exc())
         
+        st.write("### Standard Discontinuation Chart")
+    
+    try:
         # Create the chart using the imported function
         fig, ax = create_discontinuation_retreatment_chart(
             chart_df,
@@ -104,8 +136,6 @@ def display_retreatment_panel(results):
             show_data_labels=True,
             minimal_style=True
         )
-        
-        st.write("Chart created successfully, displaying...")
         
         # Display the chart
         st.pyplot(fig)
