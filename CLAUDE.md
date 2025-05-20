@@ -86,6 +86,18 @@ These principles are NON-NEGOTIABLE. As the postmortem in meta/streamgraph_synth
 # Workflow Reminder
 - Every summary should be followed by an offer to git commit and push and update documentation
 
+# Always run these tests before committing changes
+When making changes to the codebase, always run the following tests before committing:
+1. For discontinuation tracking changes:
+   - `python verify_fixed_discontinuation.py`
+   - `python verify_streamlit_integration.py`
+
+2. For Streamlit visualization changes:
+   - Check visualization output in the `output/debug` directory
+
+3. Always confirm ABS/DES compatibility:
+   - Test both ABS and DES implementations with the same configuration
+
 # DATA INTEGRITY VERIFICATION PROTOCOL
 
 These protocols MUST be followed for all data manipulation and visualization tasks:
