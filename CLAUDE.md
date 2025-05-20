@@ -28,9 +28,11 @@ Use Git and github  for version control. You have access to the gh command. Use 
 - All Playwright tests should be run against the local Streamlit server (port 8502)
 - Follow the setup instructions in streamlit_app/PLAYWRIGHT.md when using Playwright
 - Run the setup script (./streamlit_app/setup-playwright.sh) to ensure browser binaries are installed
-- Verify tests work with real data and actual application components
+- ONLY run tests against real simulation data, NEVER with synthetic test data
+- Verify data integrity in automated tests by checking key values match expected distributions
 - Use the existing test script (streamlit_app/playwright_streamlit.js) as a template for new tests
 - Capture screenshots during tests to provide visual verification of application state
+- When validating visualizations, check the actual data source, not just the visual appearance
 
 # Visualization Guidelines
 - For visual acuity graphs use a y-axis scale running from 0 to 85 and so far as is possible make sure they all have the same vertical height for the scale. This is to maintain a consistent mental model for the user.
@@ -56,9 +58,12 @@ Use Git and github  for version control. You have access to the gh command. Use 
   8. Refactoring Priority: Consider inconsistent styling as a bug that needs immediate attention, not as a feature to be
   worked around.
 
-# Critical Scientific Tool Principles
+# CRITICAL SCIENTIFIC TOOL PRINCIPLES
 
 **NEVER GENERATE SYNTHETIC DATA**: This is a scientific analysis tool, not a demo
+
+This is the single most important principle guiding all development, testing, and validation:
+
 - If data is missing, FAIL FAST with clear error messages
 - NEVER create fallback data, synthetic timelines, or mock values
 - NEVER add try/except blocks that hide missing data
@@ -70,6 +75,10 @@ Use Git and github  for version control. You have access to the gh command. Use 
 - Flag and refuse to use any code containing "sample", "mock", "fake", "dummy", or "synthetic" outside test contexts
 - IMMEDIATELY halt and speak up if asked to replace actual data with something "prettier" or "smoother"
 - NEVER "enhance" actual data for aesthetics - show the real data with all its messiness
+- When debugging, inspect and verify the ACTUAL data values rather than making assumptions
+- Do not "normalize" or "standardize" data without explicit scientific justification
+- Document actual data sources and calculation methods in code comments
+- In testing, verify against known reference values, not arbitrary placeholders
 
 These principles are NON-NEGOTIABLE. As the postmortem in meta/streamgraph_synthetic_data_postmortem.md states: 
 "In scientific computing, accuracy is paramount. Never invent data. Ever."
@@ -77,23 +86,66 @@ These principles are NON-NEGOTIABLE. As the postmortem in meta/streamgraph_synth
 # Workflow Reminder
 - Every summary should be followed by an offer to git commit and push and update documentation
 
-# VERY IMPORTANT RULWES ABOUT INTEGRITY
+# DATA INTEGRITY VERIFICATION PROTOCOL
+
+These protocols MUST be followed for all data manipulation and visualization tasks:
 
   1. Be explicit about the data structure: Tell me exactly what fields contain the real data. For example:
     - "The patient visit times are in results['patient_histories'][patient_id]['visits'][i]['time']"
     - "The discontinuation events are marked by visit['is_discontinuation_visit'] == True"
-  2. Demand data inspection first: Make me show you what's actually in the data before plotting:
-  # First, inspect the data
-  print("Sample patient data:", patient_histories[first_patient_id])
-  print("Visit structure:", patient_histories[first_patient_id]['visits'][0])
-  3. Reject synthetic data immediately: When you see sigmoid curves or smooth transitions, challenge them:
+  
+  2. Demand data inspection BEFORE any implementation:
+    ```python
+    # First, inspect the data structure
+    print("Sample patient data:", patient_histories[first_patient_id])
+    print("Visit structure:", patient_histories[first_patient_id]['visits'][0])
+    
+    # Then, verify the specific values you'll be working with
+    print("Time values:", [visit['time'] for visit in patient_histories[first_patient_id]['visits'][:5]])
+    print("Discontinuation events:", sum(1 for visit in patient_histories[first_patient_id]['visits'] if visit.get('is_discontinuation_visit')))
+    ```
+  
+  3. Reject synthetic patterns immediately: When you see sigmoid curves or smooth transitions, challenge them:
     - "Why are you using sigmoid? Show me where in the data this curve comes from"
     - "This looks too smooth. Show me the actual patient state counts at each time point"
-  4. Request raw data exports: Ask for the actual numbers:
-  # Export the actual counts at each time point
-  with open('actual_patient_states.csv', 'w') as f:
-      f.write("month,active,discontinued_planned,discontinued_admin,...\n")
-      f.write(f"{month},{counts['active']},{counts['discontinued_planned']},...\n")
-  5. Fail fast on missing data: Insist on error messages when data is missing:
-  if 'patient_histories' not in results:
-      raise ValueError("No patient histories available - cannot create visualization")
+    - "Demonstrate from the raw data how these patterns emerge, not from smoothing algorithms"
+  
+  4. Request raw data exports for verification and traceability:
+    ```python
+    # Export the actual counts at each time point for verification
+    with open('actual_patient_states.csv', 'w') as f:
+        f.write("month,active,discontinued_planned,discontinued_admin,...\n")
+        for month, counts in sorted(state_counts.items()):
+            f.write(f"{month},{counts['active']},{counts['discontinued_planned']},{counts['discontinued_admin']},...\n")
+    print("Raw data exported to actual_patient_states.csv for verification")
+    ```
+  
+  5. Fail fast and loudly on missing data: Implement explicit error handling:
+    ```python
+    if 'patient_histories' not in results:
+        raise ValueError("ERROR: No patient histories available - cannot create visualization")
+        
+    if not patient_histories:
+        raise ValueError("ERROR: Patient histories dictionary is empty")
+        
+    # Verify key fields exist in the data structure
+    first_patient = next(iter(patient_histories.values()))
+    if 'visits' not in first_patient:
+        raise ValueError("ERROR: Patient data missing required 'visits' field")
+    ```
+  
+  6. Document data lineage in code and visualization outputs:
+    ```python
+    # Add a data source annotation to all visualizations
+    plt.annotate(f"Data source: {data_source_file}\nPatient count: {len(patient_histories)}\nTime period: {start_date} to {end_date}",
+                xy=(0.01, 0.01), xycoords='figure fraction', fontsize=8)
+    ```
+  
+  7. Validate conservation principles in data transforms:
+    ```python
+    # Ensure patient count remains constant across transformations
+    original_patient_count = len(patient_histories)
+    # ... perform data transformation ...
+    transformed_patient_count = sum(len(group) for group in patient_groups)
+    assert original_patient_count == transformed_patient_count, f"ERROR: Patient count mismatch! Original: {original_patient_count}, After transformation: {transformed_patient_count}"
+    ```
