@@ -3,8 +3,15 @@
 Run an ABS simulation with explicit state flags and save results in Parquet format.
 
 This script runs an ABS simulation that explicitly sets state flags for each visit
-(is_discontinuation_visit, discontinuation_type, etc.) and saves the results in
-Parquet format to preserve type information.
+(is_discontinuation_visit, discontinuation_type, is_retreatment_visit, etc.) and 
+saves the results in Parquet format to preserve type information.
+
+Important features:
+- Uses explicit flags for state transitions rather than inferring them
+- Tracks cumulative retreatment status with has_been_retreated flag
+- Once a patient is retreated, they remain in the retreated state for visualization
+- Preserves type information using Parquet format
+- Provides diagnostic information about simulation data
 """
 
 import os
@@ -188,15 +195,21 @@ def save_results_parquet(patient_histories, statistics, config, output_dir=None,
     for patient_id, visits in patient_histories.items():
         # Get transition points for this patient
         transitions = treatment_status_changes.get(patient_id, [])
+        has_been_retreated = False  # Track if this patient has been retreated
         
         for i, visit in enumerate(visits):
             # Determine if this is a retreatment visit
             is_retreatment_visit = i in transitions
             
-            # Create a record for this visit with patient_id and retreatment flag
+            # Once a patient is retreated, they remain in the retreated state
+            if is_retreatment_visit:
+                has_been_retreated = True
+                
+            # Create a record for this visit with patient_id and retreatment flags
             visit_record = {
                 "patient_id": patient_id,
-                "is_retreatment_visit": is_retreatment_visit,  # Add retreatment flag
+                "is_retreatment_visit": is_retreatment_visit,  # Flag for the actual retreatment visit
+                "has_been_retreated": has_been_retreated,      # Cumulative flag for all visits after retreatment
                 **visit  # Include all visit data
             }
             patient_data.append(visit_record)
@@ -211,6 +224,13 @@ def save_results_parquet(patient_histories, statistics, config, output_dir=None,
     # Add diagnostic information
     print(f"Added retreatment flags for {len(retreated_patients)} patients")
     print(f"Total retreatment visits: {sum(visits_df['is_retreatment_visit'])}")
+    print(f"Total visits with cumulative retreatment flag: {sum(visits_df['has_been_retreated'])}")
+    
+    # Calculate the percentage of visits that have the cumulative retreatment flag
+    # This shows how many patient-timepoints are in the retreated state
+    if len(visits_df) > 0:
+        retreatment_percentage = (sum(visits_df['has_been_retreated']) / len(visits_df)) * 100
+        print(f"Percentage of visits with retreatment flag: {retreatment_percentage:.2f}%")
     
     # Create metadata DataFrame
     metadata = {

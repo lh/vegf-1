@@ -200,6 +200,50 @@ The updated streamgraph now correctly displays all patient states with proper st
 4. **Conservation Principle**: The total patient count is preserved at all time points.
 5. **Proper Stacking**: All patient states are properly stacked in the visualization, using Plotly's `stackgroup` parameter.
 
+## Update: Cumulative Retreatment Tracking
+
+We have implemented cumulative retreatment tracking to fix the issue where retreated patients were only appearing at the time of their retreatment visit rather than remaining in the retreated state:
+
+1. **Added `has_been_retreated` Flag**:
+   - Once a patient is retreated, they remain in the retreated state for all subsequent visits
+   - This prevents patients from "disappearing" from the retreated group after their retreatment visit
+   - The flag is checked in the state determination logic alongside the `is_retreatment_visit` flag
+
+   ```python
+   # In run_streamgraph_simulation_parquet.py
+   # Once a patient is retreated, they remain in the retreated state
+   if is_retreatment_visit:
+       has_been_retreated = True
+       
+   # Create a record for this visit with patient_id and retreatment flags
+   visit_record = {
+       "patient_id": patient_id,
+       "is_retreatment_visit": is_retreatment_visit,  # Flag for the actual retreatment visit
+       "has_been_retreated": has_been_retreated,      # Cumulative flag for all visits after retreatment
+       **visit  # Include all visit data
+   }
+   ```
+
+2. **Updated State Determination Logic**:
+   - The `determine_state` function now checks both `is_retreatment_visit` and `has_been_retreated` flags
+   - This ensures retreated patients remain in that state throughout the visualization
+
+   ```python
+   # In create_patient_state_streamgraph.py
+   def determine_state(row):
+       # Check explicit retreatment flag or has_been_retreated flag for cumulative tracking
+       if row.get("is_retreatment_visit", False) or row.get("has_been_retreated", False):
+           return "retreated"
+       
+       # Other state determination logic follows...
+   ```
+
+3. **Added Diagnostic Information**:
+   - New summary information is printed showing the total number of visits with the cumulative retreatment flag
+   - This helps verify that the retreatment state is properly tracked
+
+The updated implementation ensures that retreated patients appear as a growing segment in the streamgraph rather than a fluctuating line, properly showing the cumulative nature of the retreatment state.
+
 ## Future Work
 
 1. **Advanced Streamgraph Options**: Consider exploring additional streamgraph options like centering the streamgraph around a baseline (`stackgroup='one', groupnorm='percent'`).
@@ -207,3 +251,4 @@ The updated streamgraph now correctly displays all patient states with proper st
 3. **Additional State Categories**: Consider adding more granular state categories if needed.
 4. **Interactive Controls**: Add interactive filtering by state category.
 5. **Color Customization**: Allow customization of color palette for different state categories.
+6. **Premature Discontinuation Analysis**: Add detailed analysis of premature discontinuation patterns.

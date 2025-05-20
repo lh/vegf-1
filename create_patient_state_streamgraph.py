@@ -187,8 +187,8 @@ def prepare_patient_state_data(visits_df, metadata_df):
         This function relies exclusively on flags set by the simulation, without
         attempting to infer states from other data points.
         """
-        # Check explicit retreatment flag
-        if row.get("is_retreatment_visit", False):
+        # Check explicit retreatment flag or has_been_retreated flag for cumulative tracking
+        if row.get("is_retreatment_visit", False) or row.get("has_been_retreated", False):
             return "retreated"
             
         # Check explicit discontinuation flags

@@ -1,65 +1,79 @@
-# Streamgraph and Retreatment Visualization Fix
+# Streamgraph Visualization Fix: Cumulative Retreatment Tracking
 
-This document outlines the fixes implemented to address visualization issues in the streamgraph and retreatment visualization components.
+## Problem Statement
 
-## Streamgraph Patient States Fixes
+The original streamgraph visualization showed retreated patients only at the point of their retreatment visit, causing the retreated patient line to fluctuate rather than grow cumulatively as expected. This made it difficult to track the total number of patients who had been retreated.
 
-The visualization of patient states in the streamgraph was enhanced with the following improvements:
+## Solution
 
-1. **Fixed Patient State Tracking**: 
-   - Improved the tracking of patients across various states (Active, Discontinued, Retreated)
-   - Properly accounted for all patients in the simulation at all timepoints
-   - Fixed state transitions to ensure patient counts are consistent
+We implemented a cumulative retreatment tracking system with the following key components:
 
-2. **Retreatment Visualization**:
-   - Added dedicated patient states for retreated patients to properly visualize retreatment patterns
-   - Implemented retreatment tracking by discontinuation type for better analysis
-   - Enhanced coloring system to distinguish between different patient states
+1. **Added `has_been_retreated` Flag**:
+   - Once a patient is retreated, they remain in the retreated state for all subsequent visits
+   - This prevents patients from "disappearing" from the retreated group after their retreatment visit
+   - The flag is checked in the state determination logic alongside the `is_retreatment_visit` flag
 
-3. **Data Consistency**:
-   - Ensured patient counts remain consistent throughout the simulation timeline
-   - Fixed timestamp conversion for proper month-based visualization
-   - Addressed edge cases in timestamp handling across different operating systems
+2. **Updated State Determination Logic**:
+   - The state determination function now checks both `is_retreatment_visit` and `has_been_retreated` flags
+   - This ensures retreated patients remain in that state throughout the visualization
 
-## Integration with Enhanced DES Framework
+3. **Enhanced Diagnostic Information**:
+   - Added reporting of total visits with cumulative retreatment flag
+   - Calculated percentage of visits with retreatment flag
 
-The visualization improvements were integrated with the enhanced DES framework:
+## Key Changes
 
-1. **Enhanced DES Implementation**:
-   - Configuration-driven protocol parameters for flexible simulation setup
-   - Standardized event structure for improved consistency
-   - Better tracking of discontinuation and retreatment events
+1. **Modified `run_streamgraph_simulation_parquet.py`**:
+   ```python
+   # Track cumulative retreatment status
+   has_been_retreated = False
+   
+   # Once a patient is retreated, they remain in the retreated state
+   if is_retreatment_visit:
+       has_been_retreated = True
+       
+   # Create a record with both flags
+   visit_record = {
+       "patient_id": patient_id,
+       "is_retreatment_visit": is_retreatment_visit,  # Flag for the actual retreatment visit
+       "has_been_retreated": has_been_retreated,      # Cumulative flag for all visits after retreatment
+       **visit  # Include all visit data
+   }
+   ```
 
-2. **TreatAndExtendAdapter**:
-   - Implemented adapter pattern for compatibility with original TreatAndExtendDES
-   - Maintained the same interface while using enhanced framework internally
-   - Added validation scripts to compare outputs with original implementation
+2. **Updated State Determination in `create_patient_state_streamgraph.py`**:
+   ```python
+   def determine_state(row):
+       # Check both retreatment flags for cumulative tracking
+       if row.get("is_retreatment_visit", False) or row.get("has_been_retreated", False):
+           return "retreated"
+       
+       # Other state determination logic follows...
+   ```
 
-3. **Staggered Enrollment Support**:
-   - Added support for staggered patient enrollment with proper time tracking
-   - Implemented per-patient timing for more realistic simulation
-   - Enhanced per-patient state tracking for better visualization
+## Testing and Verification
 
-## Retreatment Panel Improvements
+We created a verification script (`verify_cumulative_retreatment.py`) to ensure:
 
-The retreatment panel was updated to better visualize retreatment patterns:
+1. The `has_been_retreated` flag is correctly set for all visits after a patient's first retreatment
+2. Patient state counts accurately reflect cumulative retreatment status
+3. Retreated patient counts grow over time rather than fluctuating
 
-1. **Enhanced Retreatment Visualization**:
-   - Added more detailed visualization of retreatment by discontinuation type
-   - Improved data presentation with clear labeling and metrics
-   - Added explanatory text and context for better interpretation
+Results from verification:
+- Retreatment visits: 21
+- Cumulative retreated visits: 139
+- Retreated patients at month 36: 14 (28% of total patients)
+- No decreases in retreated count over time
 
-2. **Data Fallbacks**:
-   - Implemented fallback mechanisms when specific data is not available
-   - Maintained backward compatibility with existing visualization functions
-   - Added proper error handling and user feedback
+## Visual Impact
 
-## Usage
+The updated streamgraph now shows:
+- A steadily growing retreated patient segment (pale green)
+- More accurate representation of patient state transitions
+- Proper preservation of state information
 
-To use the fixed streamgraph visualization:
+## Future Considerations
 
-1. Import the `streamgraph_patient_states_fixed.py` module in your script
-2. Use the `create_patient_state_streamgraph()` function for general state visualization
-3. Use the `visualize_retreatment_by_discontinuation_type()` function for retreatment analysis
-
-The retreatment panel will automatically use the enhanced visualization when available.
+1. **Enhanced Analytics**: Explore analyzing retreatment patterns by discontinuation type
+2. **Visualization Enhancements**: Consider adding hover information about retreatment patterns
+3. **Timing Analysis**: Add retreatment timing analysis to examine when retreatments typically occur
