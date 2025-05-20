@@ -283,7 +283,28 @@ def main():
             fig.savefig(plot_path, dpi=300, bbox_inches="tight")
             print(f"Streamgraph saved to {plot_path}")
             
-            # Show figure if running interactively
+            # Show figure for 10 seconds then automatically close it
+            import matplotlib.pyplot as plt
+            from matplotlib.animation import FuncAnimation
+            import time
+            
+            # Display the figure
+            fig_manager = plt.get_current_fig_manager()
+            if fig_manager is not None:
+                # Try to move the window to the front if possible
+                try:
+                    fig_manager.window.raise_()
+                except:
+                    pass
+            
+            # Set up a timer to close the figure after 10 seconds
+            def close_figure(frame):
+                plt.close()
+                
+            # Create a simple animation that triggers the close function after 10 seconds
+            ani = FuncAnimation(fig, close_figure, frames=[0], interval=10000, repeat=False)
+            
+            print("Figure will automatically close after 10 seconds...")
             plt.show()
         except Exception as e:
             print(f"Error generating streamgraph: {e}")

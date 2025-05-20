@@ -398,6 +398,17 @@ if __name__ == "__main__":
         fig.savefig(output_file, dpi=300, bbox_inches="tight")
         print(f"Streamgraph saved to {output_file}")
         
+        # Show figure for 10 seconds then automatically close it
+        from matplotlib.animation import FuncAnimation
+        
+        # Set up a timer to close the figure after 10 seconds
+        def close_figure(frame):
+            plt.close()
+            
+        # Create a simple animation that triggers the close function after 10 seconds
+        ani = FuncAnimation(fig, close_figure, frames=[0], interval=10000, repeat=False)
+        
+        print("Figure will automatically close after 10 seconds...")
         plt.show()
     except Exception as e:
         import traceback
