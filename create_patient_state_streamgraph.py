@@ -345,25 +345,15 @@ def create_streamgraph(state_counts_df, state_categories, metadata_df, stats_df)
     duration_years = metadata_df["duration_years"].iloc[0]
     simulation_type = metadata_df["simulation_type"].iloc[0]
     
-    # Define custom colors for patient states with semantic meaning
+    # Use color system for patient states
     state_colors = {
-        # Active patients - green
-        "active": "#1b7a3d",  # Strong green for active treatment
-        
-        # Retreated patients - lighter green
-        "retreated": "#7fbf7f",  # Pale green for retreated patients
-        
-        # Monitoring patients - blue-green
-        "monitoring": "#4682b4",  # Blue for monitoring (non-treatment phases)
-        
-        # Discontinued patients with semantic color coding:
-        # Yellow for planned (expected/desired) discontinuations
-        "discontinued_planned": "#ffd700",  # Gold for planned discontinuation
-        
-        # Red spectrum for undesirable discontinuations:
-        "discontinued_administrative": "#ff4500",  # OrangeRed for administrative issues
-        "discontinued_premature": "#cd5c5c",  # IndianRed for premature discontinuation
-        "discontinued_duration": "#8b0000",  # DarkRed for duration-based discontinuation
+        "active": SEMANTIC_COLORS['patient_state_active'],
+        "retreated": SEMANTIC_COLORS['patient_state_retreated'],
+        "monitoring": SEMANTIC_COLORS['patient_state_monitoring'],
+        "discontinued_planned": SEMANTIC_COLORS['patient_state_discontinued_planned'],
+        "discontinued_administrative": SEMANTIC_COLORS['patient_state_discontinued_administrative'],
+        "discontinued_premature": SEMANTIC_COLORS['patient_state_discontinued_premature'],
+        "discontinued_duration": SEMANTIC_COLORS['patient_state_discontinued_duration'],
     }
     
     # Create months array

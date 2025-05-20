@@ -32,7 +32,16 @@ COLORS = {
     'grid': '#EEEEEE',       # Very light gray for grid lines
     'text': '#333333',       # Dark gray for titles and labels
     'text_secondary': '#666666',  # Medium gray for secondary text
-    'border': '#CCCCCC'      # Light gray for necessary borders
+    'border': '#CCCCCC',     # Light gray for necessary borders
+    
+    # Patient state colors for streamgraph visualization
+    'active': '#1b7a3d',      # Strong green for active treatment
+    'retreated': '#7fbf7f',   # Pale green for retreated patients
+    'monitoring': '#4682b4',  # Blue for monitoring (non-treatment phases)
+    'disc_planned': '#ffd700', # Gold for planned discontinuation
+    'disc_admin': '#ff4500',   # OrangeRed for administrative discontinuation
+    'disc_premature': '#cd5c5c', # IndianRed for premature discontinuation
+    'disc_duration': '#8b0000'  # DarkRed for duration-based discontinuation
 }
 
 # Standardized alpha values for consistent transparency across visualizations
@@ -51,7 +60,16 @@ SEMANTIC_COLORS = {
     'patient_counts': COLORS['patient_counts'],  # Sage Green for patient/sample counts
     'patient_counts_trend': COLORS['patient_counts_dark'],  # Darker sage green for patient count trend lines
     'critical_info': COLORS['secondary'],   # Red for critical information and alerts
-    'additional_series': COLORS['tertiary'] # Green for any additional data series
+    'additional_series': COLORS['tertiary'], # Green for any additional data series
+    
+    # Patient state colors for streamgraph visualization
+    'patient_state_active': COLORS['active'],
+    'patient_state_retreated': COLORS['retreated'],
+    'patient_state_monitoring': COLORS['monitoring'],
+    'patient_state_discontinued_planned': COLORS['disc_planned'],
+    'patient_state_discontinued_administrative': COLORS['disc_admin'],
+    'patient_state_discontinued_premature': COLORS['disc_premature'],
+    'patient_state_discontinued_duration': COLORS['disc_duration']
 }
 
 # Color System Design Guide Documentation
@@ -82,6 +100,24 @@ Colors are assigned to specific data types regardless of chart type:
   - Acuity trend lines: SEMANTIC_COLORS['acuity_trend'] - Darker Steel Blue (#2a4d6e)
   - Patient count trend lines: SEMANTIC_COLORS['patient_counts_trend'] - Darker Sage Green (#5e7260)
   - NEVER use red for trend lines unless the data itself uses red
+
+PATIENT STATE COLORS
+------------------
+Semantic color scheme for patient states in streamgraph visualizations:
+
+- Green Spectrum: Active Treatment States
+  - Strong Green (#1b7a3d): Active patients receiving treatment
+  - Pale Green (#7fbf7f): Retreated patients who returned to treatment
+
+- Blue (#4682b4): Monitoring phase (non-treatment but still active in study)
+
+- Yellow/Gold (#ffd700): Planned discontinuation (expected/desired)
+  - Used for patients who completed treatment successfully
+
+- Red Spectrum: Undesirable Discontinuations (semantically indicates problematic outcomes)
+  - Orange-Red (#ff4500): Administrative discontinuation (process/system issues)
+  - Indian Red (#cd5c5c): Premature discontinuation (earlier than clinically ideal)
+  - Dark Red (#8b0000): Treatment duration discontinuation (time-limited treatment)
 
 OPACITY (ALPHA) STANDARDS
 ------------------------
