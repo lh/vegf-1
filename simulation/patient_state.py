@@ -460,6 +460,10 @@ class PatientState:
             - type: str - Visit classification
             - disease_state: str - Current disease state
             - treatment_status: Dict - Treatment status information
+            - is_discontinuation_visit: bool - Whether this visit marks a discontinuation
+            - discontinuation_reason: str - Type of discontinuation (if applicable)
+            - is_retreatment: bool - Whether this visit marks a retreatment
+            - retreatment_reason: str - Original discontinuation type that led to retreatment
 
         The visit history provides a complete audit trail of all patient
         interactions and is used for:
@@ -467,7 +471,9 @@ class PatientState:
             - Outcome analysis
             - Protocol adherence monitoring
             - Simulation validation
+            - Visualization of patient state transitions
         """
+        # Start with the basic visit record
         visit_record = {
             'date': visit_time.replace(second=0, microsecond=0),
             'actions': actions,
@@ -482,6 +488,42 @@ class PatientState:
                 'weeks_since_discontinuation': self.state['treatment_status']['weeks_since_discontinuation']
             }
         }
+        
+        # Check for discontinuation at this visit
+        if "discontinue_treatment" in actions or (
+            len(self.state['visit_history']) > 0 and 
+            self.state['visit_history'][-1]['treatment_status']['active'] and 
+            not self.state['treatment_status']['active']
+        ):
+            visit_record['is_discontinuation_visit'] = True
+            visit_record['discontinuation_reason'] = self.state['treatment_status'].get('reason_for_discontinuation')
+        
+        # Check for retreatment at this visit
+        if "injection" in actions and len(self.state['visit_history']) > 0:
+            # Retreatment occurs when a previously discontinued patient gets an injection
+            prev_active = self.state['visit_history'][-1]['treatment_status']['active']
+            curr_active = self.state['treatment_status']['active']
+            
+            if not prev_active and curr_active:
+                visit_record['is_retreatment'] = True
+                
+                # Find the last discontinuation reason
+                last_discontinuation_type = None
+                for past_visit in reversed(self.state['visit_history']):
+                    if 'is_discontinuation_visit' in past_visit and past_visit['is_discontinuation_visit']:
+                        last_discontinuation_type = past_visit.get('discontinuation_reason')
+                        break
+                        
+                # If we can't find an explicit flag, try to use the reason_for_discontinuation from treatment_status
+                if not last_discontinuation_type:
+                    for past_visit in reversed(self.state['visit_history']):
+                        if past_visit['treatment_status'].get('reason_for_discontinuation'):
+                            last_discontinuation_type = past_visit['treatment_status']['reason_for_discontinuation']
+                            break
+                
+                # Record the retreatment reason
+                visit_record['retreatment_reason'] = last_discontinuation_type
+        
         self.state['visit_history'].append(visit_record)
     
     def update_phase(self, new_phase: str):
