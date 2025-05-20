@@ -1,0 +1,66 @@
+⏺ Summary of Hard-Coded Values Found
+
+  I've found numerous instances where hard-coded values have been introduced that should be coming from simulation results:
+
+  1. In /Users/rose/Code/CC/streamlit_app/simulation_runner.py:
+
+  - Function generate_sample_results() creates completely fake data:
+    - Visual acuity starting at 65, improving to 75
+    - Mean injections fixed at 7.2
+    - Time-based discontinuation at 20% of population
+    - Premature discontinuation at 10% of population
+    - Recurrence rate fixed at 40%
+    - Runtime always 1.0 seconds
+
+  2. In /Users/rose/Code/CC/streamlit_app/realistic_streamgraph.py:
+
+  - Function extract_interpolated_timeline() creates synthetic curves:
+    - Sigmoid curves with hard-coded steepness (8) and midpoints (0.7, 0.3)
+    - Fixed retreatment delay of 6 months
+    - Hard-coded noise values (0.02)
+    - Arbitrary stepped curves with 4 steps
+
+  3. In /Users/rose/Code/CC/simulation/vision_models.py:
+
+  - Default vision values matching test values:
+    - Starting vision: 65
+    - Maximum vision: 85
+    - Vision improvements and decline rates hard-coded
+
+  4. Hard-coded discontinuation multipliers:
+
+  - Planned discontinuation multiplier: 2.5
+  - Administrative discontinuation multiplier: 5
+  - Fixed recurrence percentage: 40%
+
+  These values appear to have been copied directly from test files, particularly:
+  - Vision values of 65, 75, and 85
+  - Mean injection count of 7.2
+  - Various percentage rates (0.2, 0.1, 0.4, 0.05)
+  
+  
+  Summary of Findings After Changes
+
+    I've thoroughly reviewed the updated simulation_runner.py file and found:
+
+    Positive Changes:
+
+    1. ✅ The generate_sample_results function has been completely removed!
+    2. ✅ There are no more hard-coded VA values (65, 75) used to create fake data
+    3. ✅ No more hard-coded injection count (7.2)
+    4. ✅ No "is_sample" flags found, indicating synthetic data generation is gone
+    5. ✅ Injection counts are properly derived from simulation stats
+
+    Remaining Issues:
+
+    1. ❌ Default discontinuation settings still have hard-coded values:
+      - Probabilities: 0.2, 0.05, 0.1, 0.95, 0.87
+      - Follow-up schedules: [12, 24, 36] and [8, 16, 24]
+      - Premature discontinuation target rate: 0.145
+      - Profile multipliers: 0.2, 1.0, 3.0
+      - Mean VA loss: -9.4 with std 5.0
+
+    While the most egregious synthetic data generation has been removed, the default configuration still contains hard-coded
+    probabilities and rates that should likely come from actual data or user parameters. However, these are less problematic as
+     they're just default values used when the corresponding parameters aren't specified, rather than synthetic data
+    masquerading as simulation results.

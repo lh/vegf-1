@@ -150,13 +150,20 @@ def main():
                     print(f"✅ {sim_type} VISUALIZATION TEST PASSED: Got 1 figure")
                     
                 # Save the figures for inspection
+                # Create output directory if it doesn't exist
+                output_dir = os.path.join(os.getcwd(), "output", "debug")
+                os.makedirs(output_dir, exist_ok=True)
+                
+                # Save the figures for inspection
                 if isinstance(figure, list):
                     for i, fig in enumerate(figure):
-                        fig.savefig(f"{sim_type.lower()}_disc_viz_{i}.png")
-                        print(f"Saved {sim_type.lower()}_disc_viz_{i}.png")
+                        filepath = os.path.join(output_dir, f"{sim_type.lower()}_disc_viz_{i}.png")
+                        fig.savefig(filepath)
+                        print(f"Saved {filepath}")
                 else:
-                    figure.savefig(f"{sim_type.lower()}_disc_viz.png")
-                    print(f"Saved {sim_type.lower()}_disc_viz.png")
+                    filepath = os.path.join(output_dir, f"{sim_type.lower()}_disc_viz.png")
+                    figure.savefig(filepath)
+                    print(f"Saved {filepath}")
             except Exception as e:
                 print(f"❌ {sim_type} VISUALIZATION TEST FAILED: {type(e).__name__}: {e}")
         
