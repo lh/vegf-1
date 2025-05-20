@@ -20,8 +20,7 @@ TRAFFIC_LIGHT_COLORS = {
     "discontinued_planned": "#FFA500",  # Amber
     "discontinued_administrative": "#DC143C",  # Red
     "discontinued_not_renewed": "#B22222",  # Red
-    "discontinued_premature": "#8B0000",  # Dark red
-    "discontinued_after_retreatment": "#CD5C5C"  # Light red
+    "discontinued_premature": "#8B0000"  # Dark red
 }
 
 # Display names for states
@@ -31,8 +30,7 @@ STATE_DISPLAY_NAMES = {
     'discontinued_planned': 'Discontinued Planned',
     'discontinued_administrative': 'Discontinued Administrative',
     'discontinued_not_renewed': 'Discontinued Not Renewed',
-    'discontinued_premature': 'Discontinued Premature',
-    'discontinued_after_retreatment': 'Discontinued After Retreatment'
+    'discontinued_premature': 'Discontinued Premature'
 }
 
 def analyze_phase_transitions(patient_visits: List[Dict]) -> Dict[str, Any]:
@@ -81,10 +79,13 @@ def analyze_phase_transitions(patient_visits: List[Dict]) -> Dict[str, Any]:
     # Process phase transitions
     phase_transitions = []
     
+    # Track the latest discontinuation type
+    latest_discontinuation_type = None
+    latest_discontinuation_index = -1
+    
     for i in phase_transition_indices:
         prev_phase = phases[i-1]
         curr_phase = phases[i]
-        transition = f"{prev_phase} -> {curr_phase}"
         
         phase_transitions.append({
             "index": i,
@@ -97,21 +98,59 @@ def analyze_phase_transitions(patient_visits: List[Dict]) -> Dict[str, Any]:
         if curr_phase == "monitoring" and prev_phase in ["loading", "maintenance"]:
             has_discontinued = True
             
-            # Try to determine discontinuation type
+            # Store the index for this discontinuation
+            latest_discontinuation_index = i
+            
+            # Try to determine discontinuation type from various sources
+            
+            # 1. Check if the visit has a specific discontinuation reason
+            current_visit = sorted_visits[i]
+            reason = (current_visit.get("discontinuation_reason") or 
+                     current_visit.get("reason") or 
+                     current_visit.get("discontinuation_type"))
+            
+            # 2. Check the previous visit's interval
             interval = sorted_visits[i-1].get("interval")
-            if interval and interval >= 12:
-                # Long interval suggests planned discontinuation
-                discontinuation_type = "planned"
+            
+            # 3. Look for disease state
+            disease_state = current_visit.get("disease_state")
+            
+            # Determine type based on available information
+            if reason:
+                # Map various reason strings to our standardized types
+                reason_lower = str(reason).lower()
+                
+                if any(k in reason_lower for k in ["stable_max", "planned", "patient_choice", "stable"]):
+                    latest_discontinuation_type = "planned"
+                elif any(k in reason_lower for k in ["admin", "random_admin"]):
+                    latest_discontinuation_type = "administrative"
+                elif any(k in reason_lower for k in ["premature", "early"]):
+                    latest_discontinuation_type = "premature"
+                elif any(k in reason_lower for k in ["not_renewed", "not renewed", "course_complete"]):
+                    latest_discontinuation_type = "not_renewed"
+                else:
+                    # Default fallback
+                    latest_discontinuation_type = "not_renewed"
+            
+            # If no reason found, use interval logic
+            elif interval is not None:
+                if interval >= 12:
+                    # Long interval suggests planned discontinuation
+                    latest_discontinuation_type = "planned"
+                else:
+                    # Shorter interval might be premature
+                    latest_discontinuation_type = "premature"
             else:
-                # Otherwise, might be administrative or premature
-                # Look for admin-based or premature indicators
-                # Default to not_renewed if we can't determine
-                discontinuation_type = "not_renewed"
+                # Default
+                latest_discontinuation_type = "not_renewed"
         
         # Monitoring -> Treatment transition = retreatment
         if curr_phase in ["loading", "maintenance"] and prev_phase == "monitoring":
             has_retreated = True
             retreatment_count += 1
+    
+    # Use the most recent discontinuation type
+    discontinuation_type = latest_discontinuation_type
     
     return {
         "has_discontinued": has_discontinued,
@@ -149,20 +188,23 @@ def determine_patient_state(patient_analysis: Dict[str, Any]) -> str:
     # Initialize state
     state = "active"
     
-    if has_discontinued and not has_retreated:
-        # Currently discontinued
+    # Determine the current state based on most recent status
+    
+    # Case 1: Currently in a monitoring phase (discontinued)
+    if final_phase == "monitoring":
+        # Patient is in a discontinued state
         if discontinuation_type:
             state = f"discontinued_{discontinuation_type}"
         else:
             state = "discontinued_not_renewed"  # Default type if unknown
-    elif has_retreated:
-        # Has been retreated
-        if final_phase == "monitoring":
-            # Discontinued after retreatment
-            state = "discontinued_after_retreatment"
-        else:
-            # Currently active after retreatment
+    
+    # Case 2: Currently in treatment phase
+    else:
+        # Check if this is a retreated patient
+        if has_retreated:
             state = "active_retreated"
+        else:
+            state = "active"
     
     return state
 
@@ -294,8 +336,7 @@ def generate_phase_tracking_streamgraph(results: Dict) -> plt.Figure:
         'discontinued_planned',
         'discontinued_administrative',
         'discontinued_not_renewed',
-        'discontinued_premature',
-        'discontinued_after_retreatment'
+        'discontinued_premature'
     ]
     
     # Create stacked area plot
