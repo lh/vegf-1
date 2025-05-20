@@ -225,21 +225,23 @@ def run_simulation(config_name="test_simulation", num_patients=100, duration_yea
         sys.exit(1)
 
 
-def save_results(results, filename=None):
+def save_results(results, filename=None, save_parquet=True):
     """
-    Save simulation results to a JSON file.
+    Save simulation results to JSON and optionally Parquet format.
     
     Parameters
     ----------
     results : dict
         Simulation results to save
     filename : str, optional
-        Filename to save to, by default auto-generated based on parameters
+        Filename base to save to (without extension), by default auto-generated based on parameters
+    save_parquet : bool, optional
+        Whether to also save as Parquet format, by default True
         
     Returns
     -------
-    str
-        Path to saved file
+    tuple
+        Paths to saved files (json_path, parquet_path)
     """
     # Create output directory if it doesn't exist
     output_dir = os.path.join(os.getcwd(), "output")
@@ -250,24 +252,101 @@ def save_results(results, filename=None):
         patient_count = results["config"]["patient_count"]
         duration = int(results["config"]["duration_years"])
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"streamgraph_sim_{patient_count}p_{duration}yr_{timestamp}.json"
+        filename = f"streamgraph_sim_{patient_count}p_{duration}yr_{timestamp}"
     
-    # Ensure filename has .json extension
-    if not filename.endswith(".json"):
-        filename += ".json"
+    # Remove any extension from filename
+    filename = os.path.splitext(filename)[0]
     
-    # Full path
-    filepath = os.path.join(output_dir, filename)
+    # JSON path
+    json_filepath = os.path.join(output_dir, f"{filename}.json")
+    parquet_filepath = None
     
-    # Save the file
+    # Save as JSON (legacy format, may be deprecated in future)
     try:
-        with open(filepath, "w") as f:
+        with open(json_filepath, "w") as f:
             json.dump(results, f, indent=2, default=str)
-        print(f"\nResults saved to: {filepath}")
-        return filepath
+        print(f"\nJSON results saved to: {json_filepath}")
     except Exception as e:
-        print(f"Error saving results: {e}")
-        return None
+        print(f"Error saving JSON results: {e}")
+        json_filepath = None
+    
+    # Also save as Parquet if requested
+    if save_parquet:
+        try:
+            import pandas as pd
+            
+            # Convert patient histories to a more tabular structure for efficient Parquet storage
+            patient_data = []
+            
+            # Process patient histories
+            for patient_id, visits in results["patient_histories"].items():
+                for visit in visits:
+                    # Create a flattened record for this visit
+                    visit_record = {
+                        "patient_id": patient_id,
+                        # Convert common fields
+                        "date": visit.get("date"),
+                        "phase": visit.get("phase"),
+                        "disease_state": visit.get("disease_state"),
+                        "vision": visit.get("vision"),
+                        "interval": visit.get("interval"),
+                        # Add any discontinuation flags
+                        "is_discontinuation": visit.get("is_discontinuation_visit", False),
+                        "discontinuation_type": visit.get("discontinuation_type", ""),
+                        "is_retreatment": visit.get("is_retreatment_visit", False)
+                    }
+                    
+                    # Process action list
+                    actions = visit.get("actions", [])
+                    visit_record["has_injection"] = "injection" in actions
+                    visit_record["has_oct"] = "oct_scan" in actions
+                    
+                    patient_data.append(visit_record)
+            
+            # Create a DataFrame
+            visits_df = pd.DataFrame(patient_data)
+            
+            # Convert date column to datetime if it's a string
+            if "date" in visits_df.columns and pd.api.types.is_string_dtype(visits_df["date"]):
+                try:
+                    visits_df["date"] = pd.to_datetime(visits_df["date"])
+                except:
+                    # Log but don't fail if conversion fails
+                    print("Warning: Could not convert date column to datetime")
+            
+            # Create a top-level metadata DataFrame
+            metadata = {
+                "simulation_type": results.get("simulation_type"),
+                "patients": results["config"]["patient_count"],
+                "duration_years": results["config"]["duration_years"],
+                "start_date": results["config"]["start_date"],
+                "discontinuation_enabled": results["config"]["discontinuation_enabled"]
+            }
+            metadata_df = pd.DataFrame([metadata])
+            
+            # Create a statistics DataFrame
+            stats_df = pd.DataFrame([results["statistics"]])
+            
+            # Save as a partitioned parquet dataset
+            parquet_filepath = os.path.join(output_dir, f"{filename}.parquet")
+            
+            # Write each DataFrame to a separate partition
+            visits_df.to_parquet(os.path.join(output_dir, f"{filename}_visits.parquet"))
+            metadata_df.to_parquet(os.path.join(output_dir, f"{filename}_metadata.parquet"))
+            stats_df.to_parquet(os.path.join(output_dir, f"{filename}_stats.parquet"))
+            
+            print(f"Parquet results saved to:")
+            print(f"  - Visits: {os.path.join(output_dir, f'{filename}_visits.parquet')}")
+            print(f"  - Metadata: {os.path.join(output_dir, f'{filename}_metadata.parquet')}")
+            print(f"  - Statistics: {os.path.join(output_dir, f'{filename}_stats.parquet')}")
+            
+        except Exception as e:
+            print(f"Error saving Parquet results: {e}")
+            import traceback
+            traceback.print_exc()
+            parquet_filepath = None
+    
+    return json_filepath, parquet_filepath
 
 
 def main():
@@ -280,7 +359,9 @@ def main():
     parser.add_argument("--years", type=float, default=5, 
                         help="Simulation duration in years (default: 5)")
     parser.add_argument("--output", type=str, default=None, 
-                        help="Output filename (default: auto-generated)")
+                        help="Output filename base (default: auto-generated)")
+    parser.add_argument("--no-parquet", action="store_true", 
+                        help="Disable Parquet output (JSON only)")
     
     args = parser.parse_args()
     
@@ -293,7 +374,7 @@ def main():
     
     # Save results
     if results:
-        save_results(results, args.output)
+        save_results(results, args.output, save_parquet=not args.no_parquet)
 
 
 if __name__ == "__main__":
