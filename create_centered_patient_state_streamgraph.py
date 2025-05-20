@@ -3,8 +3,9 @@
 Create centered streamgraph visualization of patient states over time using real simulation data.
 
 This script is a variant of create_patient_state_streamgraph.py that creates a centered streamgraph.
-The main difference is using groupnorm='percent' alongside stackgroup='one' to create a centered
-layout that expands both upward and downward from a central baseline.
+The main difference is that this visualization expands both upward and downward from a central
+baseline, with active patients below and discontinued patients above, creating a more balanced
+and symmetrical appearance.
 """
 
 import os
@@ -357,32 +358,108 @@ def create_centered_streamgraph(state_counts_df, state_categories, metadata_df, 
     # Create months array
     months = state_counts_df.index.tolist()
     
-    # Create figure
+    # *** Alternative Implementation: Creating Centered Stream Manually ***
+    # This approach creates a more visually balanced streamgraph by manually adjusting
+    # the baseline to center the data
+    
+    # Create a custom baseline by dividing the range by 2
+    active_patients = state_counts_df['active'].values if 'active' in state_counts_df.columns else np.zeros(len(months))
+    retreated_patients = state_counts_df['retreated'].values if 'retreated' in state_counts_df.columns else np.zeros(len(months))
+    
+    # Group 1: active treatment (active + retreated)
+    treatment_group = active_patients + retreated_patients
+    
+    # Group 2: all discontinued states
+    discontinued_group = np.zeros(len(months))
+    for state in state_categories:
+        if 'discontinued' in state and state in state_counts_df.columns:
+            discontinued_group += state_counts_df[state].values
+    
+    # Calculate the baseline as weighted average to balance the visualization
+    baseline = treatment_group * 0.75  # Use 75% of treatment group as baseline
+    
+    # Create figure for manual approach
     fig = go.Figure()
     
-    # Add traces for each state category in reverse order (for proper stacking)
-    for state in reversed(state_categories):
+    # Create a dict to track the current stack position
+    current_position = {}
+    for month_idx in range(len(months)):
+        current_position[month_idx] = -baseline[month_idx]  # Start from negative baseline
+    
+    # First add the active treatment states (from bottom up)
+    treatment_states = ["active", "retreated"]
+    for state in treatment_states:
         if state in state_counts_df.columns:
-            values = state_counts_df[state].tolist()
-            
-            # Get color
+            values = state_counts_df[state].values
             color = state_colors.get(state, "#grey")
-            
-            # Create more readable display name
             display_name = state.replace("_", " ").title()
             
-            # Add trace using centered streamgraph parameters
+            # Create a customized set of y-values based on stacking from the baseline
+            y_values = []
+            for month_idx in range(len(months)):
+                start_y = current_position[month_idx]
+                end_y = start_y + values[month_idx]
+                current_position[month_idx] = end_y
+                y_values.append(end_y)
+            
+            # Add filled area
             fig.add_trace(go.Scatter(
                 x=months,
-                y=values,
+                y=y_values,
                 mode='lines',
                 line=dict(width=0.5, color=color),
-                stackgroup='one',  # Enable stacking
-                groupnorm='percent',  # Center the streamgraph - key difference from regular streamgraph
+                fill='tonexty' if state != treatment_states[0] else 'none',  # Fill to the trace before it
                 fillcolor=color,
-                opacity=0.85,  # Add some transparency to make colors more subtle
+                opacity=0.85,
                 name=display_name,
-                hovertemplate=f"{display_name}: %{{y:.0f}} patients<br>Month: %{{x:.0f}}<extra></extra>"
+                customdata=values,  # Add raw values for hover
+                hovertemplate=f"{display_name}: %{{customdata:.0f}} patients<br>Month: %{{x:.0f}}<extra></extra>"
+            ))
+    
+    # Reset current position to start from 0 (the middle) for discontinued states
+    for month_idx in range(len(months)):
+        current_position[month_idx] = 0
+    
+    # Then add all the discontinued states (from middle up)
+    discontinued_states = [s for s in state_categories if 'discontinued' in s]
+    
+    # Need to add an initial zero trace as a starting point for filling
+    # This creates a clean separation between the treatment and discontinued groups
+    fig.add_trace(go.Scatter(
+        x=months,
+        y=[0] * len(months),
+        mode='lines',
+        line=dict(width=0, color='rgba(0,0,0,0)'),
+        showlegend=False,
+        hoverinfo='skip'
+    ))
+    
+    for state in discontinued_states:
+        if state in state_counts_df.columns:
+            values = state_counts_df[state].values
+            color = state_colors.get(state, "#grey")
+            display_name = state.replace("_", " ").title()
+            
+            # Create a customized set of y-values based on stacking from 0 (middle)
+            y_values = []
+            for month_idx in range(len(months)):
+                start_y = current_position[month_idx]
+                end_y = start_y + values[month_idx]
+                current_position[month_idx] = end_y
+                y_values.append(end_y)
+            
+            # Add filled area
+            fig.add_trace(go.Scatter(
+                x=months,
+                y=y_values,
+                mode='lines',
+                line=dict(width=0.5, color=color),
+                fill='tonexty',  # Fill to the trace before it
+                fillcolor=color,
+                opacity=0.85,
+                name=display_name,
+                customdata=values,  # Add raw values for hover
+                hovertemplate=f"{display_name}: %{{customdata:.0f}} patients<br>Month: %{{x:.0f}}<extra></extra>"
             ))
     
     # Configure layout
@@ -395,7 +472,7 @@ def create_centered_streamgraph(state_counts_df, state_categories, metadata_df, 
             'yanchor': 'top'
         },
         xaxis_title="Months",
-        yaxis_title="Patient Distribution",  # Changed from "Number of Patients" as values are now percentages
+        yaxis_title="Patient Distribution",
         hovermode="x unified",
         legend=dict(
             orientation="h", 
@@ -418,8 +495,9 @@ def create_centered_streamgraph(state_counts_df, state_categories, metadata_df, 
         yaxis=dict(
             gridcolor='lightgrey',
             gridwidth=0.5,
-            # Don't force non-negative range for centered streamgraph
-            # as we expect negative values
+            zeroline=True,  # Show the zero line for reference
+            zerolinecolor='black',
+            zerolinewidth=1
         ),
         # Add margins for readability
         margin=dict(l=50, r=50, t=80, b=120)
@@ -449,13 +527,29 @@ def create_centered_streamgraph(state_counts_df, state_categories, metadata_df, 
         borderpad=4
     )
     
+    # Add visualization explanation
+    fig.add_annotation(
+        x=0.98,
+        y=1.05,
+        xref="paper",
+        yref="paper",
+        text="Centered Visualization:<br>Active states below middle line<br>Discontinued states above middle line",
+        showarrow=False,
+        font=dict(size=10),
+        align="right",
+        bgcolor="rgba(255,255,255,0.8)",
+        bordercolor="black",
+        borderwidth=1,
+        borderpad=4
+    )
+    
     # Add attribution and data source info
     fig.add_annotation(
         x=0.5,
         y=-0.22,
         xref="paper",
         yref="paper",
-        text=f"Source: Real patient simulation data - No synthetic data used<br>Simulation Type: {simulation_type}, Duration: {duration_years} years, Patients: {total_patients}<br>Note: This is a centered streamgraph showing relative distribution of patient states",
+        text=f"Source: Real patient simulation data - No synthetic data used<br>Simulation Type: {simulation_type}, Duration: {duration_years} years, Patients: {total_patients}<br>Note: This is a centered visualization with active states below and discontinued states above the center line",
         showarrow=False,
         font=dict(size=8, color="darkgrey"),
         align="center"
