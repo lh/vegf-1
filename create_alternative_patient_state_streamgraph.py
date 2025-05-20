@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 """
-Create centered streamgraph visualization of patient states over time using real simulation data.
+Create alternative stacked visualization of patient states over time using real simulation data.
 
-This script is a variant of create_patient_state_streamgraph.py that creates a centered streamgraph.
-The main difference is that this visualization expands both upward and downward from a central
-baseline, with active patients below and discontinued patients above, creating a more balanced
-and symmetrical appearance.
+This script is a variant of create_patient_state_streamgraph.py that arranges patient states
+in a different way. It places active treatment states at the bottom and stacks discontinued
+states on top, creating a clear separation between the two groups for better visualization.
 """
 
 import os
@@ -317,7 +316,7 @@ def prepare_patient_state_data(visits_df, metadata_df):
     return pivot_df, state_categories
 
 
-def create_centered_streamgraph(state_counts_df, state_categories, metadata_df, stats_df):
+def create_alternative_stacking(state_counts_df, state_categories, metadata_df, stats_df):
     """
     Create a centered Plotly streamgraph visualization.
     
@@ -337,7 +336,7 @@ def create_centered_streamgraph(state_counts_df, state_categories, metadata_df, 
     plotly.graph_objects.Figure
         Plotly figure with centered streamgraph visualization
     """
-    print("\nCreating centered streamgraph visualization...")
+    print("\nCreating alternative stacked visualization...")
     
     # Extract key metadata
     total_patients = metadata_df["patients"].iloc[0]
@@ -375,8 +374,9 @@ def create_centered_streamgraph(state_counts_df, state_categories, metadata_df, 
         if 'discontinued' in state and state in state_counts_df.columns:
             discontinued_group += state_counts_df[state].values
     
-    # Calculate the baseline as weighted average to balance the visualization
-    baseline = treatment_group * 0.75  # Use 75% of treatment group as baseline
+    # Calculate the baseline to be a small amount (show all patients)
+    # Setting the baseline to be very small ensures we see the full distribution
+    baseline = np.zeros(len(months))  # No baseline shift, show all patients
     
     # Create figure for manual approach
     fig = go.Figure()
@@ -533,7 +533,7 @@ def create_centered_streamgraph(state_counts_df, state_categories, metadata_df, 
         y=1.05,
         xref="paper",
         yref="paper",
-        text="Centered Visualization:<br>Active states below middle line<br>Discontinued states above middle line",
+        text="Alternative Visualization:<br>Active states shown first<br>Discontinued states stacked on top",
         showarrow=False,
         font=dict(size=10),
         align="right",
@@ -549,7 +549,7 @@ def create_centered_streamgraph(state_counts_df, state_categories, metadata_df, 
         y=-0.22,
         xref="paper",
         yref="paper",
-        text=f"Source: Real patient simulation data - No synthetic data used<br>Simulation Type: {simulation_type}, Duration: {duration_years} years, Patients: {total_patients}<br>Note: This is a centered visualization with active states below and discontinued states above the center line",
+        text=f"Source: Real patient simulation data - No synthetic data used<br>Simulation Type: {simulation_type}, Duration: {duration_years} years, Patients: {total_patients}<br>Note: This is an alternative stacking arrangement with active states on bottom and discontinued states on top",
         showarrow=False,
         font=dict(size=8, color="darkgrey"),
         align="center"
@@ -558,7 +558,7 @@ def create_centered_streamgraph(state_counts_df, state_categories, metadata_df, 
     return fig
 
 
-def save_visualization(fig, input_path, output_dir=None, suffix="_centered_streamgraph"):
+def save_visualization(fig, input_path, output_dir=None, suffix="_alternative_stacking"):
     """
     Save the visualization as HTML and PNG.
     
@@ -607,7 +607,7 @@ def save_visualization(fig, input_path, output_dir=None, suffix="_centered_strea
 
 def main():
     """Main function to parse arguments and create visualization."""
-    parser = argparse.ArgumentParser(description="Create centered streamgraph visualization from simulation data")
+    parser = argparse.ArgumentParser(description="Create alternative stacked visualization from simulation data")
     parser.add_argument("--input", type=str, required=True, 
                         help="Path to simulation data file (without _visits, etc. extensions)")
     parser.add_argument("--output-dir", type=str, default=None, 
@@ -621,8 +621,8 @@ def main():
     # Prepare data
     state_counts_df, state_categories = prepare_patient_state_data(visits_df, metadata_df)
     
-    # Create centered visualization
-    fig = create_centered_streamgraph(state_counts_df, state_categories, metadata_df, stats_df)
+    # Create alternative stacking visualization
+    fig = create_alternative_stacking(state_counts_df, state_categories, metadata_df, stats_df)
     
     # Save visualization
     save_visualization(fig, args.input, args.output_dir)
