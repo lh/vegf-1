@@ -151,7 +151,46 @@ We have successfully fixed the visualization rendering to create a proper stream
    - Confirmed that all patient states are properly displayed in the streamgraph.
    - Verified that the stacking is working correctly with real simulation data.
 
-The updated streamgraph now correctly displays all patient states with proper stacking, allowing for clear visualization of how patient populations transition between states over time.
+5. **Implemented semantic color scheme**:
+   - Updated the color palette to have meaningful associations with patient states:
+   ```python
+   state_colors = {
+       # Active patients - green
+       "active": "#1b7a3d",  # Strong green for active treatment
+       
+       # Retreated patients - lighter green
+       "retreated": "#7fbf7f",  # Pale green for retreated patients
+       
+       # Monitoring patients - blue-green
+       "monitoring": "#4682b4",  # Blue for monitoring (non-treatment phases)
+       
+       # Discontinued patients with semantic color coding:
+       # Yellow for planned (expected/desired) discontinuations
+       "discontinued_planned": "#ffd700",  # Gold for planned discontinuation
+       
+       # Red spectrum for undesirable discontinuations:
+       "discontinued_administrative": "#ff4500",  # OrangeRed for administrative issues
+       "discontinued_premature": "#cd5c5c",  # IndianRed for premature discontinuation
+       "discontinued_duration": "#8b0000",  # DarkRed for duration-based discontinuation
+   }
+   ```
+
+6. **Enhanced state categorization**:
+   - Added support for "premature" discontinuation as a separate category
+   - Improved the state determination logic to better classify discontinuation types:
+   ```python
+   # Categorize based on discontinuation type with more granular categories
+   if "stable" in disc_type or "planned" in disc_type or "max_interval" in disc_type:
+       return "discontinued_planned"
+   elif "admin" in disc_type or "administrative" in disc_type:
+       return "discontinued_administrative"
+   elif "premature" in disc_type or "early" in disc_type:
+       return "discontinued_premature"
+   elif "duration" in disc_type or "course" in disc_type:
+       return "discontinued_duration"
+   ```
+
+The updated streamgraph now correctly displays all patient states with proper stacking and meaningful colors, allowing for clear visualization of how patient populations transition between states over time. The color scheme has semantic meaning, with green representing active patients, yellow for planned discontinuations, and red spectrum for the various types of undesirable discontinuations.
 
 ## Key Principles
 

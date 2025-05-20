@@ -196,11 +196,13 @@ def prepare_patient_state_data(visits_df, metadata_df):
             # Get discontinuation type for categorization
             disc_type = row.get("discontinuation_type", "").lower()
             
-            # Categorize based on discontinuation type
+            # Categorize based on discontinuation type with more granular categories
             if "stable" in disc_type or "planned" in disc_type or "max_interval" in disc_type:
                 return "discontinued_planned"
-            elif "admin" in disc_type:
-                return "discontinued_administrative" 
+            elif "admin" in disc_type or "administrative" in disc_type:
+                return "discontinued_administrative"
+            elif "premature" in disc_type or "early" in disc_type:
+                return "discontinued_premature"
             elif "duration" in disc_type or "course" in disc_type:
                 return "discontinued_duration"
             else:
@@ -287,6 +289,7 @@ def prepare_patient_state_data(visits_df, metadata_df):
         "active",
         "discontinued_planned",
         "discontinued_administrative",
+        "discontinued_premature",  # Added premature discontinuation state
         "discontinued_duration",
         "monitoring",
         "retreated"
@@ -342,19 +345,25 @@ def create_streamgraph(state_counts_df, state_categories, metadata_df, stats_df)
     duration_years = metadata_df["duration_years"].iloc[0]
     simulation_type = metadata_df["simulation_type"].iloc[0]
     
-    # Define custom colors for patient states
+    # Define custom colors for patient states with semantic meaning
     state_colors = {
-        # Active patients - green tones
-        "active": "#1b7a3d",  # Dark green
+        # Active patients - green
+        "active": "#1b7a3d",  # Strong green for active treatment
         
-        # Discontinued patients - yellow to red spectrum
-        "discontinued_planned": "#ffa500",  # Orange for planned discontinuation
-        "discontinued_administrative": "#ff4500",  # OrangeRed for admin issues
-        "discontinued_duration": "#dc143c",  # Crimson for treatment duration
+        # Retreated patients - lighter green
+        "retreated": "#7fbf7f",  # Pale green for retreated patients
         
-        # Monitoring and retreated - blue tones
-        "monitoring": "#4682b4",  # Steel blue for monitoring
-        "retreated": "#00bfff"  # Deep sky blue for retreated
+        # Monitoring patients - blue-green
+        "monitoring": "#4682b4",  # Blue for monitoring (non-treatment phases)
+        
+        # Discontinued patients with semantic color coding:
+        # Yellow for planned (expected/desired) discontinuations
+        "discontinued_planned": "#ffd700",  # Gold for planned discontinuation
+        
+        # Red spectrum for undesirable discontinuations:
+        "discontinued_administrative": "#ff4500",  # OrangeRed for administrative issues
+        "discontinued_premature": "#cd5c5c",  # IndianRed for premature discontinuation
+        "discontinued_duration": "#8b0000",  # DarkRed for duration-based discontinuation
     }
     
     # Create months array
