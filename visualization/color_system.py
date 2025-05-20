@@ -37,11 +37,11 @@ COLORS = {
     # Patient state colors for streamgraph visualization
     'active': '#1b7a3d',      # Strong green for active treatment
     'retreated': '#7fbf7f',   # Pale green for retreated patients
-    'discontinued': '#ff69b4', # Hot pink for discontinued (monitored) patients
+    'discontinued': '#f8a5cf', # Pastel pink for discontinued (monitored) patients
     'disc_planned': '#ffd700', # Gold for planned discontinuation
-    'disc_admin': '#ff4500',   # OrangeRed for administrative discontinuation
-    'disc_premature': '#cd5c5c', # IndianRed for premature discontinuation
-    'disc_duration': '#8b0000'  # DarkRed for duration-based discontinuation
+    'disc_admin': '#ff7f50',   # Coral for administrative discontinuation
+    'disc_premature': '#db7093', # PaleVioletRed for premature discontinuation
+    'disc_duration': '#b22222'  # Firebrick for duration-based discontinuation
 }
 
 # Standardized alpha values for consistent transparency across visualizations

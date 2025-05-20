@@ -381,6 +381,7 @@ def create_streamgraph(state_counts_df, state_categories, metadata_df, stats_df)
                 line=dict(width=0.5, color=color),
                 stackgroup='one',  # This enables proper stacking
                 fillcolor=color,
+                opacity=0.85,  # Add some transparency to make colors more subtle
                 name=display_name,
                 hovertemplate=f"{display_name}: %{{y:.0f}} patients<br>Month: %{{x:.0f}}<extra></extra>"
             ))
@@ -407,11 +408,11 @@ def create_streamgraph(state_counts_df, state_categories, metadata_df, stats_df)
         # Apply a clean white background
         paper_bgcolor='white',
         plot_bgcolor='white',
-        # Make yearly tick marks
+        # Make monthly tick marks (at yearly intervals)
         xaxis=dict(
             tickmode='array',
             tickvals=[i*12 for i in range(int(duration_years) + 1)],
-            ticktext=[f"Year {i}" for i in range(int(duration_years) + 1)],
+            ticktext=[f"{i*12}" for i in range(int(duration_years) + 1)],
             gridcolor='lightgrey',
             gridwidth=0.5
         ),
