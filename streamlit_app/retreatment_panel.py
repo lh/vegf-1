@@ -16,16 +16,6 @@ try:
 except ImportError:
     pass
 
-# Import the visualization function
-try:
-    from streamlit_app.discontinuation_chart import create_discontinuation_retreatment_chart
-except ImportError:
-    # Define a fallback implementation in case the import fails
-    def create_discontinuation_retreatment_chart(data, **kwargs):
-        """Fallback implementation of the chart function"""
-        fig, ax = plt.subplots(figsize=(10, 6))
-        ax.text(0.5, 0.5, "Visualization not available", ha='center', va='center', fontsize=14)
-        return fig, ax
 
 def display_retreatment_panel(results):
     """
@@ -80,74 +70,6 @@ def display_retreatment_panel(results):
                 st.write(f"**Avg Retreatments per Patient:** {avg_retreatments:.2f}",
                         help="Average number of retreatment events per unique retreated patient")
     
-    # Create and display the discontinuation by retreatment status chart
-    st.subheader("Discontinuation Reasons by Retreatment Status")
-    
-    # Use the sample data from the test that worked correctly
-    # This uses realistic proportions that match the expected visualization
-    chart_data = [
-        {"reason": "Administrative", "retreatment_status": "Retreated", "count": 3}, 
-        {"reason": "Administrative", "retreatment_status": "Not Retreated", "count": 11}, 
-        {"reason": "Not Renewed", "retreatment_status": "Retreated", "count": 19}, 
-        {"reason": "Not Renewed", "retreatment_status": "Not Retreated", "count": 108}, 
-        {"reason": "Planned", "retreatment_status": "Retreated", "count": 73}, 
-        {"reason": "Planned", "retreatment_status": "Not Retreated", "count": 49}, 
-        {"reason": "Premature", "retreatment_status": "Retreated", "count": 299}, 
-        {"reason": "Premature", "retreatment_status": "Not Retreated", "count": 246}
-    ]
-    
-    # Create the chart
-    chart_df = pd.DataFrame(chart_data)
-    
-    # Try to use the fixed streamgraph implementation first
-    try:
-        if 'visualize_retreatment_by_discontinuation_type' in globals() or 'visualize_retreatment_by_discontinuation_type' in locals():
-            st.write("### Enhanced Retreatment Visualization")
-            
-            # Check if we have the raw data needed
-            if 'raw_discontinuation_stats' in results and 'retreatments_by_type' in results['raw_discontinuation_stats']:
-                # Create the enhanced visualization
-                fig = visualize_retreatment_by_discontinuation_type(results)
-                st.pyplot(fig)
-                
-                # Add a caption to explain the enhanced chart
-                st.caption("This visualization shows retreatment patterns by discontinuation type using the fixed implementation.")
-                
-                # Skip the old chart if we've successfully shown the enhanced one
-                st.write("### Standard Discontinuation Chart (Fallback)")
-            else:
-                # If we don't have raw data, fall back to standard chart
-                st.write("### Standard Discontinuation Chart")
-    except Exception as e:
-        # Log the exception but continue to standard chart
-        if 'DEBUG_MODE' in globals() and DEBUG_MODE:
-            st.error(f"Could not create enhanced visualization: {e}")
-            import traceback
-            st.code(traceback.format_exc())
-        
-        st.write("### Standard Discontinuation Chart")
-    
-    try:
-        # Create the chart using the imported function
-        fig, ax = create_discontinuation_retreatment_chart(
-            chart_df,
-            title="Discontinuation Reasons by Retreatment Status",
-            figsize=(10, 6),
-            show_data_labels=True,
-            minimal_style=True
-        )
-        
-        # Display the chart
-        st.pyplot(fig)
-        
-        # Add a caption to explain the chart
-        st.caption("This chart shows the distribution of retreated vs. non-retreated patients for each discontinuation reason.")
-    except Exception as e:
-        st.error(f"Could not create visualization: {e}")
-        import traceback
-        st.code(traceback.format_exc())
-        # Display the data in tabular format as fallback
-        st.dataframe(chart_df)
 
     # Display retreatment breakdown if available
     if retreatment_by_type and sum(retreatment_by_type.values()) > 0:

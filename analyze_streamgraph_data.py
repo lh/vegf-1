@@ -232,11 +232,23 @@ def extract_patient_state_by_month(results, structure_info):
                 for i, visit in enumerate(sorted_visits):
                     # Get visit time in months
                     if sort_key == "date" and baseline_time is None:
-                        baseline_time = visit["date"]
+                        # Convert baseline_time string to datetime if needed
+                        if isinstance(visit["date"], str):
+                            from datetime import datetime
+                            baseline_time = datetime.strptime(visit["date"], "%Y-%m-%d %H:%M:%S")
+                        else:
+                            baseline_time = visit["date"]
                         month = 0
                     elif sort_key == "date":
+                        # Convert current time string to datetime if needed
+                        if isinstance(visit["date"], str):
+                            from datetime import datetime
+                            current_time = datetime.strptime(visit["date"], "%Y-%m-%d %H:%M:%S")
+                        else:
+                            current_time = visit["date"]
+                            
                         # Calculate months from baseline
-                        time_diff = (visit["date"] - baseline_time).total_seconds()
+                        time_diff = (current_time - baseline_time).total_seconds()
                         month = int(time_diff / (30.44 * 24 * 60 * 60))
                     else:
                         # Direct time value (assume in months)

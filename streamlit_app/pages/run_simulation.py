@@ -23,7 +23,6 @@ try:
         run_simulation, 
         get_ui_parameters,
         generate_va_over_time_plot,
-        generate_discontinuation_plot,
         save_simulation_results
     )
 except ImportError:
@@ -41,10 +40,6 @@ except ImportError:
         ax.text(0.5, 0.5, "Simulation module not available", ha='center', va='center')
         return fig
     
-    def generate_discontinuation_plot(results):
-        fig, ax = plt.subplots()
-        ax.text(0.5, 0.5, "Simulation module not available", ha='center', va='center')
-        return fig
     
     def save_simulation_results(results, filename=None):
         return None
@@ -411,29 +406,97 @@ def display_simulation_results(results):
     else:
         st.warning("No discontinuation data available in simulation results. Check simulation configuration.")
     
-    # Show discontinuation and retreatment analysis
+    # Patient State Visualisation
+    st.subheader("Patient State Visualisation")
+    
+    # Create tabs for different views
+    current_tab, cumulative_tab = st.tabs(["Current State View", "Cumulative View"])
+    
+    with current_tab:
+        st.write("**Where patients are right now at each time point**")
+        
+        # Try to create current state visualization
+        try:
+            # Import and use our current state streamgraph
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            
+            # Import bridge function
+            from streamgraph_bridge import convert_streamlit_to_streamgraph_format
+            from create_current_state_streamgraph import (
+                prepare_current_state_data, 
+                create_current_state_streamgraph
+            )
+            
+            # Convert Streamlit results to streamgraph format
+            visits_df, metadata_df, stats_df = convert_streamlit_to_streamgraph_format(
+                st.session_state.simulation_results
+            )
+            
+            # Prepare data for current state visualization
+            state_counts_df, state_categories = prepare_current_state_data(visits_df, metadata_df)
+            
+            # Create the streamgraph
+            fig = create_current_state_streamgraph(
+                state_counts_df,
+                state_categories,
+                metadata_df,
+                stats_df
+            )
+            
+            # Display the visualization
+            st.plotly_chart(fig, use_container_width=True)
+            
+        except ImportError as e:
+            st.error(f"Import error: {e}")
+            st.info("Debugging: Check that all required modules are accessible")
+            if get_debug_mode():
+                import traceback
+                st.code(traceback.format_exc())
+        except Exception as e:
+            st.error(f"Could not create current state visualization: {str(e)}")
+            if get_debug_mode():
+                import traceback
+                st.code(traceback.format_exc())
+    
+    with cumulative_tab:
+        st.write("**What patients have ever experienced**")
+        st.info("🚧 Cumulative View coming next")
+        st.write("This will show historical treatment patterns and what patients have experienced over time.")
+    
+    # Add expandable clinical glossary
+    with st.expander("📖 Clinical State Definitions"):
+        st.markdown("""
+        ### Current State View
+        Shows where patients are **right now** at each time point - better for operational planning.
+        
+        | **State** | **Clinical Meaning** | **Duration** |
+        |-----------|---------------------|--------------|
+        | **Active** | Currently receiving regular injections | Ongoing |
+        | **Recommencing treatment** | Previously discontinued, now restarting (loading phase) | Transient (1-3 months) |
+        | **Untreated - remission** | Stable patients who reached maximum intervals | Long-term |
+        | **Not booked** | Administrative issues preventing treatment | Variable |
+        | **Not renewed** | Course complete, clinician chose not to continue | Long-term |
+        | **Discontinued without reason** | Clinician decision without clear documentation | Variable |
+        
+        ### Cumulative View  
+        Shows what patients have **ever experienced** - better for outcome analysis.
+        
+        | **State** | **Clinical Meaning** |
+        |-----------|---------------------|
+        | **Active** | Never discontinued |
+        | **Retreated** | Has experienced at least one treatment restart |
+        | **Discontinued planned** | Has been discontinued due to stable remission |
+        | **Discontinued administrative** | Has experienced administrative barriers |
+        | **Discontinued duration** | Has completed treatment course without renewal |
+        
+        ### Key Insight
+        **Why "Recommencing treatment" oscillates:** This represents patients currently in the retreatment process - a transient state lasting 1-3 months before returning to active treatment.
+        """)
+    
+    # Show retreatment analysis
     if "discontinuation_counts" in results:
-        st.subheader("Discontinuation and Retreatment Analysis")
-        figs = generate_discontinuation_plot(results)
-
-        # Display the discontinuation charts
-        if isinstance(figs, list) and len(figs) > 0:
-            # Show the streamgraph first
-            st.write("**Patient Cohort Flow**")
-            with st.container():
-                st.pyplot(figs[0])
-                st.caption("Streamgraph showing patient lifecycle through treatment states")
-                
-            # Show the bar chart for detailed breakdown
-            st.write("**Discontinuation Breakdown**")
-            with st.container():
-                st.pyplot(figs[1])
-                st.caption("Discontinuation reasons by retreatment status")
-        else:
-            # Fallback in case figs is not a list (should never happen with updated code)
-            st.pyplot(figs)
-
-        # Show retreatment analysis
         display_retreatment_panel(results)
     
     # Show visual acuity over time

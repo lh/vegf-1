@@ -35,6 +35,26 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# CRITICAL: Check if we're running from the correct working directory
+expected_files = ["protocols", "simulation", "README.md"]
+missing_files = [f for f in expected_files if not Path(f).exists()]
+
+if missing_files:
+    st.error(f"""
+    ❌ **Wrong working directory detected!**
+    
+    Missing: {', '.join(missing_files)}
+    
+    **Please run from project root:**
+    ```bash
+    cd /path/to/your/project/
+    streamlit run streamlit_app/app.py
+    ```
+    
+    **Current working directory:** `{os.getcwd()}`
+    """)
+    st.stop()
+
 # Import Puppeteer helpers
 try:
     from streamlit_app.puppeteer_helpers import add_puppeteer_support, selectable_radio, selectable_button, selectable_selectbox

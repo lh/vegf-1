@@ -191,25 +191,40 @@ def save_results_parquet(patient_histories, statistics, config, output_dir=None,
             # Update tracking state
             was_active = is_active
             
-    # Second pass: add all visit data with retreatment flags
+    # Second pass: add all visit data with retreatment and discontinuation flags
     for patient_id, visits in patient_histories.items():
         # Get transition points for this patient
         transitions = treatment_status_changes.get(patient_id, [])
-        has_been_retreated = False  # Track if this patient has been retreated
+        has_been_retreated = False    # Track if this patient has been retreated
+        has_been_discontinued = False # Track if this patient has been discontinued
+        discontinuation_type = None   # Track the type of discontinuation
         
         for i, visit in enumerate(visits):
             # Determine if this is a retreatment visit
             is_retreatment_visit = i in transitions
             
-            # Once a patient is retreated, they remain in the retreated state
+            # Check for discontinuation (using the correct column name from simulation)
+            is_discontinuation = visit.get("is_discontinuation_visit", False)
+            
+            # When a patient is retreated, they are no longer considered discontinued
             if is_retreatment_visit:
                 has_been_retreated = True
-                
-            # Create a record for this visit with patient_id and retreatment flags
+                has_been_discontinued = False
+                discontinuation_type = None
+            
+            # When a patient is discontinued, track the discontinuation type
+            if is_discontinuation:
+                has_been_discontinued = True
+                discontinuation_type = visit.get("discontinuation_type", "")
+            
+            # Create a record for this visit with patient_id and state flags
             visit_record = {
                 "patient_id": patient_id,
-                "is_retreatment_visit": is_retreatment_visit,  # Flag for the actual retreatment visit
-                "has_been_retreated": has_been_retreated,      # Cumulative flag for all visits after retreatment
+                "is_retreatment_visit": is_retreatment_visit,      # Flag for the actual retreatment visit
+                "has_been_retreated": has_been_retreated,          # Cumulative flag for all visits after retreatment
+                "is_discontinuation": is_discontinuation,          # Flag for the actual discontinuation visit
+                "has_been_discontinued": has_been_discontinued,    # Cumulative flag for all visits after discontinuation
+                "discontinuation_type": discontinuation_type,      # Type of discontinuation (if any)
                 **visit  # Include all visit data
             }
             patient_data.append(visit_record)

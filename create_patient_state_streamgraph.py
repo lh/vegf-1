@@ -182,17 +182,18 @@ def prepare_patient_state_data(visits_df, metadata_df):
     # Define state determination function
     def determine_state(row):
         """
-        Determine patient state from visit data using only explicit flags.
+        Determine patient state from visit data using the explicit flags added by the simulation.
         
-        This function relies exclusively on flags set by the simulation, without
-        attempting to infer states from other data points.
+        This function uses the cumulative flags has_been_retreated and has_been_discontinued
+        to ensure patients remain in their state once they enter it.
         """
-        # Check explicit retreatment flag or has_been_retreated flag for cumulative tracking
-        if row.get("is_retreatment_visit", False) or row.get("has_been_retreated", False):
+        # Check explicit retreatment flag for cumulative tracking
+        # Retreatment takes precedence over discontinuation
+        if row.get("has_been_retreated", False):
             return "retreated"
             
-        # Check explicit discontinuation flags
-        if row.get("is_discontinuation_visit", False):
+        # Check explicit discontinuation flag for cumulative tracking
+        if row.get("has_been_discontinued", False):
             # Get discontinuation type for categorization
             disc_type = row.get("discontinuation_type", "").lower()
             
@@ -206,15 +207,10 @@ def prepare_patient_state_data(visits_df, metadata_df):
             elif "duration" in disc_type or "course" in disc_type:
                 return "discontinued_duration"
             else:
-                # Default to planned if type not recognized
-                return "discontinued_planned"
+                # Default to discontinued if type not recognized
+                return "discontinued"
                 
-        # Check phase for monitoring - renamed to discontinued (monitored)
-        phase = row.get("phase", "").lower()
-        if phase == "monitoring":
-            return "discontinued"  # Renamed from "monitoring" to "discontinued"
-            
-        # Default to active if no other state detected
+        # Default to active if neither retreated nor discontinued
         return "active"
     
     # Add state column
@@ -226,7 +222,7 @@ def prepare_patient_state_data(visits_df, metadata_df):
     
     # Create a helper function to fill in patient state for all months
     def generate_patient_timeline(patient_id, patient_visits):
-        """Generate state for all months for a patient"""
+        """Generate state for all months for a patient using states from the simulation data"""
         # Sort visits by month
         visits_by_month = patient_visits.sort_values("month_int")
         
@@ -237,11 +233,12 @@ def prepare_patient_state_data(visits_df, metadata_df):
             "state": None
         })
         
-        # Get actual visit months and states
+        # Get actual visit months and states - since we have cumulative flags
+        # we can just use the most recent state for each month
         visit_months = visits_by_month["month_int"].tolist()
         visit_states = visits_by_month["state"].tolist()
         
-        # Fill in states
+        # Fill in states using forward fill from latest visit
         last_state = "active"  # Default starting state
         
         for i, month in enumerate(timeline["month"]):

@@ -363,6 +363,12 @@ class TreatAndExtendABS(OriginalTreatAndExtendABS):
                     patient.treatment_status["discontinuation_reason"] = reason
                     patient.treatment_status["cessation_type"] = cessation_type
                     
+                    # Mark the most recent visit record as a discontinuation visit
+                    if patient.history and len(patient.history) > 0:
+                        latest_visit = patient.history[-1]
+                        latest_visit['is_discontinuation_visit'] = True
+                        latest_visit['discontinuation_type'] = cessation_type
+                    
                     # Only increment stats if this is a new discontinuation for this patient
                     if patient_id not in self.discontinued_patients:
                         self.stats["protocol_discontinuations"] += 1
@@ -429,6 +435,12 @@ class TreatAndExtendABS(OriginalTreatAndExtendABS):
             # Check if treatment was already discontinued
             if not patient.treatment_status["active"] and patient.treatment_status["discontinuation_date"] is None:
                 patient.treatment_status["discontinuation_date"] = event.time
+                
+                # Mark the most recent visit record as a discontinuation visit (likely administrative discontinuation)
+                if patient.history and len(patient.history) > 0:
+                    latest_visit = patient.history[-1]
+                    latest_visit['is_discontinuation_visit'] = True
+                    latest_visit['discontinuation_type'] = "administrative"  # Default to administrative reason
                 
                 # Only increment stats if this is a new discontinuation for this patient
                 if patient_id not in self.discontinued_patients:

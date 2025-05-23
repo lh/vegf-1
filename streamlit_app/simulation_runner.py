@@ -2233,25 +2233,17 @@ def generate_discontinuation_plot(results):
         # Return both figures as a list
         return [streamgraph_fig, bar_chart_fig]
     except ImportError:
-        # Fall back to the enhanced streamgraph if realistic version not available
-        try:
-            from streamlit_app.enhanced_streamgraph import generate_cohort_flow_streamgraph
-            streamgraph_fig = generate_cohort_flow_streamgraph(results)
-            
-            from streamlit_app.discontinuation_chart import generate_enhanced_discontinuation_plot
-            bar_chart_fig = generate_enhanced_discontinuation_plot(results)
-            
-            return [streamgraph_fig, bar_chart_fig]
-        except ImportError:
-            # Fall back to the original implementations if streamgraph not available
-            try:
-                from streamlit_app.discontinuation_chart import generate_enhanced_discontinuation_plot
-                enhanced_fig = generate_enhanced_discontinuation_plot(results)
-                original_fig = generate_simple_discontinuation_plot(results)
-                return [enhanced_fig, original_fig]
-            except ImportError:
-                # Fall back to the original implementation if enhanced version not available
-                return generate_simple_discontinuation_plot(results)
+        # FAIL FAST: No synthetic data generation allowed
+        # The realistic_streamgraph module doesn't exist, and enhanced_streamgraph
+        # uses synthetic data generation which violates the scientific integrity 
+        # principles of this application
+        raise NotImplementedError(
+            "Streamgraph visualization not available. "
+            "The streamgraph implementations use synthetic data generation (sigmoid curves, etc.) "
+            "which violates the 'NEVER GENERATE SYNTHETIC DATA' principle. "
+            "Please use actual_data_streamgraph.py or implement a visualization "
+            "that uses real patient timeline data."
+        )
 
 
 def generate_simple_discontinuation_plot(results):
