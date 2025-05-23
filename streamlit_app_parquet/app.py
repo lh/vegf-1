@@ -17,18 +17,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tempfile
 from pathlib import Path
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
-
-# Feature flags
-USE_PARQUET_PIPELINE = os.getenv('USE_PARQUET_PIPELINE', 'false').lower() == 'true'
-
-# Display pipeline mode in development
-if os.getenv('STREAMLIT_ENV', 'production') == 'development':
-    pipeline_mode = "Parquet" if USE_PARQUET_PIPELINE else "JSON"
-    print(f"[PIPELINE MODE: {pipeline_mode}]")
+# This version is ALWAYS Parquet!
 
 # Determine favicon to use (this needs to be before set_page_config)
 favicon = "🦧"  # Default emoji fallback
@@ -69,7 +59,7 @@ if missing_files:
 
 # Import Puppeteer helpers
 try:
-    from streamlit_app.puppeteer_helpers import add_puppeteer_support, selectable_radio, selectable_button, selectable_selectbox
+    from streamlit_app_parquet.puppeteer_helpers import add_puppeteer_support, selectable_radio, selectable_button, selectable_selectbox
 except ImportError:
     # Fallback functions if puppeteer_helpers is not available
     def add_puppeteer_support():
@@ -103,13 +93,13 @@ except ImportError:
     SimulationConfig = None
 
 # Import local modules
-from streamlit_app.acknowledgments import ACKNOWLEDGMENT_TEXT
-from streamlit_app.quarto_utils import get_quarto, render_quarto_report
-from streamlit_app.patient_explorer import display_patient_explorer
-from streamlit_app.retreatment_panel import display_retreatment_panel
+from streamlit_app_parquet.acknowledgments import ACKNOWLEDGMENT_TEXT
+from streamlit_app_parquet.quarto_utils import get_quarto, render_quarto_report
+from streamlit_app_parquet.patient_explorer import display_patient_explorer
+from streamlit_app_parquet.retreatment_panel import display_retreatment_panel
 
 try:
-    from streamlit_app.amd_protocol_explorer import run_enhanced_discontinuation_dashboard
+    from streamlit_app_parquet.amd_protocol_explorer import run_enhanced_discontinuation_dashboard
 except ImportError:
     # Define a fallback function if the import fails
     def run_enhanced_discontinuation_dashboard(config_path=None):
@@ -117,13 +107,11 @@ except ImportError:
         st.info("This may be due to missing dependencies or incorrect import paths.")
 
 try:
-    from streamlit_app.simulation_runner import (
+    from streamlit_app_parquet.simulation_runner import (
         run_simulation, 
         get_ui_parameters,
         generate_va_over_time_plot,
-        generate_discontinuation_plot,
-        save_simulation_results,
-        load_simulation_results
+        generate_discontinuation_plot
     )
 except ImportError:
     # Define fallback functions if the imports fail
@@ -145,11 +133,7 @@ except ImportError:
         ax.text(0.5, 0.5, "Simulation module not available", ha='center', va='center')
         return fig
     
-    def save_simulation_results(results, filename=None):
-        return None
-    
-    def load_simulation_results(filepath):
-        return {}
+    # Removed JSON save/load - Parquet only!
 
 
 def display_logo_and_title(title, logo_width=100, column_ratio=[1, 4]):
@@ -209,29 +193,20 @@ except Exception:
 
 st.sidebar.markdown("Interactive dashboard for exploring AMD treatment protocols")
 
-# Show pipeline mode indicator
-if USE_PARQUET_PIPELINE:
-    st.sidebar.info("""
-    ### 🚀 Parquet Pipeline Active
-    
-    Using enriched data pipeline with:
-    - Full discontinuation categorization
-    - Retreatment tracking
-    - Enhanced state flags
-    """)
-else:
-    st.sidebar.warning("""
-    ### 📊 JSON Pipeline Active
-    
-    Limited data pipeline. To enable Parquet:
-    ```bash
-    export USE_PARQUET_PIPELINE=true
-    ```
-    """)
+# Show that this is the Parquet version
+st.sidebar.success("""
+### 🚀 Parquet-Enhanced Version
+
+This version provides:
+- Full discontinuation categorization
+- Retreatment tracking  
+- Enhanced state flags
+- Rich patient state visualization
+""")
 
 # Show a notice about fixed implementation if applicable
 try:
-    from streamlit_app.simulation_runner import USING_FIXED_IMPLEMENTATION
+    from streamlit_app_parquet.simulation_runner import USING_FIXED_IMPLEMENTATION
     if USING_FIXED_IMPLEMENTATION:
         st.sidebar.success("""
         ### Using Fixed Discontinuation Implementation
@@ -267,8 +242,8 @@ debug_mode = st.sidebar.checkbox(
 
 # Set debug mode in the simulation runner module
 try:
-    from streamlit_app.simulation_runner import DEBUG_MODE
-    import streamlit_app.simulation_runner as sim_runner
+    from streamlit_app_parquet.simulation_runner import DEBUG_MODE
+    import streamlit_app_parquet.simulation_runner as sim_runner
     sim_runner.DEBUG_MODE = debug_mode
 except ImportError:
     pass
@@ -575,34 +550,16 @@ elif page == "Run Simulation":
                         # Display retreatment panel
                         display_retreatment_panel(results)
                     
-                    # Save results option
-                    if st.button("Save Results"):
-                        filename = save_simulation_results(results)
-                        if filename:
-                            st.success(f"Results saved to {filename}")
-                        else:
-                            st.error("Failed to save results")
+                    # Results are automatically saved as Parquet
+                    if "parquet_base_path" in results:
+                        st.info(f"Results saved to: {results['parquet_base_path']}")
             
             except Exception as e:
                 st.error(f"An error occurred: {str(e)}")
                 st.exception(e)
     
-    # Option to load saved results
-    st.subheader("Load Saved Results")
-    uploaded_file = st.file_uploader("Upload simulation results file", type=["json"])
-    
-    if uploaded_file is not None:
-        try:
-            # Load results from uploaded file
-            results = json.loads(uploaded_file.getvalue().decode())
-            
-            # Store results in session state
-            st.session_state["simulation_results"] = results
-            
-            st.success("Results loaded successfully!")
-            st.experimental_rerun()  # Rerun app to show results in dashboard
-        except Exception as e:
-            st.error(f"Error loading results: {str(e)}")
+    # Removed JSON loading - Parquet only!
+    # Results are loaded directly from Parquet files when needed
 
 elif page == "Patient Explorer":
     display_logo_and_title("Patient Explorer")

@@ -19,11 +19,10 @@ from streamlit_app.utils.session_state import (
 
 # Import simulation_runner functions conditionally to handle missing dependencies
 try:
-    from streamlit_app.simulation_runner import (
+    from streamlit_app_parquet.simulation_runner import (
         run_simulation, 
         get_ui_parameters,
-        generate_va_over_time_plot,
-        save_simulation_results
+        generate_va_over_time_plot
     )
 except ImportError:
     # Define fallback functions
@@ -41,12 +40,11 @@ except ImportError:
         return fig
     
     
-    def save_simulation_results(results, filename=None):
-        return None
+    # Removed JSON save function - Parquet only!
 
 # Import retreatment_panel conditionally
 try:
-    from streamlit_app.retreatment_panel import display_retreatment_panel
+    from streamlit_app_parquet.retreatment_panel import display_retreatment_panel
 except ImportError:
     def display_retreatment_panel(results):
         st.warning("Retreatment panel module not available.")
@@ -244,10 +242,9 @@ def display_run_simulation():
                         # Keep the results but mark them as failed for display
                         results["failed"] = True
                     else:
-                        # Save results to file
-                        results_path = save_simulation_results(results)
-                        if results_path:
-                            st.session_state["simulation_results_path"] = results_path
+                        # Results are already saved as Parquet in simulation_runner
+                        if "parquet_base_path" in results:
+                            st.session_state["simulation_results_path"] = results["parquet_base_path"]
                         
                         # Show success message
                         debug_mode = get_debug_mode()
@@ -422,29 +419,33 @@ def display_simulation_results(results):
             import os
             sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             
-            # Check if we have Parquet data or need to use bridge
-            if "visits_df" in st.session_state.simulation_results:
-                # We have Parquet data directly!
-                visits_df = st.session_state.simulation_results["visits_df"]
-                metadata_df = st.session_state.simulation_results["metadata_df"]
-                stats_df = st.session_state.simulation_results["stats_df"]
-                
-                if get_debug_mode():
-                    st.info("Using Parquet pipeline data directly")
-            else:
-                # Fall back to bridge function for JSON data
-                from streamgraph_bridge import convert_streamlit_to_streamgraph_format
-                
-                # Convert Streamlit results to streamgraph format
-                visits_df, metadata_df, stats_df = convert_streamlit_to_streamgraph_format(
-                    st.session_state.simulation_results
-                )
-                
-                if get_debug_mode():
-                    st.info("Using JSON pipeline with bridge function")
+            # PARQUET ONLY - No JSON fallback!
+            # Debug: Show what's in results
+            if get_debug_mode():
+                st.write("Debug: Results keys:", list(results.keys()))
+                if "parquet_base_path" in results:
+                    st.write("Debug: Parquet path:", results["parquet_base_path"])
             
-            # Import visualization functions
-            from create_current_state_streamgraph import (
+            # Check in the results passed to this function
+            if "visits_df" not in results:
+                st.error("❌ Parquet data not available. This version requires Parquet pipeline.")
+                if "parquet_base_path" in results:
+                    st.info(f"Parquet files were saved to: {results['parquet_base_path']}")
+                    st.info("But DataFrames were not loaded into results.")
+                st.stop()
+                
+            # Get Parquet data directly from results
+            visits_df = results["visits_df"]
+            metadata_df = results["metadata_df"]
+            stats_df = results["stats_df"]
+            
+            if get_debug_mode():
+                st.info("✅ Using Parquet pipeline data")
+                st.write(f"Visits shape: {visits_df.shape}")
+                st.write(f"Enrichment columns: {[col for col in visits_df.columns if col.startswith(('is_', 'has_'))]}")
+            
+            # Import visualization functions that use enrichment flags
+            from create_current_state_streamgraph_fixed import (
                 prepare_current_state_data, 
                 create_current_state_streamgraph
             )
@@ -477,8 +478,69 @@ def display_simulation_results(results):
     
     with cumulative_tab:
         st.write("**What patients have ever experienced**")
-        st.info("🚧 Cumulative View coming next")
-        st.write("This will show historical treatment patterns and what patients have experienced over time.")
+        
+        # Try to create cumulative state visualization
+        try:
+            # PARQUET ONLY - No JSON fallback!
+            # Check in the results passed to this function
+            if "visits_df" not in results:
+                st.error("❌ Parquet data not available. This version requires Parquet pipeline.")
+                st.stop()
+                
+            # Get Parquet data directly from results
+            visits_df = results["visits_df"]
+            metadata_df = results["metadata_df"]
+            stats_df = results["stats_df"]
+            
+            # Import visualization functions that use enrichment flags
+            from create_patient_state_streamgraph_cumulative_fixed import (
+                prepare_cumulative_state_data, 
+                create_cumulative_streamgraph
+            )
+            
+            # Prepare data for cumulative visualization
+            state_counts_df, state_categories = prepare_cumulative_state_data(visits_df, metadata_df)
+            
+            # Create the streamgraph
+            fig = create_cumulative_streamgraph(
+                state_counts_df,
+                state_categories,
+                metadata_df,
+                stats_df
+            )
+            
+            # Display the visualization
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # Add interpretation guide
+            with st.expander("📊 Understanding the Cumulative View"):
+                st.markdown("""
+                This view shows what patients have **ever experienced** during the simulation:
+                
+                - **Active (never discontinued)**: Patients who remained on treatment throughout
+                - **Retreated**: Patients who discontinued but returned to treatment at least once
+                - **Discontinued categories**: Shows the reason for discontinuation
+                  - *Planned*: Achieved stable remission (good outcome)
+                  - *Administrative*: System/booking failures
+                  - *Duration*: Treatment course complete
+                  - *Premature*: Stopped too early
+                  - *Poor outcome*: Stopped due to vision loss
+                
+                **Key Insight**: Once a patient is retreated, they remain in the "Retreated" category 
+                even if currently active, showing their treatment journey included interruption.
+                """)
+                
+        except ImportError as e:
+            st.error(f"Import error: {e}")
+            st.info("Debugging: Check that all required modules are accessible")
+            if get_debug_mode():
+                import traceback
+                st.code(traceback.format_exc())
+        except Exception as e:
+            st.error(f"Could not create cumulative visualization: {str(e)}")
+            if get_debug_mode():
+                import traceback
+                st.code(traceback.format_exc())
     
     # Add expandable clinical glossary
     with st.expander("📖 Clinical State Definitions"):
@@ -522,13 +584,13 @@ def display_simulation_results(results):
     thumb_col1, thumb_col2 = st.columns([1, 1])
     
     with thumb_col1:
-        from streamlit_app.simulation_runner import generate_va_over_time_thumbnail
+        from streamlit_app_parquet.simulation_runner import generate_va_over_time_thumbnail
         thumb_fig1 = generate_va_over_time_thumbnail(results)
         st.pyplot(thumb_fig1)
         st.caption("Mean + 95% CI", unsafe_allow_html=True)
     
     with thumb_col2:
-        from streamlit_app.simulation_runner import generate_va_distribution_thumbnail
+        from streamlit_app_parquet.simulation_runner import generate_va_distribution_thumbnail
         try:
             thumb_fig2 = generate_va_distribution_thumbnail(results)
             st.pyplot(thumb_fig2)
@@ -547,7 +609,7 @@ def display_simulation_results(results):
     
     # Show distribution plot
     st.write("**Distribution of Visual Acuity**")
-    from streamlit_app.simulation_runner import generate_va_distribution_plot
+    from streamlit_app_parquet.simulation_runner import generate_va_distribution_plot
     try:
         fig2 = generate_va_distribution_plot(results)
         st.pyplot(fig2)

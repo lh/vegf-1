@@ -6,7 +6,7 @@ This module handles running simulations from the Streamlit UI and processing res
 
 import os
 import sys
-import json
+# Removed json import - Parquet only!
 import tempfile
 import pandas as pd
 import numpy as np
@@ -18,7 +18,7 @@ from datetime import datetime
 from collections import defaultdict
 
 # Import data normalization
-from streamlit_app.data_normalizer import DataNormalizer
+from streamlit_app_parquet.data_normalizer import DataNormalizer
 
 # Import the central color system and templates - fail fast, no fallbacks
 from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
@@ -34,8 +34,7 @@ from visualization.chart_templates import (
 # Global variable for debug mode - will be set by app.py
 DEBUG_MODE = False
 
-# Feature flag for Parquet pipeline
-USE_PARQUET_PIPELINE = os.getenv('USE_PARQUET_PIPELINE', 'false').lower() == 'true'
+# This version is ALWAYS Parquet - no feature flag needed!
 
 def debug_info(message):
     """
@@ -49,8 +48,7 @@ def debug_info(message):
     if DEBUG_MODE:
         st.info(message)
 
-# Import custom JSON utilities
-from streamlit_app.json_utils import APEJSONEncoder, save_json, load_json
+# Removed JSON utilities - Parquet only!
 
 # Add the project root directory to sys.path to allow importing from the main project
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -89,9 +87,8 @@ __all__ = [
     'run_simulation',
     'generate_va_over_time_plot',
     'generate_discontinuation_plot',
-    'get_ui_parameters',
-    'save_simulation_results',
-    'load_simulation_results'
+    'get_ui_parameters'
+    # Removed JSON save/load from exports
 ]
 
 
@@ -620,10 +617,14 @@ def run_simulation(params):
             # Store patient histories in results
             results["patient_histories"] = patient_histories
             
-            # If using Parquet pipeline, save results and add path to results
-            if USE_PARQUET_PIPELINE:
+            # ALWAYS use Parquet pipeline in this version
+            try:
+                st.info("📊 Saving results to Parquet format...")
+                debug_info("Starting Parquet save process...")
+                
                 # Get stats for Parquet
                 statistics = sim.stats if hasattr(sim, 'stats') else {}
+                debug_info(f"Got statistics: {len(statistics)} keys")
                 
                 # Save to Parquet
                 parquet_base_path = save_results_as_parquet(
@@ -633,6 +634,8 @@ def run_simulation(params):
                     params
                 )
                 
+                debug_info(f"Parquet files saved to: {parquet_base_path}")
+                
                 # Add Parquet path to results for downstream use
                 results["parquet_base_path"] = parquet_base_path
                 
@@ -641,7 +644,12 @@ def run_simulation(params):
                 results["metadata_df"] = pd.read_parquet(f"{parquet_base_path}_metadata.parquet")
                 results["stats_df"] = pd.read_parquet(f"{parquet_base_path}_stats.parquet")
                 
-                debug_info(f"Parquet pipeline enabled - data saved to: {parquet_base_path}")
+                debug_info(f"Loaded DataFrames - visits shape: {results['visits_df'].shape}")
+                
+            except Exception as parquet_error:
+                import traceback
+                st.error(f"Failed to save/load Parquet data: {parquet_error}")
+                debug_info(f"Parquet error details: {traceback.format_exc()}")
             
             return results
         
@@ -1434,86 +1442,14 @@ def process_simulation_results(sim, patient_histories, params):
         results["mean_injections"] = injection_df["injection_count"].mean()
         results["total_injections"] = injection_df["injection_count"].sum()
     
-    # Save results to a temporary file for report generation
-    try:
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp:
-            json.dump(results, temp, cls=APEJSONEncoder)
-            results["data_path"] = temp.name
-    except TypeError as e:
-        st.warning(f"Could not save results to file: {e}")
-        st.info("This won't affect visualization but report generation may not work.")
-        
-        # Try to convert any numpy values to Python native types
-        for key, value in list(results.items()):
-            try:
-                # Test if the value is JSON serializable
-                json.dumps(value)
-            except (TypeError, OverflowError):
-                # If not, try to convert it to a basic Python type or remove it
-                import numpy as np
-                if isinstance(value, (np.integer, np.int64, np.int32)):
-                    results[key] = int(value)
-                elif isinstance(value, (np.floating, np.float64, np.float32)):
-                    results[key] = float(value)
-                elif isinstance(value, np.ndarray):
-                    results[key] = value.tolist()
-                else:
-                    # If we can't easily convert, just convert to string
-                    results[key] = str(value)
+    # Removed JSON save - using Parquet instead
+    # Data path will be set by Parquet save in run_simulation
+    # Note: Report generation may need updating to use Parquet files
     
     return results
 
 
-def save_simulation_results(results, filename=None):
-    """
-    Save simulation results to a file.
-    
-    Parameters
-    ----------
-    results : dict
-        Simulation results
-    filename : str, optional
-        Filename to save as, by default None (auto-generated)
-    
-    Returns
-    -------
-    str
-        Path to the saved file
-    """
-    if filename is None:
-        sim_type = results["simulation_type"]
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"ape_simulation_{sim_type}_{timestamp}.json"
-    
-    save_path = os.path.join(os.getcwd(), "output", "simulation_results", filename)
-    
-    # Ensure directory exists
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
-    
-    with open(save_path, 'w') as f:
-        json.dump(results, f, indent=2, cls=APEJSONEncoder)
-    
-    return save_path
-
-
-def load_simulation_results(filepath):
-    """
-    Load simulation results from a file.
-    
-    Parameters
-    ----------
-    filepath : str
-        Path to the results file
-    
-    Returns
-    -------
-    dict
-        Simulation results
-    """
-    with open(filepath, 'r') as f:
-        results = json.load(f)
-    
-    return results
+# Removed JSON save/load functions - Parquet only!
 
 
 def generate_va_over_time_plot(results):

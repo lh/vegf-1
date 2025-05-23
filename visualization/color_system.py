@@ -35,13 +35,22 @@ COLORS = {
     'border': '#CCCCCC',     # Light gray for necessary borders
     
     # Patient state colors for streamgraph visualization
-    'active': '#1b7a3d',      # Strong green for active treatment
-    'retreated': '#7fbf7f',   # Pale green for retreated patients
-    'discontinued': '#f8a5cf', # Pastel pink for discontinued (monitored) patients
-    'disc_planned': '#ffd700', # Gold for planned discontinuation
-    'disc_admin': '#ff7f50',   # Coral for administrative discontinuation
-    'disc_premature': '#db7093', # PaleVioletRed for premature discontinuation
-    'disc_duration': '#b22222'  # Firebrick for duration-based discontinuation
+    # GREENS - Anyone being treated
+    'active': '#2E7D32',      # Dark green for active treatment
+    'recommencing': '#66BB6A', # Medium green for transient retreatment state
+    
+    # AMBER - Untreated but correctly (good outcome)
+    'untreated_remission': '#FFA726', # Amber/orange for stable remission
+    
+    # REDS - Stopped when they shouldn't be (need distinct shades)
+    'not_booked': '#EF5350',   # Light red for administrative issues
+    'not_renewed': '#E53935',  # Medium red for treatment not renewed
+    'premature_discontinuation': '#C62828', # Dark red for premature stop
+    'discontinued_without_reason': '#B71C1C', # Very dark red for unclear discontinuation
+    
+    # GRAYS - Poor outcomes and death
+    'stopped_poor_outcome': '#757575', # Medium gray for poor visual outcome
+    'death': '#424242' # Dark gray for death (future use)
 }
 
 # Standardized alpha values for consistent transparency across visualizations
@@ -64,12 +73,13 @@ SEMANTIC_COLORS = {
     
     # Patient state colors for streamgraph visualization
     'patient_state_active': COLORS['active'],
-    'patient_state_retreated': COLORS['retreated'],
-    'patient_state_discontinued': COLORS['discontinued'],  # Updated from monitoring to discontinued
-    'patient_state_discontinued_planned': COLORS['disc_planned'],
-    'patient_state_discontinued_administrative': COLORS['disc_admin'],
-    'patient_state_discontinued_premature': COLORS['disc_premature'],
-    'patient_state_discontinued_duration': COLORS['disc_duration']
+    'patient_state_recommencing': COLORS['recommencing'],
+    'patient_state_untreated_remission': COLORS['untreated_remission'],
+    'patient_state_not_booked': COLORS['not_booked'],
+    'patient_state_not_renewed': COLORS['not_renewed'],
+    'patient_state_premature_discontinuation': COLORS['premature_discontinuation'],
+    'patient_state_stopped_poor_outcome': COLORS['stopped_poor_outcome'],
+    'patient_state_discontinued_without_reason': COLORS['discontinued_without_reason']
 }
 
 # Color System Design Guide Documentation
@@ -103,21 +113,25 @@ Colors are assigned to specific data types regardless of chart type:
 
 PATIENT STATE COLORS
 ------------------
-Semantic color scheme for patient states in streamgraph visualizations:
+Semantic color scheme for patient states in streamgraph visualizations based on clinical logic:
 
-- Green Spectrum: Active Treatment States
-  - Strong Green (#1b7a3d): Active patients receiving treatment
-  - Pale Green (#7fbf7f): Retreated patients who returned to treatment
-
-- Pink (#ff69b4): Discontinued but monitored patients (not on active treatment but still followed)
-
-- Yellow/Gold (#ffd700): Planned discontinuation (expected/desired)
-  - Used for patients who completed treatment successfully
-
-- Red Spectrum: Undesirable Discontinuations (semantically indicates problematic outcomes)
-  - Orange-Red (#ff4500): Administrative discontinuation (process/system issues)
-  - Indian Red (#cd5c5c): Premature discontinuation (earlier than clinically ideal)
-  - Dark Red (#8b0000): Treatment duration discontinuation (time-limited treatment)
+- GREEN SPECTRUM: Patients Currently Receiving Treatment
+  - Dark Green (#2E7D32): Active patients receiving regular injections
+  - Medium Green (#66BB6A): Recommencing treatment (transient state during retreatment)
+  
+- AMBER (#FFA726): Untreated but Correctly
+  - Patients in stable remission who no longer need treatment
+  - This is a GOOD outcome - deliberate clinical decision
+  
+- RED SPECTRUM: Stopped When They Shouldn't Be (distinct shades for different reasons)
+  - Light Red (#EF5350): Not booked (administrative failure)
+  - Medium Red (#E53935): Not renewed (treatment course complete but should continue)
+  - Dark Red (#C62828): Premature discontinuation (stopped too early)
+  - Very Dark Red (#B71C1C): Discontinued without clear reason
+  
+- GRAY SPECTRUM: Poor Clinical Outcomes
+  - Medium Gray (#757575): Stopped due to poor visual outcome
+  - Dark Gray (#424242): Death (future use)
 
 OPACITY (ALPHA) STANDARDS
 ------------------------
