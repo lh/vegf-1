@@ -97,7 +97,8 @@ from streamlit_app_parquet.acknowledgments import ACKNOWLEDGMENT_TEXT
 from streamlit_app_parquet.quarto_utils import get_quarto, render_quarto_report
 from streamlit_app_parquet.patient_explorer import display_patient_explorer
 from streamlit_app_parquet.retreatment_panel import display_retreatment_panel
-from streamlit_app_parquet.pages.staggered_simulation_page import run_staggered_simulation_page
+# Note: Staggered simulation is now handled by Streamlit's multi-page app feature
+# from streamlit_app_parquet.pages.staggered_simulation_page import run_staggered_simulation_page
 
 try:
     from streamlit_app_parquet.amd_protocol_explorer import run_enhanced_discontinuation_dashboard
@@ -563,8 +564,8 @@ elif page == "Run Simulation":
     # Results are loaded directly from Parquet files when needed
 
 elif page == "Calendar-Time Analysis":
-    # Run the staggered simulation page (calendar-time analysis)
-    run_staggered_simulation_page()
+    # This is now handled by Streamlit's multi-page app
+    st.info("Please use the 📅 Calendar Time Analysis option in the sidebar.")
 
 elif page == "Patient Explorer":
     display_logo_and_title("Patient Explorer")

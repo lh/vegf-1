@@ -1,4 +1,4 @@
-"""Staggered Simulation Page - Analyze clinic activity from calendar-time perspective."""
+"""Calendar-Time Analysis - Analyze clinic activity from calendar-time perspective."""
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -28,30 +28,35 @@ from utils.paths import get_parquet_results_dir, debug_paths
 
 logger = logging.getLogger(__name__)
 
-def run_staggered_simulation_page():
-    """Main function for the staggered simulation page."""
-    st.title("🕐 Calendar-Time Analysis")
-    
-    st.markdown("""
-    This page analyzes existing simulation data from a calendar-time perspective, 
-    showing clinic activity, resource requirements, and patient flow over real time.
-    """)
-    
-    # Get parquet directory using path utilities
-    parquet_dir = get_parquet_results_dir()
-    
-    # Debug mode - show path information
-    if st.checkbox("Show debug information", value=False):
-        debug_paths()
-    
-    # Check for available Parquet files
-    parquet_files = list(parquet_dir.glob("*_metadata.parquet"))
-    if not parquet_files:
-        st.error("No Parquet simulation results found.")
-        st.info("Please run a simulation first from the 'Run Simulation' page.")
-        debug_paths()  # Always show debug info if no files found
-        return
-    
+# Streamlit page configuration
+st.set_page_config(
+    page_title="Calendar-Time Analysis",
+    page_icon="📅",
+    layout="wide"
+)
+
+# Main page content
+st.title("📅 Calendar-Time Analysis")
+
+st.markdown("""
+This page analyzes existing simulation data from a calendar-time perspective, 
+showing clinic activity, resource requirements, and patient flow over real time.
+""")
+
+# Get parquet directory using path utilities
+parquet_dir = get_parquet_results_dir()
+
+# Debug mode - show path information
+if st.checkbox("Show debug information", value=False):
+    debug_paths()
+
+# Check for available Parquet files
+parquet_files = list(parquet_dir.glob("*_metadata.parquet"))
+if not parquet_files:
+    st.error("No Parquet simulation results found.")
+    st.info("Please run a simulation first from the 'Run Simulation' page.")
+    debug_paths()  # Always show debug info if no files found
+else:
     # Sidebar configuration
     with st.sidebar:
         st.header("Calendar View Settings")
@@ -94,6 +99,9 @@ def run_staggered_simulation_page():
             value=True,
             help="Calculate staffing and capacity requirements"
         )
+        
+        target_clinicians = None
+        visits_per_clinician = 20
         
         if show_resource_analysis:
             target_clinicians = st.number_input(
@@ -177,7 +185,6 @@ def run_staggered_simulation_page():
             except Exception as e:
                 st.error(f"Error transforming data: {str(e)}")
                 logger.exception("Calendar transformation error")
-                return
     
     # Display results if available
     if hasattr(st.session_state, 'calendar_data'):
