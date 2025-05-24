@@ -34,6 +34,17 @@ def transform_to_calendar_view(
     Returns:
         Tuple of (calendar_visits_df, clinic_metrics_df)
     """
+    # Check if metadata contains recruitment information
+    if 'recruitment_mode' in metadata_df.columns:
+        recruitment_mode = metadata_df['recruitment_mode'].iloc[0]
+        if recruitment_mode == "Constant Rate" and 'recruitment_rate' in metadata_df.columns:
+            # Use the actual recruitment rate from simulation
+            recruitment_rate = metadata_df['recruitment_rate'].iloc[0]
+            duration_years = metadata_df['duration_years'].iloc[0] if 'duration_years' in metadata_df.columns else 5
+            # For constant rate, enrollment extends throughout simulation
+            enrollment_months = int(duration_years * 12)
+            logger.info(f"Using simulation recruitment rate: {recruitment_rate:.2f} patients/month over {enrollment_months} months")
+    
     if start_date is None:
         start_date = datetime.now() - timedelta(days=5*365)
     
@@ -49,40 +60,34 @@ def transform_to_calendar_view(
     # Create patient enrollment mapping
     patient_enrollment = dict(zip(patients, enrollment_dates))
     
-    # Transform visits to calendar time
-    calendar_visits = []
+    # Transform visits to calendar time using vectorized operations
+    logger.info(f"Transforming {len(visits_df)} visits for {n_patients} patients to calendar time...")
     
-    for patient_id in patients:
-        patient_visits = visits_df[visits_df['patient_id'] == patient_id].copy()
-        enrollment_date = patient_enrollment[patient_id]
-        
-        # Calculate months since first visit (patient time)
-        if len(patient_visits) > 0:
-            # Sort by date to ensure correct order
-            patient_visits = patient_visits.sort_values('date')
-            first_visit_date = patient_visits['date'].iloc[0]
-            
-            # Calculate months since enrollment for each visit
-            patient_visits['months_since_enrollment'] = patient_visits['date'].apply(
-                lambda d: (d - first_visit_date).days / 30.44
-            )
-            
-            # Convert to calendar dates based on enrollment
-            patient_visits['calendar_date'] = patient_visits['months_since_enrollment'].apply(
-                lambda months: enrollment_date + timedelta(days=int(months * 30.44))
-            )
-        else:
-            # No visits for this patient
-            patient_visits['months_since_enrollment'] = 0
-            patient_visits['calendar_date'] = enrollment_date
-        
-        # Add enrollment info
-        patient_visits['enrollment_date'] = enrollment_date
-        
-        calendar_visits.append(patient_visits)
+    # Create a copy to avoid modifying original
+    calendar_visits_df = visits_df.copy()
     
-    # Combine all visits
-    calendar_visits_df = pd.concat(calendar_visits, ignore_index=True)
+    # Add enrollment dates for all patients at once
+    calendar_visits_df['enrollment_date'] = calendar_visits_df['patient_id'].map(patient_enrollment)
+    
+    # Get first visit date for each patient (vectorized)
+    first_visits = calendar_visits_df.groupby('patient_id')['date'].min().reset_index()
+    first_visits.columns = ['patient_id', 'first_visit_date']
+    
+    # Merge first visit dates back to main dataframe
+    calendar_visits_df = calendar_visits_df.merge(first_visits, on='patient_id', how='left')
+    
+    # Calculate months since enrollment (vectorized)
+    calendar_visits_df['months_since_enrollment'] = (
+        (calendar_visits_df['date'] - calendar_visits_df['first_visit_date']).dt.days / 30.44
+    )
+    
+    # Convert to calendar dates (vectorized)
+    calendar_visits_df['calendar_date'] = (
+        calendar_visits_df['enrollment_date'] + 
+        pd.to_timedelta(calendar_visits_df['months_since_enrollment'] * 30.44, unit='days')
+    )
+    
+    logger.info("Calendar transformation complete")
     
     # Sort by calendar date
     calendar_visits_df = calendar_visits_df.sort_values('calendar_date')
@@ -158,89 +163,86 @@ def generate_clinic_metrics(
     Returns:
         DataFrame with monthly clinic metrics
     """
+    logger.info("Generating clinic metrics...")
+    
     if end_date is None:
         end_date = calendar_visits_df['calendar_date'].max()
     
-    # Create monthly bins
-    # Ensure we have at least one full month
-    if (end_date - start_date).days < 30:
-        end_date = start_date + timedelta(days=30)
+    # Create a copy and add month column for grouping
+    visits_df = calendar_visits_df.copy()
+    visits_df['month'] = pd.to_datetime(visits_df['calendar_date']).dt.to_period('M')
     
-    date_range = pd.date_range(start=start_date, end=end_date, freq='ME')
-    
-    # If date_range is too short, create manual monthly bins
-    if len(date_range) < 2:
-        date_range = [start_date]
-        current_date = start_date
-        while current_date < end_date:
-            current_date = current_date + timedelta(days=30)
-            date_range.append(current_date)
-        date_range = pd.DatetimeIndex(date_range)
-    
-    metrics = []
-    
-    for i in range(len(date_range) - 1):
-        month_start = date_range[i]
-        month_end = date_range[i + 1]
-        
-        # Filter visits for this month
-        month_visits = calendar_visits_df[
-            (calendar_visits_df['calendar_date'] >= month_start) &
-            (calendar_visits_df['calendar_date'] < month_end)
-        ]
-        
-        # Calculate metrics
-        # Determine injection visits by checking if 'injection' is in actions
-        if 'actions' in month_visits.columns and len(month_visits) > 0:
-            # Handle cases where actions is a numpy array or list
-            def has_injection(actions):
-                try:
-                    if actions is None:
-                        return False
-                    # If it's an array or list, check if 'injection' is in it
-                    if hasattr(actions, '__iter__') and not isinstance(actions, str):
-                        return any('injection' in str(action).lower() for action in actions)
-                    # Otherwise convert to string and check
-                    return 'injection' in str(actions).lower()
-                except:
+    # Pre-calculate injection visits (vectorized)
+    if 'actions' in visits_df.columns:
+        def has_injection(actions):
+            try:
+                if actions is None:
                     return False
-            
-            injection_mask = month_visits['actions'].apply(has_injection)
-            injection_visits = month_visits[injection_mask]
-        else:
-            injection_visits = pd.DataFrame()
+                if hasattr(actions, '__iter__') and not isinstance(actions, str):
+                    return any('injection' in str(action).lower() for action in actions)
+                return 'injection' in str(actions).lower()
+            except:
+                return False
         
-        # Calculate new patients (first visit in this month)
-        new_patient_ids = set()
-        for patient_id in month_visits['patient_id'].unique():
-            patient_all_visits = calendar_visits_df[calendar_visits_df['patient_id'] == patient_id]
-            if len(patient_all_visits) > 0:
-                first_visit = patient_all_visits.iloc[0]
-                if (first_visit['calendar_date'] >= month_start) and (first_visit['calendar_date'] < month_end):
-                    new_patient_ids.add(patient_id)
-        
-        metric = {
-            'month': month_start,
-            'total_visits': len(month_visits),
-            'unique_patients': month_visits['patient_id'].nunique(),
-            'injection_visits': len(injection_visits),
-            'monitoring_visits': len(month_visits) - len(injection_visits),
-            'new_patients': len(new_patient_ids),
-            'avg_vision': month_visits['vision'].mean() if 'vision' in month_visits.columns else None,
-            'retreatment_visits': month_visits['is_retreatment_visit'].sum() if 'is_retreatment_visit' in month_visits.columns else 0,
-        }
-        
-        # Add phase-specific counts
-        if 'phase' in month_visits.columns:
-            phase_counts = month_visits['phase'].value_counts().to_dict()
-            metric.update({
-                f'phase_{phase}_visits': count
-                for phase, count in phase_counts.items()
-            })
-        
-        metrics.append(metric)
+        visits_df['has_injection'] = visits_df['actions'].apply(has_injection)
+    else:
+        visits_df['has_injection'] = False
     
-    return pd.DataFrame(metrics)
+    # Identify first visits for each patient (vectorized)
+    first_visits = visits_df.groupby('patient_id')['calendar_date'].min().reset_index()
+    first_visits.columns = ['patient_id', 'first_visit_date']
+    first_visits['first_visit_month'] = pd.to_datetime(first_visits['first_visit_date']).dt.to_period('M')
+    
+    # Group by month and calculate metrics
+    monthly_metrics = visits_df.groupby('month').agg({
+        'patient_id': ['count', 'nunique'],
+        'has_injection': 'sum',
+        'vision': 'mean' if 'vision' in visits_df.columns else lambda x: None,
+        'is_retreatment_visit': 'sum' if 'is_retreatment_visit' in visits_df.columns else lambda x: 0
+    }).reset_index()
+    
+    # Flatten column names
+    monthly_metrics.columns = ['month', 'total_visits', 'unique_patients', 'injection_visits', 'avg_vision', 'retreatment_visits']
+    
+    # Calculate monitoring visits
+    monthly_metrics['monitoring_visits'] = monthly_metrics['total_visits'] - monthly_metrics['injection_visits']
+    
+    # Count new patients per month
+    new_patients_per_month = first_visits.groupby('first_visit_month').size().reset_index(name='new_patients')
+    
+    # Merge new patients data
+    monthly_metrics = monthly_metrics.merge(
+        new_patients_per_month,
+        left_on='month',
+        right_on='first_visit_month',
+        how='left'
+    ).fillna({'new_patients': 0})
+    
+    # Convert period back to timestamp
+    monthly_metrics['month'] = monthly_metrics['month'].dt.to_timestamp()
+    
+    # Drop the extra column
+    if 'first_visit_month' in monthly_metrics.columns:
+        monthly_metrics = monthly_metrics.drop('first_visit_month', axis=1)
+    
+    # Add phase-specific counts if phase column exists
+    if 'phase' in visits_df.columns:
+        phase_counts = visits_df.pivot_table(
+            index='month',
+            columns='phase',
+            values='patient_id',
+            aggfunc='count',
+            fill_value=0
+        ).add_prefix('phase_').add_suffix('_visits')
+        
+        # Convert index to column and merge
+        phase_counts = phase_counts.reset_index()
+        phase_counts['month'] = phase_counts['month'].dt.to_timestamp()
+        monthly_metrics = monthly_metrics.merge(phase_counts, on='month', how='left')
+    
+    logger.info(f"Generated metrics for {len(monthly_metrics)} months")
+    
+    return monthly_metrics
 
 
 def calculate_resource_requirements(
@@ -304,59 +306,66 @@ def aggregate_patient_outcomes_by_enrollment_cohort(
     Returns:
         DataFrame with cohort-based outcomes
     """
-    # Create enrollment cohorts
-    calendar_visits_df['enrollment_cohort'] = pd.to_datetime(
-        calendar_visits_df['enrollment_date']
+    logger.info("Aggregating patient outcomes by enrollment cohort...")
+    
+    # Create a copy and add enrollment cohorts
+    visits_df = calendar_visits_df.copy()
+    visits_df['enrollment_cohort'] = pd.to_datetime(
+        visits_df['enrollment_date']
     ).dt.to_period(f'{cohort_months}M')
     
-    # Get final outcomes per patient
-    patient_outcomes = []
-    
-    for patient_id in calendar_visits_df['patient_id'].unique():
-        patient_data = calendar_visits_df[calendar_visits_df['patient_id'] == patient_id].sort_values('calendar_date')
-        
-        # Get patient information from visits data
-        baseline_vision = patient_data['baseline_vision'].iloc[0] if 'baseline_vision' in patient_data.columns else None
-        final_vision = patient_data['vision'].iloc[-1] if 'vision' in patient_data.columns and len(patient_data) > 0 else None
-        
-        # Count injections based on actions
-        total_injections = 0
-        if 'actions' in patient_data.columns:
-            def has_injection(actions):
-                try:
-                    if actions is None:
-                        return False
-                    if hasattr(actions, '__iter__') and not isinstance(actions, str):
-                        return any('injection' in str(action).lower() for action in actions)
-                    return 'injection' in str(actions).lower()
-                except:
+    # Pre-calculate injection status for all visits
+    if 'actions' in visits_df.columns:
+        def has_injection(actions):
+            try:
+                if actions is None:
                     return False
-            total_injections = patient_data['actions'].apply(has_injection).sum()
-        
-        # Check if patient discontinued
-        discontinued = False
-        if 'is_discontinuation' in patient_data.columns:
-            discontinued = patient_data['is_discontinuation'].any()
-        elif 'has_been_discontinued' in patient_data.columns:
-            discontinued = patient_data['has_been_discontinued'].iloc[-1] if len(patient_data) > 0 else False
-        
-        outcome = {
-            'patient_id': patient_id,
-            'enrollment_cohort': patient_data['enrollment_cohort'].iloc[0],
-            'baseline_vision': baseline_vision,
-            'final_vision': final_vision,
-            'total_visits': len(patient_data),
-            'total_injections': total_injections,
-            'discontinued': discontinued,
-            'months_followed': patient_data['months_since_enrollment'].max()
-        }
-        
-        patient_outcomes.append(outcome)
+                if hasattr(actions, '__iter__') and not isinstance(actions, str):
+                    return any('injection' in str(action).lower() for action in actions)
+                return 'injection' in str(actions).lower()
+            except:
+                return False
+        visits_df['has_injection'] = visits_df['actions'].apply(has_injection)
+    else:
+        visits_df['has_injection'] = False
     
-    outcomes_df = pd.DataFrame(patient_outcomes)
+    # Get first and last visits per patient (vectorized)
+    patient_first_last = visits_df.groupby('patient_id').agg({
+        'baseline_vision': 'first',
+        'vision': 'last',
+        'enrollment_cohort': 'first',
+        'months_since_enrollment': 'max',
+        'calendar_date': ['count'],
+        'has_injection': 'sum'
+    }).reset_index()
+    
+    # Flatten column names
+    patient_first_last.columns = ['patient_id', 'baseline_vision', 'final_vision', 
+                                   'enrollment_cohort', 'months_followed', 
+                                   'total_visits', 'total_injections']
+    
+    # Get discontinuation status per patient
+    if 'has_been_discontinued' in visits_df.columns:
+        # Get the last discontinuation status per patient
+        patient_disc = visits_df.groupby('patient_id')['has_been_discontinued'].last().reset_index()
+        patient_disc.columns = ['patient_id', 'discontinued']
+    elif 'is_discontinuation' in visits_df.columns:
+        # Check if any visit was a discontinuation
+        patient_disc = visits_df.groupby('patient_id')['is_discontinuation'].any().reset_index()
+        patient_disc.columns = ['patient_id', 'discontinued']
+    else:
+        # No discontinuation data
+        patient_first_last['discontinued'] = False
+        patient_disc = None
+    
+    # Merge discontinuation data if it exists
+    if patient_disc is not None:
+        patient_outcomes = patient_first_last.merge(patient_disc, on='patient_id', how='left')
+    else:
+        patient_outcomes = patient_first_last
     
     # Aggregate by cohort
-    cohort_summary = outcomes_df.groupby('enrollment_cohort').agg({
+    cohort_summary = patient_outcomes.groupby('enrollment_cohort').agg({
         'patient_id': 'count',
         'baseline_vision': 'mean',
         'final_vision': 'mean',

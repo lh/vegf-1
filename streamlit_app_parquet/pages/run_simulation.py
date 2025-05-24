@@ -7,6 +7,9 @@ This module handles configuring and running AMD treatment simulations.
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import logging
+
+logger = logging.getLogger(__name__)
 
 from streamlit_app.components.layout import display_logo_and_title
 from streamlit_app.utils.session_state import (
@@ -87,15 +90,41 @@ def display_simulation_configuration():
             key="duration_years_slider"
         )
         
-        population_size = st.slider(
-            "Population Size",
-            min_value=100,
-            max_value=10000,
-            value=1000,
-            step=100,
-            help="Number of patients in the simulation",
-            key="population_size_slider"
+        # Recruitment mode selector
+        recruitment_mode = st.radio(
+            "Recruitment Mode",
+            ["Fixed Total", "Constant Rate"],
+            help="Fixed Total: Specify total patients to simulate\n"
+                 "Constant Rate: Specify recruitment rate per month",
+            key="recruitment_mode_radio"
         )
+        
+        if recruitment_mode == "Fixed Total":
+            population_size = st.slider(
+                "Total Population Size",
+                min_value=100,
+                max_value=10000,
+                value=1000,
+                step=100,
+                help="Total number of patients in the simulation",
+                key="population_size_slider"
+            )
+            # Calculate implied rate
+            monthly_rate = population_size / (duration_years * 12)
+            st.info(f"Implied recruitment rate: {monthly_rate:.1f} patients/month")
+        else:
+            recruitment_rate = st.number_input(
+                "Recruitment Rate (patients/month)",
+                min_value=1.0,
+                max_value=200.0,
+                value=20.0,
+                step=1.0,
+                help="Number of new patients recruited per month",
+                key="recruitment_rate_input"
+            )
+            # Calculate total population
+            population_size = int(recruitment_rate * duration_years * 12)
+            st.info(f"Total population: {population_size:,} patients over {duration_years} years")
     
     with col2:
         st.subheader("Discontinuation Parameters")
@@ -191,9 +220,98 @@ def display_simulation_configuration():
     return simulation_can_run
 
 
+def display_saved_simulations():
+    """Display a section showing saved simulations."""
+    from utils.paths import get_parquet_results_dir
+    import os
+    
+    parquet_dir = get_parquet_results_dir()
+    if parquet_dir.exists():
+        # Get all metadata files, sorted by date (newest first)
+        metadata_files = sorted(parquet_dir.glob("*_metadata.parquet"), reverse=True)
+        
+        if metadata_files:
+            with st.expander("📁 Saved Simulations", expanded=False):
+                # Show latest simulation if it exists
+                if "latest_simulation_name" in st.session_state:
+                    st.success(f"✅ Latest: {st.session_state['latest_simulation_name']}")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("📊 Analyze in Calendar-Time", key="analyze_latest_btn"):
+                            st.switch_page("pages/5_Calendar_Time_Analysis.py")
+                    with col2:
+                        if st.button("🔍 View in Patient Explorer", key="explore_latest_btn"):
+                            st.switch_page("pages/3_Patient_Explorer.py")
+                    st.divider()
+                
+                # Show all simulations in a table
+                st.markdown("### All Simulations")
+                
+                sim_data = []
+                for mf in metadata_files[:20]:  # Show latest 20
+                    try:
+                        metadata = pd.read_parquet(mf)
+                        sim_name = mf.stem.replace("_metadata", "")
+                        
+                        # Extract info from filename (new format: YYYYMMDD-HHMMSS-sim-Xp-Yy)
+                        parts = sim_name.split("-")
+                        if len(parts) >= 5:
+                            date_str = f"{parts[0][:4]}-{parts[0][4:6]}-{parts[0][6:8]} {parts[1][:2]}:{parts[1][2:4]}"
+                            patients = parts[3].replace("p", "")
+                            years = parts[4].replace("y", "")
+                        else:
+                            # Old format fallback
+                            date_str = metadata['timestamp'].iloc[0] if 'timestamp' in metadata.columns else "Unknown"
+                            patients = metadata['population_size'].iloc[0] if 'population_size' in metadata.columns else metadata.get('patients', [0]).iloc[0]
+                            years = metadata['duration_years'].iloc[0] if 'duration_years' in metadata.columns else "?"
+                        
+                        sim_data.append({
+                            "Date": date_str,
+                            "Patients": f"{int(patients):,}",
+                            "Duration": f"{years} years",
+                            "Type": metadata['simulation_type'].iloc[0] if 'simulation_type' in metadata.columns else "?",
+                            "Name": sim_name
+                        })
+                    except Exception as e:
+                        logger.warning(f"Could not read metadata for {mf}: {e}")
+                        continue
+                
+                if sim_data:
+                    df = pd.DataFrame(sim_data)
+                    
+                    # Make the table selectable
+                    selected = st.selectbox(
+                        "Select a simulation to load:",
+                        options=df['Name'].tolist(),
+                        format_func=lambda x: f"{df[df['Name']==x]['Date'].iloc[0]} - {df[df['Name']==x]['Patients'].iloc[0]} patients",
+                        key="selected_simulation"
+                    )
+                    
+                    if selected:
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            if st.button("📊 Analyze Selected", key="analyze_selected_btn"):
+                                st.session_state["selected_simulation_for_calendar"] = selected
+                                st.switch_page("pages/5_Calendar_Time_Analysis.py")
+                        with col2:
+                            if st.button("🔍 Explore Selected", key="explore_selected_btn"):
+                                st.session_state["selected_simulation_for_explorer"] = selected
+                                st.switch_page("pages/3_Patient_Explorer.py")
+                    
+                    # Show the full table
+                    st.dataframe(df[['Date', 'Patients', 'Duration', 'Type']], use_container_width=True)
+                else:
+                    st.info("No saved simulations found.")
+        else:
+            st.info("No saved simulations yet. Run a simulation to get started!")
+
+
 def display_run_simulation():
     """Display the run simulation page."""
     display_logo_and_title("Run AMD Treatment Simulation")
+    
+    # Show existing simulations
+    display_saved_simulations()
     
     # Display configuration options
     simulation_can_run = display_simulation_configuration()
@@ -204,10 +322,20 @@ def display_run_simulation():
     # Run simulation button
     if st.button("Run Simulation", type="primary", key="run_simulation_button", help="Run the simulation with current parameters"):
         # Save all parameters to session state
+        # Get population size based on recruitment mode
+        if st.session_state["recruitment_mode_radio"] == "Fixed Total":
+            population_size = st.session_state["population_size_slider"]
+            recruitment_rate = population_size / (st.session_state["duration_years_slider"] * 12)
+        else:
+            recruitment_rate = st.session_state["recruitment_rate_input"]
+            population_size = int(recruitment_rate * st.session_state["duration_years_slider"] * 12)
+        
         params = {
             "simulation_type": st.session_state["simulation_type_select"],
             "duration_years": st.session_state["duration_years_slider"],
-            "population_size": st.session_state["population_size_slider"],
+            "population_size": population_size,
+            "recruitment_mode": st.session_state["recruitment_mode_radio"],
+            "recruitment_rate": recruitment_rate,
             "enable_clinician_variation": st.session_state["enable_clinician_variation_checkbox"],
             "planned_discontinue_prob": st.session_state["planned_discontinue_prob_slider"],
             "admin_discontinue_prob": st.session_state["admin_discontinue_prob_slider"],
@@ -244,7 +372,11 @@ def display_run_simulation():
                     else:
                         # Results are already saved as Parquet in simulation_runner
                         if "parquet_base_path" in results:
-                            st.session_state["simulation_results_path"] = results["parquet_base_path"]
+                            st.session_state["latest_simulation_path"] = results["parquet_base_path"]
+                            st.session_state["latest_simulation_name"] = os.path.basename(results["parquet_base_path"])
+                            
+                            # Also store for quick access
+                            st.session_state["latest_simulation_results"] = results
                         
                         # Show success message
                         debug_mode = get_debug_mode()

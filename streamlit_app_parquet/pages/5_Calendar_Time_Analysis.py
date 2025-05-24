@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+import time
 
 import sys
 from pathlib import Path
@@ -35,162 +36,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Main page content
-st.title("📅 Calendar-Time Analysis")
-
-st.markdown("""
-This page analyzes existing simulation data from a calendar-time perspective, 
-showing clinic activity, resource requirements, and patient flow over real time.
-""")
-
-# Get parquet directory using path utilities
-parquet_dir = get_parquet_results_dir()
-
-# Debug mode - show path information
-if st.checkbox("Show debug information", value=False):
-    debug_paths()
-
-# Check for available Parquet files
-parquet_files = list(parquet_dir.glob("*_metadata.parquet"))
-if not parquet_files:
-    st.error("No Parquet simulation results found.")
-    st.info("Please run a simulation first from the 'Run Simulation' page.")
-    debug_paths()  # Always show debug info if no files found
-else:
-    # Sidebar configuration
-    with st.sidebar:
-        st.header("Calendar View Settings")
-        
-        # Select simulation to analyze
-        simulation_names = [f.stem.replace("_metadata", "") for f in parquet_files]
-        selected_sim = st.selectbox(
-            "Select Simulation",
-            options=simulation_names,
-            help="Choose which simulation to analyze"
-        )
-        
-        # Enrollment settings
-        st.subheader("Enrollment Configuration")
-        
-        enrollment_pattern = st.selectbox(
-            "Enrollment Pattern",
-            options=["uniform", "front_loaded", "gradual"],
-            format_func=lambda x: {
-                "uniform": "Uniform (steady rate)",
-                "front_loaded": "Front-loaded (more early)",
-                "gradual": "Gradual (bell curve)"
-            }[x],
-            help="How patients are enrolled over time"
-        )
-        
-        enrollment_months = st.number_input(
-            "Enrollment Period (months)",
-            min_value=1,
-            max_value=36,
-            value=12,
-            help="Period over which patients are enrolled"
-        )
-        
-        # Analysis options
-        st.subheader("Analysis Options")
-        
-        show_resource_analysis = st.checkbox(
-            "Resource Requirements Analysis",
-            value=True,
-            help="Calculate staffing and capacity requirements"
-        )
-        
-        target_clinicians = None
-        visits_per_clinician = 20
-        
-        if show_resource_analysis:
-            target_clinicians = st.number_input(
-                "Target FTE Clinicians",
-                min_value=0.5,
-                max_value=20.0,
-                value=5.0,
-                step=0.5,
-                help="Target number of full-time equivalent clinicians"
-            )
-            
-            visits_per_clinician = st.number_input(
-                "Visits per Clinician per Day",
-                min_value=10,
-                max_value=40,
-                value=20,
-                help="Average number of visits a clinician can handle per day"
-            )
-        
-        cohort_months = st.selectbox(
-            "Cohort Grouping",
-            options=[3, 6, 12],
-            format_func=lambda x: f"{x} months",
-            help="Group patients into cohorts by enrollment period"
-        )
-        
-        # Transform button
-        transform_button = st.button(
-            "Transform to Calendar View",
-            type="primary",
-            use_container_width=True
-        )
-    
-    # Main content area
-    if transform_button or hasattr(st.session_state, 'calendar_data'):
-        with st.spinner("Transforming data to calendar-time view..."):
-            try:
-                # Load Parquet data
-                visits_df = pd.read_parquet(parquet_dir / f"{selected_sim}_visits.parquet")
-                metadata_df = pd.read_parquet(parquet_dir / f"{selected_sim}_metadata.parquet")
-                
-                # Transform to calendar view
-                calendar_visits_df, clinic_metrics_df = transform_to_calendar_view(
-                    visits_df,
-                    metadata_df,
-                    enrollment_pattern=enrollment_pattern,
-                    enrollment_months=enrollment_months
-                )
-                
-                # Calculate additional metrics if requested
-                if show_resource_analysis:
-                    resources_df = calculate_resource_requirements(
-                        clinic_metrics_df,
-                        visits_per_clinician_per_day=visits_per_clinician
-                    )
-                else:
-                    resources_df = None
-                
-                # Calculate cohort outcomes
-                cohort_outcomes_df = aggregate_patient_outcomes_by_enrollment_cohort(
-                    calendar_visits_df,
-                    metadata_df,
-                    cohort_months=cohort_months
-                )
-                
-                # Store in session state
-                st.session_state.calendar_data = {
-                    'calendar_visits': calendar_visits_df,
-                    'clinic_metrics': clinic_metrics_df,
-                    'resources': resources_df,
-                    'cohort_outcomes': cohort_outcomes_df,
-                    'settings': {
-                        'enrollment_pattern': enrollment_pattern,
-                        'enrollment_months': enrollment_months,
-                        'target_clinicians': target_clinicians if show_resource_analysis else None
-                    }
-                }
-                
-                st.success("Data transformed successfully!")
-                
-            except Exception as e:
-                st.error(f"Error transforming data: {str(e)}")
-                logger.exception("Calendar transformation error")
-    
-    # Display results if available
-    if hasattr(st.session_state, 'calendar_data'):
-        display_calendar_results(st.session_state.calendar_data)
-
-
+# Define display function BEFORE main page logic
 def display_calendar_results(calendar_data: Dict):
     """Display results from calendar-time analysis."""
     st.header("Calendar-Time Analysis Results")
@@ -397,3 +243,215 @@ def display_calendar_results(calendar_data: Dict):
             file_name=f"cohort_outcomes_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
             mime="text/csv"
         )
+
+
+# Main page content
+st.title("📅 Calendar-Time Analysis")
+
+st.markdown("""
+This page analyzes existing simulation data from a calendar-time perspective, 
+showing clinic activity, resource requirements, and patient flow over real time.
+""")
+
+# Get parquet directory using path utilities
+parquet_dir = get_parquet_results_dir()
+
+# Debug mode - show path information
+if st.checkbox("Show debug information", value=False):
+    debug_paths()
+
+# Check for available Parquet files
+parquet_files = list(parquet_dir.glob("*_metadata.parquet"))
+if not parquet_files:
+    st.error("No Parquet simulation results found.")
+    st.info("Please run a simulation first from the 'Run Simulation' page.")
+    debug_paths()  # Always show debug info if no files found
+else:
+    # Sidebar configuration
+    with st.sidebar:
+        st.header("Calendar View Settings")
+        
+        # Get simulation names
+        simulation_names = [f.stem.replace("_metadata", "") for f in parquet_files]
+        
+        # Check if we should auto-select a simulation
+        default_index = 0
+        if "selected_simulation_for_calendar" in st.session_state:
+            # User selected a specific simulation from Run Simulation page
+            selected_name = st.session_state["selected_simulation_for_calendar"]
+            if selected_name in simulation_names:
+                default_index = simulation_names.index(selected_name)
+            del st.session_state["selected_simulation_for_calendar"]  # Clear after use
+        elif "latest_simulation_name" in st.session_state:
+            # Auto-select the latest simulation if available
+            latest_name = st.session_state["latest_simulation_name"]
+            if latest_name in simulation_names:
+                default_index = simulation_names.index(latest_name)
+        
+        # Select simulation to analyze
+        selected_sim = st.selectbox(
+            "Select Simulation",
+            options=simulation_names,
+            index=default_index,
+            help="Choose which simulation to analyze"
+        )
+        
+        # Enrollment settings
+        st.subheader("Enrollment Configuration")
+        
+        enrollment_pattern = st.selectbox(
+            "Enrollment Pattern",
+            options=["uniform", "front_loaded", "gradual"],
+            format_func=lambda x: {
+                "uniform": "Uniform (steady rate)",
+                "front_loaded": "Front-loaded (more early)",
+                "gradual": "Gradual (bell curve)"
+            }[x],
+            help="How patients are enrolled over time"
+        )
+        
+        # Get simulation duration from selected simulation's metadata
+        max_enrollment = 120  # Default maximum
+        if selected_sim:
+            try:
+                # Read metadata to get simulation duration
+                metadata_path = parquet_dir / f"{selected_sim}_metadata.parquet"
+                if metadata_path.exists():
+                    temp_metadata = pd.read_parquet(metadata_path)
+                    if 'duration_years' in temp_metadata.columns:
+                        sim_duration_years = temp_metadata['duration_years'].iloc[0]
+                        # Allow enrollment throughout entire simulation period
+                        max_enrollment = int(sim_duration_years * 12)
+            except Exception:
+                pass  # Use default if any error
+        
+        enrollment_months = st.number_input(
+            "Enrollment Period (months)",
+            min_value=1,
+            max_value=max_enrollment,
+            value=12,
+            help=f"Period over which patients are enrolled. Can extend throughout entire simulation ({max_enrollment} months) to model steady-state clinic operations."
+        )
+        
+        # Analysis options
+        st.subheader("Analysis Options")
+        
+        show_resource_analysis = st.checkbox(
+            "Resource Requirements Analysis",
+            value=True,
+            help="Calculate staffing and capacity requirements"
+        )
+        
+        target_clinicians = None
+        visits_per_clinician = 20
+        
+        if show_resource_analysis:
+            target_clinicians = st.number_input(
+                "Target FTE Clinicians",
+                min_value=0.5,
+                max_value=20.0,
+                value=5.0,
+                step=0.5,
+                help="Target number of full-time equivalent clinicians"
+            )
+            
+            visits_per_clinician = st.number_input(
+                "Visits per Clinician per Day",
+                min_value=10,
+                max_value=40,
+                value=20,
+                help="Average number of visits a clinician can handle per day"
+            )
+        
+        cohort_months = st.selectbox(
+            "Cohort Grouping",
+            options=[3, 6, 12],
+            format_func=lambda x: f"{x} months",
+            help="Group patients into cohorts by enrollment period"
+        )
+        
+        # Transform button
+        transform_button = st.button(
+            "Transform to Calendar View",
+            type="primary",
+            use_container_width=True
+        )
+    
+    # Main content area
+    if transform_button or hasattr(st.session_state, 'calendar_data'):
+        try:
+            # Create a progress container
+            progress_container = st.container()
+            with progress_container:
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                
+                # Load Parquet data
+                status_text.text("Loading simulation data...")
+                progress_bar.progress(10)
+                visits_df = pd.read_parquet(parquet_dir / f"{selected_sim}_visits.parquet")
+                metadata_df = pd.read_parquet(parquet_dir / f"{selected_sim}_metadata.parquet")
+                
+                # Show data size
+                status_text.text(f"Processing {len(visits_df):,} visits from {visits_df['patient_id'].nunique():,} patients...")
+                progress_bar.progress(20)
+                
+                # Transform to calendar view
+                status_text.text("Transforming to calendar-time view...")
+                progress_bar.progress(30)
+                calendar_visits_df, clinic_metrics_df = transform_to_calendar_view(
+                    visits_df,
+                    metadata_df,
+                    enrollment_pattern=enrollment_pattern,
+                    enrollment_months=enrollment_months
+                )
+                
+                # Calculate additional metrics if requested
+                if show_resource_analysis:
+                    status_text.text("Calculating resource requirements...")
+                    progress_bar.progress(60)
+                    resources_df = calculate_resource_requirements(
+                        clinic_metrics_df,
+                        visits_per_clinician_per_day=visits_per_clinician
+                    )
+                else:
+                    resources_df = None
+                    progress_bar.progress(60)
+                
+                # Calculate cohort outcomes
+                status_text.text("Aggregating cohort outcomes...")
+                progress_bar.progress(80)
+                cohort_outcomes_df = aggregate_patient_outcomes_by_enrollment_cohort(
+                    calendar_visits_df,
+                    metadata_df,
+                    cohort_months=cohort_months
+                )
+                
+                # Store in session state
+                status_text.text("Finalizing...")
+                progress_bar.progress(90)
+                st.session_state.calendar_data = {
+                    'calendar_visits': calendar_visits_df,
+                    'clinic_metrics': clinic_metrics_df,
+                    'resources': resources_df,
+                    'cohort_outcomes': cohort_outcomes_df,
+                    'settings': {
+                        'enrollment_pattern': enrollment_pattern,
+                        'enrollment_months': enrollment_months,
+                        'target_clinicians': target_clinicians if show_resource_analysis else None
+                    }
+                }
+                
+                # Clear progress indicators
+                progress_bar.progress(100)
+                status_text.text("✅ Transformation complete!")
+                time.sleep(0.5)  # Brief pause to show completion
+                progress_container.empty()  # Clear the progress display
+                
+        except Exception as e:
+            st.error(f"Error transforming data: {str(e)}")
+            logger.exception("Calendar transformation error")
+    
+    # Display results if available
+    if hasattr(st.session_state, 'calendar_data'):
+        display_calendar_results(st.session_state.calendar_data)

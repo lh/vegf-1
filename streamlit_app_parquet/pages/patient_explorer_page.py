@@ -53,7 +53,78 @@ def display_patient_explorer_page():
     """Display the patient explorer page with detailed patient information."""
     display_logo_and_title("Patient Explorer")
     
-    # Check various sources of simulation data
+    # Import path utilities
+    from streamlit_app_parquet.utils.paths import get_parquet_results_dir
+    
+    # Get available Parquet files
+    parquet_dir = get_parquet_results_dir()
+    parquet_files = list(parquet_dir.glob("*_metadata.parquet"))
+    
+    if not parquet_files:
+        st.error("No simulation results found.")
+        st.info("Please run a simulation first from the 'Run Simulation' page.")
+        return
+    
+    # Get simulation names
+    simulation_names = [f.stem.replace("_metadata", "") for f in parquet_files]
+    
+    # Check if we should auto-select a simulation
+    default_index = 0
+    if "selected_simulation_for_explorer" in st.session_state:
+        # User selected a specific simulation from Run Simulation page
+        selected_name = st.session_state["selected_simulation_for_explorer"]
+        if selected_name in simulation_names:
+            default_index = simulation_names.index(selected_name)
+        del st.session_state["selected_simulation_for_explorer"]  # Clear after use
+    elif "latest_simulation_name" in st.session_state:
+        # Auto-select the latest simulation if available
+        latest_name = st.session_state["latest_simulation_name"]
+        if latest_name in simulation_names:
+            default_index = simulation_names.index(latest_name)
+    
+    # Sidebar configuration
+    with st.sidebar:
+        st.header("Patient Explorer Settings")
+        
+        # Select simulation to explore
+        selected_sim = st.selectbox(
+            "Select Simulation",
+            options=simulation_names,
+            index=default_index,
+            help="Choose which simulation to explore"
+        )
+        
+        # Load the selected simulation data
+        if selected_sim:
+            try:
+                visits_df = pd.read_parquet(parquet_dir / f"{selected_sim}_visits.parquet")
+                metadata_df = pd.read_parquet(parquet_dir / f"{selected_sim}_metadata.parquet")
+                
+                # Display simulation info
+                st.markdown("### Simulation Info")
+                st.write(f"**Type:** {metadata_df['simulation_type'].iloc[0]}")
+                st.write(f"**Patients:** {metadata_df['population_size'].iloc[0]:,}")
+                st.write(f"**Duration:** {metadata_df['duration_years'].iloc[0]} years")
+                
+                # Convert visits data to patient histories format for compatibility
+                patient_histories = {}
+                for patient_id in visits_df['patient_id'].unique():
+                    patient_visits = visits_df[visits_df['patient_id'] == patient_id].sort_values('date')
+                    patient_histories[patient_id] = patient_visits.to_dict('records')
+                
+                # Create a results dict from metadata
+                results = metadata_df.iloc[0].to_dict()
+                results['patient_count'] = len(patient_histories)
+                
+                # Store in session state for the explorer
+                st.session_state["patient_histories"] = patient_histories
+                st.session_state["simulation_results"] = results
+                
+            except Exception as e:
+                st.error(f"Error loading simulation data: {e}")
+                return
+    
+    # Check if we have data to display
     has_standard_simulation = "simulation_results" in st.session_state and "patient_histories" in st.session_state
     has_staggered_simulation = "staggered_results" in st.session_state and "patient_histories" in st.session_state.get("staggered_results", {})
     

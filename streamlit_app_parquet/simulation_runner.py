@@ -727,9 +727,9 @@ def save_results_as_parquet(patient_histories, statistics, config, params):
     output_dir = os.path.join(os.path.dirname(__file__), "output", "parquet_results")
     os.makedirs(output_dir, exist_ok=True)
     
-    # Generate filename
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    base_filename = f"streamlit_sim_{params['population_size']}p_{params['duration_years']}yr_{timestamp}"
+    # Generate filename with better naming convention
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    base_filename = f"{timestamp}-sim-{params['population_size']}p-{params['duration_years']}y"
     base_path = os.path.join(output_dir, base_filename)
     
     # Convert patient histories to DataFrame with enrichment
@@ -813,7 +813,10 @@ def save_results_as_parquet(patient_histories, statistics, config, params):
     metadata = {
         "simulation_type": params["simulation_type"],
         "patients": params["population_size"],
+        "population_size": params["population_size"],  # Add for backwards compatibility
         "duration_years": params["duration_years"],
+        "recruitment_mode": params.get("recruitment_mode", "Fixed Total"),
+        "recruitment_rate": params.get("recruitment_rate", params["population_size"] / (params["duration_years"] * 12)),
         "start_date": config.start_date if hasattr(config, "start_date") else datetime.now().strftime("%Y-%m-%d"),
         "discontinuation_enabled": True,
         "planned_discontinue_prob": params["planned_discontinue_prob"],
