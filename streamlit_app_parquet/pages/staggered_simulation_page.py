@@ -19,7 +19,6 @@ from staggered_visualizations import (
     create_cohort_outcomes_comparison,
     create_phase_distribution_heatmap
 )
-from utils.session_state import init_session_state
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +30,6 @@ def run_staggered_simulation_page():
     This page analyzes existing simulation data from a calendar-time perspective, 
     showing clinic activity, resource requirements, and patient flow over real time.
     """)
-    
-    # Initialize session state
-    init_session_state()
     
     # Check for available Parquet files
     parquet_dir = Path("output/parquet_results")
