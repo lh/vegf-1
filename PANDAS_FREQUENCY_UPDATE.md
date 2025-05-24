@@ -1,37 +1,49 @@
 # Pandas Frequency Alias Updates (2025-01-24)
 
 ## Background
-Pandas 2.2+ is deprecating single-letter frequency aliases in favor of more explicit ones that indicate the period end.
+Pandas 2.2+ has different requirements for frequency aliases depending on the function used.
 
-## Changes Made
-Updated all deprecated frequency aliases to their new equivalents:
+## Important Distinction
+- **For `to_period()`**: Use OLD format ('M', 'Q', 'Y')
+- **For `resample()`, `pd.Grouper()`, `date_range()`**: Use NEW format ('ME', 'QE', 'YE')
 
-### Files Updated:
+## Current State
+After investigation, the correct usage is:
+
+### Functions using OLD format:
+- `dt.to_period('M')` - for monthly periods
+- `dt.to_period('Q')` - for quarterly periods
+- `dt.to_period('3M')` - for 3-month periods
+
+### Functions using NEW format:
+- `resample('ME')` - for month end resampling
+- `resample('QE')` - for quarter end resampling
+- `pd.Grouper(freq='ME')` - for month end grouping
+- `pd.date_range(freq='ME')` - for month end date ranges
+
+## Files Status:
 1. **streamlit_app_parquet/staggered_data_processor.py**
-   - Line 315: `f'{cohort_months}M'` → `f'{cohort_months}ME'`
+   - Lines 173, 194, 315: Using 'M' with to_period() ✓
 
-2. **streamlit_app/staggered_simulation.py**
-   - Line 223: `to_period('Q')` → `to_period('QE')`
+2. **streamlit_app_parquet/pages/5_Calendar_Time_Analysis.py**
+   - Line 124: Using 'QE' with resample() ✓
 
-### Already Updated (no changes needed):
-- `streamlit_app_parquet/staggered_data_processor.py` lines 173, 194: Already using 'ME'
-- `streamlit_app_parquet/pages/5_Calendar_Time_Analysis.py` line 124: Already using 'QE'
-- `streamlit_app_parquet/staggered_visualizations.py` lines 249, 435: Already using 'QE' and 'ME'
+3. **streamlit_app_parquet/staggered_visualizations.py**
+   - Line 249: Using 'QE' with to_period() (needs 'Q')
+   - Line 435: Using 'ME' with pd.Grouper() ✓
+
+4. **streamlit_app/staggered_simulation.py**
+   - Line 223: Using 'Q' with to_period() ✓
 
 ## Frequency Alias Reference
-| Old | New | Meaning |
-|-----|-----|---------|
-| M   | ME  | Month End |
-| Q   | QE  | Quarter End |
-| Y   | YE  | Year End |
-| H   | h   | Hour |
-| T   | min | Minute |
-| S   | s   | Second |
-| L   | ms  | Millisecond |
-| U   | us  | Microsecond |
-| N   | ns  | Nanosecond |
+| Function | Old | New | Meaning |
+|----------|-----|-----|---------|
+| to_period() | M | M | Month |
+| resample() | M | ME | Month End |
+| pd.Grouper() | M | ME | Month End |
+| date_range() | M | ME | Month End |
 
 ## Notes
-- When using numeric prefixes (e.g., '3M' for 3 months), the new format is '3ME'
-- Daily frequency 'D' remains unchanged
-- This change ensures compatibility with pandas 3.0+
+- The warnings about 'M' being deprecated apply to resample/Grouper/date_range, NOT to_period()
+- This is confusing but appears to be the current pandas behavior
+- Monitor pandas updates as this may change in future versions

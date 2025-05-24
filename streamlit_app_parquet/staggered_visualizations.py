@@ -246,7 +246,7 @@ def create_enrollment_flow_diagram(
     # Calculate quarterly cohorts
     calendar_visits_df['enrollment_quarter'] = pd.to_datetime(
         calendar_visits_df['enrollment_date']
-    ).dt.to_period('QE')
+    ).dt.to_period('Q')
     
     # Get patient status at different time points
     patient_status = []
