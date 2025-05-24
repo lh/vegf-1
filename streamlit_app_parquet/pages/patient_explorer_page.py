@@ -10,8 +10,8 @@ import streamlit as st
 import pandas as pd
 from typing import Dict, Any, Optional, List
 
-from streamlit_app.components.layout import display_logo_and_title
-from streamlit_app.utils.session_state import (
+from streamlit_app_parquet.components.layout import display_logo_and_title
+from streamlit_app_parquet.utils.session_state import (
     get_simulation_results,
     get_staggered_results,
     get_debug_mode
@@ -19,7 +19,7 @@ from streamlit_app.utils.session_state import (
 
 # Import display_patient_explorer conditionally
 try:
-    from streamlit_app.patient_explorer import display_patient_explorer
+    from streamlit_app_parquet.patient_explorer import display_patient_explorer
 except ImportError:
     # Define a fallback function
     def display_patient_explorer(patient_histories, results):

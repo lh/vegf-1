@@ -12,9 +12,10 @@ import numpy as np
 
 # Try to import the fixed streamgraph implementation
 try:
-    from streamlit_app.streamgraph_patient_states_fixed import visualize_retreatment_by_discontinuation_type
+    from streamlit_app_parquet.streamgraph_patient_states_fixed import visualize_retreatment_by_discontinuation_type
 except ImportError:
-    pass
+    # Function not available, that's ok
+    visualize_retreatment_by_discontinuation_type = None
 
 
 def display_retreatment_panel(results):
@@ -45,30 +46,33 @@ def display_retreatment_panel(results):
     ret_col1, ret_col2 = st.columns(2)
     
     with ret_col1:
-        # Display basic metrics with descriptions for screen readers
-        st.write(f"**Total Retreatment Events:** {total_retreatments}", help="Total number of retreatment events recorded")
+        # Display basic metrics with descriptions
+        st.write(f"**Total Retreatment Events:** {total_retreatments}")
+        st.caption("Total number of retreatment events recorded")
+        
         if unique_retreatments != total_retreatments:
-            st.write(f"**Unique Patients Retreated:** {unique_retreatments}", help="Number of distinct patients who required retreatment")
+            st.write(f"**Unique Patients Retreated:** {unique_retreatments}")
+            st.caption("Number of distinct patients who required retreatment")
         
         # Calculate and display retreatment rate
         discontinued_patients = results.get("total_discontinuations", 0)
         if discontinued_patients > 0:
             # Patient retreatment rate - unique patients retreated divided by discontinued
             patient_retreatment_rate = (unique_retreatments / discontinued_patients) * 100
-            st.write(f"**Patient Retreatment Rate:** {patient_retreatment_rate:.1f}% of discontinued patients", 
-                    help="Percentage of discontinued patients who later required retreatment")
+            st.write(f"**Patient Retreatment Rate:** {patient_retreatment_rate:.1f}% of discontinued patients")
+            st.caption("Percentage of discontinued patients who later required retreatment")
             
             # Also show event-based retreatment rate for clarity
             event_retreatment_rate = (total_retreatments / discontinued_patients) * 100
             if event_retreatment_rate > patient_retreatment_rate:
-                st.write(f"**Event/Patient Ratio:** {(total_retreatments / discontinued_patients):.2f} retreatments per discontinued patient",
-                        help="Average number of retreatment events per discontinued patient")
+                st.write(f"**Event/Patient Ratio:** {(total_retreatments / discontinued_patients):.2f} retreatments per discontinued patient")
+                st.caption("Average number of retreatment events per discontinued patient")
             
             # Calculate average retreatments per patient
             if unique_retreatments > 0:
                 avg_retreatments = total_retreatments / unique_retreatments
-                st.write(f"**Avg Retreatments per Patient:** {avg_retreatments:.2f}",
-                        help="Average number of retreatment events per unique retreated patient")
+                st.write(f"**Avg Retreatments per Patient:** {avg_retreatments:.2f}")
+                st.caption("Average number of retreatment events per unique retreated patient")
     
 
     # Display retreatment breakdown if available

@@ -24,14 +24,73 @@ Use Git and github  for version control. You have access to the gh command. Use 
 - "When modifying Streamlit components, test changes with test scripts and show the user the results before updating the app"
 
 # Playwright Integration
-- Use Playwright for automated testing of the Streamlit application
-- All Playwright tests should be run against the local Streamlit server (port 8502)
-- Follow the setup instructions in streamlit_app/PLAYWRIGHT.md when using Playwright
-- Run the setup script (./streamlit_app/setup-playwright.sh) to ensure browser binaries are installed
+
+## Streamlit App Debugging with Playwright
+
+Playwright is configured and working in both `streamlit_app` and `streamlit_app_parquet` directories for browser automation and debugging.
+
+### Quick Start for Debugging
+1. **Test Setup**: Ensure Playwright is installed with `npx playwright install chromium`
+2. **Use Configurable Port Scripts**: Use `playwright_debug_configurable.js` to avoid port conflicts
+3. **Default Ports**: Scripts default to port 8503 (not 8502) to avoid interfering with running apps
+
+### Available Debugging Scripts
+
+#### Basic Connection Test
+```bash
+cd streamlit_app  # or streamlit_app_parquet
+node test_playwright_simple.js
+```
+- Quick test to verify Playwright can connect
+- Takes a screenshot for verification
+- Minimal output, good for CI/CD
+
+#### Interactive Debugging (Recommended)
+```bash
+# Run test app on different port
+streamlit run test_streamlit_app.py --server.port 8503
+
+# Debug in browser with DevTools
+node playwright_debug_configurable.js 8503
+```
+- Opens visible browser window with DevTools
+- Console logging and error reporting
+- Interactive mode - browser stays open for manual testing
+- Press Ctrl+C to exit
+
+#### Advanced Debugging
+```bash
+node playwright_advanced_debug.js
+```
+- Video recording of sessions
+- Full element analysis
+- Comprehensive debug information capture
+- Network monitoring
+
+### Port Management
+- **Main app**: Use your actual port (usually 8502)
+- **Testing**: Use alternate ports (8503, 8504, etc.)
+- **Command syntax**: `node script.js [port]`
+- **Example**: `node playwright_debug_configurable.js 8504`
+
+### Testing Real vs Test Apps
+- **Real app debugging**: `node playwright_debug_configurable.js 8502`
+- **Safe testing**: Use `test_streamlit_app.py` on alternate port
+- **Port conflicts**: Always specify different port for testing
+
+### Key Files
+- `playwright_debug_configurable.js` - Main debugging tool
+- `test_streamlit_app.py` - Safe test Streamlit app
+- `test_playwright_simple.js` - Quick connection test
+- `playwright_advanced_debug.js` - Full-featured debugger
+
+### Best Practices
+- ALWAYS use alternate ports for testing to avoid disrupting running apps
+- Use the test Streamlit app for initial Playwright verification
+- Only debug real apps when necessary and with caution
+- Capture screenshots for visual verification
 - ONLY run tests against real simulation data, NEVER with synthetic test data
 - Verify data integrity in automated tests by checking key values match expected distributions
-- Use the existing test script (streamlit_app/playwright_streamlit.js) as a template for new tests
-- Capture screenshots during tests to provide visual verification of application state
 - When validating visualizations, check the actual data source, not just the visual appearance
 
 # Visualization Guidelines

@@ -13,11 +13,9 @@ import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
-from streamlit_app.json_utils import convert_datetimes_in_dict
-
 # Import Puppeteer helpers if available
 try:
-    from streamlit_app.puppeteer_helpers import selectable_radio, selectable_selectbox
+    from streamlit_app_parquet.puppeteer_helpers import selectable_radio, selectable_selectbox
 except ImportError:
     # Fallback functions if puppeteer_helpers is not available
     def selectable_radio(label, options, **kwargs):
@@ -42,15 +40,8 @@ def display_patient_explorer(patient_histories: Dict[str, List[Dict]], simulatio
         st.warning("No patient data available. Please run a simulation first.")
         return
         
-    # Convert any serialized datetime strings back to datetime objects
-    processed_histories = {}
-    for patient_id, history in patient_histories.items():
-        # Convert datetime strings in each visit
-        processed_history = [convert_datetimes_in_dict(visit) for visit in history]
-        processed_histories[patient_id] = processed_history
-    
-    # Use the processed histories instead of the original
-    patient_histories = processed_histories
+    # Note: In Parquet version, datetime conversion is not needed
+    # as Parquet preserves datetime types natively
     
     # Show simulation context if available
     if simulation_stats:
