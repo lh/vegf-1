@@ -97,6 +97,7 @@ from streamlit_app_parquet.acknowledgments import ACKNOWLEDGMENT_TEXT
 from streamlit_app_parquet.quarto_utils import get_quarto, render_quarto_report
 from streamlit_app_parquet.patient_explorer import display_patient_explorer
 from streamlit_app_parquet.retreatment_panel import display_retreatment_panel
+from streamlit_app_parquet.pages.staggered_simulation_page import run_staggered_simulation_page
 
 try:
     from streamlit_app_parquet.amd_protocol_explorer import run_enhanced_discontinuation_dashboard
@@ -222,7 +223,7 @@ except ImportError:
 # Navigation - use regular radio for now since we encountered issues
 page = st.sidebar.radio(
     "Navigate to",
-    ["Dashboard", "Run Simulation", "Patient Explorer", "Reports", "About"],
+    ["Dashboard", "Run Simulation", "Calendar-Time Analysis", "Patient Explorer", "Reports", "About"],
     key="navigation",
     format_func=lambda x: f"{x}",  # For better screen reader support
     index=0,
@@ -560,6 +561,10 @@ elif page == "Run Simulation":
     
     # Removed JSON loading - Parquet only!
     # Results are loaded directly from Parquet files when needed
+
+elif page == "Calendar-Time Analysis":
+    # Run the staggered simulation page (calendar-time analysis)
+    run_staggered_simulation_page()
 
 elif page == "Patient Explorer":
     display_logo_and_title("Patient Explorer")

@@ -23,6 +23,7 @@ var/
 input_data/*
 *.csv
 *.sql
+*.parquet
 
 # Exceptions for summaries and graphs
 !*/graphs/*.png
