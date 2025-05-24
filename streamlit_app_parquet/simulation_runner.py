@@ -589,35 +589,16 @@ def run_simulation(params):
             progress_text.text(f"Simulation completed in {runtime:.2f} seconds")
             progress_bar.progress(100)
             
-            # Process results
-            results = process_simulation_results(sim, patient_histories, params)
-            results["runtime_seconds"] = runtime
+            # Initialize results dictionary with basic info
+            results = {
+                "runtime_seconds": runtime,
+                "simulation_type": params["simulation_type"],
+                "population_size": params["population_size"],
+                "duration_years": params["duration_years"],
+                "patient_histories": patient_histories
+            }
             
-            # CRITICAL FIX: Also store direct simulation stats separately to ensure we don't lose them
-            if hasattr(sim, 'stats'):
-                results["simulation_stats"] = sim.stats
-                # Ensure retreatments are properly captured
-                if "retreatments" in sim.stats and sim.stats["retreatments"] > 0:
-                    # Store direct retreatment info where the UI can easily find it
-                    if "raw_discontinuation_stats" not in results:
-                        results["raw_discontinuation_stats"] = {}
-                    results["raw_discontinuation_stats"]["retreatments"] = sim.stats["retreatments"]
-                    if "unique_retreatments" in sim.stats:
-                        results["raw_discontinuation_stats"]["unique_patient_retreatments"] = sim.stats["unique_retreatments"]
-                    
-                    # Force update recurrences data structure 
-                    if "recurrences" not in results:
-                        results["recurrences"] = {"total": 0, "by_type": {}, "unique_count": 0}
-                    results["recurrences"]["total"] = max(results["recurrences"].get("total", 0), sim.stats["retreatments"])
-                    if "unique_retreatments" in sim.stats:
-                        results["recurrences"]["unique_count"] = sim.stats["unique_retreatments"]
-                        
-                    print(f"Fixed retreatment stats: {sim.stats['retreatments']} total, {sim.stats.get('unique_retreatments', 0)} unique")
-                
-            # Store patient histories in results
-            results["patient_histories"] = patient_histories
-            
-            # ALWAYS use Parquet pipeline in this version
+            # ALWAYS use Parquet pipeline in this version - BEFORE processing results
             try:
                 st.info("📊 Saving results to Parquet format...")
                 debug_info("Starting Parquet save process...")
@@ -645,11 +626,50 @@ def run_simulation(params):
                 results["stats_df"] = pd.read_parquet(f"{parquet_base_path}_stats.parquet")
                 
                 debug_info(f"Loaded DataFrames - visits shape: {results['visits_df'].shape}")
+                debug_info(f"DataFrames loaded - results now has visits_df: {'visits_df' in results}")
                 
             except Exception as parquet_error:
                 import traceback
                 st.error(f"Failed to save/load Parquet data: {parquet_error}")
                 debug_info(f"Parquet error details: {traceback.format_exc()}")
+            
+            # NOW process results with Parquet data available
+            # Pass the results dict which now contains visits_df
+            processed_results = process_simulation_results(sim, patient_histories, params, results)
+            
+            # Merge processed results with our results dict (keeping Parquet data)
+            for key, value in processed_results.items():
+                if key not in ["visits_df", "metadata_df", "stats_df"]:  # Don't overwrite Parquet data
+                    results[key] = value
+            
+            # CRITICAL FIX: Also store direct simulation stats separately to ensure we don't lose them
+            if hasattr(sim, 'stats'):
+                results["simulation_stats"] = sim.stats
+                # Ensure retreatments are properly captured
+                if "retreatments" in sim.stats and sim.stats["retreatments"] > 0:
+                    # Store direct retreatment info where the UI can easily find it
+                    if "raw_discontinuation_stats" not in results:
+                        results["raw_discontinuation_stats"] = {}
+                    results["raw_discontinuation_stats"]["retreatments"] = sim.stats["retreatments"]
+                    if "unique_retreatments" in sim.stats:
+                        results["raw_discontinuation_stats"]["unique_patient_retreatments"] = sim.stats["unique_retreatments"]
+                    
+                    # Force update recurrences data structure 
+                    if "recurrences" not in results:
+                        results["recurrences"] = {"total": 0, "by_type": {}, "unique_count": 0}
+                    results["recurrences"]["total"] = max(results["recurrences"].get("total", 0), sim.stats["retreatments"])
+                    if "unique_retreatments" in sim.stats:
+                        results["recurrences"]["unique_count"] = sim.stats["unique_retreatments"]
+                        
+                    print(f"Fixed retreatment stats: {sim.stats['retreatments']} total, {sim.stats.get('unique_retreatments', 0)} unique")
+            
+            # Debug: Check if VA data was processed
+            if DEBUG_MODE:
+                debug_info(f"Final results check - has mean_va_data: {'mean_va_data' in results}")
+                if 'mean_va_data' in results:
+                    debug_info(f"  mean_va_data length: {len(results['mean_va_data'])}")
+                if 'va_data_summary' in results:
+                    debug_info(f"  VA summary: {results['va_data_summary']}")
             
             return results
         
@@ -816,7 +836,7 @@ def save_results_as_parquet(patient_histories, statistics, config, params):
     return base_path
 
 
-def process_simulation_results(sim, patient_histories, params):
+def process_simulation_results(sim, patient_histories, params, existing_results=None):
     """
     Process simulation results into a format for visualization.
     
@@ -828,6 +848,8 @@ def process_simulation_results(sim, patient_histories, params):
         List of patient histories
     params : dict
         Simulation parameters
+    existing_results : dict, optional
+        Existing results dictionary (may contain visits_df from Parquet)
     
     Returns
     -------
@@ -845,16 +867,31 @@ def process_simulation_results(sim, patient_histories, params):
         except ValueError as e:
             debug_info(f"Data normalization validation failed: {e}")
     
-    results = {
-        "simulation_type": params["simulation_type"],
-        "population_size": params["population_size"],
-        "duration_years": params["duration_years"],
-        "enable_clinician_variation": params["enable_clinician_variation"],
-        "planned_discontinue_prob": params["planned_discontinue_prob"],
-        "admin_discontinue_prob": params["admin_discontinue_prob"],
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "patient_count": len(patient_histories)
-    }
+    # Start with existing results if provided, otherwise create new dict
+    if existing_results:
+        results = existing_results.copy()
+        # Update with processing params
+        results.update({
+            "simulation_type": params["simulation_type"],
+            "population_size": params["population_size"],
+            "duration_years": params["duration_years"],
+            "enable_clinician_variation": params["enable_clinician_variation"],
+            "planned_discontinue_prob": params["planned_discontinue_prob"],
+            "admin_discontinue_prob": params["admin_discontinue_prob"],
+            "timestamp": existing_results.get("timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+            "patient_count": len(patient_histories)
+        })
+    else:
+        results = {
+            "simulation_type": params["simulation_type"],
+            "population_size": params["population_size"],
+            "duration_years": params["duration_years"],
+            "enable_clinician_variation": params["enable_clinician_variation"],
+            "planned_discontinue_prob": params["planned_discontinue_prob"],
+            "admin_discontinue_prob": params["admin_discontinue_prob"],
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "patient_count": len(patient_histories)
+        }
     
     # Process discontinuation information
     discontinuation_manager = None
@@ -1040,6 +1077,9 @@ def process_simulation_results(sim, patient_histories, params):
         # Use Parquet data for VA processing
         visits_df = results["visits_df"]
         
+        # Always log this important step
+        debug_info("✅ Found visits_df in results - processing VA data from Parquet!")
+        
         # Debug info about the DataFrame
         if DEBUG_MODE:
             debug_info(f"Processing VA data from visits_df with shape: {visits_df.shape}")
@@ -1175,6 +1215,9 @@ def process_simulation_results(sim, patient_histories, params):
                     debug_info(f"Time range: {va_df['time'].min():.1f} to {va_df['time'].max():.1f} months")
     else:
         # No Parquet data available
+        debug_info("❌ No visits_df found in results - VA processing skipped!")
+        debug_info(f"Available keys in results: {list(results.keys())}")
+        
         results["mean_va_data"] = []
         results["va_data_summary"] = {
             "datapoints_count": 0,
