@@ -121,7 +121,7 @@ def display_calendar_results(calendar_data: Dict):
             
             # Resource planning table
             with st.expander("View Quarterly Resource Requirements"):
-                quarterly_resources = resources.set_index('month').resample('Q').agg({
+                quarterly_resources = resources.set_index('month').resample('QE').agg({
                     'total_visits': 'sum',
                     'fte_clinicians_needed': 'mean',
                     'total_hours': 'sum'
@@ -175,9 +175,23 @@ def display_calendar_results(calendar_data: Dict):
         # Calculate current patient status
         latest_visits = calendar_visits.sort_values('calendar_date').groupby('patient_id').last()
         
+        # Check which discontinuation column exists
+        if 'has_been_discontinued' in latest_visits.columns:
+            active_mask = ~latest_visits['has_been_discontinued']
+            discontinued_mask = latest_visits['has_been_discontinued']
+        elif 'is_discontinuation' in latest_visits.columns:
+            # For this column, we need to check if the patient ever discontinued
+            patient_disc_status = calendar_visits.groupby('patient_id')['is_discontinuation'].any()
+            active_mask = ~patient_disc_status
+            discontinued_mask = patient_disc_status
+        else:
+            # No discontinuation data available
+            active_mask = pd.Series([True] * len(latest_visits), index=latest_visits.index)
+            discontinued_mask = pd.Series([False] * len(latest_visits), index=latest_visits.index)
+        
         status_counts = {
-            'Active': len(latest_visits[~latest_visits.get('discontinued', False)]),
-            'Discontinued': len(latest_visits[latest_visits.get('discontinued', False)])
+            'Active': active_mask.sum(),
+            'Discontinued': discontinued_mask.sum()
         }
         
         col1, col2 = st.columns(2)

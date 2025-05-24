@@ -246,7 +246,7 @@ def create_enrollment_flow_diagram(
     # Calculate quarterly cohorts
     calendar_visits_df['enrollment_quarter'] = pd.to_datetime(
         calendar_visits_df['enrollment_date']
-    ).dt.to_period('Q')
+    ).dt.to_period('QE')
     
     # Get patient status at different time points
     patient_status = []
@@ -432,7 +432,7 @@ def create_phase_distribution_heatmap(
     """
     # Group by month and phase
     monthly_phase = calendar_visits_df.groupby([
-        pd.Grouper(key='calendar_date', freq='M'),
+        pd.Grouper(key='calendar_date', freq='ME'),
         'phase'
     ])['patient_id'].nunique().reset_index()
     

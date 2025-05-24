@@ -170,7 +170,7 @@ def generate_clinic_metrics(
     
     # Create a copy and add month column for grouping
     visits_df = calendar_visits_df.copy()
-    visits_df['month'] = pd.to_datetime(visits_df['calendar_date']).dt.to_period('M')
+    visits_df['month'] = pd.to_datetime(visits_df['calendar_date']).dt.to_period('ME')
     
     # Pre-calculate injection visits (vectorized)
     if 'actions' in visits_df.columns:
@@ -191,7 +191,7 @@ def generate_clinic_metrics(
     # Identify first visits for each patient (vectorized)
     first_visits = visits_df.groupby('patient_id')['calendar_date'].min().reset_index()
     first_visits.columns = ['patient_id', 'first_visit_date']
-    first_visits['first_visit_month'] = pd.to_datetime(first_visits['first_visit_date']).dt.to_period('M')
+    first_visits['first_visit_month'] = pd.to_datetime(first_visits['first_visit_date']).dt.to_period('ME')
     
     # Group by month and calculate metrics
     monthly_metrics = visits_df.groupby('month').agg({
@@ -312,7 +312,7 @@ def aggregate_patient_outcomes_by_enrollment_cohort(
     visits_df = calendar_visits_df.copy()
     visits_df['enrollment_cohort'] = pd.to_datetime(
         visits_df['enrollment_date']
-    ).dt.to_period(f'{cohort_months}M')
+    ).dt.to_period(f'{cohort_months}ME')
     
     # Pre-calculate injection status for all visits
     if 'actions' in visits_df.columns:

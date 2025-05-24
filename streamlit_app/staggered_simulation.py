@@ -220,7 +220,7 @@ def create_enrollment_histogram_disabled(enrollment_dates):
     df["enrollment_date"] = pd.to_datetime(df["enrollment_date"])
     
     # Group by quarter for cleaner visualization
-    df["quarter"] = df["enrollment_date"].dt.to_period('Q')
+    df["quarter"] = df["enrollment_date"].dt.to_period('QE')
     
     # Count enrollments by quarter
     quarterly_counts = df.groupby("quarter").size()
