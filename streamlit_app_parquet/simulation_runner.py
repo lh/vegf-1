@@ -2042,15 +2042,32 @@ def generate_va_over_time_thumbnail(results):
                        color=SEMANTIC_COLORS['acuity_data'], 
                        alpha=ALPHAS['very_low'])
     
-    # Minimal styling - no labels, no ticks
+    # Set limits per guidelines
     ax.set_xlim(0, max_months)
     ax.set_ylim(0, 85)
-    ax.set_xticks([])
-    ax.set_yticks([])
     
-    # Remove all spines for clean look
+    # Add minimal but informative axes
+    # X-axis: show 0 and max time
+    ax.set_xticks([0, max_months])
+    ax.set_xticklabels(['0', f'{max_months}'], fontsize=7)
+    ax.set_xlabel('Months', fontsize=8)
+    
+    # Y-axis: show key values
+    ax.set_yticks([0, 40, 85])
+    ax.set_yticklabels(['0', '40', '85'], fontsize=7)
+    ax.set_ylabel('VA (letters)', fontsize=8)
+    
+    # Add a title
+    ax.set_title('Mean VA + 95% CI', fontsize=9, pad=3)
+    
+    # Keep spines but make them subtle
     for spine in ax.spines.values():
-        spine.set_visible(False)
+        spine.set_linewidth(0.5)
+        spine.set_color('#cccccc')
+    
+    # Remove top and right spines for cleaner look
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
     
     plt.tight_layout(pad=0.1)
     return fig
@@ -2146,17 +2163,34 @@ def generate_va_distribution_thumbnail(results):
     ax.plot(df['time'], df['p50'], 
            color=COLORS['primary_dark'], linewidth=2)
     
-    # Minimal styling
+    # Set limits and styling
     duration_years = results.get("duration_years", 5)
     max_months = duration_years * 12
     ax.set_xlim(0, max_months)
     ax.set_ylim(0, 85)
-    ax.set_xticks([])
-    ax.set_yticks([])
     
-    # Remove all spines
+    # Add minimal but informative axes
+    # X-axis: show 0 and max time
+    ax.set_xticks([0, max_months])
+    ax.set_xticklabels(['0', f'{max_months}'], fontsize=7)
+    ax.set_xlabel('Months', fontsize=8)
+    
+    # Y-axis: show key values
+    ax.set_yticks([0, 40, 85])
+    ax.set_yticklabels(['0', '40', '85'], fontsize=7)
+    ax.set_ylabel('VA (letters)', fontsize=8)
+    
+    # Add a title
+    ax.set_title('Patient Distribution', fontsize=9, pad=3)
+    
+    # Keep spines but make them subtle
     for spine in ax.spines.values():
-        spine.set_visible(False)
+        spine.set_linewidth(0.5)
+        spine.set_color('#cccccc')
+    
+    # Remove top and right spines for cleaner look
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
     
     plt.tight_layout(pad=0.1)
     return fig
