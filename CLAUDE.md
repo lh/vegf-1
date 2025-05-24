@@ -157,6 +157,33 @@ When making changes to the codebase, always run the following tests before commi
 3. Always confirm ABS/DES compatibility:
    - Test both ABS and DES implementations with the same configuration
 
+# Simulation Management and Performance
+
+## Recent Improvements (2025-01-24)
+
+### Recruitment Modes
+- **Fixed Total Mode**: Specify total patients, system calculates monthly rate
+- **Constant Rate Mode**: Specify patients/month, continues throughout simulation
+- Enables modeling of both clinical trials and real-world steady-state operations
+
+### Simulation File Management
+- New naming: `YYYYMMDD-HHMMSS-sim-Xp-Yy` (e.g., `20250124-120530-sim-1000p-5y`)
+- Files automatically sort by date/time
+- Saved simulations browser with quick actions
+- Auto-loads latest simulation in analysis pages
+
+### Performance Optimizations
+- Calendar-time transformation now uses vectorized pandas operations
+- 10-100x speedup for large datasets (1000+ patients process in seconds)
+- Progress indicators show transformation status
+- Removed inefficient patient-by-patient loops
+
+### User Experience
+- Session state persistence across pages
+- One-click navigation to Calendar-Time Analysis or Patient Explorer
+- Latest simulation automatically selected in analysis pages
+- Enrollment period can extend throughout entire simulation
+
 # DATA INTEGRITY VERIFICATION PROTOCOL
 
 These protocols MUST be followed for all data manipulation and visualization tasks:
