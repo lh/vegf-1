@@ -166,7 +166,7 @@ def generate_clinic_metrics(
     if (end_date - start_date).days < 30:
         end_date = start_date + timedelta(days=30)
     
-    date_range = pd.date_range(start=start_date, end=end_date, freq='M')
+    date_range = pd.date_range(start=start_date, end=end_date, freq='ME')
     
     # If date_range is too short, create manual monthly bins
     if len(date_range) < 2:
@@ -313,17 +313,41 @@ def aggregate_patient_outcomes_by_enrollment_cohort(
     patient_outcomes = []
     
     for patient_id in calendar_visits_df['patient_id'].unique():
-        patient_data = calendar_visits_df[calendar_visits_df['patient_id'] == patient_id]
-        patient_meta = metadata_df[metadata_df['patient_id'] == patient_id].iloc[0]
+        patient_data = calendar_visits_df[calendar_visits_df['patient_id'] == patient_id].sort_values('calendar_date')
+        
+        # Get patient information from visits data
+        baseline_vision = patient_data['baseline_vision'].iloc[0] if 'baseline_vision' in patient_data.columns else None
+        final_vision = patient_data['vision'].iloc[-1] if 'vision' in patient_data.columns and len(patient_data) > 0 else None
+        
+        # Count injections based on actions
+        total_injections = 0
+        if 'actions' in patient_data.columns:
+            def has_injection(actions):
+                try:
+                    if actions is None:
+                        return False
+                    if hasattr(actions, '__iter__') and not isinstance(actions, str):
+                        return any('injection' in str(action).lower() for action in actions)
+                    return 'injection' in str(actions).lower()
+                except:
+                    return False
+            total_injections = patient_data['actions'].apply(has_injection).sum()
+        
+        # Check if patient discontinued
+        discontinued = False
+        if 'is_discontinuation' in patient_data.columns:
+            discontinued = patient_data['is_discontinuation'].any()
+        elif 'has_been_discontinued' in patient_data.columns:
+            discontinued = patient_data['has_been_discontinued'].iloc[-1] if len(patient_data) > 0 else False
         
         outcome = {
             'patient_id': patient_id,
             'enrollment_cohort': patient_data['enrollment_cohort'].iloc[0],
-            'baseline_vision': patient_meta.get('baseline_vision', None),
-            'final_vision': patient_data['vision'].iloc[-1] if 'vision' in patient_data.columns else None,
+            'baseline_vision': baseline_vision,
+            'final_vision': final_vision,
             'total_visits': len(patient_data),
-            'total_injections': patient_data['received_injection'].sum(),
-            'discontinued': patient_meta.get('discontinued', False),
+            'total_injections': total_injections,
+            'discontinued': discontinued,
             'months_followed': patient_data['months_since_enrollment'].max()
         }
         
