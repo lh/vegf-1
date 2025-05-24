@@ -46,19 +46,42 @@ def transform_to_calendar_view(
             logger.info(f"Using simulation recruitment rate: {recruitment_rate:.2f} patients/month over {enrollment_months} months")
     
     if start_date is None:
-        start_date = datetime.now() - timedelta(days=5*365)
+        # Use simulation start date from metadata if available
+        if 'start_date' in metadata_df.columns:
+            start_date = pd.to_datetime(metadata_df['start_date'].iloc[0])
+        else:
+            # Default to a reasonable past date
+            start_date = datetime(2020, 1, 1)
     
     # Get unique patients
     patients = visits_df['patient_id'].unique()
     n_patients = len(patients)
     
-    # Generate enrollment dates based on pattern
-    enrollment_dates = generate_enrollment_dates(
-        n_patients, start_date, enrollment_months, enrollment_pattern
-    )
+    # Check if we should use actual enrollment times from the simulation
+    preserve_original_enrollment = False
+    if 'recruitment_mode' in metadata_df.columns and metadata_df['recruitment_mode'].iloc[0] == "Constant Rate":
+        # For constant rate simulations, preserve the original enrollment pattern
+        preserve_original_enrollment = True
+        logger.info("Preserving original constant-rate enrollment pattern")
     
-    # Create patient enrollment mapping
-    patient_enrollment = dict(zip(patients, enrollment_dates))
+    if preserve_original_enrollment:
+        # Extract actual enrollment dates from first visit of each patient
+        patient_first_visits = visits_df.groupby('patient_id')['date'].min().reset_index()
+        patient_first_visits.columns = ['patient_id', 'first_visit_date']
+        
+        # Use actual first visit dates as enrollment dates
+        patient_enrollment = dict(zip(
+            patient_first_visits['patient_id'],
+            patient_first_visits['first_visit_date']
+        ))
+    else:
+        # Generate enrollment dates based on pattern
+        enrollment_dates = generate_enrollment_dates(
+            n_patients, start_date, enrollment_months, enrollment_pattern
+        )
+        
+        # Create patient enrollment mapping
+        patient_enrollment = dict(zip(patients, enrollment_dates))
     
     # Transform visits to calendar time using vectorized operations
     logger.info(f"Transforming {len(visits_df)} visits for {n_patients} patients to calendar time...")
@@ -92,8 +115,12 @@ def transform_to_calendar_view(
     # Sort by calendar date
     calendar_visits_df = calendar_visits_df.sort_values('calendar_date')
     
-    # Generate clinic metrics
-    clinic_metrics_df = generate_clinic_metrics(calendar_visits_df, start_date)
+    # Generate clinic metrics - limit to actual data range
+    actual_end_date = calendar_visits_df['calendar_date'].max()
+    clinic_metrics_df = generate_clinic_metrics(calendar_visits_df, start_date, actual_end_date)
+    
+    # Log the actual time range
+    logger.info(f"Calendar view spans from {start_date.strftime('%Y-%m-%d')} to {actual_end_date.strftime('%Y-%m-%d')}")
     
     return calendar_visits_df, clinic_metrics_df
 

@@ -313,16 +313,30 @@ else:
         # Enrollment settings
         st.subheader("Enrollment Configuration")
         
-        enrollment_pattern = st.selectbox(
-            "Enrollment Pattern",
-            options=["uniform", "front_loaded", "gradual"],
-            format_func=lambda x: {
-                "uniform": "Uniform (steady rate)",
-                "front_loaded": "Front-loaded (more early)",
-                "gradual": "Gradual (bell curve)"
-            }[x],
-            help="How patients are enrolled over time"
-        )
+        # Check if this is a constant rate simulation
+        is_constant_rate = False
+        if selected_sim:
+            try:
+                temp_metadata = pd.read_parquet(parquet_dir / f"{selected_sim}_metadata.parquet")
+                if 'recruitment_mode' in temp_metadata.columns:
+                    is_constant_rate = temp_metadata['recruitment_mode'].iloc[0] == "Constant Rate"
+            except:
+                pass
+        
+        if is_constant_rate:
+            st.info("📌 This simulation used Constant Rate recruitment. The original enrollment timeline will be preserved.")
+            enrollment_pattern = "preserved"  # Internal flag
+        else:
+            enrollment_pattern = st.selectbox(
+                "Enrollment Pattern",
+                options=["uniform", "front_loaded", "gradual"],
+                format_func=lambda x: {
+                    "uniform": "Uniform (steady rate)",
+                    "front_loaded": "Front-loaded (more early)",
+                    "gradual": "Gradual (bell curve)"
+                }[x],
+                help="How patients are enrolled over time"
+            )
         
         # Get simulation duration from selected simulation's metadata
         max_enrollment = 120  # Default maximum
@@ -339,13 +353,18 @@ else:
             except Exception:
                 pass  # Use default if any error
         
-        enrollment_months = st.number_input(
-            "Enrollment Period (months)",
-            min_value=1,
-            max_value=max_enrollment,
-            value=12,
-            help=f"Period over which patients are enrolled. Can extend throughout entire simulation ({max_enrollment} months) to model steady-state clinic operations."
-        )
+        if not is_constant_rate:
+            enrollment_months = st.number_input(
+                "Enrollment Period (months)",
+                min_value=1,
+                max_value=max_enrollment,
+                value=12,
+                help=f"Period over which patients are enrolled. Can extend throughout entire simulation ({max_enrollment} months) to model steady-state clinic operations."
+            )
+        else:
+            # For constant rate, enrollment period is the full simulation
+            enrollment_months = int(temp_metadata['duration_years'].iloc[0] * 12) if 'duration_years' in temp_metadata.columns else 60
+            st.info(f"Enrollment period: {enrollment_months} months (full simulation duration)")
         
         # Analysis options
         st.subheader("Analysis Options")
