@@ -7,6 +7,11 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+import sys
+from pathlib import Path
+# Add parent directory to path for imports
+sys.path.append(str(Path(__file__).parent.parent))
+
 from staggered_data_processor import (
     transform_to_calendar_view,
     calculate_resource_requirements,
@@ -31,15 +36,28 @@ def run_staggered_simulation_page():
     showing clinic activity, resource requirements, and patient flow over real time.
     """)
     
+    # Debug: show current working directory
+    import os
+    st.info(f"Current working directory: {os.getcwd()}")
+    
     # Check for available Parquet files
-    parquet_dir = Path("output/parquet_results")
+    # Handle both running from project root and from streamlit_app_parquet
+    parquet_dir = Path("streamlit_app_parquet/output/parquet_results")
+    if not parquet_dir.exists():
+        parquet_dir = Path("output/parquet_results")
+    
     if not parquet_dir.exists():
         st.error("No simulation results found. Please run a simulation first.")
+        st.info(f"Looking for directory at: {parquet_dir.absolute()}")
         return
     
     parquet_files = list(parquet_dir.glob("*_metadata.parquet"))
     if not parquet_files:
         st.error("No Parquet simulation results found.")
+        st.info(f"Looking in directory: {parquet_dir.absolute()}")
+        st.info(f"Directory exists: {parquet_dir.exists()}")
+        if parquet_dir.exists():
+            st.info(f"Files in directory: {list(parquet_dir.iterdir())[:5]}")  # Show first 5 files
         return
     
     # Sidebar configuration
