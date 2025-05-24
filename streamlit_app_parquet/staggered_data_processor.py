@@ -56,14 +56,28 @@ def transform_to_calendar_view(
         patient_visits = visits_df[visits_df['patient_id'] == patient_id].copy()
         enrollment_date = patient_enrollment[patient_id]
         
-        # Convert relative months to actual dates
-        patient_visits['calendar_date'] = patient_visits['time'].apply(
-            lambda months: enrollment_date + timedelta(days=int(months * 30.44))
-        )
+        # Calculate months since first visit (patient time)
+        if len(patient_visits) > 0:
+            # Sort by date to ensure correct order
+            patient_visits = patient_visits.sort_values('date')
+            first_visit_date = patient_visits['date'].iloc[0]
+            
+            # Calculate months since enrollment for each visit
+            patient_visits['months_since_enrollment'] = patient_visits['date'].apply(
+                lambda d: (d - first_visit_date).days / 30.44
+            )
+            
+            # Convert to calendar dates based on enrollment
+            patient_visits['calendar_date'] = patient_visits['months_since_enrollment'].apply(
+                lambda months: enrollment_date + timedelta(days=int(months * 30.44))
+            )
+        else:
+            # No visits for this patient
+            patient_visits['months_since_enrollment'] = 0
+            patient_visits['calendar_date'] = enrollment_date
         
         # Add enrollment info
         patient_visits['enrollment_date'] = enrollment_date
-        patient_visits['months_since_enrollment'] = patient_visits['time']
         
         calendar_visits.append(patient_visits)
     
@@ -148,7 +162,20 @@ def generate_clinic_metrics(
         end_date = calendar_visits_df['calendar_date'].max()
     
     # Create monthly bins
+    # Ensure we have at least one full month
+    if (end_date - start_date).days < 30:
+        end_date = start_date + timedelta(days=30)
+    
     date_range = pd.date_range(start=start_date, end=end_date, freq='M')
+    
+    # If date_range is too short, create manual monthly bins
+    if len(date_range) < 2:
+        date_range = [start_date]
+        current_date = start_date
+        while current_date < end_date:
+            current_date = current_date + timedelta(days=30)
+            date_range.append(current_date)
+        date_range = pd.DatetimeIndex(date_range)
     
     metrics = []
     
@@ -163,15 +190,29 @@ def generate_clinic_metrics(
         ]
         
         # Calculate metrics
+        # Determine injection visits by checking if 'injection' is in actions
+        injection_visits = month_visits[
+            month_visits['actions'].apply(lambda x: 'injection' in str(x).lower() if pd.notna(x) else False)
+        ] if 'actions' in month_visits.columns else pd.DataFrame()
+        
+        # Calculate new patients (first visit in this month)
+        new_patient_ids = set()
+        for patient_id in month_visits['patient_id'].unique():
+            patient_all_visits = calendar_visits_df[calendar_visits_df['patient_id'] == patient_id]
+            if len(patient_all_visits) > 0:
+                first_visit = patient_all_visits.iloc[0]
+                if (first_visit['calendar_date'] >= month_start) and (first_visit['calendar_date'] < month_end):
+                    new_patient_ids.add(patient_id)
+        
         metric = {
             'month': month_start,
             'total_visits': len(month_visits),
             'unique_patients': month_visits['patient_id'].nunique(),
-            'injection_visits': len(month_visits[month_visits['received_injection'] == True]),
-            'monitoring_visits': len(month_visits[month_visits['received_injection'] == False]),
-            'new_patients': len(month_visits[month_visits['visit_number'] == 1]),
+            'injection_visits': len(injection_visits),
+            'monitoring_visits': len(month_visits) - len(injection_visits),
+            'new_patients': len(new_patient_ids),
             'avg_vision': month_visits['vision'].mean() if 'vision' in month_visits.columns else None,
-            'retreatment_visits': len(month_visits[month_visits.get('is_retreatment_visit', False) == True]),
+            'retreatment_visits': len(month_visits[month_visits['is_retreatment_visit'] == True]) if 'is_retreatment_visit' in month_visits.columns else 0,
         }
         
         # Add phase-specific counts
