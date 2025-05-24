@@ -24,6 +24,7 @@ from staggered_visualizations import (
     create_cohort_outcomes_comparison,
     create_phase_distribution_heatmap
 )
+from utils.paths import get_parquet_results_dir, debug_paths
 
 logger = logging.getLogger(__name__)
 
@@ -36,28 +37,19 @@ def run_staggered_simulation_page():
     showing clinic activity, resource requirements, and patient flow over real time.
     """)
     
-    # Debug: show current working directory
-    import os
-    st.info(f"Current working directory: {os.getcwd()}")
+    # Get parquet directory using path utilities
+    parquet_dir = get_parquet_results_dir()
+    
+    # Debug mode - show path information
+    if st.checkbox("Show debug information", value=False):
+        debug_paths()
     
     # Check for available Parquet files
-    # Handle both running from project root and from streamlit_app_parquet
-    parquet_dir = Path("streamlit_app_parquet/output/parquet_results")
-    if not parquet_dir.exists():
-        parquet_dir = Path("output/parquet_results")
-    
-    if not parquet_dir.exists():
-        st.error("No simulation results found. Please run a simulation first.")
-        st.info(f"Looking for directory at: {parquet_dir.absolute()}")
-        return
-    
     parquet_files = list(parquet_dir.glob("*_metadata.parquet"))
     if not parquet_files:
         st.error("No Parquet simulation results found.")
-        st.info(f"Looking in directory: {parquet_dir.absolute()}")
-        st.info(f"Directory exists: {parquet_dir.exists()}")
-        if parquet_dir.exists():
-            st.info(f"Files in directory: {list(parquet_dir.iterdir())[:5]}")  # Show first 5 files
+        st.info("Please run a simulation first from the 'Run Simulation' page.")
+        debug_paths()  # Always show debug info if no files found
         return
     
     # Sidebar configuration
