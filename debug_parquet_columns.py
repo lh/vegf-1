@@ -25,5 +25,11 @@ if visit_files:
     # Check data types
     print(f"\nData types:")
     print(df.dtypes)
+    
+    # Check actions column specifically
+    print(f"\nActions column analysis:")
+    print(f"First 5 actions values:")
+    for i, action in enumerate(df['actions'].head()):
+        print(f"  {i}: {action} (type: {type(action)})")
 else:
     print("No visit parquet files found!")

@@ -191,9 +191,24 @@ def generate_clinic_metrics(
         
         # Calculate metrics
         # Determine injection visits by checking if 'injection' is in actions
-        injection_visits = month_visits[
-            month_visits['actions'].apply(lambda x: 'injection' in str(x).lower() if pd.notna(x) else False)
-        ] if 'actions' in month_visits.columns else pd.DataFrame()
+        if 'actions' in month_visits.columns and len(month_visits) > 0:
+            # Handle cases where actions is a numpy array or list
+            def has_injection(actions):
+                try:
+                    if actions is None:
+                        return False
+                    # If it's an array or list, check if 'injection' is in it
+                    if hasattr(actions, '__iter__') and not isinstance(actions, str):
+                        return any('injection' in str(action).lower() for action in actions)
+                    # Otherwise convert to string and check
+                    return 'injection' in str(actions).lower()
+                except:
+                    return False
+            
+            injection_mask = month_visits['actions'].apply(has_injection)
+            injection_visits = month_visits[injection_mask]
+        else:
+            injection_visits = pd.DataFrame()
         
         # Calculate new patients (first visit in this month)
         new_patient_ids = set()
@@ -212,7 +227,7 @@ def generate_clinic_metrics(
             'monitoring_visits': len(month_visits) - len(injection_visits),
             'new_patients': len(new_patient_ids),
             'avg_vision': month_visits['vision'].mean() if 'vision' in month_visits.columns else None,
-            'retreatment_visits': len(month_visits[month_visits['is_retreatment_visit'] == True]) if 'is_retreatment_visit' in month_visits.columns else 0,
+            'retreatment_visits': month_visits['is_retreatment_visit'].sum() if 'is_retreatment_visit' in month_visits.columns else 0,
         }
         
         # Add phase-specific counts
