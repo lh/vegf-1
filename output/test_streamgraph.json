@@ -1,0 +1,1106 @@
+{
+  "simulation_type": "ABS",
+  "population_size": 10,
+  "duration_years": 1,
+  "enable_clinician_variation": true,
+  "planned_discontinue_prob": 0.2,
+  "admin_discontinue_prob": 0.05,
+  "timestamp": "2025-05-20 12:45:31",
+  "patient_count": 10,
+  "discontinuation_counts": {
+    "Planned": 0,
+    "Administrative": 0,
+    "Not Renewed": 0,
+    "Premature": 0
+  },
+  "runtime_seconds": 0.019159793853759766,
+  "simulation_stats": {
+    "total_visits": 75,
+    "total_injections": 75,
+    "total_oct_scans": 75,
+    "vision_improvements": 46,
+    "vision_declines": 29,
+    "protocol_completions": 10,
+    "protocol_discontinuations": 0,
+    "unique_discontinuations": 0,
+    "monitoring_visits": 0,
+    "retreatments": 0,
+    "unique_retreatments": 0,
+    "clinician_decisions": {
+      "protocol_followed": 0,
+      "protocol_overridden": 0
+    }
+  },
+  "patient_histories": {
+    "PATIENT001": [
+      {
+        "date": "2023-01-01 02:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 66.4406952790031,
+        "disease_state": "stable",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-01-29 02:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 68.7379442106323,
+        "disease_state": "stable",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-02-26 02:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 68.89790680061,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-04-23 02:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 67.66108828317529,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 10
+      },
+      {
+        "date": "2023-07-02 02:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 68.60786941929949,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 12
+      },
+      {
+        "date": "2023-09-24 02:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 69.86353651824959,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 10
+      },
+      {
+        "date": "2023-12-03 02:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 68.17781211907734,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 12
+      }
+    ],
+    "PATIENT002": [
+      {
+        "date": "2023-01-01 04:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 64.56976359480751,
+        "disease_state": "stable",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-01-29 04:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 62.05293446900962,
+        "disease_state": "active",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-02-26 04:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 62.04956588209982,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-04-23 04:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 62.50504697326249,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-06-18 04:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 60.47514015619413,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 10
+      },
+      {
+        "date": "2023-08-27 04:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 62.419466304531994,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-10-22 04:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 61.649236383407,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 10
+      },
+      {
+        "date": "2023-12-31 04:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 62.006223813186715,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      }
+    ],
+    "PATIENT003": [
+      {
+        "date": "2023-01-01 06:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 66.08969846903248,
+        "disease_state": "stable",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-01-29 06:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 68.09580179594525,
+        "disease_state": "active",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-02-26 06:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 68.44000752278336,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-04-23 06:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 68.61931960108681,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-06-18 06:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 66.49498744875676,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 10
+      },
+      {
+        "date": "2023-08-27 06:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 66.76435946826342,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 12
+      },
+      {
+        "date": "2023-11-19 06:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 65.5625399646498,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 14
+      }
+    ],
+    "PATIENT004": [
+      {
+        "date": "2023-01-01 08:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 66.12580134684956,
+        "disease_state": "active",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-01-29 08:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 65.9920104043005,
+        "disease_state": "stable",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-02-26 08:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 68.56444255146118,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-04-23 08:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 68.85139323267475,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 10
+      },
+      {
+        "date": "2023-07-02 08:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 68.73733330483019,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-08-27 08:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 68.49936741124067,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-10-22 08:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 68.06564593055465,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 10
+      },
+      {
+        "date": "2023-12-31 08:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 67.23150900248179,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 12
+      }
+    ],
+    "PATIENT005": [
+      {
+        "date": "2023-01-01 10:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 64.79431815033503,
+        "disease_state": "stable",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-01-29 10:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 64.58454841662342,
+        "disease_state": "stable",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-02-26 10:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 64.56283353516898,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-04-23 10:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 64.57607709699599,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 10
+      },
+      {
+        "date": "2023-07-02 10:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 63.561458082544405,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-08-27 10:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 63.97514796245288,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 10
+      },
+      {
+        "date": "2023-11-05 10:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 64.64253100306622,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 12
+      }
+    ],
+    "PATIENT006": [
+      {
+        "date": "2023-01-01 12:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 66.25476905683665,
+        "disease_state": "active",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-01-29 12:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 66.61063581021257,
+        "disease_state": "stable",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-02-26 12:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 65.0961503453073,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-04-23 12:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 66.41287427111968,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 10
+      },
+      {
+        "date": "2023-07-02 12:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 66.81747103447191,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-08-27 12:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 66.10103039332158,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 10
+      },
+      {
+        "date": "2023-11-05 12:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 66.7416501444157,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-12-31 12:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 65.90111454869106,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 10
+      }
+    ],
+    "PATIENT007": [
+      {
+        "date": "2023-01-01 14:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 64.85404068240993,
+        "disease_state": "stable",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-01-29 14:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 66.0308155166846,
+        "disease_state": "stable",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-02-26 14:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 67.20129257961375,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-04-23 14:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 66.70452511706456,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-06-18 14:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 65.82238811752573,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 10
+      },
+      {
+        "date": "2023-08-27 14:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 65.31195972918806,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 12
+      },
+      {
+        "date": "2023-11-19 14:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 65.35720582553773,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 14
+      }
+    ],
+    "PATIENT008": [
+      {
+        "date": "2023-01-01 16:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 66.58468257739096,
+        "disease_state": "stable",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-01-29 16:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 66.09844938841933,
+        "disease_state": "stable",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-02-26 16:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 69.51579413729378,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-04-23 16:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 69.53825563676207,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-06-18 16:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 68.81705096809256,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 10
+      },
+      {
+        "date": "2023-08-27 16:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 68.18936498154231,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 12
+      },
+      {
+        "date": "2023-11-19 16:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 67.58595998203988,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 14
+      }
+    ],
+    "PATIENT009": [
+      {
+        "date": "2023-01-01 18:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 66.24336127441909,
+        "disease_state": "stable",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-01-29 18:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 66.04537445797082,
+        "disease_state": "stable",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-02-26 18:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 65.31071965647793,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-04-23 18:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 63.38453502651122,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-06-18 18:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 62.635970304227065,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 10
+      },
+      {
+        "date": "2023-08-27 18:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 63.93820068178282,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-10-22 18:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 63.87033308216946,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-12-17 18:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 63.41769538852001,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 10
+      }
+    ],
+    "PATIENT010": [
+      {
+        "date": "2023-01-01 20:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 64.80986381229803,
+        "disease_state": "stable",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-01-29 20:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 64.17217028611259,
+        "disease_state": "stable",
+        "phase": "loading",
+        "interval": 4
+      },
+      {
+        "date": "2023-02-26 20:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 63.83717974958242,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-04-23 20:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 64.39217781498758,
+        "disease_state": "stable",
+        "phase": "maintenance",
+        "interval": 10
+      },
+      {
+        "date": "2023-07-02 20:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 63.23043482519119,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-08-27 20:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 61.82403558988838,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-10-22 20:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 62.509250125352004,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      },
+      {
+        "date": "2023-12-17 20:00:00",
+        "type": "regular_visit",
+        "actions": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "baseline_vision": 65,
+        "vision": 63.699797703563604,
+        "disease_state": "active",
+        "phase": "maintenance",
+        "interval": 8
+      }
+    ]
+  }
+}

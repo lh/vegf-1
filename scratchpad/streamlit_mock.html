@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Streamlit Discontinuation Analysis</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    
+    .sidebar {
+      width: 250px;
+      background-color: #262730;
+      color: white;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      max-width: calc(100% - 290px);
+    }
+    
+    h1 {
+      color: #0e1117;
+      margin-top: 0;
+    }
+    
+    h2 {
+      color: #0e1117;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 10px;
+      margin-top: 30px;
+    }
+    
+    h3 {
+      color: #0e1117;
+      margin-top: 20px;
+    }
+    
+    p {
+      color: #555;
+      line-height: 1.5;
+    }
+    
+    .checkbox {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .checkbox input {
+      margin-right: 10px;
+    }
+    
+    .select-box {
+      width: 100%;
+      padding: 5px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+    }
+    
+    .text-input {
+      width: 100%;
+      padding: 5px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+    }
+    
+    .sidebar-header {
+      font-weight: bold;
+      margin-bottom: 15px;
+      margin-top: 20px;
+      font-size: 16px;
+    }
+    
+    .metrics-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 20px 0;
+    }
+    
+    .metric-card {
+      background-color: white;
+      padding: 15px;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      flex: 1;
+      margin: 0 10px;
+      text-align: center;
+    }
+    
+    .metric-title {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 5px;
+    }
+    
+    .metric-value {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      background-color: white;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .data-table th,
+    .data-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .data-table th {
+      background-color: #f7f7f7;
+      font-weight: 600;
+    }
+    
+    .data-table tr:hover {
+      background-color: #f9f9f9;
+    }
+    
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+    
+    .caption {
+      font-size: 12px;
+      color: #777;
+      margin-top: 20px;
+      font-style: italic;
+    }
+    
+    hr {
+      border: none;
+      border-top: 1px solid #444;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">Visualization Controls</div>
+    
+    <div class="checkbox">
+      <input type="checkbox" id="showPercentages" checked>
+      <label for="showPercentages">Show Retreatment Percentages</label>
+    </div>
+    
+    <div class="checkbox">
+      <input type="checkbox" id="showTotals" checked>
+      <label for="showTotals">Show Category Totals</label>
+    </div>
+    
+    <div class="sidebar-header">Color Theme</div>
+    <select class="select-box">
+      <option>Blue/Red (Default)</option>
+      <option>Green/Purple</option>
+      <option>Teal/Orange</option>
+    </select>
+    
+    <div class="sidebar-header">Custom Chart Title</div>
+    <input type="text" class="text-input" value="Discontinuation Reasons by Retreatment Status">
+    
+    <hr>
+    <div class="caption">Data Source: Simulation Results</div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <h1>Discontinuation and Retreatment Analysis</h1>
+    <p>This dashboard visualizes patient discontinuation reasons and retreatment status from simulation results.</p>
+    
+    <img src="streamlit_discontinuation_enhanced.png" alt="Discontinuation Chart">
+    
+    <h2>Detailed Analysis</h2>
+    
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-title">Total Discontinuations</div>
+        <div class="metric-value">808</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Total Retreated</div>
+        <div class="metric-value">395</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Total Not Retreated</div>
+        <div class="metric-value">413</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title">Overall Retreat Rate</div>
+        <div class="metric-value">48.9%</div>
+      </div>
+    </div>
+    
+    <h3>Discontinuation and Retreatment Data</h3>
+    
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Discontinuation Reason</th>
+          <th>Retreated</th>
+          <th>Not Retreated</th>
+          <th>Total</th>
+          <th>Retreat Rate</th>
+          <th>% of All Discontinuations</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Administrative</td>
+          <td>4</td>
+          <td>10</td>
+          <td>14</td>
+          <td>28.6%</td>
+          <td>1.7%</td>
+        </tr>
+        <tr>
+          <td>Not Renewed</td>
+          <td>19</td>
+          <td>108</td>
+          <td>127</td>
+          <td>15.0%</td>
+          <td>15.7%</td>
+        </tr>
+        <tr>
+          <td>Planned</td>
+          <td>73</td>
+          <td>49</td>
+          <td>122</td>
+          <td>59.8%</td>
+          <td>15.1%</td>
+        </tr>
+        <tr>
+          <td>Premature</td>
+          <td>300</td>
+          <td>245</td>
+          <td>545</td>
+          <td>55.0%</td>
+          <td>67.5%</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <h2>About the Data</h2>
+    <p>This visualization shows the distribution of patient discontinuations by reason and retreatment status. 
+      The chart highlights patterns in retreatment for different discontinuation types:</p>
+    <ul>
+      <li><strong>Retreat Rate:</strong> The percentage of patients with a specific discontinuation reason who were retreated</li>
+      <li><strong>% of All Discontinuations:</strong> The proportion of each discontinuation reason across all discontinued patients</li>
+    </ul>
+  </div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+
+protocol: "treat_and_extend"
+simulation_type: "ABS"
+num_patients: 2
+duration_days: 30
+random_seed: 42
+verbose: true
+start_date: "2024-01-01"
+parameters:
+  population_size: 2
+  simulation_duration_years: 0.1
+  discontinuation:
+    enabled: true
+    criteria:
+      stable_max_interval:
+        consecutive_visits: 3
+        probability: 0.2
+      random_administrative:
+        annual_probability: 0.05

@@ -1,0 +1,242 @@
+"""
+R script template for visualization.
+
+This module contains the R script template used for creating
+high-quality visualizations with ggplot2.
+"""
+
+R_SCRIPT_TEMPLATE = """#!/usr/bin/env Rscript
+
+# R Visualization Script for APE: AMD Protocol Explorer
+# This script generates high-quality visualizations using ggplot2
+# following Edward Tufte design principles.
+
+# Check for and install required packages if needed
+required_packages <- c("ggplot2", "optparse", "lubridate", "scales", "dplyr", "tidyr")
+new_packages <- required_packages[!(required_packages %in% installed.packages()[,"Package"])]
+if(length(new_packages)) install.packages(new_packages, repos = "https://cran.r-project.org")
+
+# Load libraries
+library(ggplot2)
+library(optparse)
+library(lubridate)
+library(scales)
+library(dplyr)
+library(tidyr)
+
+# Parse command line arguments
+option_list <- list(
+  make_option("--data", type="character", help="Path to CSV data file"),
+  make_option("--output", type="character", help="Path to save output visualization"),
+  make_option("--type", type="character", default="enrollment", help="Type of visualization to create"),
+  make_option("--width", type="integer", default=10, help="Width of the output image in inches"),
+  make_option("--height", type="integer", default=5, help="Height of the output image in inches"),
+  make_option("--dpi", type="integer", default=120, help="Resolution of the output image in DPI"),
+  make_option("--theme", type="character", default="tufte", help="Visualization theme (tufte, minimal, classic)")
+)
+
+opt <- parse_args(OptionParser(option_list=option_list))
+
+# Create a Tufte-inspired theme
+theme_tufte_enhanced <- function(base_size = 11, base_family = "") {
+  half_line <- base_size / 2
+  
+  theme_minimal(base_size = base_size, base_family = base_family) +
+    theme(
+      # Remove most background elements
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.major.y = element_line(color = "#f0f0f0"),
+      
+      # Minimize axis lines and ticks
+      axis.line.x = element_line(color = "black", size = 0.3),
+      axis.ticks.x = element_line(color = "black", size = 0.3),
+      axis.ticks.length = unit(half_line / 2, "pt"),
+      
+      # Text elements
+      axis.title = element_text(size = rel(0.9), hjust = 0),
+      axis.text = element_text(size = rel(0.8)),
+      plot.title = element_text(size = rel(1.2), hjust = 0, face = "bold"),
+      plot.subtitle = element_text(size = rel(0.9), hjust = 0, color = "grey30"),
+      plot.caption = element_text(size = rel(0.7), color = "grey30", hjust = 1),
+      
+      # Margins
+      plot.margin = margin(half_line, half_line, half_line, half_line),
+      
+      # Legend
+      legend.background = element_blank(),
+      legend.key = element_blank(),
+      legend.position = "top"
+    )
+}
+
+# Function to create enrollment visualization
+create_enrollment_visualization <- function(data_path, output_path) {
+  # Read data
+  data <- read.csv(data_path)
+  
+  # Convert enrollment_date to proper date format
+  data$enrollment_date <- as.Date(data$enrollment_date)
+  
+  # Aggregate by month
+  monthly_data <- data %>%
+    mutate(month = floor_date(enrollment_date, "month")) %>%
+    count(month) %>%
+    arrange(month)
+  
+  # Create the plot with Tufte-inspired design
+  p <- ggplot(monthly_data, aes(x = month, y = n)) +
+    geom_bar(stat = "identity", fill = "#4682B4", alpha = 0.8) +
+    theme_tufte_enhanced() +
+    # Labels
+    labs(
+      title = "Patient Enrollment Over Time",
+      subtitle = paste0("Total of ", nrow(data), " patients enrolled"),
+      x = "Month",
+      y = "Number of Patients",
+      caption = "Data source: Staggered enrollment simulation"
+    ) +
+    # Format x-axis
+    scale_x_date(
+      date_breaks = "1 month",
+      date_labels = "%b %Y",
+      expand = expansion(mult = c(0.02, 0.02))
+    )
+  
+  # Save to file using direct device rather than Cairo
+  ggsave(output_path, plot = p, width = opt$width, height = opt$height, dpi = opt$dpi)
+  
+  cat("Visualization saved to:", output_path, "\\n")
+}
+
+# Function to create visual acuity over time visualization
+create_va_over_time_visualization <- function(data_path, output_path) {
+  # Read data
+  data <- read.csv(data_path)
+  
+  # Convert date/time to proper format if needed
+  if ("time" %in% colnames(data)) {
+    data$time <- as.numeric(data$time)
+  }
+  
+  # Create the plot
+  p <- ggplot(data, aes(x = time, y = visual_acuity)) +
+    geom_line(color = "#4682B4", size = 1) +
+    geom_point(color = "#4682B4", size = 2, alpha = 0.7) +
+    theme_tufte_enhanced() +
+    # Labels
+    labs(
+      title = "Mean Visual Acuity Over Time",
+      subtitle = "Change in visual acuity throughout simulation period",
+      x = "Time (weeks)",
+      y = "Visual Acuity",
+      caption = "Data source: AMD Protocol Explorer"
+    )
+  
+  # Save to file using direct device
+  ggsave(output_path, plot = p, width = opt$width, height = opt$height, dpi = opt$dpi)
+  
+  cat("VA visualization saved to:", output_path, "\\n")
+}
+
+# Function to create dual timeframe visualization
+create_dual_timeframe_visualization <- function(data_path, output_path) {
+  # Read data
+  data <- read.csv(data_path)
+  
+  # Check if we have both calendar and patient time data
+  has_calendar_time <- "calendar_time" %in% colnames(data) && "calendar_va" %in% colnames(data)
+  has_patient_time <- "patient_time" %in% colnames(data) && "patient_va" %in% colnames(data)
+  
+  if (!has_calendar_time || !has_patient_time) {
+    stop("Data must include both calendar_time/calendar_va and patient_time/patient_va columns")
+  }
+  
+  # Reshape data to long format
+  long_data <- data %>%
+    pivot_longer(
+      cols = c(calendar_va, patient_va),
+      names_to = "metric_type",
+      values_to = "visual_acuity"
+    ) %>%
+    mutate(
+      time = if_else(metric_type == "calendar_va", calendar_time, patient_time),
+      time_type = if_else(metric_type == "calendar_va", "Calendar Time (months)", "Patient Time (weeks)")
+    )
+  
+  # Create the plot
+  p <- ggplot(long_data, aes(x = time, y = visual_acuity, color = time_type)) +
+    geom_line(size = 1) +
+    geom_point(size = 2, alpha = 0.7) +
+    facet_wrap(~ time_type, scales = "free_x") +
+    theme_tufte_enhanced() +
+    scale_color_manual(values = c("Calendar Time (months)" = "#4682B4", "Patient Time (weeks)" = "#6A5ACD")) +
+    # Labels
+    labs(
+      title = "Visual Acuity by Calendar vs. Patient Time",
+      subtitle = "Comparing time reference frames for acuity progression",
+      y = "Visual Acuity",
+      caption = "Data source: AMD Protocol Explorer"
+    ) +
+    theme(
+      strip.background = element_blank(),
+      strip.text = element_text(face = "bold"),
+      legend.position = "none"
+    )
+  
+  # Save to file using direct device
+  ggsave(output_path, plot = p, width = opt$width, height = opt$height, dpi = opt$dpi)
+  
+  cat("Dual timeframe visualization saved to:", output_path, "\\n")
+}
+
+# Function to create discontinuation plot
+create_discontinuation_plot <- function(data_path, output_path) {
+  # Read data
+  data <- read.csv(data_path)
+  
+  # Check required columns
+  required_cols <- c("time", "count", "type")
+  if (!all(required_cols %in% colnames(data))) {
+    stop("Data must include time, count, and type columns")
+  }
+  
+  # Create the plot
+  p <- ggplot(data, aes(x = time, y = count, fill = type)) +
+    geom_bar(stat = "identity", position = "stack", alpha = 0.8) +
+    theme_tufte_enhanced() +
+    scale_fill_brewer(palette = "Blues", direction = -1) +
+    # Labels
+    labs(
+      title = "Discontinuations by Type Over Time",
+      subtitle = "Distribution of discontinuation types throughout simulation",
+      x = "Time (weeks)",
+      y = "Count",
+      fill = "Discontinuation Type",
+      caption = "Data source: AMD Protocol Explorer"
+    )
+  
+  # Save to file using direct device
+  ggsave(output_path, plot = p, width = opt$width, height = opt$height, dpi = opt$dpi)
+  
+  cat("Discontinuation plot saved to:", output_path, "\\n")
+}
+
+# Main execution
+if (is.null(opt$data) || is.null(opt$output)) {
+  stop("Data and output paths are required.")
+}
+
+# Select visualization based on type
+if (opt$type == "enrollment") {
+  create_enrollment_visualization(opt$data, opt$output)
+} else if (opt$type == "va_over_time") {
+  create_va_over_time_visualization(opt$data, opt$output)
+} else if (opt$type == "dual_timeframe") {
+  create_dual_timeframe_visualization(opt$data, opt$output)
+} else if (opt$type == "discontinuation") {
+  create_discontinuation_plot(opt$data, opt$output)
+} else {
+  stop("Unknown visualization type:", opt$type)
+}
+"""

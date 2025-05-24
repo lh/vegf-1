@@ -28,7 +28,7 @@ from simulation.config import SimulationConfig
 from simulation.base import BaseSimulation, Event, SimulationClock
 from simulation.clinical_model import ClinicalModel, DiseaseState
 from simulation.scheduler import ClinicScheduler
-from simulation.vision_models import SimplifiedVisionModel
+from simulation.vision_models import RealisticVisionModel, create_vision_model
 from simulation.discontinuation_manager import DiscontinuationManager
 from simulation.enhanced_discontinuation_manager import EnhancedDiscontinuationManager
 from simulation.clinician import Clinician, ClinicianManager
@@ -298,7 +298,14 @@ class TreatAndExtendABS(BaseSimulation):
         # Initialize components
         self.agents = {}
         self.clinical_model = ClinicalModel(self.config)
-        self.vision_model = SimplifiedVisionModel(self.config)
+        
+        # Use the new RealisticVisionModel instead of SimplifiedVisionModel
+        # Or use the factory function to allow configuration-based model selection
+        vision_model_type = self.config.parameters.get('vision_model_type', 'realistic')
+        if vision_model_type == 'simplified':
+            self.vision_model = create_vision_model('simplified', self.config)
+        else:
+            self.vision_model = create_vision_model('realistic', self.config)
         
         # Initialize clinician manager
         clinician_config = self.config.parameters.get("clinicians", {})
@@ -324,6 +331,16 @@ class TreatAndExtendABS(BaseSimulation):
         else:
             # If no parameter file specified, use the discontinuation config from the parameters
             discontinuation_params = self.config.get_treatment_discontinuation_params()
+            
+            # Fix: Create the correct structure with enabled=True
+            if "enabled" not in discontinuation_params:
+                # Ensure enabled flag is present and set to true
+                discontinuation_params["enabled"] = True
+            else:
+                # Ensure it's explicitly True even if present
+                discontinuation_params["enabled"] = True
+                
+            # Directly pass the properly structured parameters
             self.discontinuation_manager = EnhancedDiscontinuationManager({"discontinuation": discontinuation_params})
         
         self.scheduler = ClinicScheduler(
@@ -600,6 +617,27 @@ class TreatAndExtendABS(BaseSimulation):
                     patient.treatment_status["discontinuation_reason"] = reason
                     patient.treatment_status["cessation_type"] = cessation_type
                     self.stats["protocol_discontinuations"] += 1
+                    
+                    # Apply vision changes specific to this type of discontinuation
+                    # Convert Patient object to dictionary for discontinuation manager
+                    patient_state = {
+                        "disease_activity": patient.disease_activity,
+                        "treatment_status": patient.treatment_status,
+                        "disease_characteristics": patient.disease_characteristics,
+                        "vision": {
+                            "current_va": patient.current_vision
+                        }
+                    }
+                    
+                    # Apply vision changes based on cessation type
+                    updated_patient_state = self.discontinuation_manager.apply_vision_changes_after_discontinuation(
+                        patient_state=patient_state,
+                        cessation_type=cessation_type
+                    )
+                    
+                    # Update patient with any vision changes
+                    if "vision" in updated_patient_state and "current_va" in updated_patient_state["vision"]:
+                        patient.current_vision = updated_patient_state["vision"]["current_va"]
                     
                     # Schedule monitoring visits
                     monitoring_events = self.discontinuation_manager.schedule_monitoring(

@@ -1,0 +1,21 @@
+[theme]
+primaryColor = "#FF5A5F"
+backgroundColor = "#F0F2F6"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#262730"
+font = "sans serif"
+
+[server]
+port = 8502
+enableCORS = true  # Changed to true to be compatible with XSRF protection
+enableXsrfProtection = true
+maxUploadSize = 200
+
+[browser]
+gatherUsageStats = false
+serverAddress = "localhost"
+
+[runner]
+fastReruns = true
+
+# Removed deprecated option: showPyplotGlobalUse

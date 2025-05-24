@@ -1,0 +1,130 @@
+[2025-05-11T19:59:33.221Z] Starting APE monitoring
+[2025-05-11T19:59:39.443Z] Navigating to AMD Protocol Explorer...
+[2025-05-11T19:59:40.114Z] CONSOLE log: Gather usage stats:  false
+[2025-05-11T19:59:46.094Z] Home page loaded and screenshot captured
+[2025-05-11T19:59:46.113Z] Puppeteer helpers available: false
+[2025-05-11T19:59:46.113Z] Navigating to Dashboard page...
+[2025-05-11T19:59:46.226Z] ERROR navigating to Dashboard: Node is either not clickable or not an HTMLElement
+[2025-05-11T19:59:46.227Z] Navigating to Run Simulation page...
+[2025-05-11T19:59:46.241Z] ERROR navigating to Run Simulation: Node is either not clickable or not an HTMLElement
+[2025-05-11T19:59:46.241Z] Navigating to Staggered Simulation page...
+[2025-05-11T19:59:46.256Z] ERROR navigating to Staggered Simulation: Node is either not clickable or not an HTMLElement
+[2025-05-11T19:59:46.256Z] Navigating to Patient Explorer page...
+[2025-05-11T19:59:46.265Z] ERROR navigating to Patient Explorer: Node is either not clickable or not an HTMLElement
+[2025-05-11T19:59:46.266Z] Navigating to Reports page...
+[2025-05-11T19:59:46.282Z] ERROR navigating to Reports: Node is either not clickable or not an HTMLElement
+[2025-05-11T19:59:46.282Z] Navigating to About page...
+[2025-05-11T19:59:46.298Z] ERROR navigating to About: Node is either not clickable or not an HTMLElement
+[2025-05-11T19:59:46.299Z] No console errors detected
+[2025-05-11T19:59:46.299Z] Monitoring completed successfully
+[2025-05-11T20:00:40.160Z] Starting APE monitoring
+[2025-05-11T20:00:43.869Z] Navigating to AMD Protocol Explorer...
+[2025-05-11T20:00:44.460Z] CONSOLE log: Gather usage stats:  false
+[2025-05-11T20:00:50.893Z] Home page loaded and screenshot captured
+[2025-05-11T20:00:50.921Z] Saved initial HTML for debugging
+[2025-05-11T20:00:50.922Z] Navigating to Dashboard page...
+[2025-05-11T20:00:51.033Z] Found 8 radio navigation options
+[2025-05-11T20:00:51.048Z] ERROR navigating to Dashboard: Node is either not clickable or not an HTMLElement
+[2025-05-11T20:00:51.143Z] Navigating to Run Simulation page...
+[2025-05-11T20:00:51.146Z] Found 8 radio navigation options
+[2025-05-11T20:00:51.152Z] ERROR navigating to Run Simulation: Node is either not clickable or not an HTMLElement
+[2025-05-11T20:00:51.241Z] Navigating to Staggered Simulation page...
+[2025-05-11T20:00:51.245Z] Found 8 radio navigation options
+[2025-05-11T20:00:51.253Z] ERROR navigating to Staggered Simulation: Node is either not clickable or not an HTMLElement
+[2025-05-11T20:00:51.334Z] Navigating to Patient Explorer page...
+[2025-05-11T20:00:51.336Z] Found 8 radio navigation options
+[2025-05-11T20:00:51.355Z] ERROR navigating to Patient Explorer: Node is either not clickable or not an HTMLElement
+[2025-05-11T20:00:51.466Z] Navigating to Reports page...
+[2025-05-11T20:00:51.470Z] Found 8 radio navigation options
+[2025-05-11T20:00:51.488Z] ERROR navigating to Reports: Node is either not clickable or not an HTMLElement
+[2025-05-11T20:00:51.596Z] Navigating to About page...
+[2025-05-11T20:00:51.599Z] Found 8 radio navigation options
+[2025-05-11T20:00:51.602Z] ERROR navigating to About: Node is either not clickable or not an HTMLElement
+[2025-05-11T20:00:51.685Z] Checking for console errors...
+[2025-05-11T20:00:51.686Z] No console errors detected via evaluation
+[2025-05-11T20:00:51.686Z] Monitoring completed successfully
+[2025-05-11T20:02:01.327Z] Starting APE monitoring
+[2025-05-11T20:02:04.985Z] Navigating to AMD Protocol Explorer...
+[2025-05-11T20:02:05.550Z] CONSOLE log: Gather usage stats:  false
+[2025-05-11T20:02:11.967Z] Home page loaded and screenshot captured
+[2025-05-11T20:02:11.974Z] Saved initial HTML for debugging
+[2025-05-11T20:02:11.974Z] Navigating to Dashboard page...
+[2025-05-11T20:02:12.138Z] ERROR navigating to Dashboard: Node is either not clickable or not an HTMLElement
+[2025-05-11T20:02:12.241Z] Navigating to Run Simulation page...
+[2025-05-11T20:02:12.255Z] ERROR navigating to Run Simulation: Node is either not clickable or not an HTMLElement
+[2025-05-11T20:02:12.339Z] Navigating to Staggered Simulation page...
+[2025-05-11T20:02:12.355Z] ERROR navigating to Staggered Simulation: Node is either not clickable or not an HTMLElement
+[2025-05-11T20:02:12.452Z] Navigating to Patient Explorer page...
+[2025-05-11T20:02:12.457Z] ERROR navigating to Patient Explorer: Node is either not clickable or not an HTMLElement
+[2025-05-11T20:02:12.545Z] Navigating to Reports page...
+[2025-05-11T20:02:12.555Z] ERROR navigating to Reports: Node is either not clickable or not an HTMLElement
+[2025-05-11T20:02:12.641Z] Navigating to About page...
+[2025-05-11T20:02:12.658Z] ERROR navigating to About: Node is either not clickable or not an HTMLElement
+[2025-05-11T20:02:12.740Z] No network errors detected
+[2025-05-11T20:02:12.740Z] Monitoring completed successfully
+[2025-05-11T20:04:41.205Z] Starting APE monitoring
+[2025-05-11T20:04:45.181Z] Navigating to AMD Protocol Explorer...
+[2025-05-11T20:04:45.746Z] CONSOLE log: Gather usage stats:  false
+[2025-05-11T20:04:52.002Z] Home page loaded and screenshot captured
+[2025-05-11T20:04:52.031Z] Saved initial HTML for debugging
+[2025-05-11T20:04:52.047Z] Found navigation sections:
+[
+  {
+    "name": "Navigate to",
+    "index": 0
+  },
+  {
+    "name": "",
+    "index": 1
+  },
+  {
+    "name": "Dashboard",
+    "index": 0
+  },
+  {
+    "name": "Run Simulation",
+    "index": 1
+  },
+  {
+    "name": "Staggered Simulation",
+    "index": 2
+  },
+  {
+    "name": "Patient Explorer",
+    "index": 3
+  },
+  {
+    "name": "Reports",
+    "index": 4
+  },
+  {
+    "name": "About",
+    "index": 5
+  }
+]
+[2025-05-11T20:04:52.048Z] Navigating to Run Simulation page directly...
+[2025-05-11T20:04:52.172Z] ERROR navigating to Run Simulation: Node is either not clickable or not an HTMLElement
+[2025-05-11T20:04:52.305Z] No network errors detected
+[2025-05-11T20:04:52.306Z] UI ALERTS detected:
+[
+  {
+    "type": "info",
+    "message": "Using Fixed Discontinuation Implementation\nThis app is using the fixed discontinuation implementation that properly tracks\nunique patient discontinuations and prevents double-counting.\nThe discontinuation rates shown will be accurate (≤100%)."
+  },
+  {
+    "type": "info",
+    "message": "No simulation results available. Please run a simulation to view results."
+  }
+]
+[2025-05-11T20:04:52.306Z] Monitoring completed successfully
+[2025-05-11T20:06:38.037Z] Starting APE viewer
+[2025-05-11T20:06:41.936Z] Navigating to Streamlit app...
+[2025-05-11T20:06:42.482Z] Browser opened. Please:
+[2025-05-11T20:06:42.483Z] 1. Manually interact with the Streamlit app
+[2025-05-11T20:06:42.483Z] 2. Test different features and navigation
+[2025-05-11T20:06:42.483Z] 3. Check for visual anomalies and errors
+[2025-05-11T20:06:42.483Z] 4. Close the browser when done to save screenshots
+[2025-05-11T20:06:42.483Z] Waiting for you to close the browser...
+[2025-05-11T20:06:42.500Z] CONSOLE log: Gather usage stats:  false
+[2025-05-11T20:06:47.617Z] Initial screenshot captured
+[2025-05-11T20:06:47.700Z] Browser closed, monitoring complete

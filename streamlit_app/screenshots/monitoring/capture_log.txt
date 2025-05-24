@@ -1,0 +1,6 @@
+Starting screenshot capture
+Navigating to home page
+Captured screenshot: 2025-05-11T20-06-11-094Z_home_page.png
+Found 2 UI issues: [{"type":"info","message":"Using Fixed Discontinuation Implementation\nThis app is using the fixed discontinuation implementation that properly tracks\nunique patient discontinuations and prevents double-counting.\nThe discontinuation rates shown will be accurate (≤100%)."},{"type":"info","message":"No simulation results available. Please run a simulation to view results."}]
+Found 2 UI issues: [{"type":"info","message":"Using Fixed Discontinuation Implementation\nThis app is using the fixed discontinuation implementation that properly tracks\nunique patient discontinuations and prevents double-counting.\nThe discontinuation rates shown will be accurate (≤100%)."},{"type":"info","message":"No simulation results available. Please run a simulation to view results."}]
+All screenshots captured, report saved.

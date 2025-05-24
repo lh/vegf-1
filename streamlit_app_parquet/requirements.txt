@@ -1,0 +1,15 @@
+streamlit>=1.25.0
+pandas>=1.5.0
+numpy>=1.22.0
+matplotlib>=3.6.0
+seaborn>=0.12.0
+altair>=5.0.0
+plotly>=5.15.0
+requests>=2.28.0
+PyYAML>=6.0
+pyarrow>=10.0.0
+python-dotenv>=1.0.0
+r-base>=4.0.0  # For Quarto reports
+r-ggplot2>=3.4.0
+r-knitr>=1.40.0
+r-kableExtra>=1.3.4

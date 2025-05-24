@@ -201,6 +201,7 @@ class AgentBasedSimulation(BaseSimulation):
             patient = self.agents[event.patient_id]
             visit_data = patient.state.process_visit(event.time, event.data['actions'], self.clinical_model)
             
+            # Start with basic visit record
             visit_record = {
                 'date': event.time,
                 'type': visit_data['visit_type'],
@@ -209,6 +210,27 @@ class AgentBasedSimulation(BaseSimulation):
                 'vision': visit_data['new_vision'],
                 'disease_state': visit_data['disease_state']
             }
+            
+            # Check if this is a discontinuation visit
+            # Look at the most recent visit in patient state history which should have just been updated
+            if len(patient.state.visit_history) > 0:
+                last_state_visit = patient.state.visit_history[-1]
+                
+                # Copy visualization-specific flags from patient state visit to ABS visit record
+                if 'is_discontinuation_visit' in last_state_visit:
+                    visit_record['is_discontinuation_visit'] = last_state_visit['is_discontinuation_visit']
+                    visit_record['discontinuation_reason'] = last_state_visit.get('discontinuation_reason')
+                
+                if 'is_retreatment' in last_state_visit:
+                    visit_record['is_retreatment'] = last_state_visit['is_retreatment']
+                    visit_record['retreatment_reason'] = last_state_visit.get('retreatment_reason')
+            
+            # Add treatment status info for potential future processing
+            if hasattr(patient, 'treatment_status'):
+                visit_record['treatment_status'] = patient.treatment_status.copy()
+            elif hasattr(patient.state, 'treatment_status'):
+                visit_record['treatment_status'] = patient.state.state['treatment_status'].copy()
+            
             patient.history.append(visit_record)
             
             # Schedule next visit based on protocol
@@ -281,5 +303,5 @@ class AgentBasedSimulation(BaseSimulation):
         """
         return {
             'patients': self.agents,
-            'events': self.clock.event_history
+            'events': self.clock.event_list if hasattr(self.clock, 'event_list') else []
         }

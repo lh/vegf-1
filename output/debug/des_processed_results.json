@@ -1,0 +1,242 @@
+{
+  "simulation_type": "DES",
+  "population_size": 10,
+  "duration_years": 2.0,
+  "enable_clinician_variation": true,
+  "planned_discontinue_prob": 0.9,
+  "admin_discontinue_prob": 0.2,
+  "timestamp": "2025-05-20 18:10:59",
+  "patient_count": 10,
+  "unique_discontinued_patients": 2,
+  "discontinuation_counts": {
+    "Planned": 1,
+    "Administrative": 1,
+    "Not Renewed": 0,
+    "Premature": 0
+  },
+  "total_discontinuations": 2,
+  "retreatments": 2,
+  "raw_discontinuation_stats": {
+    "stable_max_interval_discontinuations": 1,
+    "random_administrative_discontinuations": 1,
+    "treatment_duration_discontinuations": 0,
+    "total_discontinuations": 2,
+    "retreatments": 2,
+    "premature_discontinuations": 0,
+    "retreatments_by_type": {
+      "stable_max_interval": 1,
+      "premature": 0,
+      "random_administrative": 1,
+      "course_complete_but_not_renewed": 0
+    },
+    "unique_patients_tracked": 2,
+    "unique_patients_by_cessation_type": {
+      "random_administrative": 1,
+      "stable_max_interval": 1
+    },
+    "retreatment_rate": 1.0,
+    "retreatment_rates_by_type": {
+      "stable_max_interval": 1.0,
+      "premature": 0.0,
+      "random_administrative": 1.0,
+      "course_complete_but_not_renewed": 0.0
+    },
+    "premature_discontinuation_rate": 0.0,
+    "premature_rate_match": {
+      "target": 0.145,
+      "actual": 0.0,
+      "difference": 0.145,
+      "percentage_difference": 100.0
+    }
+  },
+  "patient_structure_info": [
+    "Patient histories type: dict",
+    "Patient histories count: 10",
+    "Sample patient (ID PATIENT001) type: list",
+    "Sample patient is a list with 11 records",
+    "First record type: dict",
+    "First record keys: ['date', 'actions', 'vision', 'baseline_vision', 'phase', 'type', 'disease_state', 'treatment_status', 'clinician_id']",
+    "Visual acuity attributes found: None"
+  ],
+  "va_extraction_stats": {
+    "total_patients": 10,
+    "patients_with_acuity": 10,
+    "total_va_datapoints": 104,
+    "extraction_failures": {}
+  },
+  "mean_va_data": [
+    {
+      "time": 0,
+      "visual_acuity": 66.18433999566896,
+      "std_error": 0.35688337245152907,
+      "sample_size": 10,
+      "visual_acuity_raw": 66.18433999566896,
+      "visual_acuity_smoothed": 66.18433999566896
+    },
+    {
+      "time": 1,
+      "visual_acuity": 67.48202266790386,
+      "std_error": 0.4525238513581443,
+      "sample_size": 10,
+      "visual_acuity_raw": 67.6055147130232,
+      "visual_acuity_smoothed": 67.48202266790386
+    },
+    {
+      "time": 2,
+      "visual_acuity": 68.31753850350185,
+      "std_error": 0.37494298656243935,
+      "sample_size": 10,
+      "visual_acuity_raw": 68.53272124990009,
+      "visual_acuity_smoothed": 68.31753850350185
+    },
+    {
+      "time": 4,
+      "visual_acuity": 68.72619019688983,
+      "std_error": 0.3871679820672253,
+      "sample_size": 10,
+      "visual_acuity_raw": 68.59919680118404,
+      "visual_acuity_smoothed": 68.72619019688983
+    },
+    {
+      "time": 6,
+      "visual_acuity": 69.14117340695778,
+      "std_error": 0.6269158923593354,
+      "sample_size": 10,
+      "visual_acuity_raw": 69.17364593529118,
+      "visual_acuity_smoothed": 69.14117340695778
+    },
+    {
+      "time": 7,
+      "visual_acuity": 69.88882807691938,
+      "std_error": 2.9799939252367156,
+      "sample_size": 2,
+      "visual_acuity_raw": 71.52633115249242,
+      "visual_acuity_smoothed": 69.88882807691938
+    },
+    {
+      "time": 8,
+      "visual_acuity": 69.94165669390398,
+      "std_error": 0.7541836014726421,
+      "sample_size": 4,
+      "visual_acuity_raw": 70.03928035541686,
+      "visual_acuity_smoothed": 69.94165669390398
+    },
+    {
+      "time": 9,
+      "visual_acuity": 69.66204841668953,
+      "std_error": 0.6560607699833154,
+      "sample_size": 7,
+      "visual_acuity_raw": 69.37732266400684,
+      "visual_acuity_smoothed": 69.66204841668953
+    },
+    {
+      "time": 10,
+      "visual_acuity": 69.80330812736773,
+      "std_error": 2.193917670683744,
+      "sample_size": 3,
+      "visual_acuity_raw": 70.48779267757236,
+      "visual_acuity_smoothed": 69.80330812736773
+    },
+    {
+      "time": 11,
+      "visual_acuity": 69.61102657323109,
+      "std_error": 0.8175359485566388,
+      "sample_size": 7,
+      "visual_acuity_raw": 69.6425925476961,
+      "visual_acuity_smoothed": 69.61102657323109
+    },
+    {
+      "time": 12,
+      "visual_acuity": 69.05048091422071,
+      "std_error": 0.9813130289168046,
+      "sample_size": 5,
+      "visual_acuity_raw": 68.99658218212429,
+      "visual_acuity_smoothed": 69.05048091422071
+    },
+    {
+      "time": 13,
+      "visual_acuity": 69.13822656334001,
+      "std_error": 1.2348101288031723,
+      "sample_size": 3,
+      "visual_acuity_raw": 67.84854954309957,
+      "visual_acuity_smoothed": 69.13822656334001
+    },
+    {
+      "time": 14,
+      "visual_acuity": 69.37167212646392,
+      "std_error": 1.2994054275917297,
+      "sample_size": 4,
+      "visual_acuity_raw": 71.24979757022035,
+      "visual_acuity_smoothed": 69.37167212646392
+    },
+    {
+      "time": 15,
+      "visual_acuity": 68.95270873012608,
+      "std_error": 1.2363350856054436,
+      "sample_size": 5,
+      "visual_acuity_raw": 67.2805449664722,
+      "visual_acuity_smoothed": 68.95270873012608
+    },
+    {
+      "time": 16,
+      "visual_acuity": 69.65310010472153,
+      "std_error": 1.3546908204646289,
+      "sample_size": 3,
+      "visual_acuity_raw": 71.46380282217991,
+      "visual_acuity_smoothed": 69.65310010472153
+    },
+    {
+      "time": 17,
+      "visual_acuity": 70.85259693323427,
+      "std_error": 1.503337382049484,
+      "sample_size": 3,
+      "visual_acuity_raw": 69.98595323355367,
+      "visual_acuity_smoothed": 70.85259693323427
+    },
+    {
+      "time": 18,
+      "visual_acuity": 70.97486868239616,
+      "std_error": 1.11859043241542,
+      "sample_size": 2,
+      "visual_acuity_raw": 72.53571919885763,
+      "visual_acuity_smoothed": 70.97486868239616
+    },
+    {
+      "time": 19,
+      "visual_acuity": 70.65704166514699,
+      "std_error": 1.056572880239013,
+      "sample_size": 3,
+      "visual_acuity_raw": 69.88265010929005,
+      "visual_acuity_smoothed": 70.65704166514699
+    },
+    {
+      "time": 21,
+      "visual_acuity": 70.34949285197139,
+      "std_error": 2.359701507135138,
+      "sample_size": 2,
+      "visual_acuity_raw": 71.10153879900722,
+      "visual_acuity_smoothed": 70.34949285197139
+    },
+    {
+      "time": 24,
+      "visual_acuity": 68.74183729187209,
+      "std_error": NaN,
+      "sample_size": 1,
+      "visual_acuity_raw": 68.74183729187209,
+      "visual_acuity_smoothed": 68.74183729187209
+    }
+  ],
+  "va_data_summary": {
+    "datapoints_count": 104,
+    "unique_timepoints": 20,
+    "patients_with_data": 10,
+    "min_va": 64.42924110880189,
+    "max_va": 74.50632507772914,
+    "mean_va": 68.92991155411346,
+    "time_range_months": 24,
+    "smoothing_applied": true
+  },
+  "mean_injections": 10.0,
+  "total_injections": 100,
+  "data_path": "/var/folders/cf/hfdshtps1bzbtzd3txx2ybmr0000gn/T/tmpxuxtfh80.json"
+}

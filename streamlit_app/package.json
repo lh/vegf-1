@@ -1,0 +1,26 @@
+{
+  "name": "amd-protocol-explorer-puppeteer",
+  "version": "1.0.0",
+  "description": "Puppeteer testing tools for AMD Protocol Explorer",
+  "main": "test_puppeteer_integration.js",
+  "scripts": {
+    "test": "node test_puppeteer_integration.js",
+    "test:improved": "node improved_puppeteer_test.js",
+    "visual:baseline": "node visual_regression.js --mode=baseline",
+    "visual:test": "node visual_regression.js --mode=test",
+    "test:playwright": "node playwright_streamlit.js",
+    "postinstall": "npx playwright install chromium",
+    "setup:playwright": "npx playwright install chromium"
+  },
+  "dependencies": {
+    "pixelmatch": "^5.3.0",
+    "pngjs": "^7.0.0",
+    "puppeteer": "^19.11.0",
+    "playwright": "^1.40.0",
+    "@executeautomation/playwright-mcp-server": "latest"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "private": true
+}

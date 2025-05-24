@@ -1,0 +1,57 @@
+\subsection{Premature Discontinuation Analysis}
+
+To ensure our simulation accurately captures real-world treatment patterns, we conducted a detailed analysis of premature discontinuations in the Eylea database. We defined premature discontinuations as cases where patients with good visual acuity (>20 letters) transitioned abruptly from regular treatment intervals ($\leq$2 months) to extended intervals ($\geq$6 months), suggesting a potential non-optimal treatment cessation.
+
+\subsubsection{Methodology}
+
+We analyzed the real-world dataset using the following criteria:
+\begin{itemize}
+    \item Visual acuity better than 20 letters at the time of the treatment pattern change
+    \item Treatment interval increasing from $\leq$60 days (regular treatment) to $\geq$180 days (extended interval)
+    \item Two separate analyses: one including all identified cases, and another excluding discontinuations occurring around the one-year mark (330-390 days from treatment start), as these would be classified as "course complete but not renewed" rather than true premature discontinuations
+\end{itemize}
+
+\subsubsection{Key Findings}
+
+Our analysis revealed 266 true premature discontinuations affecting 249 unique patients, with the following characteristics:
+
+\begin{itemize}
+    \item \textbf{Visual Acuity at Discontinuation:} Mean VA of 61.7 letters (median 65.0 letters), indicating good vision at the time of discontinuation
+    
+    \item \textbf{Treatment Intervals:} Mean interval before discontinuation of 52.1 days ($\sim$7.5 weeks) increasing to 411.5 days ($\sim$59 weeks), representing an approximately 8-fold increase
+    
+    \item \textbf{Vision Impact:} Mean VA change of -9.4 letters following premature discontinuation, indicating significant vision loss
+\end{itemize}
+
+Notably, excluding discontinuations at the one-year mark affected only 16 cases (less than 6\% of the total), suggesting that true premature discontinuations are largely distinct from planned end-of-course discontinuations.
+
+\subsubsection{Implementation in Simulation}
+
+Based on these findings, we implemented a specific "premature discontinuation" type in our simulation model with the following parameters:
+
+\begin{table}[h]
+\centering
+\caption{Premature Discontinuation Parameters}
+\label{tab:premature_disc_parameters}
+\begin{tabular}{p{4.5cm}p{5cm}p{3cm}}
+\hline
+\textbf{Parameter} & \textbf{Value} & \textbf{Source} \\
+\hline
+Eligibility & VA $>$ 20 letters \& interval $\leq$ 60 days & Real-world analysis \\
+Annual probability & 10-15\% & Real-world frequency \\
+Vision change & -9.4 letters (mean) & Real-world analysis \\
+Monitoring frequency & More frequent than stable discontinuations & Clinical guidance \\
+Retreatment probability & Higher than stable discontinuations & Clinical implications \\
+\hline
+\end{tabular}
+\end{table}
+
+The simulation model distinguishes between four discontinuation types:
+\begin{itemize}
+    \item \textbf{Stable max interval:} Protocol-based discontinuations after reaching and maintaining maximum treatment interval with stable disease
+    \item \textbf{Course complete but not renewed:} Discontinuations at the end of a standard course of treatment (typically around one year)
+    \item \textbf{Premature:} Non-protocol based early discontinuations despite good vision and regular treatment
+    \item \textbf{Administrative:} Random discontinuations due to insurance changes, relocation, or other non-clinical factors
+\end{itemize}
+
+This refined approach allows our simulation to more accurately reflect the diverse treatment patterns observed in real-world practice, particularly the significant impact of premature discontinuations on visual outcomes.

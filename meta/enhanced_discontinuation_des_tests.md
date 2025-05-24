@@ -40,7 +40,7 @@ The test suite includes tests for:
 
 2. **Administrative Discontinuation**: Tests that random administrative discontinuations occur with the expected probability
 
-3. **Treatment Duration Discontinuation**: Tests that patients are discontinued after the threshold treatment duration
+3. **Course Complete Discontinuation**: Tests that patients are discontinued after completing a standard course of treatment
 
 4. **Premature Discontinuation**: Tests that premature discontinuations can occur before max interval is reached
 

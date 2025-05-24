@@ -1,0 +1,35 @@
+{
+  "original_recurrences": {
+    "total": 2311,
+    "by_type": {
+      "stable_max_interval": 0,
+      "random_administrative": 0,
+      "treatment_duration": 0,
+      "premature": 0
+    },
+    "unique_count": 654
+  },
+  "retreatment_data_found": {
+    "retreatments": 2311,
+    "retreatments_by_type": {
+      "stable_max_interval": 210,
+      "premature": 1585,
+      "random_administrative": 3,
+      "course_complete_but_not_renewed": 513
+    },
+    "retreatment_rate": 2.7349112426035505,
+    "retreatment_rates_by_type": {
+      "stable_max_interval": 2.625,
+      "premature": 2.871376811594203,
+      "random_administrative": 0.15789473684210525,
+      "course_complete_but_not_renewed": 2.6443298969072164
+    },
+    "unique_patient_retreatments": 654
+  },
+  "manual_counts": {
+    "Planned": 0,
+    "Administrative": 0,
+    "Not Renewed": 0,
+    "Premature": 0
+  }
+}
