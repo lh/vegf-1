@@ -337,7 +337,7 @@ with tab3:
         max_days = max([max([(v['date'] - patient.visit_history[0]['date']).days 
                             for v in patient.visit_history] or [0]) 
                        for _, patient in sample_patients])
-        time_ticks = StyleConstants.get_time_ticks(max_days, unit='days')
+        time_ticks = StyleConstants.get_time_ticks(max_days, preferred_unit='days')
         ax.set_xticks(time_ticks)
     else:
         fig, ax = plt.subplots(figsize=(12, 8))
@@ -409,7 +409,7 @@ with tab3:
         
         # Set appropriate time ticks
         max_months = max(months) if months else 12
-        time_ticks = StyleConstants.get_time_ticks(max_months * 30.44, unit='days')
+        time_ticks = StyleConstants.get_time_ticks(max_months * 30.44, preferred_unit='months')
         # Convert back to months for display
         month_ticks = [t / 30.44 for t in time_ticks]
         ax.set_xticks(month_ticks)

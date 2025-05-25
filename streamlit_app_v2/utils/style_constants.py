@@ -136,11 +136,19 @@ class StyleConstants:
             return f"{value:.1f}"
     
     @staticmethod
-    def get_vision_ticks(data_min: float, data_max: float) -> List[int]:
-        """Get appropriate vision tick marks."""
-        # Always use our standard vision ticks
-        return [t for t in StyleConstants.VISION_SCALE['major_ticks'] 
-                if data_min - 5 <= t <= data_max + 5]
+    def get_vision_ticks(data_min: float = None, data_max: float = None) -> List[int]:
+        """Get appropriate vision tick marks.
+        
+        If no bounds provided, returns all standard ticks.
+        If bounds provided, returns only ticks within range.
+        """
+        if data_min is None or data_max is None:
+            # Return all standard vision ticks
+            return StyleConstants.VISION_SCALE['major_ticks']
+        else:
+            # Return only ticks within the data range (with small buffer)
+            return [t for t in StyleConstants.VISION_SCALE['major_ticks'] 
+                    if data_min - 5 <= t <= data_max + 5]
     
     @staticmethod
     def get_time_ticks(days: int, preferred_unit: str = 'weeks') -> List[int]:
