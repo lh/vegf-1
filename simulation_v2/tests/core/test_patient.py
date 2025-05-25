@@ -90,12 +90,12 @@ class TestPatient:
         )
         assert patient.injection_count == 2
         
-    def test_weeks_since_last_injection(self):
-        """Should calculate weeks since last injection."""
+    def test_days_since_last_injection(self):
+        """Should calculate days since last injection."""
         patient = Patient("P005")
         
         # No injections yet
-        assert patient.weeks_since_last_injection is None
+        assert patient.days_since_last_injection is None
         
         # First injection
         patient.record_visit(
@@ -105,9 +105,9 @@ class TestPatient:
             vision=70
         )
         
-        # Check after 4 weeks
-        weeks = patient.weeks_since_last_injection_at(datetime(2024, 1, 29))
-        assert weeks == 4
+        # Check after 28 days (4 weeks)
+        days = patient.days_since_last_injection_at(datetime(2024, 1, 29))
+        assert days == 28
         
         # Another injection
         patient.record_visit(
@@ -118,8 +118,12 @@ class TestPatient:
         )
         
         # Should measure from most recent injection
+        days = patient.days_since_last_injection_at(datetime(2024, 2, 15))
+        assert days == 14
+        
+        # Test convenience method for weeks
         weeks = patient.weeks_since_last_injection_at(datetime(2024, 2, 15))
-        assert weeks == 2
+        assert weeks == 2.0
         
     def test_discontinuation(self):
         """Should track discontinuation status."""

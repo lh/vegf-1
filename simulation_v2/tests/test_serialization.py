@@ -46,7 +46,7 @@ class TestVisitSerialization:
             'date': datetime(2024, 1, 15),
             'disease_state': DiseaseState.ACTIVE,
             'treatment_given': True,
-            'vision': 72.5,
+            'vision': 72,
             'discontinuation_type': None
         }
         
@@ -56,7 +56,7 @@ class TestVisitSerialization:
         assert serialized['treatment_decision'] == 'inject'
         
         # Check other fields
-        assert serialized['vision'] == 72.5
+        assert serialized['vision'] == 72
         assert serialized['date'] == datetime(2024, 1, 15)
         assert serialized['discontinuation_type'] == 'none'
         
@@ -70,7 +70,7 @@ class TestVisitSerialization:
             'date': datetime(2024, 6, 1),
             'disease_state': DiseaseState.STABLE,
             'treatment_given': False,
-            'vision': 75.0,
+            'vision': 75,
             'discontinuation_type': 'planned'
         }
         
@@ -85,7 +85,7 @@ class TestVisitSerialization:
             'date': datetime(2024, 7, 1),
             'disease_state': DiseaseState.ACTIVE,  # Still active
             'treatment_given': False,  # But monitoring only
-            'vision': 71.0,
+            'vision': 71,
             'discontinuation_type': None,
             'visit_type': 'monitoring'
         }
@@ -167,4 +167,4 @@ class TestPatientSerialization:
         
         # Should be Parquet-compatible (no enums)
         assert df['treatment_decision'].dtype == 'object'  # string
-        assert df['vision'].dtype == 'float64'
+        assert df['vision'].dtype == 'int64'  # VA is measured in ETDRS letters (integers)
