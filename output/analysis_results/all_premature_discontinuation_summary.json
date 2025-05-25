@@ -1,0 +1,10 @@
+{
+  "total_premature_discontinuations": 282,
+  "unique_patients": 264,
+  "unique_patient_eyes": 282,
+  "mean_va_at_discontinuation": 62.336879432624116,
+  "median_va_at_discontinuation": 65.0,
+  "mean_interval_before": 52.5,
+  "mean_interval_after": 418.85460992907804,
+  "mean_va_change": -9.82213438735178
+}

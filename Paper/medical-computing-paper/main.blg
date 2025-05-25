@@ -1,0 +1,49 @@
+This is BibTeX, Version 0.99d (TeX Live 2023)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: main.aux
+The style file: plainnat.bst
+Database file #1: references.bib
+Warning--to sort, need author or key in RanibizumabBevacizumabNeovascular
+Warning--empty year in RanibizumabBevacizumabNeovascular
+You've used 8 entries,
+            2773 wiz_defined-function locations,
+            656 strings with 9516 characters,
+and the built_in function-call counts, 8883 in all, are:
+= -- 680
+> -- 1083
+< -- 0
++ -- 362
+- -- 354
+* -- 971
+:= -- 1485
+add.period$ -- 37
+call.type$ -- 8
+change.case$ -- 142
+chr.to.int$ -- 8
+cite$ -- 19
+duplicate$ -- 162
+empty$ -- 325
+format.name$ -- 361
+if$ -- 1707
+int.to.chr$ -- 1
+int.to.str$ -- 1
+missing$ -- 7
+newline$ -- 61
+num.names$ -- 28
+pop$ -- 265
+preamble$ -- 1
+purify$ -- 134
+quote$ -- 0
+skip$ -- 208
+stack$ -- 0
+substring$ -- 198
+swap$ -- 15
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 88
+warning$ -- 2
+while$ -- 35
+width$ -- 0
+write$ -- 135
+(There were 2 warnings)

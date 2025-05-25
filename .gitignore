@@ -23,6 +23,7 @@ var/
 input_data/*
 *.csv
 *.sql
+*.parquet
 
 # Exceptions for summaries and graphs
 !*/graphs/*.png
@@ -53,6 +54,42 @@ docs/**/*.html
 docs/**/*.txt
 docs/**/*.js
 
-# The Paper folder has its own git repository
-Paper/
+# Paper directory is now included in this repository
+# Paper/
 **/.claude/settings.local.json
+
+**/CLAUDE.local.md
+
+# Large simulation result files
+output/simulation_results/ape_simulation_*.json
+
+# Node.js dependencies
+node_modules/
+**/node_modules/
+streamlit_app/node_modules/
+package-lock.json
+yarn.lock
+
+# Debug files and temporary data
+debug_*.json
+**/debug_*.json
+debug_output/
+*_debug_data.json
+streamgraph_phase_data_*.json
+large_streamgraph_data_*.json
+**/playwright-mcp-server*.log
+**/playwright-mcp-server.pid
+
+# Generated test data and temp files
+*_test_data.json
+simulation_test_results.json
+enhanced_streamgraph_test_data.json
+full_streamgraph_test_data.json
+streamgraph_debug_data.json
+patient_data_check.json
+test_discontinuation_data.json
+test_patient_data.json
+
+# Virtual environments
+venv/
+.venv/

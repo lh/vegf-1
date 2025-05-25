@@ -9,7 +9,7 @@ The enhanced discontinuation model extends the existing discontinuation framewor
 1. **Multiple Discontinuation Types**
    - Protocol-based (stable at max interval)
    - Administrative (random events like insurance issues)
-   - Time-based (after fixed treatment duration)
+   - Course complete but not renewed (end of standard treatment course)
    - Premature (non-adherence to protocol)
 
 2. **Time-dependent Recurrence**

@@ -1,0 +1,470 @@
+This is LuaHBTeX, Version 1.16.0 (TeX Live 2023)  (format=lualatex 2024.3.3)  3 MAY 2025 18:31
+ restricted system commands enabled.
+ file:line:error style messages enabled.
+**/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review
+(/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex
+LaTeX2e <2022-11-01> patch level 1
+Lua module: luaotfload 2022-10-03 3.23 Lua based OpenType font support
+Lua module: lualibs 2022-10-04 2.75 ConTeXt Lua standard libraries.
+Lua module: lualibs-extended 2022-10-04 2.75 ConTeXt Lua libraries -- extended collection.
+luaotfload | conf : Root cache directory is "/Users/rose/Library/texlive/2023/texmf-var/luatex-cache/generic/names".
+luaotfload | init : Loading fontloader "fontloader-2022-10-03.lua" from kpse-resolved path "/usr/local/texlive/2023/texmf-dist/tex/luatex/luaotfload/fontloader-2022-10-03.lua".
+Lua-only attribute luaotfload@noligature = 1
+luaotfload | init : Context OpenType loader version 3.120
+Inserting `luaotfload.node_processor' in `pre_linebreak_filter'.
+Inserting `luaotfload.node_processor' in `hpack_filter'.
+Inserting `luaotfload.glyph_stream' in `glyph_stream_provider'.
+Inserting `luaotfload.define_font' in `define_font'.
+Lua-only attribute luaotfload_color_attribute = 2
+luaotfload | conf : Root cache directory is "/Users/rose/Library/texlive/2023/texmf-var/luatex-cache/generic/names".
+Inserting `luaotfload.harf.strip_prefix' in `find_opentype_file'.
+Inserting `luaotfload.harf.strip_prefix' in `find_truetype_file'.
+Removing  `luaotfload.glyph_stream' from `glyph_stream_provider'.
+Inserting `luaotfload.harf.glyphstream' in `glyph_stream_provider'.
+Inserting `luaotfload.harf.finalize_vlist' in `post_linebreak_filter'.
+Inserting `luaotfload.harf.finalize_hlist' in `hpack_filter'.
+Inserting `luaotfload.cleanup_files' in `wrapup_run'.
+Inserting `luaotfload.harf.finalize_unicode' in `finish_pdffile'.
+Inserting `luaotfload.glyphinfo' in `glyph_info'.
+Lua-only attribute luaotfload.letterspace_done = 3
+Inserting `luaotfload.aux.set_sscale_dimens' in `luaotfload.patch_font'.
+Inserting `luaotfload.aux.set_font_index' in `luaotfload.patch_font'.
+Inserting `luaotfload.aux.patch_cambria_domh' in `luaotfload.patch_font'.
+Inserting `luaotfload.aux.fixup_fontdata' in `luaotfload.patch_font_unsafe'.
+Inserting `luaotfload.aux.set_capheight' in `luaotfload.patch_font'.
+Inserting `luaotfload.aux.set_xheight' in `luaotfload.patch_font'.
+Inserting `luaotfload.rewrite_fontname' in `luaotfload.patch_font'. L3 programming layer <2023-02-22>
+Inserting `tracingstacklevels' in `input_level_string'.
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:3: Undefined control sequence.
+l.3 \section
+          {Literature Review on Aflibercept Treatment for Neovascular AMD}
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:3: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.3 \section{L
+            iterature Review on Aflibercept Treatment for Neovascular AMD}
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 3--4
+[]Literature
+ []
+
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:5: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.5 N
+   eovascular age-related macular degeneration (nAMD) represents a significa...
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 5--6
+[]Neovascular
+ []
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:7: Undefined control sequence.
+l.7 \subsection
+             {Clinical Trial Evidence}
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:7: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.7 \subsection{C
+               linical Trial Evidence}
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 7--8
+[]Clinical
+ []
+
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:9: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.9 T
+   he efficacy of aflibercept 2mg was initially established in the pivotal V...
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:9: Undefined control sequence.
+l.9 ...after three initial monthly injections \citep
+                                                  {heierIntravitrealAfliberc...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:9: Undefined control sequence.
+l.9 ...of patients gaining 15 or more letters \citep
+                                                  {heierIntravitrealAfliberc...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 9--10
+[]The
+ []
+
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:11: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.11 B
+    uilding on these findings, the ALTAIR study examined treat-and-extend (T...
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:11: Undefined control sequence.
+l.11 ...mately 10.4 injections over two years \citep
+                                                  {ohjiEfficacySafetyIntravi...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 11--12
+[]Building
+ []
+
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:13: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.13 S
+    imilar outcomes were observed in another Japanese T\&E study by Maruko e...
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:13: Undefined control sequence.
+l.13 ...ency (13.0 injections over two years) \citep
+                                                  {marukoTwoYearOutcomesTrea...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 13--14
+[]Similar
+ []
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:15: Undefined control sequence.
+l.15 \subsection
+              {Real-World Effectiveness}
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:15: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.15 \subsection{R
+                eal-World Effectiveness}
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 15--16
+[]Real-
+ []
+
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:17: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.17 D
+    espite promising clinical trial results, real-world evidence suggests mo...
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:17: Undefined control sequence.
+l.17 ...eved only a 1-letter mean improvement \citep
+                                                  {ciullaVisualAcuityOutcome...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 17--18
+[]Despite
+ []
+
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:19: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.19 T
+    he gap between clinical trials and real-world outcomes highlights challe...
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:19: Undefined control sequence.
+l.19 ... slight vision loss despite treatment \citep
+                                                  {ciullaVisualAcuityOutcome...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 19--20
+[]The
+ []
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:21: Undefined control sequence.
+l.21 \subsection
+              {Treatment Discontinuation}
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:21: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.21 \subsection{T
+                reatment Discontinuation}
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 21--22
+[]Treatment
+ []
+
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:23: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.23 A
+    n important clinical question concerns the possibility of discontinuing ...
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:23: Undefined control sequence.
+l.23 ...mean time to recurrence of 6.7 months \citep
+                                                  {aslanisRecurrentNeovascul...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 23--24
+[]An
+ []
+
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:25: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.25 D
+    espite recurrence, vision could generally be recovered with prompt retre...
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:25: Undefined control sequence.
+l.25 ...even after apparent disease stability \citep
+                                                  {aslanisRecurrentNeovascul...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 25--26
+[]Despite
+ []
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:27: Undefined control sequence.
+l.27 \subsection
+              {Comparative Effectiveness}
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:27: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.27 \subsection{C
+                omparative Effectiveness}
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 27--28
+[]Comparative
+ []
+
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:29: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.29 W
+    hen comparing anti-VEGF agents, the CATT study found bevacizumab to be n...
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:29: Undefined control sequence.
+l.29 ...anibizumab in monthly dosing regimens \citep
+                                                  {RanibizumabBevacizumabNeo...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:29: Undefined control sequence.
+l.29 ...cteristics and theoretical advantages \citep
+                                                  {ciullaVisualAcuityOutcome...
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 29--30
+[]When
+ []
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:31: Undefined control sequence.
+l.31 \subsection
+              {Conclusion}
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:31: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.31 \subsection{C
+                onclusion}
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 31--32
+[]Conclusion 
+ []
+
+
+/Users/rose/Code/aided/Paper/medical-computing-paper/sections/literature-review.tex:33: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.33 T
+    he literature on aflibercept treatment for nAMD demonstrates robust effi...
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 33--34
+[]The
+ []
+
+)
+! Emergency stop.
+<*> ...cal-computing-paper/sections/literature-review
+                                                  
+*** (job aborted, no legal \end found)
+
+
+
+Here is how much of LuaTeX's memory you used:
+ 19 strings out of 478285
+ 100000,1977958 words of node,token memory allocated 34927 words of node memory still in use:
+   49 hlist, 20 disc, 16 local_par, 1 dir, 654 glue, 3 kern, 32 penalty, 4145 glyph, 50 attribute, 39 glue_spec, 50 attribute_list nodes
+   avail lists: 2:2,4:78,5:2,7:72,10:77
+ 20343 multiletter control sequences out of 65536+600000
+ 14 fonts using 591679 bytes
+ 13i,0n,12p,720b,18s stack positions out of 10000i,1000n,20000p,200000b,200000s
+!  ==> Fatal error occurred, no output PDF file produced!

@@ -1,0 +1,97 @@
+Starting new test run
+[2025-05-11T16:55:30.318Z] Starting Puppeteer test for AMD Protocol Explorer
+[2025-05-11T16:55:33.951Z] Navigating to AMD Protocol Explorer...
+[2025-05-11T16:55:34.493Z] Console:
+"Gather usage stats:  false"
+[2025-05-11T16:55:40.917Z] Home page loaded and screenshot taken
+[2025-05-11T16:55:40.938Z] App structure analysis:
+{
+  "title": "APE: AMD Protocol Explorer",
+  "headings": [
+    {
+      "level": "h3",
+      "text": "Using Fixed Discontinuation Implementation"
+    },
+    {
+      "level": "h1",
+      "text": "APE: AMD Protocol Explorer"
+    }
+  ],
+  "buttons": [
+    "Deploy",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ],
+  "radios": [
+    "Navigate to",
+    "",
+    "Dashboard",
+    "Run Simulation",
+    "Patient Explorer",
+    "Reports",
+    "About"
+  ],
+  "selectboxes": 0,
+  "sliders": 0,
+  "hasHelpers": false
+}
+[2025-05-11T16:55:40.938Z] Navigating to Run Simulation page...
+[2025-05-11T16:55:40.956Z] Available navigation options:
+[
+  {
+    "index": 0,
+    "text": "Navigate to"
+  },
+  {
+    "index": 2,
+    "text": "Dashboard"
+  },
+  {
+    "index": 3,
+    "text": "Run Simulation"
+  },
+  {
+    "index": 4,
+    "text": "Patient Explorer"
+  },
+  {
+    "index": 5,
+    "text": "Reports"
+  },
+  {
+    "index": 6,
+    "text": "About"
+  }
+]
+[2025-05-11T16:55:40.956Z] Found Run Simulation option at index 3
+[2025-05-11T16:55:41.056Z] First click attempt failed, trying alternative selector
+[2025-05-11T16:55:41.067Z] Tried alternative click method for Run Simulation
+[2025-05-11T16:55:44.166Z] Configuring simulation parameters...
+[2025-05-11T16:55:44.173Z] Found 1 selectboxes
+[2025-05-11T16:55:44.206Z] Clicked simulation type selectbox
+[2025-05-11T16:55:45.249Z] Selected first option from 2 options
+[2025-05-11T16:55:46.268Z] Found 7 sliders
+[2025-05-11T16:55:46.270Z] Slider dimensions:
+{
+  "x": 80,
+  "y": 379.40625,
+  "width": 552,
+  "height": 82.375
+}
+[2025-05-11T16:55:46.293Z] Adjusted first slider
+[2025-05-11T16:55:47.295Z] Looking for Run Simulation button...
+[2025-05-11T16:55:47.305Z] Successfully clicked the Run Simulation button using JavaScript evaluation
+[2025-05-11T16:55:47.305Z] Waiting for simulation to complete...
+[2025-05-11T16:55:47.496Z] Simulation results detected
+[2025-05-11T16:55:52.598Z] Navigating to Patient Explorer...
+[2025-05-11T16:55:52.606Z] Attempted to click Patient Explorer option
+[2025-05-11T16:55:55.719Z] Patient data available: false
+[2025-05-11T16:55:55.719Z] Navigating to Reports section...
+[2025-05-11T16:55:55.727Z] Attempted to click Reports option
+[2025-05-11T16:55:58.842Z] Navigating to About section...
+[2025-05-11T16:55:58.847Z] Attempted to click About option
+[2025-05-11T16:56:01.965Z] Test completed successfully!
+[2025-05-11T16:56:02.037Z] Browser closed

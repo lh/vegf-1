@@ -1,0 +1,139 @@
+\section{Parameter Extraction and Simulation Framework}
+
+\subsection{Methodology for Parameter Extraction}
+
+To develop a robust simulation of aflibercept treatment for nAMD, we systematically extracted key parameters from clinical trials and real-world evidence studies. Our approach involved standardizing definitions across studies and reconciling differences between controlled trial outcomes and real-world observations.
+
+\subsection{Disease State Definitions}
+
+For simulation purposes, we standardized disease states across studies as follows:
+\begin{itemize}
+    \item \textbf{NAIVE:} Patients before first injection
+    \item \textbf{STABLE:} Patients with interval extension or maintaining maximum interval
+    \item \textbf{ACTIVE:} Patients maintaining their current interval (except maximum interval)
+    \item \textbf{HIGHLY\_ACTIVE:} Patients requiring treatment interval reduction
+\end{itemize}
+
+\subsection{Key Parameters for Simulation}
+
+Table~\ref{tab:simulation_parameters} presents the consolidated parameters extracted from the literature review, categorized by parameter type and showing the source studies. These parameters form the foundation of our agent-based and discrete event simulation models.
+
+\begin{table}[h]
+\begin{threeparttable}
+\caption{Key Parameters for AMD Treatment Simulation}
+\label{tab:simulation_parameters}
+\begin{tabular}{p{4.5cm}p{5cm}p{3.5cm}p{2cm}}
+\hline
+\textbf{Parameter} & \textbf{Value} & \textbf{Source} & \textbf{Confidence} \\
+\hline
+\multicolumn{4}{l}{\textit{Visual Acuity Parameters}} \\
+\hline
+NAIVE treatment response & +8.4 letters (SD 1.2-1.4) & VIEW 1/2\tnote{1}, ALTAIR\tnote{2} & High \\
+STABLE treatment response & +1.0 to +2.0 letters (SD 0.5-1.0) & ALTAIR\tnote{2} & Medium \\
+ACTIVE treatment response & +0.5 to +1.0 letters (SD 0.5-1.0) & ALTAIR\tnote{2} & Medium \\
+HIGHLY\_ACTIVE response & -0.5 to +1.0 letters (SD 1.0-1.5) & ALTAIR\tnote{2} & Medium \\
+Real-world mean VA change & +1.0 letter (at 1 year) & Ciulla et al.\tnote{3} & High \\
+\hline
+\multicolumn{4}{l}{\textit{Disease State Transition Probabilities}} \\
+\hline
+NAIVE to STABLE & 0.55-0.60 & ALTAIR\tnote{2} & High \\
+NAIVE to ACTIVE & 0.30-0.35 & ALTAIR\tnote{2} & Medium \\
+NAIVE to HIGHLY\_ACTIVE & 0.05-0.10 & ALTAIR\tnote{2} & Medium \\
+STABLE persistence & 0.80-0.85 & ALTAIR\tnote{2} & Medium \\
+ACTIVE persistence & 0.55-0.60 & ALTAIR\tnote{2} & Medium \\
+HIGHLY\_ACTIVE persistence & 0.50-0.65 & ALTAIR\tnote{2} & Low \\
+\hline
+\multicolumn{4}{l}{\textit{Treatment Protocol Parameters}} \\
+\hline
+Loading phase injections & 3 & All studies & High \\
+Initial interval & 8 weeks & All studies & High \\
+Minimum interval & 8 weeks & ALTAIR\tnote{2} & High \\
+Maximum interval & 16 weeks & ALTAIR\tnote{2} & High \\
+Extension increment & 2 or 4 weeks & ALTAIR\tnote{2} & High \\
+Mean injections (year 1) & 7.3 (real-world) & Ciulla et al.\tnote{3} & High \\
+Mean injections (2 years) & 10.4 (clinical trial) & ALTAIR\tnote{2} & High \\
+\hline
+\multicolumn{4}{l}{\textit{Treatment Effect by Injection Frequency}} \\
+\hline
+≤4 injections/year & -2 to -3 letters & Ciulla et al.\tnote{3} & High \\
+5-6 injections/year & -0.4 to -1.6 letters & Ciulla et al.\tnote{3} & High \\
+7-8 injections/year & +0.7 to +2.1 letters & Ciulla et al.\tnote{3} & High \\
+9-10 injections/year & +2.4 to +3.3 letters & Ciulla et al.\tnote{3} & High \\
+11-13 injections/year & +3.0 to +4.3 letters & Ciulla et al.\tnote{3} & High \\
+\hline
+\multicolumn{4}{l}{\textit{Treatment Effect by Baseline VA}} \\
+\hline
+≤20/200 & +13.9 letters & Ciulla et al.\tnote{3} & High \\
+20/70-20/200 & +0.8 letters & Ciulla et al.\tnote{3} & High \\
+20/40-20/70 & -0.8 letters & Ciulla et al.\tnote{3} & High \\
+≥20/40 & -3.3 letters & Ciulla et al.\tnote{3} & High \\
+\hline
+\multicolumn{4}{l}{\textit{Discontinuation and Recurrence Parameters}} \\
+\hline
+Recurrence rate at 12 months & 52.9\% & Aslanis et al.\tnote{4} & High \\
+Mean time to recurrence & 6.7 ± 2.2 months & Aslanis et al.\tnote{4} & High \\
+4-month recurrence rate & 13\% & Aslanis et al.\tnote{4} & High \\
+6-month recurrence rate & 33\% & Aslanis et al.\tnote{4} & High \\
+8-month recurrence rate & 46\% & Aslanis et al.\tnote{4} & High \\
+VA change at recurrence & -3.6 letters & Aslanis et al.\tnote{4} & High \\
+VA after re-treatment & -0.3 letters (from baseline) & Aslanis et al.\tnote{4} & High \\
+PED recurrence risk & 74\% (vs. 48\% without PED) & Aslanis et al.\tnote{4} & Medium \\
+\hline
+\end{tabular}
+\begin{tablenotes}
+\small
+\item[1] Heier et al. (2012) VIEW 1/2 study \citep{heierIntravitrealAfliberceptVEGF2012}
+\item[2] Ohji et al. (2020) ALTAIR study \citep{ohjiEfficacySafetyIntravitreal2020}
+\item[3] Ciulla et al. (2020) 49,485-eye real-world study \citep{ciullaVisualAcuityOutcomes2020}
+\item[4] Aslanis et al. (2022) treatment discontinuation study \citep{aslanisRecurrentNeovascularAgeRelated2022}
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\subsection{Parameter Integration Approach}
+
+To reconcile differences between clinical trial outcomes and real-world evidence, we developed a composite approach:
+
+\begin{itemize}
+    \item \textbf{Clinical Trial Baseline}: Visual acuity parameters and disease state transitions were primarily derived from the ALTAIR study \citep{ohjiEfficacySafetyIntravitreal2020}, which provided detailed treat-and-extend outcomes with aflibercept.
+    
+    \item \textbf{Real-World Adjustment}: We applied scaling factors based on Ciulla et al. \citep{ciullaVisualAcuityOutcomes2020} to adjust the clinical trial visual outcomes to real-world expectations, accounting for differences in treatment adherence, monitoring frequency, and patient selection.
+    
+    \item \textbf{Treatment Intensity Modifiers}: The linear relationship between injection frequency and visual outcomes identified by Ciulla et al. \citep{ciullaVisualAcuityOutcomes2020} was incorporated as a modifier function.
+    
+    \item \textbf{Baseline Vision Ceiling Effects}: Special adjustment functions were implemented to account for the observed ceiling effects in patients with good baseline vision.
+\end{itemize}
+
+\subsection{Simulation Implementation}
+
+The parameters were implemented in both agent-based and discrete event simulation frameworks to model:
+
+\begin{enumerate}
+    \item Individual patient trajectories based on treatment decisions
+    \item Visual acuity changes over time
+    \item Disease state transitions
+    \item Resource utilization (clinic visits, injections)
+    \item Treatment discontinuation and potential recurrence
+\end{enumerate}
+
+The simulation incorporated three key time points from the AMD Treatment Three-Point Trajectory Model:
+
+\begin{enumerate}
+    \item \textbf{Baseline VA} ($T_0$): Starting visual acuity
+    \item \textbf{Maximum VA} ($T_{max}$): Peak visual acuity after loading phase
+    \item \textbf{1-Year VA} ($T_{12}$): Visual acuity at 12 months
+\end{enumerate}
+
+For $T_{max}$, we calculated:
+
+\begin{equation*}
+\text{Max\_VA} = \text{Baseline\_VA} + (\text{Base\_Response} \times \text{Disease\_State\_Modifier} \times \text{Baseline\_VA\_Modifier})
+\end{equation*}
+
+For $T_{12}$, we implemented a combined approach:
+
+\begin{equation*}
+\text{Year1\_VA} = \text{Max\_VA} + (0.6 \times \text{Intensity\_Based\_Change}) + (0.4 \times \text{Activity\_Based\_Change} \times \text{Adherence\_Factor})
+\end{equation*}
+
+This framework allows for comprehensive modeling of aflibercept treatment outcomes, balancing clinical trial efficacy with real-world effectiveness factors.
