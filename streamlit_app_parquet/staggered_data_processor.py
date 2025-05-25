@@ -49,9 +49,19 @@ def transform_to_calendar_view(
         # Use simulation start date from metadata if available
         if 'start_date' in metadata_df.columns:
             start_date = pd.to_datetime(metadata_df['start_date'].iloc[0])
+            logger.info(f"Using simulation start date from metadata: {start_date}")
         else:
-            # Default to a reasonable past date
-            start_date = datetime(2020, 1, 1)
+            # For constant rate simulations, use the earliest visit date
+            if preserve_original_enrollment or (
+                'recruitment_mode' in metadata_df.columns and 
+                metadata_df['recruitment_mode'].iloc[0] == "Constant Rate"
+            ):
+                start_date = visits_df['date'].min()
+                logger.info(f"Using earliest visit date as start: {start_date}")
+            else:
+                # Default to a reasonable past date
+                start_date = datetime(2020, 1, 1)
+                logger.info(f"Using default start date: {start_date}")
     
     # Get unique patients
     patients = visits_df['patient_id'].unique()
@@ -63,6 +73,11 @@ def transform_to_calendar_view(
         # For constant rate simulations, preserve the original enrollment pattern
         preserve_original_enrollment = True
         logger.info("Preserving original constant-rate enrollment pattern")
+    
+    # Also check if enrollment_pattern is set to "preserved" from the UI
+    if enrollment_pattern == "preserved":
+        preserve_original_enrollment = True
+        logger.info("UI requested to preserve original enrollment pattern")
     
     if preserve_original_enrollment:
         # Extract actual enrollment dates from first visit of each patient
@@ -89,26 +104,40 @@ def transform_to_calendar_view(
     # Create a copy to avoid modifying original
     calendar_visits_df = visits_df.copy()
     
-    # Add enrollment dates for all patients at once
-    calendar_visits_df['enrollment_date'] = calendar_visits_df['patient_id'].map(patient_enrollment)
-    
-    # Get first visit date for each patient (vectorized)
-    first_visits = calendar_visits_df.groupby('patient_id')['date'].min().reset_index()
-    first_visits.columns = ['patient_id', 'first_visit_date']
-    
-    # Merge first visit dates back to main dataframe
-    calendar_visits_df = calendar_visits_df.merge(first_visits, on='patient_id', how='left')
-    
-    # Calculate months since enrollment (vectorized)
-    calendar_visits_df['months_since_enrollment'] = (
-        (calendar_visits_df['date'] - calendar_visits_df['first_visit_date']).dt.days / 30.44
-    )
-    
-    # Convert to calendar dates (vectorized)
-    calendar_visits_df['calendar_date'] = (
-        calendar_visits_df['enrollment_date'] + 
-        pd.to_timedelta(calendar_visits_df['months_since_enrollment'] * 30.44, unit='days')
-    )
+    if preserve_original_enrollment:
+        # For constant rate simulations, the dates are already correct
+        # Just copy the date column to calendar_date
+        calendar_visits_df['calendar_date'] = calendar_visits_df['date']
+        calendar_visits_df['enrollment_date'] = calendar_visits_df['patient_id'].map(patient_enrollment)
+        
+        # Calculate months since enrollment for consistency
+        first_visits = calendar_visits_df.groupby('patient_id')['date'].min().reset_index()
+        first_visits.columns = ['patient_id', 'first_visit_date']
+        calendar_visits_df = calendar_visits_df.merge(first_visits, on='patient_id', how='left')
+        calendar_visits_df['months_since_enrollment'] = (
+            (calendar_visits_df['date'] - calendar_visits_df['first_visit_date']).dt.days / 30.44
+        )
+    else:
+        # Add enrollment dates for all patients at once
+        calendar_visits_df['enrollment_date'] = calendar_visits_df['patient_id'].map(patient_enrollment)
+        
+        # Get first visit date for each patient (vectorized)
+        first_visits = calendar_visits_df.groupby('patient_id')['date'].min().reset_index()
+        first_visits.columns = ['patient_id', 'first_visit_date']
+        
+        # Merge first visit dates back to main dataframe
+        calendar_visits_df = calendar_visits_df.merge(first_visits, on='patient_id', how='left')
+        
+        # Calculate months since enrollment (vectorized)
+        calendar_visits_df['months_since_enrollment'] = (
+            (calendar_visits_df['date'] - calendar_visits_df['first_visit_date']).dt.days / 30.44
+        )
+        
+        # Convert to calendar dates (vectorized)
+        calendar_visits_df['calendar_date'] = (
+            calendar_visits_df['enrollment_date'] + 
+            pd.to_timedelta(calendar_visits_df['months_since_enrollment'] * 30.44, unit='days')
+        )
     
     logger.info("Calendar transformation complete")
     

@@ -714,12 +714,21 @@ def create_visit_dataframe(patient_data: List[Dict]) -> pd.DataFrame:
                 actions_str = str(actions)
             
             # Extract key information
+            # Handle disease_state - it might be a string or an enum
+            disease_state = visit.get('disease_state', 'Unknown')
+            if hasattr(disease_state, 'name'):
+                # It's an enum, get the name
+                disease_state = disease_state.name
+            elif not isinstance(disease_state, str):
+                # Convert to string if it's not already
+                disease_state = str(disease_state)
+            
             record = {
                 'Date': visit.get('date', None),
                 'Visit Type': visit.get('type', 'Unknown'),
                 'Actions': actions_str,
                 'Vision': visit.get('vision', None),
-                'Disease State': visit.get('disease_state', 'Unknown'),
+                'Disease State': disease_state,
                 'Phase': visit.get('phase', 'Unknown'),
                 'Interval': visit.get('interval', None)
             }

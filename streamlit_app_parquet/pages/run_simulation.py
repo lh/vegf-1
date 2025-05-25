@@ -99,6 +99,10 @@ def display_simulation_configuration():
             key="recruitment_mode_radio"
         )
         
+        # Debug: Show what mode is selected
+        if get_debug_mode():
+            st.write(f"DEBUG: Selected recruitment mode: {recruitment_mode}")
+        
         if recruitment_mode == "Fixed Total":
             population_size = st.slider(
                 "Total Population Size",
@@ -349,9 +353,6 @@ def display_run_simulation():
         # Save parameters to session state
         set_simulation_parameters(params)
         
-        # Get parameters from UI
-        ui_params = get_ui_parameters()
-        
         # Initialize results
         results = None
         
@@ -361,8 +362,8 @@ def display_run_simulation():
                 set_simulation_running(True)
                 
                 try:
-                    # Run simulation
-                    results = run_simulation(ui_params)
+                    # Run simulation with the params dict that has all the correct values
+                    results = run_simulation(params)
                     
                     # Check if there was an error or if simulation failed
                     if "error" in results or results.get("failed", False):

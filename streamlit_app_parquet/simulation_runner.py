@@ -319,6 +319,15 @@ def create_simulation_config(params):
     config.duration_days = params["duration_years"] * 365
     config.simulation_type = params["simulation_type"].lower()
     
+    # Add recruitment parameters for staggered enrollment
+    if params.get("recruitment_mode") == "Constant Rate":
+        config.recruitment_mode = "constant_rate"
+        config.recruitment_rate = params.get("recruitment_rate", params["population_size"] / (params["duration_years"] * 12))
+        config.enrollment_months = params["duration_years"] * 12
+    else:
+        config.recruitment_mode = "fixed_total"
+        config.enrollment_months = 1  # All patients enrolled at start
+    
     # Apply any additional parameter overrides as needed
     # For discontinuation settings, we'd need to modify the parameters dictionary
     
@@ -341,6 +350,10 @@ def run_simulation(params):
     """
     with st.spinner(f"Running {params['simulation_type']} simulation..."):
         start_time = time.time()
+        
+        # Debug log the incoming parameters
+        if DEBUG_MODE or st.session_state.get("debug_mode", False):
+            debug_info(f"run_simulation called with recruitment_mode='{params.get('recruitment_mode', 'NOT SET')}', recruitment_rate={params.get('recruitment_rate', 'NOT SET')}")
         
         # Check if simulation modules are available
         if not simulation_imports_successful:
@@ -540,8 +553,17 @@ def run_simulation(params):
                 progress_text.text("Initializing ABS simulation...")
                 progress_bar.progress(10)
                 
-                # Create simulation instance
-                sim = TreatAndExtendABS(config)
+                # Create simulation instance - use staggered version for constant rate
+                if params.get("recruitment_mode") == "Constant Rate":
+                    from simulation.staggered_abs import StaggeredABS
+                    # StaggeredABS needs start_date and patient_arrival_rate
+                    # config.start_date is ALWAYS a datetime object per SimulationConfig definition
+                    # Convert monthly rate to weekly rate
+                    patient_arrival_rate = params.get("recruitment_rate", 20) * 12 / 52  # months to weeks
+                    sim = StaggeredABS(config, start_date=config.start_date, patient_arrival_rate=patient_arrival_rate)
+                    debug_info(f"Using StaggeredABS with {patient_arrival_rate:.2f} patients/week")
+                else:
+                    sim = TreatAndExtendABS(config)
                 
                 # Update progress
                 progress_text.text("Generating patients...")
@@ -553,7 +575,12 @@ def run_simulation(params):
                     progress_text.text(f"Running simulation... {int(percent)}% complete")
                 
                 # Run simulation
-                patient_histories = sim.run()
+                if params.get("recruitment_mode") == "Constant Rate":
+                    # StaggeredABS returns a dict with patient_histories key
+                    sim_results = sim.run()
+                    patient_histories = sim_results.get('patient_histories', {})
+                else:
+                    patient_histories = sim.run()
                 
                 # Update progress
                 progress_text.text("Processing results...")
@@ -567,15 +594,34 @@ def run_simulation(params):
                 progress_text.text("Initializing DES simulation...")
                 progress_bar.progress(10)
                 
-                # Create simulation instance
-                sim = TreatAndExtendDES(config)
+                # Create simulation instance - use staggered version for constant rate
+                if params.get("recruitment_mode") == "Constant Rate":
+                    from simulation.staggered_enhanced_des import StaggeredEnhancedDES
+                    # Prepare staggered parameters
+                    staggered_params = {
+                        "enrollment_duration_days": params["duration_years"] * 365,
+                        "rate_per_week": params.get("recruitment_rate", 20) * 12 / 52,  # Convert monthly to weekly
+                        "relative_time_tracking": True
+                    }
+                    sim = StaggeredEnhancedDES(config, staggered_params=staggered_params)
+                    debug_info(f"Using StaggeredEnhancedDES with {staggered_params['rate_per_week']:.2f} patients/week")
+                else:
+                    sim = TreatAndExtendDES(config)
                 
                 # Update progress
                 progress_text.text("Generating patients...")
                 progress_bar.progress(20)
                 
                 # Run simulation
-                patient_histories = sim.run()
+                if params.get("recruitment_mode") == "Constant Rate":
+                    # StaggeredEnhancedDES might return a dict with patient_histories key
+                    sim_results = sim.run()
+                    if isinstance(sim_results, dict) and 'patient_histories' in sim_results:
+                        patient_histories = sim_results.get('patient_histories', {})
+                    else:
+                        patient_histories = sim_results
+                else:
+                    patient_histories = sim.run()
                 
                 # Update progress
                 progress_text.text("Processing results...")
@@ -809,7 +855,24 @@ def save_results_as_parquet(patient_histories, statistics, config, params):
     if "date" in visits_df.columns and pd.api.types.is_string_dtype(visits_df["date"]):
         visits_df["date"] = pd.to_datetime(visits_df["date"])
     
+    # Convert any enum columns to strings for Parquet compatibility
+    from enum import Enum
+    for col in visits_df.columns:
+        if visits_df[col].dtype == 'object':
+            # Check if any values are enums
+            sample_values = visits_df[col].dropna().head(5)
+            if len(sample_values) > 0:
+                # Check if any of the sample values are Enums
+                if any(isinstance(val, Enum) for val in sample_values):
+                    # Convert all enum values to strings
+                    visits_df[col] = visits_df[col].apply(lambda x: x.name if isinstance(x, Enum) else x)
+                    debug_info(f"Converted enum column '{col}' to strings for Parquet compatibility")
+    
     # Create metadata DataFrame
+    # Debug log the recruitment parameters
+    if DEBUG_MODE:
+        debug_info(f"Creating metadata with params: recruitment_mode='{params.get('recruitment_mode', 'NOT SET')}', recruitment_rate={params.get('recruitment_rate', 'NOT SET')}")
+    
     metadata = {
         "simulation_type": params["simulation_type"],
         "patients": params["population_size"],
@@ -825,6 +888,10 @@ def save_results_as_parquet(patient_histories, statistics, config, params):
         "timestamp": params.get("timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     }
     metadata_df = pd.DataFrame([metadata])
+    
+    # Debug log the actual metadata values
+    if DEBUG_MODE:
+        debug_info(f"Metadata created with: recruitment_mode='{metadata['recruitment_mode']}', recruitment_rate={metadata['recruitment_rate']:.2f}")
     
     # Create statistics DataFrame
     stats_df = pd.DataFrame([statistics])
@@ -2341,16 +2408,24 @@ def get_ui_parameters():
     params = {}
     
     # Get values from session state or use defaults
-    params["simulation_type"] = st.session_state.get("simulation_type", "ABS")
-    params["duration_years"] = st.session_state.get("duration_years", 5)
-    params["population_size"] = st.session_state.get("population_size", 1000)
-    params["enable_clinician_variation"] = st.session_state.get("enable_clinician_variation", True)
-    params["planned_discontinue_prob"] = st.session_state.get("planned_discontinue_prob", 0.2)
-    params["admin_discontinue_prob"] = st.session_state.get("admin_discontinue_prob", 0.05)
-    params["premature_discontinue_prob"] = st.session_state.get("premature_discontinue_prob", 2.0)
-    params["consecutive_stable_visits"] = st.session_state.get("consecutive_stable_visits", 3)
-    params["monitoring_schedule"] = st.session_state.get("monitoring_schedule", [12, 24, 36])
-    params["no_monitoring_for_admin"] = st.session_state.get("no_monitoring_for_admin", True)
-    params["recurrence_risk_multiplier"] = st.session_state.get("recurrence_risk_multiplier", 1.0)
+    # Note: Widget keys have suffixes like _select, _slider, _checkbox, _radio, _input, _multiselect
+    params["simulation_type"] = st.session_state.get("simulation_type_select", "ABS")
+    params["duration_years"] = st.session_state.get("duration_years_slider", 5)
+    params["population_size"] = st.session_state.get("population_size_slider", 1000)
+    params["recruitment_mode"] = st.session_state.get("recruitment_mode_radio", "Fixed Total")
+    params["recruitment_rate"] = st.session_state.get("recruitment_rate_input", params["population_size"] / (params["duration_years"] * 12))
+    params["enable_clinician_variation"] = st.session_state.get("enable_clinician_variation_checkbox", True)
+    params["planned_discontinue_prob"] = st.session_state.get("planned_discontinue_prob_slider", 0.2)
+    params["admin_discontinue_prob"] = st.session_state.get("admin_discontinue_prob_slider", 0.05)
+    params["premature_discontinue_prob"] = st.session_state.get("premature_discontinue_prob_slider", 2.0)
+    params["consecutive_stable_visits"] = st.session_state.get("consecutive_stable_visits_slider", 3)
+    params["monitoring_schedule"] = st.session_state.get("monitoring_schedule_multiselect", [12, 24, 36])
+    params["no_monitoring_for_admin"] = st.session_state.get("no_monitoring_for_admin_checkbox", True)
+    params["recurrence_risk_multiplier"] = st.session_state.get("recurrence_risk_multiplier_slider", 1.0)
+    
+    # Debug logging
+    if st.session_state.get("debug_mode", False):
+        st.write(f"DEBUG [get_ui_parameters]: recruitment_mode = {params['recruitment_mode']}")
+        st.write(f"DEBUG [get_ui_parameters]: recruitment_rate = {params['recruitment_rate']:.2f}")
     
     return params

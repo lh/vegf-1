@@ -320,8 +320,9 @@ else:
                 temp_metadata = pd.read_parquet(parquet_dir / f"{selected_sim}_metadata.parquet")
                 if 'recruitment_mode' in temp_metadata.columns:
                     is_constant_rate = temp_metadata['recruitment_mode'].iloc[0] == "Constant Rate"
-            except:
-                pass
+            except Exception as e:
+                st.error(f"Error reading simulation metadata: {e}")
+                st.stop()
         
         if is_constant_rate:
             st.info("📌 This simulation used Constant Rate recruitment. The original enrollment timeline will be preserved.")
@@ -361,6 +362,12 @@ else:
                 value=12,
                 help=f"Period over which patients are enrolled. Can extend throughout entire simulation ({max_enrollment} months) to model steady-state clinic operations."
             )
+            
+            # Warning about timeline extension
+            if selected_sim and enrollment_months < max_enrollment:
+                timeline_extension = max_enrollment - enrollment_months
+                if timeline_extension > 0:
+                    st.warning(f"⚠️ With {enrollment_months} months enrollment, the last patients enrolled will have visits extending {timeline_extension} months beyond the original simulation period.")
         else:
             # For constant rate, enrollment period is the full simulation
             enrollment_months = int(temp_metadata['duration_years'].iloc[0] * 12) if 'duration_years' in temp_metadata.columns else 60
@@ -432,6 +439,7 @@ else:
                 # Transform to calendar view
                 status_text.text("Transforming to calendar-time view...")
                 progress_bar.progress(30)
+                
                 calendar_visits_df, clinic_metrics_df = transform_to_calendar_view(
                     visits_df,
                     metadata_df,
