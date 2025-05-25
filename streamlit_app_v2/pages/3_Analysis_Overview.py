@@ -91,6 +91,9 @@ with tab1:
             from matplotlib.ticker import MaxNLocator
             ax.yaxis.set_major_locator(MaxNLocator(integer=True))
             
+            # Apply spine rules AFTER style_axis (which sets its own spine visibility)
+            StyleConstants.apply_spine_rules(ax, current_mode)
+            
             format_zoom_legend(ax, loc='upper left')
         else:
             # Fallback to standard matplotlib
@@ -131,6 +134,9 @@ with tab1:
             # Ensure integer y-axis for patient counts
             from matplotlib.ticker import MaxNLocator
             ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+            
+            # Apply spine rules AFTER style_axis
+            StyleConstants.apply_spine_rules(ax, current_mode)
         else:
             # Fallback to standard matplotlib
             fig, ax = plt.subplots(figsize=(8, 6))
@@ -201,6 +207,9 @@ with tab2:
             from matplotlib.ticker import MaxNLocator
             ax.xaxis.set_major_locator(MaxNLocator(integer=True))
             ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+            
+            # Apply spine rules AFTER style_axis
+            StyleConstants.apply_spine_rules(ax, current_mode)
         else:
             fig, ax = plt.subplots(figsize=(8, 6))
             ax.hist(injection_counts, bins=20, color='purple', alpha=0.7, edgecolor='black')
@@ -232,6 +241,10 @@ with tab2:
                    label=f'Trend (ratio={z[0]:.2f})')
             
             style_axis(ax, xlabel='Total Visits', ylabel='Total Injections')
+            
+            # Apply spine rules AFTER style_axis
+            StyleConstants.apply_spine_rules(ax, current_mode)
+            
             format_zoom_legend(ax, loc='lower right')
         else:
             fig, ax = plt.subplots(figsize=(8, 6))
@@ -277,6 +290,9 @@ with tab2:
                              orientation='vertical', color=colors['secondary'])
             
             style_axis(ax, xlabel='Interval Between Visits (days)', ylabel='Frequency')
+            
+            # Apply spine rules AFTER style_axis
+            StyleConstants.apply_spine_rules(ax, current_mode)
         else:
             fig, ax = plt.subplots(figsize=(10, 6))
             ax.hist(all_intervals, bins=30, color='orange', alpha=0.7, edgecolor='black')
@@ -339,6 +355,9 @@ with tab3:
                        for _, patient in sample_patients])
         time_ticks = StyleConstants.get_time_ticks(max_days, preferred_unit='days')
         ax.set_xticks(time_ticks)
+        
+        # Apply spine rules AFTER style_axis
+        StyleConstants.apply_spine_rules(ax, current_mode)
     else:
         fig, ax = plt.subplots(figsize=(12, 8))
         
@@ -413,6 +432,9 @@ with tab3:
         # Convert back to months for display
         month_ticks = [t / 30.44 for t in time_ticks]
         ax.set_xticks(month_ticks)
+        
+        # Apply spine rules AFTER style_axis
+        StyleConstants.apply_spine_rules(ax, current_mode)
         
         format_zoom_legend(ax, loc='upper right', ncol=2)
     else:
