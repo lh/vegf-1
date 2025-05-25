@@ -136,6 +136,11 @@ class StyleConstants:
             return f"{value:.1f}"
     
     @staticmethod
+    def format_statistic(value: float) -> str:
+        """Format general statistics with one decimal."""
+        return f"{value:.1f}"
+    
+    @staticmethod
     def get_vision_ticks(data_min: float = None, data_max: float = None) -> List[int]:
         """Get appropriate vision tick marks.
         
