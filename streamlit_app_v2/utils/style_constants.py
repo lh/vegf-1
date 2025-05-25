@@ -166,16 +166,54 @@ class StyleConstants:
     
     @staticmethod
     def get_time_ticks(days: int, preferred_unit: str = 'weeks') -> List[int]:
-        """Get appropriate time tick marks based on duration."""
+        """Get appropriate time tick marks based on duration.
+        
+        Returns clean intervals:
+        - Weeks: Every 4 weeks
+        - Months: Every 3 months (quarterly) or 6 months depending on duration
+        - Years: Annual markers
+        """
         if preferred_unit == 'weeks' and days <= 168:  # Up to 24 weeks
             # Use 4-week intervals
             return [i * 28 for i in range(int(days / 28) + 2)]
-        elif preferred_unit == 'months' and days <= 365:
-            # Use monthly intervals
-            return [i * 30 for i in range(int(days / 30) + 2)]
+        elif preferred_unit == 'months':
+            # For months, use clean intervals
+            if days <= 365:  # Up to 1 year: quarterly (0, 3, 6, 9, 12)
+                months_total = int(days / 30.44)
+                tick_months = []
+                for m in range(0, months_total + 1, 3):
+                    tick_months.append(m)
+                if tick_months[-1] < months_total:
+                    tick_months.append(months_total)
+                # Convert back to days for consistency
+                return [int(m * 30.44) for m in tick_months]
+            elif days <= 730:  # Up to 2 years: every 6 months
+                months_total = int(days / 30.44)
+                tick_months = []
+                for m in range(0, months_total + 1, 6):
+                    tick_months.append(m)
+                if tick_months[-1] < months_total:
+                    tick_months.append(months_total)
+                return [int(m * 30.44) for m in tick_months]
+            else:  # More than 2 years: annual
+                years_total = int(days / 365.25)
+                return [i * 365 for i in range(years_total + 1)]
         else:
-            # Use quarterly intervals
+            # Default to quarterly intervals
             return [i * 90 for i in range(int(days / 90) + 2)]
+    
+    @staticmethod
+    def get_month_ticks(total_months: int) -> List[int]:
+        """Get clean month tick marks (0, 3, 6, 9... or 0, 6, 12, 18...)."""
+        if total_months <= 12:
+            # Quarterly for up to 1 year
+            return list(range(0, total_months + 1, 3))
+        elif total_months <= 24:
+            # Every 6 months for up to 2 years
+            return list(range(0, total_months + 1, 6))
+        else:
+            # Annual for longer periods
+            return list(range(0, total_months + 1, 12))
     
     @staticmethod
     def get_count_ticks(data_max: float, target_ticks: int = 6) -> List[int]:

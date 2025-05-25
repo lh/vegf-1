@@ -123,12 +123,15 @@ class ChartBuilder:
             unit = self.x_axis_config.get('preferred_unit', 'months')
             time_ticks = StyleConstants.get_time_ticks(duration, preferred_unit=unit)
             
-            # Convert ticks if we're showing months but calculating in days
+            # Special handling for month-based x-axis
             if self.xlabel and 'month' in self.xlabel.lower():
-                # Convert day ticks to month ticks
-                time_ticks = [t / 30.44 for t in time_ticks]
-            
-            ax.set_xticks(time_ticks)
+                # Get clean month ticks directly
+                max_months = int(duration / 30.44)
+                month_ticks = StyleConstants.get_month_ticks(max_months)
+                ax.set_xticks(month_ticks)
+                ax.set_xticklabels([str(m) for m in month_ticks])
+            else:
+                ax.set_xticks(time_ticks)
             
         # Y-axis configuration
         if self.y_axis_type == 'vision':
