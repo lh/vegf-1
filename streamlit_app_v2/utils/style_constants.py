@@ -129,11 +129,20 @@ class StyleConstants:
     
     @staticmethod
     def format_percentage(value: float, include_sign: bool = True) -> str:
-        """Format percentage with one decimal."""
-        if include_sign:
-            return f"{value:.1f}%"
+        """Format percentage with one decimal.
+        
+        Assumes value is a decimal (0.85 = 85%) unless it's > 1 (then assumes it's already a percentage).
+        """
+        # If value is > 1, assume it's already a percentage (e.g., 85 for 85%)
+        if value > 1:
+            percentage = value
         else:
-            return f"{value:.1f}"
+            percentage = value * 100
+            
+        if include_sign:
+            return f"{percentage:.1f}%"
+        else:
+            return f"{percentage:.1f}"
     
     @staticmethod
     def format_statistic(value: float) -> str:
