@@ -16,7 +16,7 @@ Clean-room implementation of the AMD treatment simulation platform using test-dr
 ```bash
 # From the project root
 cd streamlit_app_v2
-streamlit run app.py
+streamlit run APE.py
 ```
 
 ## Pages
@@ -57,7 +57,7 @@ Example: `protocols/v2/eylea_treat_and_extend_v1.0.yaml`
 
 ```
 streamlit_app_v2/
-├── app.py                    # Main application entry
+├── APE.py                    # Main application entry
 ├── pages/                    # Streamlit pages
 │   ├── 1_Protocol_Manager.py
 │   ├── 2_Run_Simulation.py

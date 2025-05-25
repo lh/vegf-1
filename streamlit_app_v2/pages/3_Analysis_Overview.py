@@ -24,10 +24,28 @@ from utils.tufte_zoom_style import (
 from utils.style_constants import StyleConstants
 from utils.chart_builder import ChartBuilder
 
-st.set_page_config(page_title="Analysis Overview", page_icon="📊", layout="wide")
+st.set_page_config(
+    page_title="Analysis Overview", 
+    page_icon="📊", 
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-st.title("📊 Analysis Overview")
-st.markdown("Visualize and analyze simulation results.")
+# Add parent for utils import
+sys.path.append(str(Path(__file__).parent.parent))
+from utils.button_styling import style_navigation_buttons
+
+# Apply our button styling
+style_navigation_buttons()
+
+# Top navigation
+col1, col2, col3 = st.columns([1, 6, 1])
+with col1:
+    if st.button("🦍 Home", key="top_home"):
+        st.switch_page("APE.py")
+with col2:
+    st.title("📊 Analysis Overview")
+    st.markdown("Visualize and analyze simulation results.")
 
 # Initialize visualization mode selector - required!
 current_mode = init_visualization_mode()

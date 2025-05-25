@@ -197,14 +197,6 @@ def init_visualization_mode():
     
     Call this in your app's main function or at the top of pages.
     """
-    # Add logo to sidebar
-    from pathlib import Path
-    logo_path = Path(__file__).parent.parent / "assets" / "ape_logo.svg"
-    if logo_path.exists():
-        st.sidebar.image(str(logo_path), width=80)
-    else:
-        st.sidebar.markdown("# 🦍")  # Fallback emoji
-    st.sidebar.markdown("---")
     
     # Render selector in sidebar
     mode = VisualizationMode.render_mode_selector()

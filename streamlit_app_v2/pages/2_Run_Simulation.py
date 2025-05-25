@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from datetime import datetime
 import pandas as pd
+import time
 
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent.parent))
@@ -14,14 +15,37 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
 from simulation_v2.core.simulation_runner import SimulationRunner
 
-st.set_page_config(page_title="Run Simulation", page_icon="🚀", layout="wide")
+st.set_page_config(
+    page_title="Run Simulation", 
+    page_icon="🚀", 
+    layout="wide",
+    initial_sidebar_state="collapsed"  # Sidebar off by default
+)
 
-st.title("🚀 Run Simulation")
-st.markdown("Execute simulations using V2 engine with complete parameter tracking.")
+# Add parent for utils import
+sys.path.append(str(Path(__file__).parent.parent))
+from utils.button_styling import style_navigation_buttons
+
+# Apply our button styling
+style_navigation_buttons()
+
+
+# Top navigation
+col1, col2, col3 = st.columns([1, 6, 1])
+with col1:
+    if st.button("🦍 Home", key="top_home"):
+        st.switch_page("APE.py")
+with col2:
+    st.title("🚀 Run Simulation")
+    st.markdown("Execute simulations using V2 engine with complete parameter tracking.")
 
 # Check if protocol is loaded
 if not st.session_state.get('current_protocol'):
     st.warning("⚠️ No protocol loaded. Please select a protocol in the Protocol Manager first.")
+    
+    # Add navigation button to Protocol Manager
+    if st.button("📋 Go to Protocol Manager", use_container_width=True):
+        st.switch_page("pages/1_Protocol_Manager.py")
     st.stop()
 
 # Display current protocol
@@ -83,10 +107,42 @@ with col3:
     total_visits = int(n_patients * duration_years * visits_per_year)
     st.info(f"~{total_visits:,} visits")
 
-# Run simulation button
+# Action buttons in single line with dynamic proportional sizing
 st.markdown("---")
 
-if st.button("🎯 Run Simulation", type="primary", use_container_width=True):
+# Dynamic layout based on whether we have results
+if st.session_state.get('simulation_results'):
+    # After simulation: emphasize View Analysis
+    col1, col2, col3, col4 = st.columns([1, 3, 1, 1])
+else:
+    # Before simulation: emphasize Run Simulation
+    col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
+
+with col1:
+    # Run Simulation - changes size based on state
+    run_clicked = st.button("🎯 **Run Simulation**", use_container_width=True, key="run_sim_main")
+
+with col2:
+    # View Analysis - changes size and emphasis based on state
+    if st.session_state.get('simulation_results'):
+        # Make it more prominent after simulation
+        if st.button("📊 **View Analysis**", use_container_width=True, key="view_analysis_action"):
+            st.switch_page("pages/3_Analysis_Overview.py")
+    else:
+        # Empty space before simulation
+        st.empty()
+
+with col3:
+    # Change Protocol
+    if st.button("📋 Change Protocol", use_container_width=True, key="change_protocol"):
+        st.switch_page("pages/1_Protocol_Manager.py")
+
+with col4:
+    # Home
+    if st.button("🦍 Home", use_container_width=True, key="home_action"):
+        st.switch_page("APE.py")
+
+if run_clicked:
     # Create progress indicators
     progress_bar = st.progress(0, text="Initializing simulation...")
     status_text = st.empty()
@@ -209,29 +265,14 @@ if st.button("🎯 Run Simulation", type="primary", use_container_width=True):
         )
         
         # Next steps
-        st.info("💡 **Next Steps:** Navigate to the Analysis pages to visualize results in detail.")
+        st.info("💡 **Success!** Simulation complete. Updating interface...")
+        
+        # Force a rerun to update the dynamic layout
+        time.sleep(1.5)  # Brief pause to show success message
+        st.rerun()
         
     except Exception as e:
         progress_bar.empty()
         st.error(f"❌ Simulation failed: {str(e)}")
         st.exception(e)
 
-# Previous results
-if st.session_state.get('simulation_results'):
-    st.markdown("---")
-    st.subheader("Previous Results")
-    
-    prev_results = st.session_state.simulation_results
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.info(f"**Protocol:** {prev_results['protocol']['name']}")
-    with col2:
-        st.info(f"**Patients:** {prev_results['parameters']['n_patients']}")
-    with col3:
-        st.info(f"**Timestamp:** {prev_results['timestamp'][:19]}")
-        
-    if st.button("🗑️ Clear Previous Results"):
-        st.session_state.simulation_results = None
-        st.session_state.audit_trail = None
-        st.rerun()
