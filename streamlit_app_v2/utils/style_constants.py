@@ -38,6 +38,14 @@ class StyleConstants:
         'minor_ticks': [-25, -15, -5, 5, 15, 25],
     }
     
+    # Time scale definitions
+    TIME_SCALE = {
+        'week': 7,
+        'month': 30.44,  # Average month in days
+        'quarter': 91.31,  # Average quarter in days
+        'year': 365.25,  # Average year in days
+    }
+    
     # Time axes configurations
     TIME_SCALES = {
         'days': {
@@ -186,7 +194,7 @@ class StyleConstants:
                 if tick_months[-1] < months_total:
                     tick_months.append(months_total)
                 # Convert back to days for consistency
-                return [int(m * 30.44) for m in tick_months]
+                return [int(m * StyleConstants.TIME_SCALE['month']) for m in tick_months]
             elif days <= 730:  # Up to 2 years: every 6 months
                 months_total = int(days / 30.44)
                 tick_months = []
