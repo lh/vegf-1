@@ -83,17 +83,17 @@ class StyleConstants:
         'analysis': {
             'top': False,
             'right': False,
-            'left': True,
-            'bottom': True,
-            'alpha': 0.8,
-            'linewidth': 0.8,
+            'left': False,   # Tufte: remove non-data ink
+            'bottom': False,  # Tufte: remove non-data ink
+            'alpha': 0.0,
+            'linewidth': 0.0,
         },
         'presentation': {
             'top': False,
             'right': False,
-            'left': False,  # Clean for Zoom
-            'bottom': False,  # Clean for Zoom
-            'alpha': 0.5,
+            'left': True,    # Keep for Zoom orientation
+            'bottom': True,   # Keep for Zoom orientation
+            'alpha': 0.5,     # Subtle, not dominant
             'linewidth': 1.0,
         }
     }
