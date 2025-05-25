@@ -14,7 +14,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 # Page configuration
 st.set_page_config(
     page_title="AMD Protocol Explorer V2",
-    page_icon="🔬",
+    page_icon="🦍",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -27,8 +27,17 @@ if 'current_protocol' not in st.session_state:
 if 'audit_trail' not in st.session_state:
     st.session_state.audit_trail = None
 
-# Main page
-st.title("🔬 AMD Protocol Explorer V2")
+# Main page with logo
+col1, col2 = st.columns([1, 5])
+with col1:
+    logo_path = Path(__file__).parent / "assets" / "ape_logo.svg"
+    if logo_path.exists():
+        st.image(str(logo_path), width=100)
+    else:
+        st.markdown("🦍")  # Fallback emoji
+with col2:
+    st.title("AMD Protocol Explorer V2")
+
 st.markdown("""
 Welcome to the V2 simulation system with complete parameter traceability.
 
@@ -88,4 +97,4 @@ with col2:
 
 # Footer
 st.markdown("---")
-st.caption("AMD Protocol Explorer V2 - Scientific simulation with complete traceability")
+st.caption("🦍 AMD Protocol Explorer V2 - Scientific simulation with complete traceability")
