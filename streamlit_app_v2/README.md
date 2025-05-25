@@ -1,6 +1,6 @@
-# AMD Protocol Explorer V2 - Streamlit Interface
+# AMD Treatment Simulation Platform V2 🦍
 
-Clean implementation of the AMD Protocol Explorer using the V2 simulation engine with complete parameter traceability.
+Clean-room implementation of the AMD treatment simulation platform using test-driven development.
 
 ## Key Features
 
@@ -8,6 +8,8 @@ Clean implementation of the AMD Protocol Explorer using the V2 simulation engine
 - **Full Audit Trail**: Complete tracking from parameter definition to simulation result
 - **Protocol-Driven**: All simulations driven by versioned YAML protocol specifications
 - **Clean Architecture**: Built on V2 simulation engine without legacy code
+- **Dual Visualization Modes**: Toggle between Analysis (Tufte) and Presentation (Zoom) modes
+- **Consistent Styling**: All charts use ChartBuilder pattern with StyleConstants
 
 ## Quick Start
 
@@ -35,7 +37,9 @@ streamlit run app.py
 - Vision outcome distributions
 - Treatment pattern analysis
 - Patient trajectory visualization
+- Disease state progression
 - Complete audit trail viewer
+- All charts support dual visualization modes
 
 ## Protocol Files
 
@@ -58,10 +62,32 @@ streamlit_app_v2/
 │   ├── 1_Protocol_Manager.py
 │   ├── 2_Run_Simulation.py
 │   └── 3_Analysis_Overview.py
-├── components/              # Reusable UI components (future)
-├── utils/                   # Utility functions (future)
-└── requirements.txt         # Python dependencies
+├── utils/                    # Visualization and styling system
+│   ├── chart_builder.py      # Fluent API for consistent charts
+│   ├── style_constants.py    # Central styling rules
+│   ├── visualization_modes.py # Dual mode system
+│   └── tufte_zoom_style.py   # Mode-aware styling
+├── assets/                   # Static assets
+│   └── ape_logo.svg         # Our mascot!
+└── requirements.txt          # Python dependencies
 ```
+
+## Visualization Modes
+
+Toggle between two visualization modes using the sidebar selector:
+
+- **📊 Analysis Mode**: Tufte-inspired minimal design
+  - No axis lines (data points provide reference)
+  - Subtle grid (15% opacity)
+  - Smaller fonts for data density
+  - Designed for detailed analysis
+
+- **🎥 Presentation Mode**: Optimized for screen sharing
+  - Visible axis lines for orientation
+  - More prominent grid (30% opacity)
+  - 20% larger fonts
+  - 50% thicker lines
+  - High contrast colors
 
 ## Key Differences from V1
 
@@ -70,6 +96,8 @@ streamlit_app_v2/
 3. **Audit Trail**: Every parameter and decision is logged
 4. **Clean Separation**: No mixing of V1 and V2 code
 5. **Type Safety**: Strong typing throughout
+6. **Consistent Visualizations**: ChartBuilder pattern ensures uniformity
+7. **No Fallbacks**: Fail fast instead of silent degradation
 
 ## Adding New Protocols
 
