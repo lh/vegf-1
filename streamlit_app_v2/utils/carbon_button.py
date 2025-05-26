@@ -101,9 +101,23 @@ def carbon_button(
         fill: currentColor;
     }}
     
-    /* Hide the checkbox */
-    .stCheckbox[data-testid*="{key}"] {{
-        display: none;
+    /* Hide the checkbox - multiple selectors for reliability */
+    .stCheckbox:has(input#carbon_btn_{key}) {{
+        display: none !important;
+        height: 0 !important;
+        visibility: hidden !important;
+        position: absolute !important;
+        left: -9999px !important;
+    }}
+    
+    /* Fallback selectors for different Streamlit versions */
+    [data-testid="stCheckbox"]:has(input#carbon_btn_{key}) {{
+        display: none !important;
+    }}
+    
+    .element-container:has(.stCheckbox input#carbon_btn_{key}) {{
+        display: none !important;
+        height: 0 !important;
     }}
     </style>
     

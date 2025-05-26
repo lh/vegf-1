@@ -31,10 +31,20 @@ if 'current_protocol' not in st.session_state:
 if 'audit_trail' not in st.session_state:
     st.session_state.audit_trail = None
 
-# Main page
-st.title("AMD Protocol Explorer")
+# Main page with logo
+logo_col, title_col = st.columns([1, 4])
 
-st.markdown("Welcome to the V2 simulation system with complete parameter traceability.")
+with logo_col:
+    # Display the ape logo
+    logo_path = Path(__file__).parent / "assets" / "ape_logo.svg"
+    if logo_path.exists():
+        st.image(str(logo_path), width=150)
+    else:
+        st.markdown("🦍")  # Fallback emoji
+
+with title_col:
+    st.title("AMD Protocol Explorer")
+    st.markdown("Welcome to the V2 simulation system with complete parameter traceability.")
 
 # Two column layout for intro content
 col1, col2 = st.columns(2)
@@ -108,7 +118,4 @@ with col2:
 st.markdown("---")
 st.caption("🦍 APE V2 - Scientific simulation with complete traceability")
 
-# Add logo to sidebar (only on main page)
-logo_path = Path(__file__).parent / "assets" / "ape_logo.svg"
-if logo_path.exists():
-    st.sidebar.image(str(logo_path), use_container_width=True)
+# Logo is now displayed in the main page header
