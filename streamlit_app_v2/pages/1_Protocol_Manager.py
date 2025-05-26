@@ -8,6 +8,7 @@ from pathlib import Path
 import yaml
 import json
 from datetime import datetime
+import re
 
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent.parent))
@@ -176,10 +177,12 @@ with col2:
                     # This will validate all required fields
                     test_spec = ProtocolSpecification.from_yaml(validation_path)
                     
-                    # If validation passes, save to temp directory with timestamp
+                    # Save with timestamp to avoid collisions
+                    base_name = safe_filename.rsplit('.', 1)[0]
                     timestamp = int(time.time())
-                    final_filename = f"{safe_filename.rsplit('.', 1)[0]}_{timestamp}.yaml"
+                    final_filename = f"{base_name}_{timestamp}.yaml"
                     final_path = TEMP_DIR / final_filename
+                    
                     validation_path.rename(final_path)
                     
                     st.success(f"✅ Uploaded and validated {safe_filename}")
@@ -195,6 +198,12 @@ with col2:
 with col3:
     st.subheader(" ")  # Invisible subheader for alignment
     # Create a copy with a new name
+    # Use session state to control popover visibility
+    if st.session_state.get('duplicate_success', False):
+        st.success("✅ Duplicate created successfully!")
+        # Clear the flag after showing
+        st.session_state.duplicate_success = False
+    
     with st.popover("📝 Duplicate", use_container_width=True):
         st.markdown("**Duplicate Protocol**")
         st.info("Create a copy of this protocol with a new name")
@@ -235,7 +244,7 @@ with col3:
                 data['description'] = new_description
                 data['created_date'] = datetime.now().strftime("%Y-%m-%d")
                 
-                # Save to temp directory with timestamp
+                # Always create with timestamp for duplicates to ensure uniqueness
                 base_filename = f"{new_name.lower().replace(' ', '_')}_v{new_version}"
                 timestamp = int(time.time())
                 filename = f"{base_filename}_{timestamp}.yaml"
@@ -253,8 +262,8 @@ with col3:
                 # Validate the new file can be loaded
                 test_spec = ProtocolSpecification.from_yaml(save_path)
                 
-                st.success(f"✅ Created {filename}")
-                # Clear the flag before rerun
+                # Set success flag and clear creating flag
+                st.session_state.duplicate_success = True
                 st.session_state.creating_duplicate = False
                 st.rerun()
             except Exception as e:
