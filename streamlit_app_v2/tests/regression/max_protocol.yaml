@@ -1,0 +1,28 @@
+
+name: Maximum Size Test
+version: 1.0.0
+
+disease_states:
+  - name: active
+disease_transitions:
+  active:
+    active: 1.0
+treatment_effect_on_transitions:
+  active:
+    active: 1.0
+
+min_interval_days: 42
+max_interval_days: 84
+extension_days: 14
+shortening_days: 14
+
+baseline_vision_mean: 70
+baseline_vision_std: 10
+baseline_vision_min: 40
+baseline_vision_max: 90
+
+max_injections_per_year: 9
+loading_doses: 3
+discontinuation_vision_threshold: 20
+discontinuation_low_vision_prob: 0.2
+discontinuation_rate_per_month: 0.02

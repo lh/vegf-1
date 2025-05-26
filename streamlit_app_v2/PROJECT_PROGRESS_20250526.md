@@ -4,7 +4,7 @@
 
 ### 1. Protocol Manager Redesign 📋
 - **Complete UI Overhaul**: Redesigned the Protocol Manager with clean, intuitive interface
-- **File Management**: 
+- **File Management**:
   - Upload protocols with validation
   - Duplicate protocols with custom naming
   - Download protocols for local storage
@@ -21,7 +21,7 @@
   - Clear visual distinction between default and temporary protocols
 
 ### 2. UI/UX Improvements 🎨
-- **Button Styling Victory**: 
+- **Button Styling Victory**:
   - SOLVED the Streamlit red text flash issue for ALL button types
   - Custom CSS targeting including popover buttons
   - Removed unnecessary chevrons from popovers
@@ -38,7 +38,7 @@
   - Safety-first approach for destructive actions
 
 ### 3. Data Integrity & YAML Management 🔒
-- **Round-Trip Fix**: 
+- **Round-Trip Fix**:
   - Created `to_yaml_dict()` method in ProtocolSpecification
   - Fixed baseline_vision structure issue
   - Ensures downloaded protocols can be re-uploaded
@@ -62,7 +62,7 @@
 - Smooth transitions and animations
 
 #### Dual Time Perspectives
-- **Calendar Time View**: 
+- **Calendar Time View**:
   - Actual dates on x-axis
   - See seasonal patterns
   - Align with real-world events
