@@ -65,15 +65,26 @@
   - Timezone issues
   - Cleanup after crash
 
+### 8. **Streamlit UI Tests** 
+- ✅ `test_streamlit_ui.py` - UI interaction testing with Playwright
+  - App loading and navigation
+  - Page switching (`st.switch_page`)
+  - Protocol selection
+  - Button interactions
+  - Session state persistence
+  - Responsive layout
+  - Error states
+  - Multiple tabs behavior
+
 ## Missing Test Coverage ❌
 
-### 1. **Streamlit UI Tests**
-- Widget interactions
-- Page navigation (`st.switch_page`)
-- File upload behavior
-- Button click handling
-- Form submissions
-- Progress indicators
+### 1. **Streamlit UI Tests** (Partially Addressed)
+- ✅ Basic widget interactions
+- ✅ Page navigation 
+- ✅ Button click handling
+- ⚠️ File upload behavior (basic test written)
+- ❌ Form submissions (complex forms)
+- ❌ Progress indicators (during simulation)
 
 ### 2. **Integration Tests**
 - Full workflow (protocol → simulation → visualization)
@@ -115,9 +126,36 @@ pytest tests/ -v
 pytest tests/regression/test_memory_baseline.py -v -s
 ```
 
+### UI Tests with Playwright
+```bash
+# First, start the Streamlit app
+streamlit run APE.py
+
+# In another terminal, run UI tests
+pytest tests/ui/test_streamlit_ui.py -v
+
+# Or use the automated runner
+python tests/ui/test_app_runner.py -v
+
+# Run with visible browser
+python tests/ui/test_app_runner.py --headed
+```
+
 ### With Coverage Report
 ```bash
 pytest tests/ --cov=streamlit_app_v2 --cov-report=html
+```
+
+### Using MCP Puppeteer (in Claude)
+```python
+# Navigate to app
+mcp__puppeteer__puppeteer_navigate(url='http://localhost:8501')
+
+# Take screenshot
+mcp__puppeteer__puppeteer_screenshot(name='test_screenshot')
+
+# Interact with elements
+mcp__puppeteer__puppeteer_click(selector='button:has-text("Protocol Manager")')
 ```
 
 ## Critical Paths to Test Before Release
