@@ -156,25 +156,25 @@ class ParquetResults(SimulationResults):
         return result_df
         
     def get_treatment_intervals_df(self) -> pd.DataFrame:
-        """Get treatment intervals as DataFrame."""
+        """Get treatment intervals as DataFrame - VECTORIZED for speed."""
         visits_path = self.data_path / 'visits.parquet'
         visits_df = pd.read_parquet(visits_path)
         
-        # Calculate intervals
-        intervals = []
-        for patient_id in visits_df['patient_id'].unique():
-            patient_visits = visits_df[visits_df['patient_id'] == patient_id].sort_values('time_years')
-            
-            if len(patient_visits) > 1:
-                times = patient_visits['time_years'].values * 365
-                for i in range(1, len(times)):
-                    intervals.append({
-                        'patient_id': patient_id,
-                        'visit_number': i,
-                        'interval_days': times[i] - times[i-1]
-                    })
-                    
-        return pd.DataFrame(intervals)
+        # Sort by patient and time once
+        visits_df = visits_df.sort_values(['patient_id', 'time_years'])
+        
+        # Calculate intervals using shift - fully vectorized!
+        visits_df['prev_time'] = visits_df.groupby('patient_id')['time_years'].shift(1)
+        visits_df['interval_days'] = (visits_df['time_years'] - visits_df['prev_time']) * 365
+        
+        # Add visit number for each patient
+        visits_df['visit_number'] = visits_df.groupby('patient_id').cumcount()
+        
+        # Filter out first visits (no previous interval) and return
+        intervals_df = visits_df[visits_df['prev_time'].notna()].copy()
+        
+        # Return only needed columns
+        return intervals_df[['patient_id', 'visit_number', 'interval_days']].reset_index(drop=True)
         
     def save(self, path: Path) -> None:
         """

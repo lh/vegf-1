@@ -177,9 +177,15 @@ with tab2:
     with col4:
         st.metric("Injection Rate", f"{(total_injections / (total_patients * params['duration_years'])):.1f}/year")
     
-    # Get treatment intervals - this is usually fast even for large datasets
+    # Cache treatment intervals to avoid recalculation
+    @st.cache_data
+    def get_cached_treatment_intervals(sim_id):
+        """Cache treatment intervals calculation."""
+        return results.get_treatment_intervals_df()
+    
+    # Get treatment intervals - cached!
     with st.spinner("Loading treatment intervals..."):
-        treatment_df = results.get_treatment_intervals_df()
+        treatment_df = get_cached_treatment_intervals(results.metadata.sim_id)
         
         if not treatment_df.empty:
             # For visualization, we might sample if it's huge

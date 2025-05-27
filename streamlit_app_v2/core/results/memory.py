@@ -131,24 +131,34 @@ class InMemoryResults(SimulationResults):
         return pd.DataFrame(records)
         
     def get_treatment_intervals_df(self) -> pd.DataFrame:
-        """Get treatment intervals as DataFrame."""
+        """Get treatment intervals as DataFrame - VECTORIZED."""
+        # First collect all visits into a list
         records = []
-        
         for patient_id, patient in self.raw_results.patient_histories.items():
-            if len(patient.visit_history) > 1:
-                for i in range(1, len(patient.visit_history)):
-                    # Get dates from visit history
-                    prev_date = patient.visit_history[i-1]['date']
-                    curr_date = patient.visit_history[i]['date']
-                    interval = (curr_date - prev_date).days
-                    
-                    records.append({
-                        'patient_id': patient_id,
-                        'visit_number': i,
-                        'interval_days': interval
-                    })
-                    
-        return pd.DataFrame(records)
+            for i, visit in enumerate(patient.visit_history):
+                records.append({
+                    'patient_id': patient_id,
+                    'visit_number': i,
+                    'date': visit['date']
+                })
+        
+        # Convert to DataFrame for vectorized operations
+        visits_df = pd.DataFrame(records)
+        
+        if visits_df.empty:
+            return pd.DataFrame(columns=['patient_id', 'visit_number', 'interval_days'])
+        
+        # Sort by patient and visit number
+        visits_df = visits_df.sort_values(['patient_id', 'visit_number'])
+        
+        # Calculate intervals using shift - vectorized!
+        visits_df['prev_date'] = visits_df.groupby('patient_id')['date'].shift(1)
+        visits_df['interval_days'] = (visits_df['date'] - visits_df['prev_date']).dt.days
+        
+        # Filter out first visits and return
+        intervals_df = visits_df[visits_df['prev_date'].notna()].copy()
+        
+        return intervals_df[['patient_id', 'visit_number', 'interval_days']].reset_index(drop=True)
         
     def save(self, path: Path) -> None:
         """Save results to disk."""
