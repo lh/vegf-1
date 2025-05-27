@@ -124,7 +124,7 @@ class ParquetReader:
             columns=columns
         )
         
-        return df.sort_values('time_years')
+        return df.sort_values('time_days')
         
     def iterate_visits(
         self,
@@ -214,13 +214,13 @@ class ParquetReader:
         if patient_ids:
             filters.append(('patient_id', 'in', patient_ids))
         if time_points:
-            # This is less efficient but necessary for specific time filtering
+            # Time points should be in days now
             for tp in time_points:
-                filters.append(('time_years', '>=', tp - 0.01))
-                filters.append(('time_years', '<=', tp + 0.01))
+                filters.append(('time_days', '>=', tp - 1))
+                filters.append(('time_days', '<=', tp + 1))
                 
         # Iterate over visits with filters
-        columns = ['patient_id', 'time_years', 'vision']
+        columns = ['patient_id', 'time_days', 'vision']
         
         for batch in self.iterate_visits(
             batch_size=10000,

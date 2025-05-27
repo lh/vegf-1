@@ -36,6 +36,7 @@ st.set_page_config(
 # Add parent for utils import
 sys.path.append(str(Path(__file__).parent.parent))
 from utils.button_styling import style_navigation_buttons
+from visualizations.streamgraph_simple import create_simple_streamgraph
 
 # Apply our button styling
 style_navigation_buttons()
@@ -91,7 +92,7 @@ stats = get_cached_stats(results.metadata.sim_id)
 is_large_dataset = stats['patient_count'] > 1000
 
 # Create tabs for different analyses
-tab1, tab2, tab3, tab4 = st.tabs(["Vision Outcomes", "Treatment Patterns", "Patient Trajectories", "Audit Trail"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["Vision Outcomes", "Treatment Patterns", "Patient Trajectories", "Patient States", "Audit Trail"])
 
 with tab1:
     st.header("Vision Outcomes")
@@ -337,6 +338,67 @@ with tab3:
     st.caption(f"*Showing {n_sample} of {stats['patient_count']:,} total patients")
 
 with tab4:
+    st.header("Patient States Over Time")
+    st.markdown("Track patient state transitions throughout the simulation.")
+    
+    # Add controls for streamgraph
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        normalize = st.checkbox(
+            "Show as Percentage",
+            value=False,
+            help="Display as percentage of total patients"
+        )
+    
+    with col2:
+        time_resolution = st.selectbox(
+            "Time Resolution",
+            ["month", "week"],
+            help="Group data by month or week"
+        )
+    
+    # Create the streamgraph
+    with st.spinner("Generating streamgraph visualization..."):
+        # Cache based on simulation ID to avoid hashing the results object
+        @st.cache_data
+        def get_streamgraph_figure(sim_id: str, time_res: str, norm: bool):
+            return create_simple_streamgraph(results, time_res, norm)
+        
+        fig = get_streamgraph_figure(results.metadata.sim_id, time_resolution, normalize)
+    
+    # Display the figure
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Show state statistics
+    st.subheader("Discontinuation Statistics")
+    
+    # Get discontinuation stats from results
+    disc_stats = stats.get('discontinuation_stats', {})
+    
+    if disc_stats:
+        # Create columns for discontinuation breakdown
+        total_disc = sum(disc_stats.values())
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.metric("Total Discontinuations", StyleConstants.format_count(total_disc))
+            st.metric("Discontinuation Rate", f"{(total_disc / stats['patient_count'] * 100):.1f}%")
+        
+        with col2:
+            # Show breakdown by type
+            st.markdown("**Discontinuation Reasons:**")
+            for reason, count in disc_stats.items():
+                percentage = (count / total_disc * 100) if total_disc > 0 else 0
+                st.write(f"- {reason.replace('_', ' ').title()}: {count} ({percentage:.1f}%)")
+    else:
+        st.info("No discontinuation data available for this simulation.")
+    
+    # Add note about patient conservation
+    st.caption("*Patient counts are conserved throughout the simulation - total always equals initial population.")
+
+with tab5:
     st.header("Audit Trail")
     st.markdown("Complete parameter tracking and simulation events.")
     

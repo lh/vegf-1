@@ -50,6 +50,15 @@ class ParquetWriter:
         # Total steps for progress tracking
         total_patients = len(raw_results.patient_histories)
         
+        # Find the earliest visit date to use as reference
+        start_date = None
+        for patient_id, patient in raw_results.patient_histories.items():
+            visits = getattr(patient, 'visit_history', [])
+            if visits and isinstance(visits[0], dict) and 'date' in visits[0]:
+                visit_date = visits[0]['date']
+                if start_date is None or visit_date < start_date:
+                    start_date = visit_date
+        
         # Step 1: Write patient summaries
         if progress_callback:
             progress_callback(0, "Preparing patient data...")
@@ -58,8 +67,8 @@ class ParquetWriter:
         patients_processed = 0
         
         for patient_id, patient in raw_results.patient_histories.items():
-            # Extract patient summary
-            record = self._extract_patient_summary(patient_id, patient)
+            # Extract patient summary with start date for time conversion
+            record = self._extract_patient_summary(patient_id, patient, start_date)
             patient_records.append(record)
             patients_processed += 1
             
@@ -98,7 +107,7 @@ class ParquetWriter:
         if progress_callback:
             progress_callback(100, "Complete!")
             
-    def _extract_patient_summary(self, patient_id: str, patient: Any) -> dict:
+    def _extract_patient_summary(self, patient_id: str, patient: Any, start_date=None) -> dict:
         """Extract summary data for a patient."""
         # Get final vision (last visit)
         if hasattr(patient, 'visit_history') and patient.visit_history:
@@ -114,6 +123,13 @@ class ParquetWriter:
             # Fallback for different patient structures
             final_vision = getattr(patient, 'current_vision', getattr(patient, 'vision', 70))
             total_visits = len(getattr(patient, 'visits', []))
+        
+        # Convert discontinuation_date to days if we have a start date
+        disc_date = getattr(patient, 'discontinuation_date', getattr(patient, 'discontinuation_time', None))
+        disc_time_days = None
+        if disc_date and start_date and hasattr(disc_date, 'timestamp'):
+            time_delta = disc_date - start_date
+            disc_time_days = int(time_delta.total_seconds() / (24 * 3600))
             
         return {
             'patient_id': patient_id,
@@ -123,7 +139,7 @@ class ParquetWriter:
             'total_injections': getattr(patient, 'injection_count', 0),
             'total_visits': total_visits,
             'discontinued': getattr(patient, 'is_discontinued', getattr(patient, 'discontinued', False)),
-            'discontinuation_time': getattr(patient, 'discontinuation_date', getattr(patient, 'discontinuation_time', None)),
+            'discontinuation_time': disc_time_days,  # Now in days, not datetime
             'discontinuation_type': getattr(patient, 'discontinuation_type', None)
         }
         
@@ -163,20 +179,20 @@ class ParquetWriter:
                 # Handle both dict and object formats
                 if isinstance(visit, dict):
                     # Dict format from visit_history
-                    # Convert datetime to years from start
                     visit_date = visit.get('date')
                     if visit_date and hasattr(visit_date, 'timestamp'):
-                        # Calculate years from simulation start (first visit)
+                        # Calculate days from simulation start (first visit)
                         if i == 0:
                             start_date = visit_date
                         time_delta = visit_date - visits[0].get('date', visit_date)
-                        time_years = time_delta.total_seconds() / (365.25 * 24 * 3600)
+                        time_days = int(time_delta.total_seconds() / (24 * 3600))
                     else:
-                        time_years = i * 0.1  # Fallback
+                        time_days = i * 30  # Fallback: assume monthly visits
                         
                     record = {
                         'patient_id': patient_id,
-                        'time_years': time_years,
+                        'date': visit_date,  # Store original datetime
+                        'time_days': time_days,  # Days from start
                         'vision': visit.get('vision', 70),
                         'injected': visit.get('treatment_given', False),
                         'next_interval_days': visit.get('next_interval_days', None),
@@ -186,7 +202,8 @@ class ParquetWriter:
                     # Object format (fallback)
                     record = {
                         'patient_id': patient_id,
-                        'time_years': getattr(visit, 'time', getattr(visit, 'time_years', i * 0.1)),
+                        'date': getattr(visit, 'date', None),
+                        'time_days': getattr(visit, 'time_days', getattr(visit, 'time', i * 30)),
                         'vision': getattr(visit, 'visual_acuity', getattr(visit, 'vision', 70)),
                         'injected': getattr(visit, 'received_injection', getattr(visit, 'injected', False)),
                         'next_interval_days': getattr(visit, 'next_interval_days', None),
@@ -216,7 +233,7 @@ class ParquetWriter:
         df = pd.DataFrame(records)
         
         # Sort by patient and time for better query performance
-        df = df.sort_values(['patient_id', 'time_years'])
+        df = df.sort_values(['patient_id', 'time_days'])
         
         # Convert to table without index
         table = pa.Table.from_pandas(df, preserve_index=False)

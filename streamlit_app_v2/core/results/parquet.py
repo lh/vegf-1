@@ -149,23 +149,42 @@ class ParquetResults(SimulationResults):
             visits_df = pd.read_parquet(visits_path)
             
         # Transform to expected format
-        result_df = visits_df[['patient_id', 'time_years', 'vision']].copy()
-        result_df['time_months'] = result_df['time_years'] * 12
+        result_df = visits_df[['patient_id', 'time_days', 'vision']].copy()
+        result_df['time_months'] = result_df['time_days'] / 30.0
         result_df = result_df[['patient_id', 'time_months', 'vision']]
         
         return result_df
         
+    def get_visits_df(self) -> pd.DataFrame:
+        """Get all visits as DataFrame with discontinuation/retreatment info."""
+        visits_path = self.data_path / 'visits.parquet'
+        visits_df = pd.read_parquet(visits_path)
+        
+        # Add discontinuation and retreatment columns if not present
+        if 'is_discontinuation_visit' not in visits_df.columns:
+            visits_df['is_discontinuation_visit'] = False
+        if 'discontinuation_reason' not in visits_df.columns:
+            visits_df['discontinuation_reason'] = None
+        if 'is_retreatment_visit' not in visits_df.columns:
+            visits_df['is_retreatment_visit'] = False
+            
+        return visits_df
+    
     def get_treatment_intervals_df(self) -> pd.DataFrame:
         """Get treatment intervals as DataFrame - VECTORIZED for speed."""
         visits_path = self.data_path / 'visits.parquet'
         visits_df = pd.read_parquet(visits_path)
         
         # Sort by patient and time once
-        visits_df = visits_df.sort_values(['patient_id', 'time_years'])
+        visits_df = visits_df.sort_values(['patient_id', 'time_days'])
         
         # Calculate intervals using shift - fully vectorized!
-        visits_df['prev_time'] = visits_df.groupby('patient_id')['time_years'].shift(1)
-        visits_df['interval_days'] = (visits_df['time_years'] - visits_df['prev_time']) * 365
+        visits_df['prev_time'] = visits_df.groupby('patient_id')['time_days'].shift(1)
+        visits_df['interval_days'] = visits_df['time_days'] - visits_df['prev_time']
+        
+        # Convert to int only for non-null values
+        mask = visits_df['interval_days'].notna()
+        visits_df.loc[mask, 'interval_days'] = visits_df.loc[mask, 'interval_days'].astype(int)
         
         # Add visit number for each patient
         visits_df['visit_number'] = visits_df.groupby('patient_id').cumcount()

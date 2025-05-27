@@ -37,7 +37,7 @@ class TestAnalysisPageAPI:
             for j in range(10):
                 visits.append({
                     'patient_id': f'P{i:04d}',
-                    'time_years': j * 0.1,
+                    'time_days': j * 30,  # Changed to days
                     'vision': 70 - j * 0.5 + np.random.normal(0, 2),
                     'injected': j % 2 == 0,
                     'next_interval_days': 42,

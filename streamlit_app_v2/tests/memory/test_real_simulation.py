@@ -115,7 +115,7 @@ class TestRealSimulation:
                         
                         # Check visit structure
                         first_visit = patient['visits'][0]
-                        assert 'time_years' in first_visit
+                        assert 'time_days' in first_visit  # Changed from time_years
                         assert 'vision' in first_visit
                         assert 'injected' in first_visit
                         
