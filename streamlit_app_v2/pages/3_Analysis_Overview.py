@@ -315,7 +315,7 @@ with tab3:
     ax.set_xlim(0, max_months)
     
     # Apply styling
-    style_axis(ax, spine_color=colors['neutral'])
+    style_axis(ax)
     
     plt.tight_layout()
     st.pyplot(fig)
