@@ -9,6 +9,7 @@ import socket
 import os
 import signal
 from pathlib import Path
+from playwright.sync_api import sync_playwright
 
 
 def is_port_open(port=8501, host='localhost'):
@@ -109,6 +110,19 @@ def streamlit_server():
                 server_process.kill()
         
         print("✓ Streamlit server stopped")
+
+
+@pytest.fixture(scope="session")
+def browser():
+    """Create browser instance for testing."""
+    with sync_playwright() as p:
+        # Use Chromium for consistency
+        browser = p.chromium.launch(
+            headless=True,  # Set to False to see the browser
+            args=['--no-sandbox']  # Needed for some environments
+        )
+        yield browser
+        browser.close()
 
 
 @pytest.fixture

@@ -260,9 +260,10 @@ with tab3:
         grouped = vision_df_sample.groupby('patient_id')
         
         for i, (patient_id, patient_data) in enumerate(grouped):
-            patient_data = patient_data.sort_values('time_months')
+            patient_data = patient_data.sort_values('time_days')
             
-            months = patient_data['time_months'].values
+            # Convert days to months for display
+            months = patient_data['time_days'].values / 30.0
             visions = patient_data['vision'].values
             
             # Use a color cycle for better visibility
@@ -291,7 +292,7 @@ with tab3:
     ax.set_yticks(StyleConstants.get_vision_ticks())
     
     # Set time scale with proper month ticks
-    max_months = vision_df_sample['time_months'].max()
+    max_months = vision_df_sample['time_days'].max() / 30.0
     
     # Create clean month ticks
     if max_months <= 12:

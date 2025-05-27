@@ -148,10 +148,8 @@ class ParquetResults(SimulationResults):
             # Read all visits
             visits_df = pd.read_parquet(visits_path)
             
-        # Transform to expected format
+        # Return with time_days (no conversion needed)
         result_df = visits_df[['patient_id', 'time_days', 'vision']].copy()
-        result_df['time_months'] = result_df['time_days'] / 30.0
-        result_df = result_df[['patient_id', 'time_months', 'vision']]
         
         return result_df
         

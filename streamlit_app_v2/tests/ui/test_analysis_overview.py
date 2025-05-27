@@ -48,7 +48,7 @@ class TestAnalysisOverview:
         vision_df = results.get_vision_trajectory_df()
         assert not vision_df.empty
         assert 'patient_id' in vision_df.columns
-        assert 'time_months' in vision_df.columns
+        assert 'time_days' in vision_df.columns
         assert 'vision' in vision_df.columns
         
         # Calculate baseline and final visions from trajectory data
@@ -57,7 +57,7 @@ class TestAnalysisOverview:
         
         for patient_id in vision_df['patient_id'].unique():
             patient_data = vision_df[vision_df['patient_id'] == patient_id]
-            patient_data = patient_data.sort_values('time_months')
+            patient_data = patient_data.sort_values('time_days')
             
             if not patient_data.empty:
                 baseline_visions.append(patient_data.iloc[0]['vision'])

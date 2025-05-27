@@ -78,7 +78,7 @@ class TestAnalysisPageAPI:
         vision_df = results.get_vision_trajectory_df()
         assert not vision_df.empty
         assert 'patient_id' in vision_df.columns
-        assert 'time_months' in vision_df.columns
+        assert 'time_days' in vision_df.columns
         assert 'vision' in vision_df.columns
         
         # 2. get_summary_statistics

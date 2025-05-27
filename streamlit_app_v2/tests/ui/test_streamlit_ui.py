@@ -7,8 +7,7 @@ Run these tests with the Streamlit app running:
 """
 
 import pytest
-import asyncio
-from playwright.sync_api import sync_playwright, expect
+from playwright.sync_api import expect
 import time
 from pathlib import Path
 
@@ -16,25 +15,9 @@ from pathlib import Path
 class TestStreamlitUI:
     """Test Streamlit UI interactions using Playwright."""
     
-    @pytest.fixture(scope="class")
-    def browser(self):
-        """Create browser instance for testing."""
-        with sync_playwright() as p:
-            # Use Chromium for consistency
-            browser = p.chromium.launch(
-                headless=True,  # Set to False to see the browser
-                args=['--no-sandbox']  # Needed for some environments
-            )
-            yield browser
-            browser.close()
-    
-    @pytest.fixture
-    def page(self, browser):
-        """Create a new page for each test."""
-        context = browser.new_context()
-        page = context.new_page()
-        yield page
-        context.close()
+    # Remove local fixtures - use the ones from conftest.py instead
+    # The conftest.py provides both browser and page fixtures
+    # The page fixture includes streamlit_server which auto-starts the server
     
     def test_app_loads(self, page):
         """Test that the app loads successfully."""
@@ -225,21 +208,9 @@ version: 1.0.0
 class TestStreamlitMemoryBehavior:
     """Test memory-related UI behavior."""
     
-    @pytest.fixture(scope="class")
-    def browser(self):
-        """Create browser instance for testing."""
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            yield browser
-            browser.close()
-    
-    @pytest.fixture
-    def page(self, browser):
-        """Create a new page for each test."""
-        context = browser.new_context()
-        page = context.new_page()
-        yield page
-        context.close()
+    # Remove local fixtures - use the ones from conftest.py instead
+    # The conftest.py provides both browser and page fixtures
+    # The page fixture includes streamlit_server which auto-starts the server
     
     def test_session_state_persistence(self, page):
         """Test that session state persists across navigation."""
