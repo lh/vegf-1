@@ -96,21 +96,13 @@ tab1, tab2, tab3, tab4 = st.tabs(["Vision Outcomes", "Treatment Patterns", "Pati
 with tab1:
     st.header("Vision Outcomes")
     
-    # Use vectorized calculation
-    if is_large_dataset:
-        st.info(f"📊 Analyzing all {stats['patient_count']:,} patients. Histograms show representative samples for performance.")
-        
-        with st.spinner(f"Calculating vision statistics for {stats['patient_count']:,} patients..."):
-            # Use a moderate sample for histogram visualization
-            sample_size = min(5000, stats['patient_count'])
-            baseline_visions, final_visions, vision_changes, n_patients = calculate_vision_stats_vectorized(
-                results.metadata.sim_id, sample_size=sample_size
-            )
-    else:
-        # For small datasets, use all data
+    # Use vectorized calculation - always use all data since it's fast!
+    with st.spinner(f"Calculating vision statistics for {stats['patient_count']:,} patients..."):
         baseline_visions, final_visions, vision_changes, n_patients = calculate_vision_stats_vectorized(
-            results.metadata.sim_id
+            results.metadata.sim_id, sample_size=None  # None = use all data
         )
+    
+    st.info(f"📊 Analyzing all {stats['patient_count']:,} patients")
     
     # Vision distribution plots
     col1, col2 = st.columns(2)
@@ -165,9 +157,6 @@ with tab1:
         # Use vectorized stats
         st.metric("Mean Vision Change", f"{StyleConstants.format_vision(mean_change)} letters")
         st.metric("Patients Improved", f"{StyleConstants.format_count(np.sum(vision_changes > 0))}/{StyleConstants.format_count(len(vision_changes))}")
-    
-    if is_large_dataset:
-        st.caption(f"*Histograms based on representative sample of {n_patients:,} patients. Statistics reflect all {stats['patient_count']:,} patients.")
 
 with tab2:
     st.header("Treatment Patterns")
