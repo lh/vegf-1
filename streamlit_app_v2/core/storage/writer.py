@@ -140,7 +140,10 @@ class ParquetWriter:
             'total_visits': total_visits,
             'discontinued': getattr(patient, 'is_discontinued', getattr(patient, 'discontinued', False)),
             'discontinuation_time': disc_time_days,  # Now in days, not datetime
-            'discontinuation_type': getattr(patient, 'discontinuation_type', None)
+            'discontinuation_type': getattr(patient, 'discontinuation_type', None),
+            'discontinuation_reason': getattr(patient, 'discontinuation_reason', None),
+            'pre_discontinuation_vision': getattr(patient, 'pre_discontinuation_vision', None),
+            'retreatment_count': getattr(patient, 'retreatment_count', 0)
         }
         
     def _write_patient_chunk(self, records: list, is_final: bool) -> None:
