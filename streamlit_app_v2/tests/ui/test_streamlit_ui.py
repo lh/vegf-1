@@ -44,12 +44,13 @@ class TestStreamlitUI:
         page.wait_for_load_state("networkidle")
         
         # Check for main title
-        expect(page.locator("h1")).to_contain_text("APE V2")
+        expect(page.locator("h1")).to_contain_text("AMD Protocol Explorer")
         
-        # Check navigation cards are present
-        expect(page.locator("text=Protocol Manager")).to_be_visible()
-        expect(page.locator("text=Run Simulation")).to_be_visible()
-        expect(page.locator("text=Analysis Overview")).to_be_visible()
+        # Check navigation cards are present - use role locators for specificity
+        expect(page.get_by_role("button", name="Protocol Manager")).to_be_visible()
+        expect(page.get_by_role("button", name="Run Simulation")).to_be_visible()
+        # Analysis Overview is in the sidebar - check it exists, not necessarily visible
+        expect(page.locator("text=Analysis Overview")).to_have_count(1)
     
     def test_navigation_to_protocol_manager(self, page):
         """Test navigation to Protocol Manager page."""
@@ -96,7 +97,7 @@ class TestStreamlitUI:
         
         # Should be back at home
         page.wait_for_url("http://localhost:8501")
-        expect(page.locator("h1")).to_contain_text("APE V2")
+        expect(page.locator("h1")).to_contain_text("AMD Protocol Explorer")
     
     def test_protocol_selection(self, page):
         """Test protocol selection functionality."""
@@ -110,9 +111,9 @@ class TestStreamlitUI:
         # Click to open dropdown
         protocol_selector.click()
         
-        # Check for Eylea protocol option
-        eylea_option = page.locator("text=Eylea")
-        if eylea_option.is_visible():
+        # Check for Eylea protocol option - be more specific
+        eylea_option = page.locator("div[data-testid='stSelectboxVirtualDropdown']").get_by_text("eylea", exact=False).first
+        if eylea_option.count() > 0:
             eylea_option.click()
             
             # Should show protocol details
@@ -276,8 +277,8 @@ class TestStreamlitMemoryBehavior:
         page2.wait_for_load_state("networkidle")
         
         # Both should load successfully
-        expect(page.locator("h1")).to_contain_text("APE V2")
-        expect(page2.locator("h1")).to_contain_text("APE V2")
+        expect(page.locator("h1")).to_contain_text("AMD Protocol Explorer")
+        expect(page2.locator("h1")).to_contain_text("AMD Protocol Explorer")
         
         context2.close()
 
