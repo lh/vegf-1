@@ -120,11 +120,19 @@ class InMemoryResults(SimulationResults):
         for patient_id in patient_ids:
             patient = self.raw_results.patient_histories[patient_id]
             for i, visit in enumerate(patient.visit_history):
-                # Calculate time in years from index (approximation)
-                time_years = i * 0.1  # Rough approximation
+                # Get time in days from visit data
+                if 'date' in visit and hasattr(visit['date'], 'timestamp'):
+                    # Calculate days from first visit
+                    start_date = patient.visit_history[0]['date']
+                    time_delta = visit['date'] - start_date
+                    time_days = int(time_delta.total_seconds() / (24 * 3600))
+                else:
+                    # Fallback: assume monthly visits (30 days apart)
+                    time_days = i * 30
+                    
                 records.append({
                     'patient_id': patient_id,
-                    'time_months': time_years * 12,
+                    'time_days': time_days,
                     'vision': visit['vision']
                 })
                 
