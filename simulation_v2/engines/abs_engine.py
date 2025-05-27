@@ -175,12 +175,22 @@ class ABSEngine:
         final_visions = [p.current_vision for p in self.patients.values()]
         discontinued = sum(1 for p in self.patients.values() if p.is_discontinued)
         
+        # Handle edge case of zero patients
+        if self.n_patients == 0:
+            final_vision_mean = 0.0
+            final_vision_std = 0.0
+            discontinuation_rate = 0.0
+        else:
+            final_vision_mean = sum(final_visions) / len(final_visions)
+            final_vision_std = self._calculate_std(final_visions)
+            discontinuation_rate = discontinued / self.n_patients
+        
         return SimulationResults(
             total_injections=total_injections,
             patient_histories=self.patients,
-            final_vision_mean=sum(final_visions) / len(final_visions),
-            final_vision_std=self._calculate_std(final_visions),
-            discontinuation_rate=discontinued / self.n_patients
+            final_vision_mean=final_vision_mean,
+            final_vision_std=final_vision_std,
+            discontinuation_rate=discontinuation_rate
         )
         
     def _calculate_vision_change(

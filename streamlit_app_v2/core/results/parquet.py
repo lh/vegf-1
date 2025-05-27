@@ -6,7 +6,7 @@ loading only what's needed into memory. Suitable for large simulations.
 """
 
 import json
-from typing import Dict, Any, Iterator, Optional, List, Tuple
+from typing import Dict, Any, Iterator, Optional, List, Tuple, Callable
 from pathlib import Path
 import pandas as pd
 import pyarrow.parquet as pq
@@ -14,6 +14,7 @@ import numpy as np
 from datetime import datetime
 
 from .base import SimulationResults, SimulationMetadata
+from ..storage import ParquetWriter, ParquetReader
 
 
 class ParquetResults(SimulationResults):
@@ -35,14 +36,21 @@ class ParquetResults(SimulationResults):
         super().__init__(metadata)
         self.data_path = Path(data_path)
         
+        # Initialize reader
+        self.reader = ParquetReader(data_path)
+        
         # Load summary statistics from metadata
         summary_path = self.data_path / 'summary_stats.json'
         if summary_path.exists():
             with open(summary_path, 'r') as f:
                 self._summary_stats = json.load(f)
         else:
-            # Calculate and cache summary statistics
-            self._summary_stats = self._calculate_summary_stats()
+            # Get from reader metadata
+            self._summary_stats = self.reader.get_summary_statistics()
+            # Add any missing fields
+            if 'patient_count' not in self._summary_stats:
+                self._summary_stats['patient_count'] = self.reader.patient_count
+            # Save for next time
             with open(summary_path, 'w') as f:
                 json.dump(self._summary_stats, f, indent=2)
                 
@@ -69,28 +77,17 @@ class ParquetResults(SimulationResults):
         """
         Iterate over patients in batches.
         
-        Reads data from Parquet files in chunks to minimize memory usage.
+        Uses lazy reader to minimize memory usage.
         """
-        visits_path = self.data_path / 'visits.parquet'
-        patients_path = self.data_path / 'patients.parquet'
-        
-        # Read patient metadata
-        patients_df = pd.read_parquet(patients_path)
-        
-        # Process in batches
-        for start_idx in range(0, len(patients_df), batch_size):
-            end_idx = min(start_idx + batch_size, len(patients_df))
-            batch_patients = patients_df.iloc[start_idx:end_idx]
-            
+        # Iterate over patient batches
+        for patient_batch_df in self.reader.iterate_patients(batch_size=batch_size):
             batch_data = []
-            for _, patient_row in batch_patients.iterrows():
+            
+            for _, patient_row in patient_batch_df.iterrows():
                 patient_id = patient_row['patient_id']
                 
-                # Read visits for this patient
-                visits_df = pd.read_parquet(
-                    visits_path,
-                    filters=[('patient_id', '=', patient_id)]
-                )
+                # Get visits for this patient
+                visits_df = self.reader.get_patient_visits(patient_id)
                 
                 patient_dict = {
                     'patient_id': patient_id,
@@ -107,34 +104,22 @@ class ParquetResults(SimulationResults):
             
     def get_patient(self, patient_id: str) -> Optional[Dict[str, Any]]:
         """Get data for a specific patient."""
-        patients_path = self.data_path / 'patients.parquet'
-        visits_path = self.data_path / 'visits.parquet'
-        
-        # Read patient metadata
-        patients_df = pd.read_parquet(
-            patients_path,
-            filters=[('patient_id', '=', patient_id)]
-        )
-        
-        if patients_df.empty:
+        # Get patient data
+        patient_data = self.reader.get_patient_by_id(patient_id)
+        if not patient_data:
             return None
             
-        patient_row = patients_df.iloc[0]
-        
-        # Read visits
-        visits_df = pd.read_parquet(
-            visits_path,
-            filters=[('patient_id', '=', patient_id)]
-        )
+        # Get visits
+        visits_df = self.reader.get_patient_visits(patient_id)
         
         return {
             'patient_id': patient_id,
-            'disease_state': patient_row['final_disease_state'],
-            'vision': patient_row['final_vision'],
+            'disease_state': patient_data['final_disease_state'],
+            'vision': patient_data['final_vision'],
             'visits': visits_df.to_dict('records'),
-            'total_injections': patient_row['total_injections'],
-            'discontinued': patient_row['discontinued'],
-            'discontinuation_time': patient_row.get('discontinuation_time')
+            'total_injections': patient_data['total_injections'],
+            'discontinued': patient_data['discontinued'],
+            'discontinuation_time': patient_data.get('discontinuation_time')
         }
         
     def get_summary_statistics(self) -> Dict[str, Any]:
@@ -265,12 +250,22 @@ class ParquetResults(SimulationResults):
     def create_from_raw_results(
         raw_results: Any,
         metadata: SimulationMetadata,
-        save_path: Path
+        save_path: Path,
+        progress_callback: Optional[Callable[[float, str], None]] = None
     ) -> 'ParquetResults':
         """
         Create ParquetResults from raw simulation results.
         
         This is used to convert in-memory results to Parquet format.
+        
+        Args:
+            raw_results: Raw simulation results
+            metadata: Simulation metadata
+            save_path: Directory to save results
+            progress_callback: Optional progress callback
+            
+        Returns:
+            ParquetResults instance
         """
         save_path = Path(save_path)
         save_path.mkdir(parents=True, exist_ok=True)
@@ -280,37 +275,12 @@ class ParquetResults(SimulationResults):
         with open(metadata_path, 'w') as f:
             json.dump(metadata.to_dict(), f, indent=2)
             
-        # Convert patients to DataFrame
-        patient_records = []
-        visit_records = []
+        # Use ParquetWriter for efficient chunked writing
+        writer = ParquetWriter(save_path)
+        writer.write_simulation_results(raw_results, progress_callback)
         
-        for patient_id, patient in raw_results.patient_histories.items():
-            # Patient summary
-            patient_records.append({
-                'patient_id': patient_id,
-                'final_disease_state': patient.disease_state.value,
-                'final_vision': patient.vision,
-                'total_injections': patient.injection_count,
-                'total_visits': len(patient.visits),
-                'discontinued': patient.discontinued,
-                'discontinuation_time': getattr(patient, 'discontinuation_time', None)
-            })
-            
-            # Visit details
-            for visit in patient.visits:
-                visit_records.append({
-                    'patient_id': patient_id,
-                    'time_years': visit.time_years,
-                    'vision': visit.vision,
-                    'injected': visit.injected,
-                    'next_interval_days': visit.next_interval_days
-                })
-                
-        # Save as Parquet
-        patients_df = pd.DataFrame(patient_records)
-        patients_df.to_parquet(save_path / 'patients.parquet', index=False)
-        
-        visits_df = pd.DataFrame(visit_records)
-        visits_df.to_parquet(save_path / 'visits.parquet', index=False)
+        # Create index for fast lookup
+        reader = ParquetReader(save_path)
+        reader.create_patient_index()
         
         return ParquetResults(metadata, save_path)

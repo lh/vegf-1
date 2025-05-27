@@ -83,12 +83,17 @@ class ResultsFactory:
         if use_parquet:
             print(f"📁 Using Parquet storage for {n_patients:,} patients × {duration_years} years")
             
-            # Create Parquet results
+            # Create Parquet results with progress
             save_path = cls.DEFAULT_RESULTS_DIR / sim_id
+            
+            def progress_callback(pct: float, msg: str):
+                print(f"  [{pct:3.0f}%] {msg}")
+                
             return ParquetResults.create_from_raw_results(
                 raw_results,
                 metadata,
-                save_path
+                save_path,
+                progress_callback
             )
         else:
             print(f"💾 Using in-memory storage for {n_patients:,} patients × {duration_years} years")

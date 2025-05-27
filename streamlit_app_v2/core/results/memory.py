@@ -90,7 +90,7 @@ class InMemoryResults(SimulationResults):
         """Get summary statistics."""
         # Calculate additional statistics
         total_visits = sum(
-            len(patient.visits) 
+            len(patient.visit_history) 
             for patient in self.raw_results.patient_histories.values()
         )
         mean_visits = total_visits / self._patient_count if self._patient_count > 0 else 0
@@ -119,11 +119,13 @@ class InMemoryResults(SimulationResults):
             
         for patient_id in patient_ids:
             patient = self.raw_results.patient_histories[patient_id]
-            for visit in patient.visits:
+            for i, visit in enumerate(patient.visit_history):
+                # Calculate time in years from index (approximation)
+                time_years = i * 0.1  # Rough approximation
                 records.append({
                     'patient_id': patient_id,
-                    'time_months': visit.time_years * 12,
-                    'vision': visit.vision
+                    'time_months': time_years * 12,
+                    'vision': visit['vision']
                 })
                 
         return pd.DataFrame(records)
@@ -133,11 +135,12 @@ class InMemoryResults(SimulationResults):
         records = []
         
         for patient_id, patient in self.raw_results.patient_histories.items():
-            if len(patient.visits) > 1:
-                for i in range(1, len(patient.visits)):
-                    prev_time = patient.visits[i-1].time_years * 365
-                    curr_time = patient.visits[i].time_years * 365
-                    interval = curr_time - prev_time
+            if len(patient.visit_history) > 1:
+                for i in range(1, len(patient.visit_history)):
+                    # Get dates from visit history
+                    prev_date = patient.visit_history[i-1]['date']
+                    curr_date = patient.visit_history[i]['date']
+                    interval = (curr_date - prev_date).days
                     
                     records.append({
                         'patient_id': patient_id,

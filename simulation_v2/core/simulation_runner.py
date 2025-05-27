@@ -58,6 +58,12 @@ class SimulationRunner:
         Returns:
             SimulationResults with patient histories and statistics
         """
+        # Validate parameters
+        if n_patients < 0:
+            raise ValueError(f"Number of patients must be non-negative, got {n_patients}")
+        if duration_years <= 0:
+            raise ValueError(f"Duration must be positive, got {duration_years}")
+            
         # Log simulation start
         self.audit_log.append({
             'event': 'simulation_start',

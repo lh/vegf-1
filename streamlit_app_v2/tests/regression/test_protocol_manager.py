@@ -60,31 +60,51 @@ disease_transitions:
 
 treatment_effect_on_transitions:
   NAIVE:
-    multipliers: {}
+    NAIVE: 0.0
+    STABLE: 0.9
+    ACTIVE: 0.1
+    HIGHLY_ACTIVE: 0.0
   STABLE:
-    multipliers:
-      STABLE: 1.1
-      ACTIVE: 0.9
+    NAIVE: 0.0
+    STABLE: 0.95
+    ACTIVE: 0.05
+    HIGHLY_ACTIVE: 0.0
   ACTIVE:
-    multipliers:
-      STABLE: 1.5
-      ACTIVE: 0.8
-      HIGHLY_ACTIVE: 0.5
+    NAIVE: 0.0
+    STABLE: 0.7
+    ACTIVE: 0.3
+    HIGHLY_ACTIVE: 0.0
   HIGHLY_ACTIVE:
-    multipliers:
-      ACTIVE: 1.2
-      HIGHLY_ACTIVE: 0.9
+    NAIVE: 0.0
+    STABLE: 0.0
+    ACTIVE: 0.5
+    HIGHLY_ACTIVE: 0.5
 
 vision_change_model:
-  stable:
-    mean: 0.5
+  naive_treated:
+    mean: 2.0
     std: 1.0
-  active:
+  naive_untreated:
     mean: -2.0
-    std: 2.0
-  highly_active:
+    std: 1.0
+  stable_treated:
+    mean: 0.5
+    std: 0.5
+  stable_untreated:
+    mean: -1.0
+    std: 0.5
+  active_treated:
+    mean: -1.0
+    std: 1.0
+  active_untreated:
+    mean: -3.0
+    std: 1.0
+  highly_active_treated:
+    mean: -2.0
+    std: 1.5
+  highly_active_untreated:
     mean: -5.0
-    std: 3.0
+    std: 2.0
 
 baseline_vision:
   mean: 70
@@ -93,15 +113,16 @@ baseline_vision:
   max: 85
 
 discontinuation_rules:
-  low_vision_threshold: 35
-  low_vision_discontinuation_probability: 0.8
-  rapid_decline_threshold: -15
-  rapid_decline_window_days: 90
-  rapid_decline_discontinuation_probability: 0.6
-  non_response_threshold: -5
-  non_response_window_days: 180
-  non_response_discontinuation_probability: 0.4
-  baseline_rate_per_year: 0.1
+  poor_vision_threshold: 35
+  poor_vision_probability: 0.1
+  high_injection_count: 20
+  high_injection_probability: 0.02
+  long_treatment_months: 36
+  long_treatment_probability: 0.01
+  discontinuation_types:
+    - planned
+    - adverse
+    - ineffective
 """
     
     @pytest.fixture
