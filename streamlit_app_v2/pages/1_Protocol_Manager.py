@@ -12,6 +12,7 @@ import json
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
+from utils.carbon_buttons import carbon_action_button, convert_emoji_to_icon
 
 st.set_page_config(page_title="Protocol Manager", page_icon="📋", layout="wide")
 
@@ -200,7 +201,8 @@ try:
         
     with col3:
         # Copy to clipboard button (using session state)
-        if st.button("📋 Copy Checksum"):
+        label, icon = convert_emoji_to_icon("📋 Copy Checksum")
+        if carbon_action_button(label, key="copy_checksum", kind="secondary", icon=icon, size="sm"):
             st.code(spec.checksum)
             st.success("Checksum displayed above")
     

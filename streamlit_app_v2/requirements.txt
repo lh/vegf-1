@@ -6,3 +6,4 @@ matplotlib>=3.7.0
 seaborn>=0.12.0
 pyyaml>=6.0
 pyarrow>=12.0.0  # For Parquet support
+git+https://github.com/lh/streamlit-carbon-button.git  # Carbon button component

@@ -13,6 +13,7 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
 from simulation_v2.core.simulation_runner import SimulationRunner
+from utils.carbon_buttons import carbon_action_button, convert_emoji_to_icon
 
 st.set_page_config(page_title="Run Simulation", page_icon="🚀", layout="wide")
 
@@ -86,7 +87,8 @@ with col3:
 # Run simulation button
 st.markdown("---")
 
-if st.button("🎯 Run Simulation", type="primary", use_container_width=True):
+label, icon = convert_emoji_to_icon("🎯 Run Simulation")
+if carbon_action_button(label, key="run_simulation", kind="primary", icon=icon, use_container_width=True):
     # Create progress indicators
     progress_bar = st.progress(0, text="Initializing simulation...")
     status_text = st.empty()
@@ -231,7 +233,8 @@ if st.session_state.get('simulation_results'):
     with col3:
         st.info(f"**Timestamp:** {prev_results['timestamp'][:19]}")
         
-    if st.button("🗑️ Clear Previous Results"):
+    label, icon = convert_emoji_to_icon("🗑️ Clear Previous Results")
+    if carbon_action_button(label, key="clear_results", kind="danger", icon=icon, size="sm"):
         st.session_state.simulation_results = None
         st.session_state.audit_trail = None
         st.rerun()
