@@ -40,7 +40,6 @@ def carbon_action_button(
     label: str,
     key: str,
     kind: Literal["primary", "secondary", "danger", "ghost"] = "primary",
-    size: Literal["sm", "md", "lg", "xl", "2xl"] = "md",
     icon: Optional[str] = None,
     use_container_width: bool = False,
     disabled: bool = False,
@@ -56,8 +55,7 @@ def carbon_action_button(
     Args:
         label: Button text
         key: Unique key for the button
-        kind: Button style variant
-        size: Button size
+        kind: Button style variant (primary, secondary, danger, ghost)
         icon: Optional Carbon icon name
         use_container_width: Whether to expand to container width
         disabled: Whether button is disabled
@@ -94,41 +92,15 @@ def carbon_action_button(
         if key not in st.session_state:
             st.session_state[key] = 0
         
-        # Create container for full width support
-        if use_container_width:
-            container = st.container()
-            with container:
-                # Apply full width styling
-                st.markdown(
-                    f"""
-                    <style>
-                    [data-testid="stVerticalBlock"] > [style*="flex-direction: column;"] > [data-testid="stVerticalBlock"]:has(iframe[title="briquette.carbon_button"]) {{
-                        width: 100%;
-                    }}
-                    iframe[title="briquette.carbon_button"] {{
-                        width: 100% !important;
-                    }}
-                    </style>
-                    """,
-                    unsafe_allow_html=True
-                )
-                clicks = carbon_button(
-                    label=label,
-                    key=f"carbon_{key}",
-                    kind=kind,
-                    size=size,
-                    icon=icon,
-                    disabled=disabled
-                )
-        else:
-            clicks = carbon_button(
-                label=label,
-                key=f"carbon_{key}",
-                kind=kind,
-                size=size,
-                icon=icon,
-                disabled=disabled
-            )
+        # Call Carbon button with proper parameters
+        clicks = carbon_button(
+            label=label,
+            key=f"carbon_{key}",
+            button_type=kind,  # Carbon button uses button_type, not kind
+            icon=icon,
+            disabled=disabled,
+            use_container_width=use_container_width  # Pass this to the component
+        )
         
         # Add help tooltip if provided
         if help:

@@ -234,7 +234,7 @@ if st.session_state.get('simulation_results'):
         st.info(f"**Timestamp:** {prev_results['timestamp'][:19]}")
         
     label, icon = convert_emoji_to_icon("🗑️ Clear Previous Results")
-    if carbon_action_button(label, key="clear_results", kind="danger", icon=icon, size="sm"):
+    if carbon_action_button(label, key="clear_results", kind="danger", icon=icon):
         st.session_state.simulation_results = None
         st.session_state.audit_trail = None
         st.rerun()

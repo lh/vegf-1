@@ -202,7 +202,7 @@ try:
     with col3:
         # Copy to clipboard button (using session state)
         label, icon = convert_emoji_to_icon("📋 Copy Checksum")
-        if carbon_action_button(label, key="copy_checksum", kind="secondary", icon=icon, size="sm"):
+        if carbon_action_button(label, key="copy_checksum", kind="secondary", icon=icon):
             st.code(spec.checksum)
             st.success("Checksum displayed above")
     
