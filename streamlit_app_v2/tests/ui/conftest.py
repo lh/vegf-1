@@ -29,19 +29,29 @@ def streamlit_server():
     Start Streamlit server for the test session and stop it afterwards.
     
     This fixture:
-    1. Checks if server is already running
-    2. Starts it if needed
+    1. Uses port 8509 to avoid conflicts with development server on 8501
+    2. Always starts fresh server for tests
     3. Waits for it to be ready
     4. Cleans up after tests
     """
-    port = 8501
+    port = 8509  # Use different port for tests to avoid conflicts
     server_process = None
     
-    # Check if server is already running
+    # Kill any existing process on this port first
     if is_port_open(port):
-        print(f"✓ Streamlit server already running on port {port}")
-        yield f"http://localhost:{port}"
-        return
+        print(f"⚠️  Port {port} already in use, attempting to free it...")
+        try:
+            # Don't reimport subprocess - it's already imported at the top
+            result = subprocess.run(['lsof', '-ti', f':{port}'], capture_output=True, text=True)
+            pids = result.stdout.strip()
+            if pids:
+                for pid in pids.split('\n'):
+                    if pid:
+                        subprocess.run(['kill', '-9', pid])
+                        print(f"  Killed process {pid}")
+                time.sleep(1)  # Give it time to release the port
+        except Exception as e:
+            print(f"  Could not kill existing process: {e}")
     
     # Start the server
     print(f"Starting Streamlit server on port {port}...")

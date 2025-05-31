@@ -4,6 +4,7 @@ pandas>=2.0.0
 numpy>=1.24.0
 matplotlib>=3.7.0
 seaborn>=0.12.0
+plotly>=5.17.0  # For interactive visualizations including Sankey diagrams
 pyyaml>=6.0
 pyarrow>=12.0.0  # For Parquet support
 

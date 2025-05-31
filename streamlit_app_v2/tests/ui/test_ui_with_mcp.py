@@ -1,6 +1,6 @@
 """
 Direct UI testing using MCP Puppeteer tools.
-Run this with the Streamlit app on port 8503.
+Run this with the Streamlit app on port 8509.
 """
 
 def test_homepage():
@@ -9,7 +9,7 @@ def test_homepage():
     
     # These would be run through MCP in Claude:
     tests = [
-        "mcp__puppeteer__puppeteer_navigate(url='http://localhost:8503')",
+        "mcp__puppeteer__puppeteer_navigate(url='http://localhost:8509')",
         "mcp__puppeteer__puppeteer_screenshot(name='homepage')",
         
         # Check for title
@@ -35,7 +35,7 @@ def test_navigation():
     """Test navigation between pages."""
     tests = [
         # Start at home
-        "mcp__puppeteer__puppeteer_navigate(url='http://localhost:8503')",
+        "mcp__puppeteer__puppeteer_navigate(url='http://localhost:8509')",
         
         # Click Protocol Manager
         """mcp__puppeteer__puppeteer_evaluate(
