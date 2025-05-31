@@ -15,7 +15,7 @@ This repository contains the codebase for simulating, analyzing, and visualizing
 
 Comprehensive documentation for the project is available. To view it, click the link below:
 
-[View Documentation](https://github.com/lh/vegf-1/blob/main/docs/_build/html/index.html)
+[View Documentation](https://lh.github.io/vegf-1/)
 
 
 The documentation includes:
