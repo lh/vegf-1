@@ -45,7 +45,16 @@ class Patient:
         # Discontinuation tracking
         self.is_discontinued = False
         self.discontinuation_date: Optional[datetime] = None
-        self.discontinuation_type: Optional[str] = None
+        self.discontinuation_type: Optional[str] = None  # e.g., "poor_response"
+        self.discontinuation_reason: Optional[str] = None  # Detailed reason
+        
+        # Additional discontinuation tracking for V2
+        self.consecutive_stable_visits = 0
+        self.consecutive_poor_vision_visits = 0
+        self.monitoring_schedule: List[datetime] = []
+        self.pre_discontinuation_vision: Optional[float] = None
+        self.first_visit_date: Optional[datetime] = None
+        self.current_interval_days: int = 28  # Default 4 weeks
         
         # Retreatment tracking
         self.retreatment_count = 0
@@ -90,6 +99,10 @@ class Patient:
         # Update current state
         self.current_state = disease_state
         self.current_vision = vision
+        
+        # Update first visit date if needed
+        if self.first_visit_date is None:
+            self.first_visit_date = date
         
         # Update injection tracking
         if treatment_given:
@@ -138,17 +151,20 @@ class Patient:
         days = self.days_since_last_injection_at(reference_date)
         return days / 7.0 if days is not None else None
         
-    def discontinue(self, date: datetime, discontinuation_type: str) -> None:
+    def discontinue(self, date: datetime, discontinuation_type: str, reason: Optional[str] = None) -> None:
         """
         Mark patient as discontinued from treatment.
         
         Args:
             date: Discontinuation date
-            discontinuation_type: Type of discontinuation (e.g., "planned", "adverse")
+            discontinuation_type: Type of discontinuation (e.g., "poor_response", "premature")
+            reason: Optional detailed reason for discontinuation
         """
         self.is_discontinued = True
         self.discontinuation_date = date
         self.discontinuation_type = discontinuation_type
+        self.discontinuation_reason = reason
+        self.pre_discontinuation_vision = self.current_vision
         
     def restart_treatment(self, date: datetime) -> None:
         """

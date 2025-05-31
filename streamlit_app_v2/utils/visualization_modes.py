@@ -197,6 +197,7 @@ def init_visualization_mode():
     
     Call this in your app's main function or at the top of pages.
     """
+    
     # Render selector in sidebar
     mode = VisualizationMode.render_mode_selector()
     

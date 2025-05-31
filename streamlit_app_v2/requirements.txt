@@ -4,5 +4,14 @@ pandas>=2.0.0
 numpy>=1.24.0
 matplotlib>=3.7.0
 seaborn>=0.12.0
+plotly>=5.17.0  # For interactive visualizations including Sankey diagrams
 pyyaml>=6.0
 pyarrow>=12.0.0  # For Parquet support
+
+# Testing and monitoring
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-benchmark>=4.0.0
+psutil>=5.9.0  # For memory monitoring
+playwright>=1.40.0  # For UI testing
+pytest-playwright>=0.4.0  # Playwright pytest integration

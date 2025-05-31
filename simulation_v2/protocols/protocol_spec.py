@@ -143,16 +143,17 @@ class ProtocolSpecification:
             }
         }
         
-    def save_as_yaml(self, filepath: Path) -> None:
+    def to_yaml_dict(self) -> Dict[str, Any]:
         """
-        Save protocol specification back to YAML.
+        Convert specification to YAML-compatible dictionary.
         
-        Useful for creating modified versions.
+        Returns:
+            Dictionary ready for YAML serialization
         """
-        data = {
+        return {
             'name': self.name,
             'version': self.version,
-            'created_date': datetime.now().isoformat(),
+            'created_date': self.created_date,
             'author': self.author,
             'description': self.description,
             'protocol_type': self.protocol_type,
@@ -171,6 +172,16 @@ class ProtocolSpecification:
             },
             'discontinuation_rules': self.discontinuation_rules
         }
+    
+    def save_as_yaml(self, filepath: Path) -> None:
+        """
+        Save protocol specification back to YAML.
+        
+        Useful for creating modified versions.
+        """
+        data = self.to_yaml_dict()
+        # Update created_date when saving
+        data['created_date'] = datetime.now().isoformat()
         
         with open(filepath, 'w') as f:
             yaml.dump(data, f, sort_keys=False, default_flow_style=False)

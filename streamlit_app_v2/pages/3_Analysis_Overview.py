@@ -1,5 +1,5 @@
 """
-Analysis Overview - Visualize simulation results.
+Analysis Overview - Visualize simulation results (Vectorized for speed).
 """
 
 import streamlit as st
@@ -8,7 +8,9 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import seaborn as sns
+import time
 
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent.parent))
@@ -24,10 +26,29 @@ from utils.tufte_zoom_style import (
 from utils.style_constants import StyleConstants
 from utils.chart_builder import ChartBuilder
 
-st.set_page_config(page_title="Analysis Overview", page_icon="📊", layout="wide")
+st.set_page_config(
+    page_title="Analysis Overview", 
+    page_icon="📊", 
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-st.title("📊 Analysis Overview")
-st.markdown("Visualize and analyze simulation results.")
+# Add parent for utils import
+sys.path.append(str(Path(__file__).parent.parent))
+from utils.button_styling import style_navigation_buttons
+from visualizations.streamgraph_simple import create_simple_streamgraph
+
+# Apply our button styling
+style_navigation_buttons()
+
+# Top navigation
+col1, col2, col3 = st.columns([1, 6, 1])
+with col1:
+    if st.button("🦍 Home", key="top_home"):
+        st.switch_page("APE.py")
+with col2:
+    st.title("📊 Analysis Overview")
+    st.markdown("Visualize and analyze simulation results.")
 
 # Initialize visualization mode selector - required!
 current_mode = init_visualization_mode()
@@ -45,21 +66,44 @@ params = results_data['parameters']
 # Results header
 st.success(f"✅ Analyzing: {protocol['name']} - {params['n_patients']} patients over {params['duration_years']} years")
 
+# Get summary statistics once and cache
+@st.cache_data
+def get_cached_stats(sim_id):
+    """Cache summary statistics to avoid recalculation."""
+    return results.get_summary_statistics()
+
+@st.cache_data
+def calculate_vision_stats_vectorized(sim_id, sample_size=None):
+    """Calculate vision statistics using vectorized operations."""
+    # Get vision trajectory data
+    vision_df = results.get_vision_trajectory_df(sample_size=sample_size)
+    
+    # Use groupby to get first and last vision for each patient - MUCH faster!
+    patient_stats = vision_df.groupby('patient_id')['vision'].agg(['first', 'last']).reset_index()
+    
+    # Extract arrays
+    baseline_visions = patient_stats['first'].values
+    final_visions = patient_stats['last'].values
+    vision_changes = final_visions - baseline_visions
+    
+    return baseline_visions, final_visions, vision_changes, len(patient_stats)
+
+stats = get_cached_stats(results.metadata.sim_id)
+is_large_dataset = stats['patient_count'] > 1000
+
 # Create tabs for different analyses
-tab1, tab2, tab3, tab4 = st.tabs(["Vision Outcomes", "Treatment Patterns", "Patient Trajectories", "Audit Trail"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["Vision Outcomes", "Treatment Patterns", "Patient Trajectories", "Patient States", "Audit Trail"])
 
 with tab1:
     st.header("Vision Outcomes")
     
-    # Prepare vision data
-    baseline_visions = []
-    final_visions = []
-    vision_changes = []
+    # Use vectorized calculation - always use all data since it's fast!
+    with st.spinner(f"Calculating vision statistics for {stats['patient_count']:,} patients..."):
+        baseline_visions, final_visions, vision_changes, n_patients = calculate_vision_stats_vectorized(
+            results.metadata.sim_id, sample_size=None  # None = use all data
+        )
     
-    for patient in results.patient_histories.values():
-        baseline_visions.append(patient.baseline_vision)
-        final_visions.append(patient.current_vision)
-        vision_changes.append(patient.current_vision - patient.baseline_vision)
+    st.info(f"📊 Analyzing all {stats['patient_count']:,} patients")
     
     # Vision distribution plots
     col1, col2 = st.columns(2)
@@ -96,199 +140,266 @@ with tab1:
                 .build())
         st.pyplot(chart.figure)
     
-    # Summary statistics
+    # Summary statistics - always use full dataset stats
     st.subheader("Vision Statistics")
     col1, col2, col3 = st.columns(3)
     
     with col1:
+        # Use vectorized stats
         st.metric("Mean Baseline Vision", f"{StyleConstants.format_vision(np.mean(baseline_visions))} letters")
         st.metric("Std Baseline Vision", f"{StyleConstants.format_statistic(np.std(baseline_visions))} letters")
         
     with col2:
-        st.metric("Mean Final Vision", f"{StyleConstants.format_vision(np.mean(final_visions))} letters")
-        st.metric("Std Final Vision", f"{StyleConstants.format_statistic(np.std(final_visions))} letters")
+        # Always use full dataset stats from summary
+        st.metric("Mean Final Vision", f"{StyleConstants.format_vision(stats.get('mean_final_vision', np.mean(final_visions)))} letters")
+        st.metric("Std Final Vision", f"{StyleConstants.format_statistic(stats.get('std_final_vision', np.std(final_visions)))} letters")
         
     with col3:
-        st.metric("Mean Vision Change", f"{StyleConstants.format_vision(np.mean(vision_changes))} letters")
-        st.metric("Patients Improved", f"{StyleConstants.format_count(sum(1 for v in vision_changes if v > 0))}/{StyleConstants.format_count(len(vision_changes))}")
+        # Use vectorized stats
+        st.metric("Mean Vision Change", f"{StyleConstants.format_vision(mean_change)} letters")
+        st.metric("Patients Improved", f"{StyleConstants.format_count(np.sum(vision_changes > 0))}/{StyleConstants.format_count(len(vision_changes))}")
 
 with tab2:
     st.header("Treatment Patterns")
     
-    # Injection counts
-    injection_counts = [p.injection_count for p in results.patient_histories.values()]
-    visit_counts = [len(p.visit_history) for p in results.patient_histories.values()]
+    # Always show full dataset statistics
+    total_patients = stats['patient_count']
+    total_injections = stats.get('total_injections', 0)
+    mean_injections = total_injections / total_patients if total_patients > 0 else 0
     
-    col1, col2 = st.columns(2)
-    
+    # Show key metrics first
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        # Injection count distribution
-        mean_injections = np.mean(injection_counts)
-        
-        chart = (ChartBuilder('Distribution of Injection Counts')
-                .with_labels(xlabel='Number of Injections', ylabel='Number of Patients')
-                .with_count_axis('x')
-                .with_count_axis('y')
-                .plot(lambda ax, colors: 
-                      ax.hist(injection_counts, bins=20, color=colors['warning'], 
-                             alpha=0.7, edgecolor=colors['neutral'], linewidth=1.5))
-                .add_reference_line(mean_injections, 
-                                   f'Mean: {StyleConstants.format_statistic(mean_injections)}', 
-                                   'vertical', 'primary')
-                .build())
-        st.pyplot(chart.figure)
-        
+        st.metric("Total Patients", f"{StyleConstants.format_count(total_patients)}")
     with col2:
-        # Injections vs Visits scatter plot
-        def plot_scatter(ax, colors):
-            # Scatter points
-            ax.scatter(visit_counts, injection_counts, 
-                      alpha=0.6, color=colors['primary'],
-                      s=50 if current_mode == 'presentation' else 30,
-                      edgecolor=colors['neutral'], linewidth=0.5)
+        st.metric("Total Injections", f"{StyleConstants.format_count(int(total_injections))}")
+    with col3:
+        st.metric("Mean Injections/Patient", f"{StyleConstants.format_statistic(mean_injections)}")
+    with col4:
+        st.metric("Injection Rate", f"{(total_injections / (total_patients * params['duration_years'])):.1f}/year")
+    
+    # Cache treatment intervals to avoid recalculation
+    @st.cache_data
+    def get_cached_treatment_intervals(sim_id):
+        """Cache treatment intervals calculation."""
+        return results.get_treatment_intervals_df()
+    
+    # Get treatment intervals - cached!
+    with st.spinner("Loading treatment intervals..."):
+        treatment_df = get_cached_treatment_intervals(results.metadata.sim_id)
+        
+        if not treatment_df.empty:
+            # For visualization, we might sample if it's huge
+            if len(treatment_df) > 50000:
+                display_df = treatment_df.sample(n=50000, random_state=42)
+                show_sample_note = True
+            else:
+                display_df = treatment_df
+                show_sample_note = False
             
-            # Add trend line
-            z = np.polyfit(visit_counts, injection_counts, 1)
-            p = np.poly1d(z)
-            ax.plot(sorted(visit_counts), p(sorted(visit_counts)), 
-                   color=colors['secondary'], linestyle='--', 
-                   linewidth=2.5 if current_mode == 'presentation' else 1.5,
-                   label=f'Trend (ratio={z[0]:.2f})')
-        
-        chart = (ChartBuilder('Injections vs Visits')
-                .with_labels(xlabel='Total Visits', ylabel='Total Injections')
-                .with_count_axis('x')
-                .with_count_axis('y')
-                .plot(plot_scatter)
-                .with_legend(loc='lower right')
-                .build())
-        st.pyplot(chart.figure)
-    
-    # Treatment intervals
-    st.subheader("Treatment Intervals")
-    
-    # Calculate intervals for a sample of patients
-    all_intervals = []
-    for patient in list(results.patient_histories.values())[:50]:  # Sample 50 patients
-        visits = patient.visit_history
-        for i in range(1, len(visits)):
-            interval = (visits[i]['date'] - visits[i-1]['date']).days
-            all_intervals.append(interval)
-    
-    if all_intervals:
-        # Visit intervals chart
-        spec = protocol['spec']
-        
-        chart = (ChartBuilder('Distribution of Visit Intervals')
-                .with_labels(xlabel='Interval Between Visits (days)', ylabel='Frequency')
-                .with_count_axis('y')
-                .plot(lambda ax, colors: 
-                      ax.hist(all_intervals, bins=30, color=colors['warning'], 
-                             alpha=0.7, edgecolor=colors['neutral'], linewidth=1.5))
-                .add_reference_line(spec.min_interval_days, 
-                                   f'Min: {spec.min_interval_days} days', 
-                                   'vertical', 'secondary')
-                .add_reference_line(spec.max_interval_days, 
-                                   f'Max: {spec.max_interval_days} days', 
-                                   'vertical', 'secondary')
-                .build())
-        st.pyplot(chart.figure)
+            all_intervals = display_df['interval_days'].values
+            
+            # Visit intervals chart
+            spec = protocol['spec']
+            
+            chart = (ChartBuilder('Distribution of Visit Intervals')
+                    .with_labels(xlabel='Interval Between Visits (days)', ylabel='Frequency')
+                    .with_count_axis('y')
+                    .plot(lambda ax, colors: 
+                          ax.hist(all_intervals, bins=30, color=colors['warning'], 
+                                 alpha=0.7, edgecolor=colors['neutral'], linewidth=1.5))
+                    .add_reference_line(spec.min_interval_days, 
+                                       f'Min: {spec.min_interval_days} days', 
+                                       'vertical', 'secondary')
+                    .add_reference_line(spec.max_interval_days, 
+                                       f'Max: {spec.max_interval_days} days', 
+                                       'vertical', 'secondary')
+                    .build())
+            st.pyplot(chart.figure)
+            
+            # Show interval statistics - vectorized operations
+            st.subheader("Interval Statistics")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Mean Interval", f"{np.mean(all_intervals):.1f} days")
+            with col2:
+                st.metric("Median Interval", f"{np.median(all_intervals):.1f} days")
+            with col3:
+                st.metric("Std Dev", f"{np.std(all_intervals):.1f} days")
+                
+            if show_sample_note:
+                st.caption(f"*Histogram based on sample of 50,000 intervals from {len(treatment_df):,} total")
 
 with tab3:
     st.header("Patient Trajectories")
     
-    # Select sample patients to plot
-    n_sample = min(20, len(results.patient_histories))
-    sample_patients = list(results.patient_histories.items())[:n_sample]
+    # For trajectories, we always need to sample for readability
+    default_n_sample = 20
+    max_sample = min(100, stats['patient_count'])
     
-    # Vision trajectories
+    # Add a slider for number of trajectories to show
+    n_sample = st.slider(
+        "Number of patient trajectories to display:",
+        min_value=5,
+        max_value=max_sample,
+        value=default_n_sample,
+        step=5,
+        help="Showing too many trajectories makes the plot unreadable"
+    )
+    
+    with st.spinner(f"Loading {n_sample} patient trajectories..."):
+        vision_df_sample = results.get_vision_trajectory_df(sample_size=n_sample)
+    
+    # Vision trajectories with better x-axis
     def plot_trajectories(ax, colors):
         # Use different alpha and linewidth based on mode
         alpha = 0.6 if current_mode == 'presentation' else 0.4
         lw = 2 if current_mode == 'presentation' else 1
         
-        for i, (pid, patient) in enumerate(sample_patients):
-            if patient.visit_history:
-                dates = [v['date'] for v in patient.visit_history]
-                visions = [v['vision'] for v in patient.visit_history]
-                
-                # Calculate days from start
-                start_date = dates[0]
-                days = [(d - start_date).days for d in dates]
-                
-                # Use a color cycle for better visibility in presentation mode
-                if current_mode == 'presentation':
-                    color = plt.cm.tab10(i % 10)
-                else:
-                    color = colors['primary']
-                
-                ax.plot(days, visions, alpha=alpha, linewidth=lw, color=color)
-    
-    # Calculate max duration for time axis
-    max_days = max([max([(v['date'] - patient.visit_history[0]['date']).days 
-                        for v in patient.visit_history] or [0]) 
-                   for _, patient in sample_patients])
-    
-    chart = (ChartBuilder(f'Vision Trajectories (first {n_sample} patients)')
-            .with_labels(xlabel='Days from First Visit', ylabel='Vision (ETDRS letters)')
-            .with_time_axis('x', duration_days=max_days, preferred_unit='days')
-            .with_vision_axis('y')
-            .plot(plot_trajectories)
-            .build())
-    st.pyplot(chart.figure)
-    
-    # Disease state progression
-    st.subheader("Disease State Progression")
-    
-    # Count states over time
-    state_counts_over_time = {}
-    
-    for patient in results.patient_histories.values():
-        for visit in patient.visit_history:
-            month = int((visit['date'] - patient.visit_history[0]['date']).days / 30.44)
-            if month not in state_counts_over_time:
-                state_counts_over_time[month] = {'NAIVE': 0, 'STABLE': 0, 'ACTIVE': 0, 'HIGHLY_ACTIVE': 0}
-            state_counts_over_time[month][visit['disease_state'].name] += 1
-    
-    # Create stacked area chart
-    months = sorted(state_counts_over_time.keys())
-    states = ['NAIVE', 'STABLE', 'ACTIVE', 'HIGHLY_ACTIVE']
-    state_data = {state: [state_counts_over_time.get(m, {}).get(state, 0) for m in months] for state in states}
-    
-    def plot_state_progression(ax, colors):
-        # Define state colors
-        state_colors = {
-            'NAIVE': '#3498DB',     # Bright blue
-            'STABLE': '#27AE60',    # Clear green
-            'ACTIVE': '#F39C12',    # Strong orange
-            'HIGHLY_ACTIVE': '#E74C3C'  # Vivid red
-        }
+        # Group by patient_id once
+        grouped = vision_df_sample.groupby('patient_id')
         
-        # Adjust alpha based on mode
-        alpha = 0.8 if current_mode == 'presentation' else 0.6
-        
-        ax.stackplot(months, 
-                     state_data['NAIVE'], 
-                     state_data['STABLE'], 
-                     state_data['ACTIVE'], 
-                     state_data['HIGHLY_ACTIVE'],
-                     labels=states,
-                     colors=[state_colors[s] for s in states],
-                     alpha=alpha)
+        for i, (patient_id, patient_data) in enumerate(grouped):
+            patient_data = patient_data.sort_values('time_days')
+            
+            # Convert days to months for display
+            months = patient_data['time_days'].values / 30.0
+            visions = patient_data['vision'].values
+            
+            # Use a color cycle for better visibility
+            if n_sample <= 20:
+                # Use distinct colors for small samples
+                color = plt.cm.tab10(i % 10)
+            else:
+                # Use gradient for larger samples
+                color = plt.cm.viridis(i / n_sample)
+            
+            ax.plot(months, visions, alpha=alpha, linewidth=lw, color=color)
     
-    # Calculate max duration for time axis
-    max_months = max(months) if months else 12
+    # Create custom chart that uses months directly
+    fig, ax = mode_aware_figure(f'Vision Trajectories ({n_sample} patients)')
+    colors = get_mode_colors()
     
-    chart = (ChartBuilder('Disease State Distribution Over Time')
-            .with_labels(xlabel='Months from Start', ylabel='Number of Patients')
-            .with_time_axis('x', duration_days=max_months * 30.44, preferred_unit='months')
-            .with_count_axis('y')
-            .plot(plot_state_progression)
-            .with_legend(loc='upper right', ncol=2)
-            .build())
-    st.pyplot(chart.figure)
+    # Plot the trajectories
+    plot_trajectories(ax, colors)
+    
+    # Style the plot (title already set by mode_aware_figure)
+    ax.set_xlabel('Time (months)')
+    ax.set_ylabel('Vision (ETDRS letters)')
+    
+    # Set vision scale
+    ax.set_ylim(0, 100)
+    ax.set_yticks(StyleConstants.get_vision_ticks())
+    
+    # Set time scale with proper month ticks
+    max_months = vision_df_sample['time_days'].max() / 30.0
+    
+    # Create clean month ticks
+    if max_months <= 12:
+        # Monthly ticks for first year
+        month_ticks = list(range(0, int(max_months) + 1, 1))
+    elif max_months <= 24:
+        # Every 2 months for up to 2 years
+        month_ticks = list(range(0, int(max_months) + 1, 2))
+    elif max_months <= 60:
+        # Every 6 months for up to 5 years
+        month_ticks = list(range(0, int(max_months) + 1, 6))
+    else:
+        # Yearly for longer simulations
+        month_ticks = list(range(0, int(max_months) + 1, 12))
+    
+    ax.set_xticks(month_ticks)
+    ax.set_xlim(0, max_months)
+    
+    # Apply styling
+    style_axis(ax)
+    
+    plt.tight_layout()
+    st.pyplot(fig)
+    
+    # Add trajectory statistics - vectorized!
+    st.subheader("Trajectory Summary")
+    
+    # Calculate trajectory changes using vectorized operations
+    trajectory_changes = vision_df_sample.groupby('patient_id')['vision'].agg(['first', 'last'])
+    trajectory_changes['change'] = trajectory_changes['last'] - trajectory_changes['first']
+    
+    trajectories_improving = (trajectory_changes['change'] > 5).sum()
+    trajectories_stable = ((trajectory_changes['change'] >= -5) & (trajectory_changes['change'] <= 5)).sum()
+    trajectories_worsening = (trajectory_changes['change'] < -5).sum()
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Improving (>5 letters)", trajectories_improving)
+    with col2:
+        st.metric("Stable (±5 letters)", trajectories_stable)
+    with col3:
+        st.metric("Worsening (>5 letters loss)", trajectories_worsening)
+    
+    st.caption(f"*Showing {n_sample} of {stats['patient_count']:,} total patients")
 
 with tab4:
+    st.header("Patient States Over Time")
+    st.markdown("Track patient state transitions throughout the simulation.")
+    
+    # Add controls for streamgraph
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        normalize = st.checkbox(
+            "Show as Percentage",
+            value=False,
+            help="Display as percentage of total patients"
+        )
+    
+    with col2:
+        time_resolution = st.selectbox(
+            "Time Resolution",
+            ["month", "week"],
+            help="Group data by month or week"
+        )
+    
+    # Create the streamgraph
+    with st.spinner("Generating streamgraph visualization..."):
+        # Cache based on simulation ID to avoid hashing the results object
+        @st.cache_data
+        def get_streamgraph_figure(sim_id: str, time_res: str, norm: bool):
+            return create_simple_streamgraph(results, time_res, norm)
+        
+        fig = get_streamgraph_figure(results.metadata.sim_id, time_resolution, normalize)
+    
+    # Display the figure
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Show state statistics
+    st.subheader("Discontinuation Statistics")
+    
+    # Get discontinuation stats from results
+    disc_stats = stats.get('discontinuation_stats', {})
+    
+    if disc_stats:
+        # Create columns for discontinuation breakdown
+        total_disc = sum(disc_stats.values())
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.metric("Total Discontinuations", StyleConstants.format_count(total_disc))
+            st.metric("Discontinuation Rate", f"{(total_disc / stats['patient_count'] * 100):.1f}%")
+        
+        with col2:
+            # Show breakdown by type
+            st.markdown("**Discontinuation Reasons:**")
+            for reason, count in disc_stats.items():
+                percentage = (count / total_disc * 100) if total_disc > 0 else 0
+                st.write(f"- {reason.replace('_', ' ').title()}: {count} ({percentage:.1f}%)")
+    else:
+        st.info("No discontinuation data available for this simulation.")
+    
+    # Add note about patient conservation
+    st.caption("*Patient counts are conserved throughout the simulation - total always equals initial population.")
+
+with tab5:
     st.header("Audit Trail")
     st.markdown("Complete parameter tracking and simulation events.")
     

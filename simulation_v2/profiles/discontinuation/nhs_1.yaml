@@ -1,0 +1,79 @@
+# NHS Unit 1 Discontinuation Profile
+# Real-world UK NHS unit parameters
+
+name: "NHS_1"
+description: "Real-world UK NHS unit parameters based on clinical experience"
+
+categories:
+  stable_max_interval:
+    enabled: true
+    consecutive_visits: 3
+    required_interval_weeks: 16
+    probability: 0.20
+    
+  poor_response:
+    enabled: true
+    vision_threshold_letters: 15
+    consecutive_visits: 2
+    
+  premature:
+    enabled: true
+    target_rate: 0.145  # 14.5% based on real-world analysis
+    min_interval_weeks: 8
+    min_vision_letters: 20
+    va_impact:
+      mean: -9.4  # Mean vision loss from analysis
+      std: 5.0
+      
+  system_discontinuation:
+    enabled: true
+    annual_probability: 0.05  # 5% annual administrative loss
+    
+  reauthorization_failure:
+    enabled: true
+    threshold_weeks: 52  # One year
+    probability: 0.10    # 10% fail to get reauthorization
+    
+  mortality:
+    enabled: true
+    annual_rate: 0.02  # 20/1000 - configurable
+
+monitoring_schedules:
+  planned: [12, 24, 36]      # Standard monitoring for protocol discontinuation
+  unplanned: [8, 16, 24]     # More frequent for unplanned
+  poor_response: []          # Discharged - harsh reality
+  mortality: []              # No monitoring - patient deceased
+  system: []                 # Lost to follow-up
+
+retreatment:
+  fluid_detection_required: true
+  min_vision_loss_letters: 5
+  probability: 0.95
+  detection_probability: 0.87
+
+# Recurrence rates based on clinical literature
+recurrence_rates:
+  stable_max_interval:
+    year_1: 0.13  # Arendt study
+    year_3: 0.40
+    year_5: 0.65
+  premature:
+    year_1: 0.53  # Aslanis study
+    year_3: 0.85
+    year_5: 0.95
+  system_discontinuation:
+    year_1: 0.30  # Estimated
+    year_3: 0.70
+    year_5: 0.85
+  reauthorization_failure:
+    year_1: 0.21  # Artiaga study
+    year_3: 0.74
+    year_5: 0.88
+  poor_response:
+    year_1: 0.0   # No recurrence - treatment ineffective
+    year_3: 0.0
+    year_5: 0.0
+  mortality:
+    year_1: 0.0   # No recurrence after death
+    year_3: 0.0
+    year_5: 0.0

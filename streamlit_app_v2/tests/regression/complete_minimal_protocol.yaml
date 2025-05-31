@@ -1,0 +1,118 @@
+# Complete minimal protocol for testing edge cases
+name: Complete Minimal
+version: 1.0.0
+author: Test Suite
+description: Complete minimal protocol with all required fields for testing
+protocol_type: treat_and_extend
+
+# Disease states and transitions
+disease_states:
+  - name: NAIVE
+    description: "Treatment naive"
+  - name: STABLE
+    description: "Stable disease"
+  - name: ACTIVE
+    description: "Active disease"
+  - name: HIGHLY_ACTIVE
+    description: "Highly active disease"
+
+disease_transitions:
+  NAIVE:
+    NAIVE: 0.0
+    STABLE: 0.8
+    ACTIVE: 0.2
+    HIGHLY_ACTIVE: 0.0
+  STABLE:
+    NAIVE: 0.0
+    STABLE: 0.9
+    ACTIVE: 0.1
+    HIGHLY_ACTIVE: 0.0
+  ACTIVE:
+    NAIVE: 0.0
+    STABLE: 0.3
+    ACTIVE: 0.6
+    HIGHLY_ACTIVE: 0.1
+  HIGHLY_ACTIVE:
+    NAIVE: 0.0
+    STABLE: 0.0
+    ACTIVE: 0.3
+    HIGHLY_ACTIVE: 0.7
+
+treatment_effect_on_transitions:
+  NAIVE:
+    NAIVE: 0.0
+    STABLE: 0.9
+    ACTIVE: 0.1
+    HIGHLY_ACTIVE: 0.0
+  STABLE:
+    NAIVE: 0.0
+    STABLE: 0.95
+    ACTIVE: 0.05
+    HIGHLY_ACTIVE: 0.0
+  ACTIVE:
+    NAIVE: 0.0
+    STABLE: 0.7
+    ACTIVE: 0.3
+    HIGHLY_ACTIVE: 0.0
+  HIGHLY_ACTIVE:
+    NAIVE: 0.0
+    STABLE: 0.0
+    ACTIVE: 0.5
+    HIGHLY_ACTIVE: 0.5
+
+# Vision change model
+vision_change_model:
+  naive_treated:
+    mean: 2.0
+    std: 1.0
+  naive_untreated:
+    mean: -2.0
+    std: 1.0
+  stable_treated:
+    mean: 0.5
+    std: 0.5
+  stable_untreated:
+    mean: -1.0
+    std: 0.5
+  active_treated:
+    mean: -1.0
+    std: 1.0
+  active_untreated:
+    mean: -3.0
+    std: 1.0
+  highly_active_treated:
+    mean: -2.0
+    std: 1.5
+  highly_active_untreated:
+    mean: -5.0
+    std: 2.0
+
+# Treatment intervals
+min_interval_days: 28
+max_interval_days: 112
+extension_days: 14
+shortening_days: 14
+
+# Baseline vision parameters
+baseline_vision:
+  mean: 70
+  std: 10
+  min: 20
+  max: 85
+
+# Other required parameters
+max_injections_per_year: 13
+loading_doses: 3
+
+# Discontinuation rules
+discontinuation_rules:
+  poor_vision_threshold: 20
+  poor_vision_probability: 0.1
+  high_injection_count: 20
+  high_injection_probability: 0.02
+  long_treatment_months: 36
+  long_treatment_probability: 0.01
+  discontinuation_types:
+    - planned
+    - adverse
+    - ineffective

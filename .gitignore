@@ -62,6 +62,26 @@ docs/**/*.js
 
 # Large simulation result files
 output/simulation_results/ape_simulation_*.json
+output/simulation_results/*.parquet
+output/simulations/*.parquet
+
+# Streamlit app v2 simulation results
+streamlit_app_v2/data/simulations/
+streamlit_app_v2/output/simulations/
+streamlit_app_v2/tests/ui/screenshots/
+streamlit_app_v2/tests/ui/*.log
+
+# Streamlit app parquet results (from legacy migration)
+streamlit_app_parquet/output/parquet_results/
+streamlit_app_parquet/output/simulation_results/
+streamlit_app_parquet/*.log
+
+# Log files
+*.log
+logs/
+**/logs/
+streamlit_app_v2/*.log
+streamlit_app_v2/tests/*.log
 
 # Node.js dependencies
 node_modules/

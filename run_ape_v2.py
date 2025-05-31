@@ -23,5 +23,5 @@ project_root = os.path.dirname(os.path.abspath(__file__))
 os.chdir(project_root)
 
 # Launch the V2 app
-app_path = os.path.join(project_root, "streamlit_app_v2", "app.py")
+app_path = os.path.join(project_root, "streamlit_app_v2", "APE.py")
 subprocess.run(["streamlit", "run", app_path, "--server.port=8503"])
