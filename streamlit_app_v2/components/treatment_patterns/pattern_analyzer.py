@@ -1,7 +1,6 @@
 """Pattern analysis functions for treatment data."""
 
 import pandas as pd
-import time
 import streamlit as st
 
 
@@ -50,8 +49,6 @@ def extract_treatment_patterns_vectorized(results):
     DAYS_PER_MONTH = 365.25 / 12
     
     if hasattr(results, 'get_visits_df'):
-        st.info("Extracting treatment patterns from visit data...")
-        start_time = time.time()
         
         # Get all visits as DataFrame
         visits_df = results.get_visits_df()
@@ -121,9 +118,6 @@ def extract_treatment_patterns_vectorized(results):
             })
             
             transitions_df = pd.concat([transitions_df, final_transitions], ignore_index=True)
-        
-        elapsed = time.time() - start_time
-        st.success(f"Extracted {len(transitions_df)} treatment pattern transitions in {elapsed:.1f} seconds")
         
         return transitions_df, visits_df
     else:

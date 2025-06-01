@@ -30,10 +30,7 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
     # Import enhanced analyzer if available
     try:
         from components.treatment_patterns.pattern_analyzer_enhanced import extract_treatment_patterns_with_terminals
-        from components.treatment_patterns.sankey_builder_enhanced import (
-            create_enhanced_sankey_with_terminals,
-            create_enhanced_sankey_with_terminals_destination_colored
-        )
+        from components.treatment_patterns.sankey_builder_enhanced import create_enhanced_sankey_with_terminals
         enhanced_available = True
     except ImportError:
         enhanced_available = False
@@ -55,7 +52,7 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
     
     with subtab1:
         # Sankey Flow Analysis (was subtab2)
-        st.subheader("Patient Flow Through Treatment Patterns")
+        st.subheader("Patient Journey Visualisation")
         
         # Mobile device warning
         mobile_warning = """
@@ -72,88 +69,75 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
         </script>
         <div id="mobile-warning" style="display: none; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 0.25rem; padding: 1rem; margin-bottom: 1rem;">
             <strong>📱 Mobile Device Detected</strong><br>
-            Sankey diagrams are complex visualizations best viewed on larger screens. 
+            Sankey diagrams are complex visualisations best viewed on larger screens. 
             For optimal viewing on mobile, consider rotating your device to landscape mode or viewing on a desktop/tablet.
         </div>
         """
         st.markdown(mobile_warning, unsafe_allow_html=True)
         
-        st.info("""
-        🔍 **Treatment Pattern Analysis**: 
-        This visualization shows how patients transition between different treatment patterns based solely on visit intervals.
-        No disease state information is used, making this directly comparable to real-world data.
-        """)
         
-        # First, show the options
-        col1, col2, col3 = st.columns([2, 1, 1])
-        with col2:
-            sankey_type = st.radio(
-                "Visualisation Style",
-                ["Source-Coloured", "Destination-Coloured"],
-                help="Choose how to colour the flow streams"
-            )
-        with col3:
-            show_terminals = st.checkbox(
-                "Show Active at End",
-                value=True,
-                help="Show patients still in treatment when simulation ended",
-                disabled=not enhanced_available
-            )
-            if not enhanced_available:
-                st.caption("Enhanced features not available")
         
-        # Get treatment patterns based on options
+        # Get treatment patterns - always include terminals if available
         with st.spinner("Analyzing treatment patterns..."):
             transitions_df, visits_df = get_cached_treatment_patterns(
                 results.metadata.sim_id, 
-                include_terminals=show_terminals and enhanced_available
+                include_terminals=enhanced_available
             )
         
         if len(transitions_df) > 0:
-            # Create appropriate Sankey based on selection
-            if show_terminals and enhanced_available:
-                # Use enhanced version that handles terminal nodes
-                if sankey_type == "Source-Coloured":
-                    fig = create_enhanced_sankey_with_terminals(transitions_df)
-                else:  # Destination-Coloured
-                    fig = create_enhanced_sankey_with_terminals_destination_colored(transitions_df)
-            elif sankey_type == "Source-Coloured":
+            # Always use enhanced version with terminal status colors if available
+            if enhanced_available:
+                fig = create_enhanced_sankey_with_terminals(transitions_df)
+            else:
+                # Fallback to basic version if enhanced not available
                 fig = create_enhanced_sankey_with_colored_streams(transitions_df)
-            else:  # Destination-Coloured
-                fig = create_gradient_sankey(transitions_df)
             
-            st.plotly_chart(fig, use_container_width=True)
+            # Import export configuration
+            from utils.export_config import get_sankey_export_config
+            config = get_sankey_export_config()
+            st.plotly_chart(fig, use_container_width=True, config=config)
             
-            # Mobile-friendly export option
-            with st.expander("📱 Mobile-Friendly Export Options"):
-                st.markdown("""
-                For better viewing on mobile devices, you can:
-                1. **Download a simplified version** - Coming soon
-                2. **View summary statistics** instead (see Pattern Details tab)
-                3. **Save for later viewing** on a larger screen
-                
-                The Sankey diagram shows patient flows between treatment states. 
-                Key insights are also available in text format in the Pattern Details tab.
-                """)
             
-            # Add interpretation guide
-            with st.expander("📖 How to interpret this diagram"):
-                st.markdown("""
-                **Treatment States** (inferred from visit intervals):
-                - **Initial Treatment**: First visits in treatment sequence
-                - **Intensive (Monthly)**: Visits ≤35 days apart
-                - **Regular (6-8 weeks)**: Visits 36-63 days apart
-                - **Extended (12+ weeks)**: Visits 64-111 days apart
-                - **Maximum Extension (16 weeks)**: Visits 112-119 days apart
+            # Add interpretation guide as an always-visible panel
+            st.markdown("---")  # Add a visual separator
+            
+            # Create a nice info panel
+            with st.container():
+                st.markdown("### 📖 Understanding the Treatment Pattern Flow")
                 
-                **Gap States** (potential treatment interruptions):
-                - **Treatment Gap (3-6 months)**: 120-180 days between visits
-                - **Extended Gap (6-12 months)**: 181-365 days between visits
-                - **Long Gap (12+ months)**: >365 days between visits
+                col1, col2 = st.columns(2)
                 
-                **Special Patterns**:
-                - **Restarted After Gap**: Regular treatment resuming after a gap >6 months
-                - **No Further Visits**: No visits in last 6 months of observation period
+                with col1:
+                    st.markdown("""
+                    **Treatment States** (from visit intervals):
+                    - **Initial**: First visits in treatment sequence
+                    - **Intensive**: Monthly visits (≤35 days apart)
+                    - **Regular**: 6-8 week visits (36-63 days)
+                    - **Extended**: 12+ week visits (64-111 days)
+                    - **Maximum**: 16 week visits (112-119 days)
+                    
+                    **Special Patterns**:
+                    - **Restarted**: Treatment resuming after gap >6 months
+                    - **Discontinued**: No visits in last 6 months
+                    """)
+                
+                with col2:
+                    st.markdown("""
+                    **Gap States** (treatment interruptions):
+                    - **Gap (3-6m)**: 120-180 days between visits
+                    - **Gap (6-12m)**: 181-365 days between visits
+                    - **Gap (12m+)**: >365 days between visits
+                    
+                    **Visual Elements**:
+                    - 🟢 **Green nodes**: Still in treatment at end
+                    - 🔴 **Red node**: Discontinued treatment
+                    - **Flow colors**: Based on source state
+                    - **Flow thickness**: Number of patients
+                    """)
+                
+                st.info("""
+                This visualisation shows patient transitions between treatment patterns based solely on visit intervals.
+                No disease state information is used, making this directly comparable to real-world data.
                 """)
         else:
             st.info("""
@@ -185,7 +169,10 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
             st.markdown("#### Distribution of Treatment Intervals")
             if len(transitions_df) > 0:
                 interval_fig = create_interval_distribution_chart(transitions_df)
-                st.plotly_chart(interval_fig, use_container_width=True)
+                # Apply export config
+                from utils.export_config import get_export_config
+                config = get_export_config(filename="treatment_intervals")
+                st.plotly_chart(interval_fig, use_container_width=True, config=config)
             else:
                 st.info("📊 No interval data available yet - patterns will appear as the simulation progresses")
         
@@ -193,7 +180,9 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
             st.markdown("#### Patient Gap Analysis")
             if len(visits_df) > 0:
                 gap_fig = create_gap_analysis_chart_tufte(visits_df)
-                st.plotly_chart(gap_fig, use_container_width=True)
+                # Apply export config
+                config = get_export_config(filename="gap_analysis")
+                st.plotly_chart(gap_fig, use_container_width=True, config=config)
             else:
                 st.info("📊 No visit data available yet - data will appear as patients have follow-up visits")
         

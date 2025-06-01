@@ -47,6 +47,9 @@ class VisualizationMode:
                 'terminal_regular': 'rgba(127, 186, 0, 0.5)',
                 'terminal_extended': 'rgba(90, 142, 0, 0.5)',
                 'terminal_maximum': 'rgba(60, 95, 0, 0.5)',
+                # Terminal status colors
+                'terminal_active': '#27ae60',  # Green for still active
+                'terminal_discontinued': '#e74c3c',  # Red for discontinued
             }
         },
         'analysis': {
@@ -82,6 +85,9 @@ class VisualizationMode:
                 'terminal_regular': 'rgba(143, 193, 92, 0.4)',
                 'terminal_extended': 'rgba(111, 150, 73, 0.4)',
                 'terminal_maximum': 'rgba(79, 107, 53, 0.4)',
+                # Terminal status colors
+                'terminal_active': '#27ae60',  # Green for still active
+                'terminal_discontinued': '#e74c3c',  # Red for discontinued
             }
         }
     }

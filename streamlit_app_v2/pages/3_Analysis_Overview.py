@@ -25,6 +25,7 @@ from utils.tufte_zoom_style import (
 )
 from utils.style_constants import StyleConstants
 from utils.chart_builder import ChartBuilder
+from utils.export_config import render_export_settings
 
 st.set_page_config(
     page_title="Analysis Overview", 
@@ -53,6 +54,9 @@ with col2:
 
 # Initialize visualization mode selector - required!
 current_mode = init_visualization_mode()
+
+# Add export settings to sidebar
+render_export_settings("sidebar")
 
 # Check if results are available
 if not st.session_state.get('simulation_results'):
@@ -92,10 +96,14 @@ def calculate_vision_stats_vectorized(sim_id, sample_size=None):
 stats = get_cached_stats(results.metadata.sim_id)
 is_large_dataset = stats['patient_count'] > 1000
 
-# Create tabs for different analyses
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["Vision Outcomes", "Treatment Patterns", "Patient Trajectories", "Patient States", "Audit Trail"])
+# Create tabs for different analyses - Treatment Patterns first as it's pretty and useful
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["Treatment Patterns", "Vision Outcomes", "Patient Trajectories", "Patient States", "Audit Trail"])
 
 with tab1:
+    # Use the enhanced treatment patterns tab with Sankey visualizations
+    render_enhanced_treatment_patterns_tab(results, protocol, params, stats)
+
+with tab2:
     st.header("Vision Outcomes")
     
     # Use vectorized calculation - always use all data since it's fast!
@@ -160,9 +168,6 @@ with tab1:
         st.metric("Mean Vision Change", f"{StyleConstants.format_vision(mean_change)} letters")
         st.metric("Patients Improved", f"{StyleConstants.format_count(np.sum(vision_changes > 0))}/{StyleConstants.format_count(len(vision_changes))}")
 
-with tab2:
-    # Use the enhanced treatment patterns tab with Sankey visualizations
-    render_enhanced_treatment_patterns_tab(results, protocol, params, stats)
 
 with tab3:
     st.header("Patient Trajectories")
