@@ -27,3 +27,18 @@ __all__ = [
     'create_gap_analysis_chart_tufte',
     'calculate_interval_statistics'
 ]
+
+# Try to import enhanced features
+try:
+    from .pattern_analyzer_enhanced import extract_treatment_patterns_with_terminals
+    from .sankey_builder_enhanced import (
+        create_enhanced_sankey_with_terminals,
+        create_enhanced_sankey_with_terminals_destination_colored
+    )
+    __all__.extend([
+        'extract_treatment_patterns_with_terminals', 
+        'create_enhanced_sankey_with_terminals',
+        'create_enhanced_sankey_with_terminals_destination_colored'
+    ])
+except ImportError:
+    pass

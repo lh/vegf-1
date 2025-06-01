@@ -5,27 +5,35 @@ import time
 import streamlit as st
 
 
-# Color scheme for treatment-based states
-TREATMENT_STATE_COLORS = {
-    # Treatment intensity states (based on intervals alone)
-    "Initial Treatment": "#e6f2ff",
-    "Intensive (Monthly)": "#4a90e2",
-    "Regular (6-8 weeks)": "#7fba00", 
-    "Extended (12+ weeks)": "#5c8a00",
-    "Maximum Extension (16 weeks)": "#2d5016",
-    
-    # Gap-based states (inferred from treatment patterns)
-    "Treatment Gap (3-6 months)": "#ffd700",
-    "Extended Gap (6-12 months)": "#ff9500",
-    "Long Gap (12+ months)": "#ff6347",
-    
-    # Discontinuation (inferred from no further visits)
-    "No Further Visits": "#999999",
-    
-    # Special patterns
-    "Restarted After Gap": "#ff1493",
-    "Irregular Pattern": "#dda0dd"
+# Import central color system
+from utils.visualization_modes import get_mode_colors
+
+# Create mapping from state names to color keys in central system
+STATE_COLOR_MAPPING = {
+    'Initial Treatment': 'initial_treatment',
+    'Intensive (Monthly)': 'intensive_monthly',
+    'Regular (6-8 weeks)': 'regular_6_8_weeks',
+    'Extended (12+ weeks)': 'extended_12_weeks',
+    'Maximum Extension (16 weeks)': 'maximum_extension',
+    'Treatment Gap (3-6 months)': 'treatment_gap_3_6',
+    'Extended Gap (6-12 months)': 'extended_gap_6_12',
+    'Long Gap (12+ months)': 'long_gap_12_plus',
+    'Restarted After Gap': 'restarted_after_gap',
+    'Irregular Pattern': 'irregular_pattern',
+    'No Further Visits': 'no_further_visits'
 }
+
+# Get colors from central system - this is now a function
+def get_treatment_state_colors():
+    """Get treatment state colors from central color system."""
+    colors = get_mode_colors()
+    return {
+        state: colors.get(color_key, '#cccccc')
+        for state, color_key in STATE_COLOR_MAPPING.items()
+    }
+
+# For backward compatibility, create a property-like access
+TREATMENT_STATE_COLORS = get_treatment_state_colors()
 
 
 def extract_treatment_patterns_vectorized(results):
@@ -167,9 +175,10 @@ def determine_treatment_state_vectorized(visits_df):
     # Within each patient, mark visits that come after a long gap
     # Use shift to look at previous visit's gap status
     # Create a boolean column explicitly to avoid downcasting warnings
-    visits_df['after_gap'] = visits_df.groupby('patient_id')['had_long_gap'].shift(1)
-    visits_df['after_gap'] = visits_df['after_gap'].fillna(False)
-    visits_df['after_gap'] = visits_df['after_gap'].astype('bool')
+    # First convert the shifted column to boolean dtype before fillna
+    after_gap_shifted = visits_df.groupby('patient_id')['had_long_gap'].shift(1)
+    # Convert to nullable boolean to handle NaN properly
+    visits_df['after_gap'] = after_gap_shifted.astype('boolean').fillna(False)
     
     # Create restart groups - increment when we see a new gap
     visits_df['gap_group'] = visits_df.groupby('patient_id')['had_long_gap'].cumsum()

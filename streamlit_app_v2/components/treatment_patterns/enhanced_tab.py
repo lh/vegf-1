@@ -27,6 +27,17 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
         "📊 Summary Statistics"
     ])
     
+    # Import enhanced analyzer if available
+    try:
+        from components.treatment_patterns.pattern_analyzer_enhanced import extract_treatment_patterns_with_terminals
+        from components.treatment_patterns.sankey_builder_enhanced import (
+            create_enhanced_sankey_with_terminals,
+            create_enhanced_sankey_with_terminals_destination_colored
+        )
+        enhanced_available = True
+    except ImportError:
+        enhanced_available = False
+    
     # Cache functions at module level to avoid redefinition
     @st.cache_data
     def get_cached_treatment_intervals(sim_id):
@@ -34,9 +45,12 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
         return results.get_treatment_intervals_df()
     
     @st.cache_data
-    def get_cached_treatment_patterns(sim_id):
+    def get_cached_treatment_patterns(sim_id, include_terminals=False):
         """Extract and cache treatment patterns."""
-        transitions_df, visits_df = extract_treatment_patterns_vectorized(results)
+        if include_terminals and enhanced_available:
+            transitions_df, visits_df = extract_treatment_patterns_with_terminals(results)
+        else:
+            transitions_df, visits_df = extract_treatment_patterns_vectorized(results)
         return transitions_df, visits_df
     
     with subtab1:
@@ -70,22 +84,40 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
         No disease state information is used, making this directly comparable to real-world data.
         """)
         
-        # Get treatment patterns
+        # First, show the options
+        col1, col2, col3 = st.columns([2, 1, 1])
+        with col2:
+            sankey_type = st.radio(
+                "Visualisation Style",
+                ["Source-Coloured", "Destination-Coloured"],
+                help="Choose how to colour the flow streams"
+            )
+        with col3:
+            show_terminals = st.checkbox(
+                "Show Active at End",
+                value=True,
+                help="Show patients still in treatment when simulation ended",
+                disabled=not enhanced_available
+            )
+            if not enhanced_available:
+                st.caption("Enhanced features not available")
+        
+        # Get treatment patterns based on options
         with st.spinner("Analyzing treatment patterns..."):
-            transitions_df, visits_df = get_cached_treatment_patterns(results.metadata.sim_id)
+            transitions_df, visits_df = get_cached_treatment_patterns(
+                results.metadata.sim_id, 
+                include_terminals=show_terminals and enhanced_available
+            )
         
         if len(transitions_df) > 0:
-            # Sankey visualization options
-            col1, col2 = st.columns([3, 1])
-            with col2:
-                sankey_type = st.radio(
-                    "Visualisation Style",
-                    ["Source-Coloured", "Destination-Coloured"],
-                    help="Choose how to colour the flow streams"
-                )
-            
             # Create appropriate Sankey based on selection
-            if sankey_type == "Source-Coloured":
+            if show_terminals and enhanced_available:
+                # Use enhanced version that handles terminal nodes
+                if sankey_type == "Source-Coloured":
+                    fig = create_enhanced_sankey_with_terminals(transitions_df)
+                else:  # Destination-Coloured
+                    fig = create_enhanced_sankey_with_terminals_destination_colored(transitions_df)
+            elif sankey_type == "Source-Coloured":
                 fig = create_enhanced_sankey_with_colored_streams(transitions_df)
             else:  # Destination-Coloured
                 fig = create_gradient_sankey(transitions_df)

@@ -2,6 +2,8 @@
 
 Clean-room implementation of the AMD treatment simulation platform using test-driven development.
 
+📚 **[Full Documentation Available](https://lh.github.io/vegf-1/)**
+
 ## Key Features
 
 - **No Hidden Parameters**: Every simulation parameter must be explicitly defined in protocol files

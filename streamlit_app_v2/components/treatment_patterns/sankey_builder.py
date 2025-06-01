@@ -2,17 +2,22 @@
 
 import plotly.graph_objects as go
 import pandas as pd
-from .pattern_analyzer import TREATMENT_STATE_COLORS
+from utils.visualization_modes import get_mode_colors
+from .pattern_analyzer import STATE_COLOR_MAPPING, get_treatment_state_colors
 
 
 def create_treatment_pattern_sankey(transitions_df):
     """Create Sankey diagram of treatment patterns."""
+    # Get colors from central system
+    treatment_colors = get_treatment_state_colors()
+    
     # Aggregate transitions
     flow_counts = transitions_df.groupby(['from_state', 'to_state']).size().reset_index(name='count')
     
-    # Filter out small flows
+    # Filter out small flows (but keep all terminal flows)
     min_flow_size = max(1, len(transitions_df) * 0.001)
-    flow_counts = flow_counts[flow_counts['count'] >= min_flow_size]
+    is_terminal = flow_counts['to_state'].str.contains('Still in')
+    flow_counts = flow_counts[(flow_counts['count'] >= min_flow_size) | is_terminal]
     
     # Create nodes
     nodes = []
@@ -40,7 +45,7 @@ def create_treatment_pattern_sankey(transitions_df):
             node_map[state] = len(nodes)
             nodes.append({
                 'label': state,
-                'color': TREATMENT_STATE_COLORS.get(state, "#cccccc")
+                'color': treatment_colors.get(state, "#cccccc")
             })
     
     # Add any missing states
@@ -50,14 +55,14 @@ def create_treatment_pattern_sankey(transitions_df):
                 node_map[state] = len(nodes)
                 nodes.append({
                     'label': state,
-                    'color': TREATMENT_STATE_COLORS.get(state, "#cccccc")
+                    'color': treatment_colors.get(state, "#cccccc")
                 })
     
     # Create Sankey
     fig = go.Figure(data=[go.Sankey(
         arrangement='snap',
         node=dict(
-            pad=30,
+            pad=40,  # Increased padding to reduce cramping
             thickness=20,
             line=dict(color="black", width=1),
             label=[n['label'] for n in nodes],
@@ -100,12 +105,16 @@ def create_enhanced_sankey_with_colored_streams(transitions_df):
     Create Sankey diagram with source-colored streams.
     Each flow inherits the color of its source state.
     """
+    # Get colors from central system
+    treatment_colors = get_treatment_state_colors()
+    
     # Aggregate transitions
     flow_counts = transitions_df.groupby(['from_state', 'to_state']).size().reset_index(name='count')
     
-    # Filter out small flows
+    # Filter out small flows (but keep all terminal flows)
     min_flow_size = max(1, len(transitions_df) * 0.001)
-    flow_counts = flow_counts[flow_counts['count'] >= min_flow_size]
+    is_terminal = flow_counts['to_state'].str.contains('Still in')
+    flow_counts = flow_counts[(flow_counts['count'] >= min_flow_size) | is_terminal]
     
     # Create nodes
     nodes = []
@@ -133,7 +142,7 @@ def create_enhanced_sankey_with_colored_streams(transitions_df):
             node_map[state] = len(nodes)
             nodes.append({
                 'label': state,
-                'color': TREATMENT_STATE_COLORS.get(state, "#cccccc")
+                'color': treatment_colors.get(state, "#cccccc")
             })
     
     # Calculate total flow for opacity scaling
@@ -142,7 +151,7 @@ def create_enhanced_sankey_with_colored_streams(transitions_df):
     # Create link colors based on source state
     link_colors = []
     for _, row in flow_counts.iterrows():
-        source_color = TREATMENT_STATE_COLORS.get(row['from_state'], "#cccccc")
+        source_color = treatment_colors.get(row['from_state'], "#cccccc")
         # Convert hex to rgba with opacity based on flow volume
         opacity = min(0.8, max(0.2, row['count'] / total_flow * 20))
         
@@ -158,7 +167,7 @@ def create_enhanced_sankey_with_colored_streams(transitions_df):
     fig = go.Figure(data=[go.Sankey(
         arrangement='snap',
         node=dict(
-            pad=30,
+            pad=40,  # Increased padding to reduce cramping
             thickness=20,
             line=dict(color="black", width=1),
             label=[n['label'] for n in nodes],
@@ -195,12 +204,16 @@ def create_gradient_sankey(transitions_df):
     Create Sankey diagram with destination-coloured gradients.
     Flows are coloured based on their destination state.
     """
+    # Get colors from central system
+    treatment_colors = get_treatment_state_colors()
+    
     # Aggregate transitions
     flow_counts = transitions_df.groupby(['from_state', 'to_state']).size().reset_index(name='count')
     
-    # Filter out small flows
+    # Filter out small flows (but keep all terminal flows)
     min_flow_size = max(1, len(transitions_df) * 0.001)
-    flow_counts = flow_counts[flow_counts['count'] >= min_flow_size]
+    is_terminal = flow_counts['to_state'].str.contains('Still in')
+    flow_counts = flow_counts[(flow_counts['count'] >= min_flow_size) | is_terminal]
     
     # Create nodes
     nodes = []
@@ -228,7 +241,7 @@ def create_gradient_sankey(transitions_df):
             node_map[state] = len(nodes)
             nodes.append({
                 'label': state,
-                'color': TREATMENT_STATE_COLORS.get(state, "#cccccc")
+                'color': treatment_colors.get(state, "#cccccc")
             })
     
     # Create colors based on destination state
@@ -272,7 +285,7 @@ def create_gradient_sankey(transitions_df):
     fig = go.Figure(data=[go.Sankey(
         arrangement='snap',
         node=dict(
-            pad=30,
+            pad=40,  # Increased padding to reduce cramping
             thickness=20,
             line=dict(color="black", width=1),
             label=[n['label'] for n in nodes],
