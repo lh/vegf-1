@@ -192,8 +192,8 @@ def create_enhanced_sankey_with_colored_streams(transitions_df):
 
 def create_gradient_sankey(transitions_df):
     """
-    Create Sankey diagram with semantically colored gradients.
-    Colors represent the type of transition (improving, stable, worsening).
+    Create Sankey diagram with destination-coloured gradients.
+    Flows are coloured based on their destination state.
     """
     # Aggregate transitions
     flow_counts = transitions_df.groupby(['from_state', 'to_state']).size().reset_index(name='count')
@@ -231,9 +231,9 @@ def create_gradient_sankey(transitions_df):
                 'color': TREATMENT_STATE_COLORS.get(state, "#cccccc")
             })
     
-    # Create semantic colors for transitions
+    # Create colors based on destination state
     def get_transition_color(from_state, to_state):
-        """Determine color based on transition type."""
+        """Determine colour based on destination state."""
         # Moving to intensive treatment
         if 'Intensive' in to_state or 'Initial' in to_state:
             return 'rgba(74, 144, 226, 0.5)'  # Blue - starting/intensifying
@@ -264,7 +264,7 @@ def create_gradient_sankey(transitions_df):
         else:
             return 'rgba(100, 100, 100, 0.3)'  # Default gray
     
-    # Apply semantic colors
+    # Apply destination-based colors
     link_colors = [get_transition_color(row['from_state'], row['to_state']) 
                    for _, row in flow_counts.iterrows()]
     
@@ -290,45 +290,14 @@ def create_gradient_sankey(transitions_df):
         textfont=dict(size=12, color='#333333', family='Arial')
     )])
     
-    # Add colour legend
-    color_legend_text = """
-    <b>Flow Colours:</b><br>
-    🔵 Blue: Starting/intensifying treatment<br>
-    🟢 Green: Stable/extending treatment<br>
-    🟡 Yellow: Developing treatment gap<br>
-    🟠 Orange: Continuing gap<br>
-    🔴 Red: Long gap (12+ months)<br>
-    🩷 Pink: Restarting after gap<br>
-    ⚫ Grey: Discontinuation
-    """
-    
     fig.update_layout(
         title=dict(
-            text="Treatment Pattern Flow (Semantically Coloured)",
+            text="Treatment Pattern Flow (Destination-Coloured)",
             font=dict(size=16)
         ),
         font=dict(size=12),
         height=600,
-        margin=dict(l=10, r=10, t=40, b=100),  # Space for legend below
-        annotations=[
-            {
-                'text': 'Flow colours indicate the type of transition (improving, stable, or developing gaps)',
-                'showarrow': False,
-                'xref': 'paper', 'yref': 'paper',
-                'x': 0.5, 'y': -0.05,
-                'xanchor': 'center', 'yanchor': 'top',
-                'font': {'size': 11, 'color': 'gray'}
-            },
-            {
-                'text': color_legend_text,
-                'showarrow': False,
-                'xref': 'paper', 'yref': 'paper',
-                'x': 0.5, 'y': -0.15,  # Moved below the chart
-                'xanchor': 'center', 'yanchor': 'top',
-                'font': {'size': 10},
-                'align': 'left'
-            }
-        ]
+        margin=dict(l=10, r=10, t=40, b=30)  # No need for extra bottom space
     )
     
     return fig

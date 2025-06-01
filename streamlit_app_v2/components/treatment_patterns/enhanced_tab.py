@@ -7,7 +7,6 @@ from utils.style_constants import StyleConstants
 from utils.chart_builder import ChartBuilder
 from components.treatment_patterns import (
     extract_treatment_patterns_vectorized,
-    create_treatment_pattern_sankey,
     create_enhanced_sankey_with_colored_streams,
     create_gradient_sankey,
     create_interval_distribution_chart,
@@ -81,16 +80,14 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
             with col2:
                 sankey_type = st.radio(
                     "Visualisation Style",
-                    ["Basic", "Source-Coloured", "Semantic Colours"],
+                    ["Source-Coloured", "Destination-Coloured"],
                     help="Choose how to colour the flow streams"
                 )
             
             # Create appropriate Sankey based on selection
-            if sankey_type == "Basic":
-                fig = create_treatment_pattern_sankey(transitions_df)
-            elif sankey_type == "Source-Coloured":
+            if sankey_type == "Source-Coloured":
                 fig = create_enhanced_sankey_with_colored_streams(transitions_df)
-            else:  # Semantic Colours
+            else:  # Destination-Coloured
                 fig = create_gradient_sankey(transitions_df)
             
             st.plotly_chart(fig, use_container_width=True)
