@@ -7,6 +7,7 @@ This module analyzes patient visits and calculates associated costs.
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 from .cost_config import CostConfig
+from .visit_enhancer import enhance_visit_with_cost_metadata
 
 
 @dataclass
@@ -44,6 +45,10 @@ class CostAnalyzer:
         Returns:
             CostEvent if visit has costs, None otherwise
         """
+        # Enhance visit with metadata if not present
+        if 'metadata' not in visit or not visit.get('metadata'):
+            visit = enhance_visit_with_cost_metadata(visit)
+        
         # Determine visit components
         components = self._determine_components(visit)
         if not components:

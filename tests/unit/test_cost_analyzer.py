@@ -96,7 +96,8 @@ class TestCostAnalyzer:
         # Then I should get reasonable defaults
         assert cost_event is not None
         assert cost_event.event_type == 'visit'
-        assert cost_event.category == 'monitoring'
+        # With enhancement, monitoring visits default to monitoring_virtual
+        assert cost_event.category == 'monitoring_virtual'
         # Default monitoring should have reasonable components
         assert len(cost_event.components) > 0
         

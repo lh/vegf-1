@@ -12,6 +12,7 @@ visit_components:
   oct_scan: 25.0
   visual_acuity_test: 10.0
   virtual_review: 15.0
+  pressure_check: 5.0
 
 visit_types:
   test_visit:
