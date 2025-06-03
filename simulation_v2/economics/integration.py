@@ -15,9 +15,9 @@ from simulation_v2.protocols.protocol_spec import ProtocolSpecification
 
 from .cost_enhancer import create_v2_cost_enhancer
 from .financial_results import FinancialResults
-from simulation.economics import CostConfig
-from simulation.economics.cost_analyzer_v2 import CostAnalyzerV2
-from simulation.economics.cost_tracker_v2 import CostTrackerV2
+from .cost_config import CostConfig
+from .cost_analyzer import CostAnalyzerV2
+from .cost_tracker import CostTrackerV2
 
 
 class EconomicsIntegration:

@@ -4,7 +4,18 @@ Run AMD simulation with cost tracking using V2 simulation infrastructure.
 
 This demonstrates running a simulation with both clinical and financial analysis
 using the V2 architecture that streamlit_app_v2 uses.
+
+DEPRECATED: This script uses the old manual data conversion approach. For V2 simulations,
+use 'run_v2_simulation_with_economics.py' which uses the EconomicsIntegration API.
 """
+
+import warnings
+warnings.warn(
+    "This script is deprecated. Use run_v2_simulation_with_economics.py "
+    "which uses the new EconomicsIntegration API.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import sys
 import json

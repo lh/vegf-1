@@ -11,11 +11,9 @@ from .financial_results import (
 )
 from .cost_enhancer import create_v2_cost_enhancer
 from .integration import EconomicsIntegration
-
-# Import from simulation.economics for now, will be moved in cleanup phase
-from simulation.economics import CostConfig
-from simulation.economics.cost_analyzer_v2 import CostAnalyzerV2, CostEvent
-from simulation.economics.cost_tracker_v2 import CostTrackerV2
+from .cost_config import CostConfig
+from .cost_analyzer import CostAnalyzerV2, CostEvent
+from .cost_tracker import CostTrackerV2
 
 __all__ = [
     'FinancialResults',

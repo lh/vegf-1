@@ -3,7 +3,12 @@ Adapter module for integrating cost tracking with existing simulations.
 
 This module provides adapters and wrappers to add cost tracking capabilities
 to existing ABS and DES simulations without modifying their core code.
+
+DEPRECATED: This module is for V1 simulations only. For simulation_v2, use
+simulation_v2.economics.EconomicsIntegration for cleaner integration.
 """
+
+import warnings
 
 from typing import Dict, List, Any, Optional
 from datetime import datetime
@@ -18,6 +23,8 @@ class SimulationCostAdapter:
     
     This adapter processes simulation results and enhances them with cost data
     without modifying the original simulation code.
+    
+    DEPRECATED: For V2 simulations, use simulation_v2.economics.EconomicsIntegration.
     """
     
     def __init__(self, cost_analyzer: CostAnalyzer):
@@ -27,6 +34,13 @@ class SimulationCostAdapter:
         Args:
             cost_analyzer: CostAnalyzer instance for calculating costs
         """
+        warnings.warn(
+            "SimulationCostAdapter is deprecated for V1 simulations only. "
+            "For simulation_v2, use simulation_v2.economics.EconomicsIntegration.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        
         self.analyzer = cost_analyzer
         self.tracker = CostTracker(cost_analyzer)
     

@@ -4,7 +4,18 @@ Run AMD simulation with integrated cost tracking using V2 simulation infrastruct
 
 This demonstrates running a simulation with both clinical and financial analysis
 using the V2 architecture with properly integrated cost tracking.
+
+DEPRECATED: This script uses the old V1 compatibility approach. For V2 simulations,
+use 'run_v2_simulation_with_costs_integrated_new.py' which uses the EconomicsIntegration API.
 """
+
+import warnings
+warnings.warn(
+    "This script is deprecated. Use run_v2_simulation_with_costs_integrated_new.py "
+    "which uses the new EconomicsIntegration API.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import sys
 import json

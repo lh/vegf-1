@@ -3,7 +3,12 @@ Cost metadata enhancer for PatientState visits.
 
 This module provides a function that can be attached to PatientState instances
 to automatically add cost-relevant metadata to visits as they are recorded.
+
+DEPRECATED: This module is for V1 simulations only. For simulation_v2, use
+simulation_v2.economics.cost_enhancer.create_v2_cost_enhancer() instead.
 """
+
+import warnings
 
 from typing import Dict, Any, List
 from datetime import datetime
@@ -16,11 +21,20 @@ def create_cost_metadata_enhancer():
     This function returns a callable that can be attached to PatientState
     instances as the visit_metadata_enhancer attribute.
     
+    DEPRECATED: Use simulation_v2.economics.cost_enhancer.create_v2_cost_enhancer()
+    for V2 simulations.
+    
     Returns:
     --------
     function
         A function that enhances visit records with cost metadata
     """
+    warnings.warn(
+        "create_cost_metadata_enhancer is deprecated for V1 simulations only. "
+        "For simulation_v2, use simulation_v2.economics.cost_enhancer.create_v2_cost_enhancer() instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     
     def enhance_visit_for_costs(visit_record: Dict[str, Any], 
                                visit_data: Dict[str, Any],
