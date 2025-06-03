@@ -19,6 +19,11 @@ var/
 .installed.cfg
 *.egg
 
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+
 # Data files
 input_data/*
 *.csv

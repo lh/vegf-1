@@ -1,0 +1,31 @@
+metadata:
+  name: "Test Cost Configuration"
+  currency: "GBP"
+  version: "1.0"
+
+drug_costs:
+  test_drug: 100.0
+  eylea_2mg: 800.0
+
+visit_components:
+  injection: 50.0
+  oct_scan: 25.0
+  visual_acuity_test: 10.0
+  virtual_review: 15.0
+
+visit_types:
+  test_visit:
+    components: [injection, oct_scan]
+    total_override: null
+  injection_virtual:
+    components: [injection, oct_scan, virtual_review]
+    total_override: null
+  injection_loading:
+    components: [injection, visual_acuity_test]
+    total_override: null
+  visit_with_override:
+    components: [injection, oct_scan]
+    total_override: 200.0  # Override the component sum
+
+special_events:
+  initial_assessment: 100.0
