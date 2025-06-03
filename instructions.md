@@ -432,7 +432,20 @@ if __name__ == "__main__":
     main()
 ```
 
-## Phase 2: Enhanced Visit Metadata (Week 2)
+## Phase 2: Enhanced Visit Metadata (Week 2) ✅ COMPLETED
+
+### Phase 2.5: V2 Financial System Modernization 🔄 IN PROGRESS
+
+**IMPORTANT**: Before proceeding to Phase 3, we need to modernize the financial system to work natively with simulation_v2. See [FINANCIAL_V2_IMPLEMENTATION_PLAN.md](FINANCIAL_V2_IMPLEMENTATION_PLAN.md) for the complete 5-day implementation plan.
+
+This modernization will:
+- Remove all V1 compatibility requirements
+- Create native V2 data format support
+- Implement Option A (Extend V2 Patient Class) for visit enhancement
+- Provide a clean API for economic integration
+- Enable seamless cost tracking without data conversion
+
+Once this modernization is complete, Phase 3 visualization integration will be much simpler.
 
 ### 2.1 Modify Visit Creation
 
