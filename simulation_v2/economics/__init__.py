@@ -10,6 +10,7 @@ from .financial_results import (
     CostBreakdown
 )
 from .cost_enhancer import create_v2_cost_enhancer
+from .integration import EconomicsIntegration
 
 # Import from simulation.economics for now, will be moved in cleanup phase
 from simulation.economics import CostConfig
@@ -24,5 +25,6 @@ __all__ = [
     'CostAnalyzerV2',
     'CostEvent',
     'CostTrackerV2',
-    'create_v2_cost_enhancer'
+    'create_v2_cost_enhancer',
+    'EconomicsIntegration'
 ]
