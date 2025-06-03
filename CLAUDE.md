@@ -1,5 +1,8 @@
 At the start of each session, use the memory server to retrieve relevant project context and maintain continuity.
 
+## 📋 Active Implementation Instructions
+**IMPORTANT**: Check `instructions.md` in the project root for the current implementation plan and follow it exactly.
+
 Automatically store the following in the memory server:
 1. Key project context (requirements, architecture decisions)
 2. Important code snippets with descriptive tags

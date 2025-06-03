@@ -1,0 +1,14 @@
+# DEPRECATED - This file has been replaced by CARBON_BUTTON_TDD_PLAN_IMPROVED.md
+
+Please see [CARBON_BUTTON_TDD_PLAN_IMPROVED.md](./CARBON_BUTTON_TDD_PLAN_IMPROVED.md) for the latest version with:
+
+- Better infrastructure setup
+- Enhanced test utilities
+- More comprehensive test examples
+- Improved migration testing
+- Better CI/CD integration
+- Enhanced accessibility testing
+- Performance monitoring
+- Success verification automation
+
+This file is kept for reference only.
