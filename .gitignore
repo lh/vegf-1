@@ -25,6 +25,10 @@ input_data/*
 *.sql
 *.parquet
 
+# Generated HTML files from markdown
+*.html
+*_files/
+
 # Exceptions for summaries and graphs
 !*/graphs/*.png
 !*/graphs/*.jpg
