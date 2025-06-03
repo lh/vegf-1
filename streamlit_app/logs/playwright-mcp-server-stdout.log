@@ -56,3 +56,13 @@ Playwright MCP server running on http://localhost:5006
 Available endpoints:
 - Health check: http://localhost:5006/healthz
 - Playwright API: http://localhost:5006/playwright
+Received SIGTERM signal, shutting down gracefully...
+Starting custom MCP Playwright server...
+Current directory: /Users/rose/Code/CC/streamlit_app
+Node version: v20.9.0
+Platform: darwin
+Playwright MCP server started successfully
+Playwright MCP server running on http://localhost:5006
+Available endpoints:
+- Health check: http://localhost:5006/healthz
+- Playwright API: http://localhost:5006/playwright

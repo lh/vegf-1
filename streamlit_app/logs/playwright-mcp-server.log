@@ -56,3 +56,13 @@
 2025-05-27T15:21:52.713Z - Available endpoints:
 2025-05-27T15:21:52.713Z - - Health check: http://localhost:5006/healthz
 2025-05-27T15:21:52.713Z - - Playwright API: http://localhost:5006/playwright
+2025-05-28T17:41:24.978Z - Received SIGTERM signal, shutting down gracefully...
+2025-05-28T17:41:25.222Z - Starting custom MCP Playwright server...
+2025-05-28T17:41:25.222Z - Current directory: /Users/rose/Code/CC/streamlit_app
+2025-05-28T17:41:25.222Z - Node version: v20.9.0
+2025-05-28T17:41:25.222Z - Platform: darwin
+2025-05-28T17:41:25.223Z - Playwright MCP server started successfully
+2025-05-28T17:41:25.224Z - Playwright MCP server running on http://localhost:5006
+2025-05-28T17:41:25.224Z - Available endpoints:
+2025-05-28T17:41:25.224Z - - Health check: http://localhost:5006/healthz
+2025-05-28T17:41:25.224Z - - Playwright API: http://localhost:5006/playwright

@@ -70,11 +70,13 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
+# Import Mozilla theme
+import mozilla_sphinx_theme
+
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
-    'sphinx_rtd_theme',
     'sphinx_autodoc_typehints',
     'myst_parser'
 ]
@@ -122,7 +124,8 @@ language = 'en'
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'mozilla'
+html_theme_path = [os.path.dirname(mozilla_sphinx_theme.__file__)]
 html_static_path = ['_static']
 
 # Autodoc settings

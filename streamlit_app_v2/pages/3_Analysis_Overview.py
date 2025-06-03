@@ -25,6 +25,7 @@ from utils.tufte_zoom_style import (
 )
 from utils.style_constants import StyleConstants
 from utils.chart_builder import ChartBuilder
+from utils.export_config import render_export_settings
 
 st.set_page_config(
     page_title="Analysis Overview", 
@@ -37,6 +38,7 @@ st.set_page_config(
 sys.path.append(str(Path(__file__).parent.parent))
 from utils.button_styling import style_navigation_buttons
 from visualizations.streamgraph_simple import create_simple_streamgraph
+from components.treatment_patterns.enhanced_tab import render_enhanced_treatment_patterns_tab
 
 # Apply our button styling
 style_navigation_buttons()
@@ -52,6 +54,9 @@ with col2:
 
 # Initialize visualization mode selector - required!
 current_mode = init_visualization_mode()
+
+# Add export settings to sidebar
+render_export_settings("sidebar")
 
 # Check if results are available
 if not st.session_state.get('simulation_results'):
@@ -91,10 +96,14 @@ def calculate_vision_stats_vectorized(sim_id, sample_size=None):
 stats = get_cached_stats(results.metadata.sim_id)
 is_large_dataset = stats['patient_count'] > 1000
 
-# Create tabs for different analyses
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["Vision Outcomes", "Treatment Patterns", "Patient Trajectories", "Patient States", "Audit Trail"])
+# Create tabs for different analyses - Treatment Patterns first as it's pretty and useful
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["Treatment Patterns", "Vision Outcomes", "Patient Trajectories", "Patient States", "Audit Trail"])
 
 with tab1:
+    # Use the enhanced treatment patterns tab with Sankey visualizations
+    render_enhanced_treatment_patterns_tab(results, protocol, params, stats)
+
+with tab2:
     st.header("Vision Outcomes")
     
     # Use vectorized calculation - always use all data since it's fast!
@@ -159,76 +168,6 @@ with tab1:
         st.metric("Mean Vision Change", f"{StyleConstants.format_vision(mean_change)} letters")
         st.metric("Patients Improved", f"{StyleConstants.format_count(np.sum(vision_changes > 0))}/{StyleConstants.format_count(len(vision_changes))}")
 
-with tab2:
-    st.header("Treatment Patterns")
-    
-    # Always show full dataset statistics
-    total_patients = stats['patient_count']
-    total_injections = stats.get('total_injections', 0)
-    mean_injections = total_injections / total_patients if total_patients > 0 else 0
-    
-    # Show key metrics first
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Total Patients", f"{StyleConstants.format_count(total_patients)}")
-    with col2:
-        st.metric("Total Injections", f"{StyleConstants.format_count(int(total_injections))}")
-    with col3:
-        st.metric("Mean Injections/Patient", f"{StyleConstants.format_statistic(mean_injections)}")
-    with col4:
-        st.metric("Injection Rate", f"{(total_injections / (total_patients * params['duration_years'])):.1f}/year")
-    
-    # Cache treatment intervals to avoid recalculation
-    @st.cache_data
-    def get_cached_treatment_intervals(sim_id):
-        """Cache treatment intervals calculation."""
-        return results.get_treatment_intervals_df()
-    
-    # Get treatment intervals - cached!
-    with st.spinner("Loading treatment intervals..."):
-        treatment_df = get_cached_treatment_intervals(results.metadata.sim_id)
-        
-        if not treatment_df.empty:
-            # For visualization, we might sample if it's huge
-            if len(treatment_df) > 50000:
-                display_df = treatment_df.sample(n=50000, random_state=42)
-                show_sample_note = True
-            else:
-                display_df = treatment_df
-                show_sample_note = False
-            
-            all_intervals = display_df['interval_days'].values
-            
-            # Visit intervals chart
-            spec = protocol['spec']
-            
-            chart = (ChartBuilder('Distribution of Visit Intervals')
-                    .with_labels(xlabel='Interval Between Visits (days)', ylabel='Frequency')
-                    .with_count_axis('y')
-                    .plot(lambda ax, colors: 
-                          ax.hist(all_intervals, bins=30, color=colors['warning'], 
-                                 alpha=0.7, edgecolor=colors['neutral'], linewidth=1.5))
-                    .add_reference_line(spec.min_interval_days, 
-                                       f'Min: {spec.min_interval_days} days', 
-                                       'vertical', 'secondary')
-                    .add_reference_line(spec.max_interval_days, 
-                                       f'Max: {spec.max_interval_days} days', 
-                                       'vertical', 'secondary')
-                    .build())
-            st.pyplot(chart.figure)
-            
-            # Show interval statistics - vectorized operations
-            st.subheader("Interval Statistics")
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Mean Interval", f"{np.mean(all_intervals):.1f} days")
-            with col2:
-                st.metric("Median Interval", f"{np.median(all_intervals):.1f} days")
-            with col3:
-                st.metric("Std Dev", f"{np.std(all_intervals):.1f} days")
-                
-            if show_sample_note:
-                st.caption(f"*Histogram based on sample of 50,000 intervals from {len(treatment_df):,} total")
 
 with tab3:
     st.header("Patient Trajectories")

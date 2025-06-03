@@ -28,6 +28,28 @@ class VisualizationMode:
                 'success': '#06D6A0',
                 'warning': '#F77F00',
                 'neutral': '#264653',
+                # Treatment pattern states
+                'pre_treatment': '#9ECAE1',
+                'initial_treatment': '#9ECAE1',
+                'intensive_monthly': '#4A90E2',
+                'regular_6_8_weeks': '#7FBA00',
+                'extended_12_weeks': '#5A8F00',
+                'maximum_extension': '#3C5F00',
+                'treatment_gap_3_6': '#FFD700',
+                'extended_gap_6_12': '#FF9500',
+                'long_gap_12_plus': '#FF6347',
+                'restarted_after_gap': '#FF1493',
+                'irregular_pattern': '#FFA500',
+                'no_further_visits': '#999999',
+                # Terminal states (lighter versions)
+                'terminal_initial': 'rgba(158, 202, 225, 0.5)',
+                'terminal_intensive': 'rgba(74, 144, 226, 0.5)',
+                'terminal_regular': 'rgba(127, 186, 0, 0.5)',
+                'terminal_extended': 'rgba(90, 142, 0, 0.5)',
+                'terminal_maximum': 'rgba(60, 95, 0, 0.5)',
+                # Terminal status colors
+                'terminal_active': '#27ae60',  # Green for still active
+                'terminal_discontinued': '#e74c3c',  # Red for discontinued
             }
         },
         'analysis': {
@@ -44,6 +66,28 @@ class VisualizationMode:
                 'success': '#4A9B7F',
                 'warning': '#D4812B',
                 'neutral': '#4A5568',
+                # Treatment pattern states (more subtle for analysis)
+                'pre_treatment': '#A8C6D4',
+                'initial_treatment': '#A8C6D4',
+                'intensive_monthly': '#6B9DC7',
+                'regular_6_8_weeks': '#8FC15C',
+                'extended_12_weeks': '#6F9649',
+                'maximum_extension': '#4F6B35',
+                'treatment_gap_3_6': '#E6C84D',
+                'extended_gap_6_12': '#E6A04D',
+                'long_gap_12_plus': '#D97A6B',
+                'restarted_after_gap': '#D97AAE',
+                'irregular_pattern': '#E6A866',
+                'no_further_visits': '#A6A6A6',
+                # Terminal states (lighter versions)
+                'terminal_initial': 'rgba(168, 198, 212, 0.4)',
+                'terminal_intensive': 'rgba(107, 157, 199, 0.4)',
+                'terminal_regular': 'rgba(143, 193, 92, 0.4)',
+                'terminal_extended': 'rgba(111, 150, 73, 0.4)',
+                'terminal_maximum': 'rgba(79, 107, 53, 0.4)',
+                # Terminal status colors
+                'terminal_active': '#27ae60',  # Green for still active
+                'terminal_discontinued': '#e74c3c',  # Red for discontinued
             }
         }
     }
