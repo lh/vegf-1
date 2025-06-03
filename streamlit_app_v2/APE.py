@@ -19,8 +19,8 @@ st.set_page_config(
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 
-# Import button styling fix
-from utils.button_styling import style_navigation_buttons
+# Import Carbon button helpers
+from utils.carbon_button_helpers import navigation_button
 
 
 # Initialize session state
@@ -66,53 +66,56 @@ with col2:
     - **Reproducible Results**: Checksums ensure exact protocol versions
     """)
 
-# Apply button styling (includes red text fix!)
-style_navigation_buttons()
+# No longer need custom styling - Carbon buttons handle it
 
 # Navigation cards
+st.subheader("Navigation")
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    if st.button(
-        "📋 **Protocol Manager**\n\nBrowse, view, and validate treatment protocols",
+    if navigation_button(
+        "Protocol Manager",
         key="nav_protocol",
-        use_container_width=True
+        help_text="Browse, view, and validate treatment protocols",
+        full_width=True
     ):
         st.switch_page("pages/1_Protocol_Manager.py")
 
 with col2:
-    if st.button(
-        "🚀 **Run Simulation**\n\nExecute simulations with selected protocols",
+    # Disable Run Simulation if no protocol is loaded
+    simulation_disabled = st.session_state.current_protocol is None
+    if navigation_button(
+        "Run Simulation",
         key="nav_simulation",
-        use_container_width=True
+        help_text="Execute simulations with selected protocols",
+        full_width=True,
+        disabled=simulation_disabled,
+        button_type="ghost" if simulation_disabled else "secondary"
     ):
         st.switch_page("pages/2_Run_Simulation.py")
 
 with col3:
-    if st.button(
-        "📊 **Analysis**\n\nVisualize and compare simulation results",
+    # Disable Analysis if no simulation results are available
+    analysis_disabled = st.session_state.simulation_results is None
+    if navigation_button(
+        "Analysis Overview",
         key="nav_analysis",
-        use_container_width=True
+        help_text="Visualize and compare simulation results",
+        full_width=True,
+        disabled=analysis_disabled,
+        button_type="ghost" if analysis_disabled else "secondary"
     ):
         st.switch_page("pages/3_Analysis_Overview.py")
 
-# Current status
-st.markdown("---")
-st.subheader("Current Status")
-
-col1, col2 = st.columns(2)
-
-with col1:
+# Quick status line (optional - much more subtle)
+if st.session_state.current_protocol or st.session_state.simulation_results:
+    st.markdown("---")
+    status_parts = []
     if st.session_state.current_protocol:
-        st.success(f"✅ Protocol Loaded: {st.session_state.current_protocol['name']}")
-    else:
-        st.warning("⚠️ No protocol loaded")
-
-with col2:
+        status_parts.append(f"Protocol: **{st.session_state.current_protocol['name']}**")
     if st.session_state.simulation_results:
-        st.success("✅ Simulation results available")
-    else:
-        st.info("ℹ️ No simulation results yet")
+        status_parts.append("Results: **Available**")
+    st.caption(" • ".join(status_parts))
 
 # Footer
 st.markdown("---")

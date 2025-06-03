@@ -29,27 +29,24 @@ from utils.export_config import render_export_settings
 
 st.set_page_config(
     page_title="Analysis Overview", 
-    page_icon="📊", 
+    page_icon="🦍", 
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
 # Add parent for utils import
 sys.path.append(str(Path(__file__).parent.parent))
-from utils.button_styling import style_navigation_buttons
+from utils.carbon_button_helpers import top_navigation_home_button, ape_button
 from visualizations.streamgraph_simple import create_simple_streamgraph
 from components.treatment_patterns.enhanced_tab import render_enhanced_treatment_patterns_tab
-
-# Apply our button styling
-style_navigation_buttons()
 
 # Top navigation
 col1, col2, col3 = st.columns([1, 6, 1])
 with col1:
-    if st.button("🦍 Home", key="top_home"):
+    if top_navigation_home_button():
         st.switch_page("APE.py")
 with col2:
-    st.title("📊 Analysis Overview")
+    st.title("Analysis Overview")
     st.markdown("Visualize and analyze simulation results.")
 
 # Initialize visualization mode selector - required!
@@ -60,7 +57,12 @@ render_export_settings("sidebar")
 
 # Check if results are available
 if not st.session_state.get('simulation_results'):
-    st.warning("⚠️ No simulation results available. Please run a simulation first.")
+    # Just show centered navigation button
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if ape_button("Run a Simulation", key="nav_run_sim", 
+                     icon="play", full_width=True, is_primary_action=True):
+            st.switch_page("pages/2_Run_Simulation.py")
     st.stop()
 
 results_data = st.session_state.simulation_results
@@ -68,8 +70,8 @@ results = results_data['results']
 protocol = results_data['protocol']
 params = results_data['parameters']
 
-# Results header
-st.success(f"✅ Analyzing: {protocol['name']} - {params['n_patients']} patients over {params['duration_years']} years")
+# Results header (subtle)
+st.caption(f"**{protocol['name']}** • {params['n_patients']} patients • {params['duration_years']} years")
 
 # Get summary statistics once and cache
 @st.cache_data

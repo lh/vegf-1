@@ -8,6 +8,9 @@ plotly>=5.17.0  # For interactive visualizations including Sankey diagrams
 pyyaml>=6.0
 pyarrow>=12.0.0  # For Parquet support
 
+# UI Components
+streamlit-carbon-button>=1.0.0  # Carbon Design System buttons
+
 # Testing and monitoring
 pytest>=7.4.0
 pytest-cov>=4.1.0

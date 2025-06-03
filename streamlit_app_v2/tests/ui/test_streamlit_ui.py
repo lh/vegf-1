@@ -10,6 +10,7 @@ import pytest
 from playwright.sync_api import expect
 import time
 from pathlib import Path
+import re
 
 
 class TestStreamlitUI:
@@ -129,18 +130,19 @@ class TestStreamlitUI:
             expect(page.locator("text=Duration (years)")).to_be_visible()
             expect(page.locator("text=Random Seed")).to_be_visible()
     
-    def test_button_styling(self, page):
-        """Test that button styling is applied correctly."""
+    def test_carbon_button_styling(self, page):
+        """Test that Carbon button styling is applied correctly."""
         page.goto("http://localhost:8509")
         page.wait_for_load_state("networkidle")
         
-        # Check that custom CSS is applied
-        button = page.locator("button").first
+        # Check that Carbon buttons are present
+        carbon_button = page.locator("button[class*='bx--btn']").first
         
-        # Should have our custom styling (no red text)
-        color = button.evaluate("el => window.getComputedStyle(el).color")
+        # Should have Carbon class
+        expect(carbon_button).to_have_class(re.compile("bx--btn"))
         
-        # Color should not be red (rgb(255, 0, 0))
+        # Check button text color is not red
+        color = carbon_button.evaluate("el => window.getComputedStyle(el).color")
         assert "rgb(255, 0, 0)" not in color
     
     @pytest.mark.slow
