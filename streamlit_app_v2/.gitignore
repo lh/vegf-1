@@ -1,0 +1,16 @@
+# Node modules
+node_modules/
+
+# Playwright test artifacts
+playwright-report/
+test-results/
+tests/playwright/screenshots/
+tests/playwright/reports/
+tests/playwright/downloads/
+
+# Test environment
+venv_carbon_test/
+test-results.json
+
+# macOS
+.DS_Store

@@ -1,0 +1,22 @@
+{
+  "name": "streamlit-app-v2-tests",
+  "version": "1.0.0",
+  "description": "Playwright tests for Streamlit APE application Carbon button migration",
+  "scripts": {
+    "test": "playwright test",
+    "test:baseline": "playwright test tests/baseline --update-snapshots",
+    "test:visual": "playwright test tests/visual",
+    "test:watch": "playwright test --ui",
+    "test:comparison": "playwright test tests/comparison",
+    "test:all": "playwright test",
+    "test:perf": "playwright test tests/performance",
+    "test:a11y": "playwright test tests/accessibility",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.1",
+    "axe-playwright": "^1.2.3"
+  },
+  "license": "MIT"
+}
