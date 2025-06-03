@@ -9,6 +9,7 @@ from .financial_results import (
     PatientCostSummary,
     CostBreakdown
 )
+from .cost_enhancer import create_v2_cost_enhancer
 
 # Import from simulation.economics for now, will be moved in cleanup phase
 from simulation.economics import CostConfig
@@ -22,5 +23,6 @@ __all__ = [
     'CostConfig',
     'CostAnalyzerV2',
     'CostEvent',
-    'CostTrackerV2'
+    'CostTrackerV2',
+    'create_v2_cost_enhancer'
 ]

@@ -9,7 +9,7 @@ In ABS, each patient is an autonomous agent that:
 
 import random
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Callable
 from dataclasses import dataclass
 
 from simulation_v2.core.patient import Patient
@@ -53,7 +53,8 @@ class ABSEngine:
         disease_model: DiseaseModel,
         protocol: Protocol,
         n_patients: int,
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
+        visit_metadata_enhancer: Optional[Callable] = None
     ):
         """
         Initialize ABS engine.
@@ -63,10 +64,12 @@ class ABSEngine:
             protocol: Treatment protocol
             n_patients: Number of patients to simulate
             seed: Random seed for reproducibility
+            visit_metadata_enhancer: Optional function to enhance visit metadata
         """
         self.disease_model = disease_model
         self.protocol = protocol
         self.n_patients = n_patients
+        self.visit_metadata_enhancer = visit_metadata_enhancer
         
         if seed is not None:
             random.seed(seed)
@@ -77,7 +80,12 @@ class ABSEngine:
             patient_id = f"P{i:04d}"
             # Sample baseline vision from realistic distribution
             baseline_vision = self._sample_baseline_vision()
-            self.patients[patient_id] = Patient(patient_id, baseline_vision)
+            # Create patient with optional metadata enhancer
+            self.patients[patient_id] = Patient(
+                patient_id, 
+                baseline_vision,
+                visit_metadata_enhancer=self.visit_metadata_enhancer
+            )
             
     def _sample_baseline_vision(self) -> int:
         """
