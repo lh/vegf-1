@@ -1,898 +1,490 @@
 # 📋 IMPLEMENTATION INSTRUCTIONS
 
-**IMPORTANT**: This is the active implementation plan. Always refer to this document when working on the Carbon button migration.
+**IMPORTANT**: This is the active implementation plan. Always refer to this document when working on the current feature.
 
-## 🚀 Quick Reference
+## 🚀 Current Implementation: Simulation Package Export/Import
 
-### Current Phase
-- [ ] Day 0: Test Infrastructure Setup
-- [ ] Day 1: Baseline Test Creation
-- [ ] Day 2: Core Infrastructure
-- [ ] Day 3-4: Navigation Migration
-- [ ] Day 5-6: Form Actions
-- [ ] Day 7: Export Buttons
-- [ ] Day 8-9: Code Cleanup
-- [ ] Day 10-11: Testing & Refinement
-- [ ] Day 12-13: Documentation
-- [ ] Day 14: Final Testing
+### Current Phase: TDD Implementation
+- [ ] Day 1: Foundation Tests & Core Logic
+- [ ] Day 2: Data Integrity & Security
+- [ ] Day 3: UI Integration
+- [ ] Day 4: Polish & Performance
+- [ ] Day 5: Documentation & Final Testing
 
 ### Key Commands
 ```bash
-# Before ANY changes
-npm run test:baseline
+# Run tests continuously during development
+python -m pytest tests/test_simulation_package.py -v --watch
 
-# During migration
-npm run test:watch
+# Before ANY implementation
+python -m pytest tests/ -x  # Ensure existing tests pass
 
 # After changes
-npm run test:all
+python scripts/run_tests.py --all
 ```
 
 ### Golden Rules
-1. **NO migration without tests**
-2. **One button at a time**
+1. **Write tests FIRST, then implement**
+2. **One feature at a time**
 3. **Tests green = safe to commit**
-4. **Check `docs/CARBON_BUTTON_TDD_PLAN.md` for details**
+4. **No synthetic data in scientific tools**
 
 ---
 
-# Carbon Button Implementation Plan - Aggressive Timeline (Improved)
+# Simulation Package Export/Import Implementation Plan (TDD)
 
 ## Overview
-Full application conversion to Carbon buttons in 2 weeks using a **Test-Driven Development (TDD)** approach. We'll capture all existing button behaviors with Playwright tests BEFORE migration, ensuring zero regressions.
+Implement bidirectional simulation package functionality for APE V2 using Test-Driven Development. This allows users to export simulation results as portable packages and import them for analysis, enabling collaboration and reproducibility.
 
-## Key Decisions
-- **Default Button Style**: `teal-shadow` 
-- **Icon Usage**: Comprehensive with fallback to text for project-specific actions
-- **Colours**: Use Carbon defaults (teal matches our logo perfectly)
-- **Timeline**: 2 weeks aggressive implementation
-- **Documentation**: Developer-only
-- **Testing Strategy**: TDD with Playwright (see [CARBON_BUTTON_TDD_PLAN.md](./CARBON_BUTTON_TDD_PLAN.md))
-- **Migration Safety**: All existing functionality captured in tests first
+## Implementation Architecture
 
-## Pre-Implementation Checklist
-
-### Day 0: Test Infrastructure Setup
-- [ ] Install Playwright: `npm install -D @playwright/test` 
-- [ ] Set up test configuration (see [TDD Plan](./CARBON_BUTTON_TDD_PLAN.md#phase-0-test-infrastructure-setup-day-0))
-- [ ] Create baseline tests for ALL existing buttons
-- [ ] Run baseline tests and save screenshots
-- [ ] Create feature branch: `feature/carbon-buttons`
-- [ ] Verify Carbon button compatibility with current Streamlit version
-- [ ] Document all existing button locations and types
-- [ ] Create button inventory spreadsheet
-- [ ] Test Carbon button installation in isolated environment
-
-## Test-Driven Development Integration
-
-This implementation plan follows a strict TDD approach. **No button migration happens without tests**.
-
-### 📋 Related Documents
-- **[CARBON_BUTTON_TDD_PLAN.md](./CARBON_BUTTON_TDD_PLAN.md)** - Complete TDD strategy with Playwright
-- Test templates and examples
-- CI/CD integration
-- Performance benchmarking
-
-### TDD Migration Workflow
-
-Every button migration follows this process:
-
-1. **Write Tests First**: Capture current button behavior using Playwright
-2. **Run Tests**: Ensure they pass with existing buttons (baseline)
-3. **Migrate Code**: Replace with Carbon buttons while tests are running
-4. **Run Tests Again**: Ensure they still pass (no regressions)
-5. **Refactor**: Improve code while keeping tests green
-6. **Commit**: Only when ALL tests pass
-
-### Test Categories
-- **Functional Tests**: Button clicks, navigation, form submission
-- **Visual Tests**: Screenshot comparisons
-- **Performance Tests**: Load time, response time
-- **Accessibility Tests**: ARIA labels, keyboard navigation
-- **E2E Tests**: Complete user journeys
-
-### Quick Test Commands
-```bash
-# Before starting ANY migration work
-npm run test:baseline        # Capture current behavior
-npm run test:visual         # Save screenshot baselines
-
-# During migration (run continuously)
-npm run test:watch          # Live test feedback
-npm run test:comparison     # Compare old vs new
-
-# After migration
-npm run test:all           # Full regression suite
-npm run test:perf          # Performance validation
-npm run test:a11y          # Accessibility check
+### Core Components
+```
+utils/simulation_package.py     # Main package management logic
+tests/test_simulation_package.py  # Comprehensive test suite
+core/results/package_manager.py   # Integration with existing results system
 ```
 
-For detailed test examples and implementation, see [CARBON_BUTTON_TDD_PLAN.md](./CARBON_BUTTON_TDD_PLAN.md).
-
-## Week 1: Full Implementation
-
-### Day 1: Baseline Test Creation
-
-**Morning**:
-- Set up Playwright test infrastructure
-- Create baseline tests for navigation buttons (see [Navigation Tests](./CARBON_BUTTON_TDD_PLAN.md#enhanced-navigation-button-tests))
-- Create baseline tests for form actions (see [Form Tests](./CARBON_BUTTON_TDD_PLAN.md#enhanced-form-action-tests))
-- Run all tests and save baseline screenshots
-
-**Afternoon**:
-- Create performance baseline tests
-- Create accessibility baseline tests
-- Document all button behaviors in test reports
-- Commit all tests to version control
-
-```bash
-# Run baseline capture
-npm run test:baseline -- --update-snapshots
-npm run test:baseline -- --reporter=html
+### Package Structure (Aligned with Current System)
+```
+APE_simulation_[sim_id]_[YYYYMMDD].zip
+├── manifest.json               # Package metadata, checksums, version
+├── data/
+│   ├── patients.parquet       # Patient-level data
+│   ├── visits.parquet         # Visit records  
+│   ├── metadata.parquet       # Simulation metadata
+│   ├── patient_index.parquet  # Patient indexing
+│   └── summary_stats.json     # Pre-calculated statistics
+├── protocol.yaml              # Exact protocol specification
+├── parameters.json            # Simulation parameters
+├── audit_log.json            # Complete audit trail
+└── README.txt               # Human-readable description
 ```
 
-### Day 2: Setup & Core Infrastructure
+## TDD Implementation Plan
 
-**Morning Day 2**:
-```bash
-# Create and activate virtual environment for testing
-python -m venv venv_carbon_test
-source venv_carbon_test/bin/activate  # or venv_carbon_test\Scripts\activate on Windows
+### Phase 1: Core Package Logic (Test-First)
 
-# Test installation
-pip install streamlit-carbon-button
-pip install -r requirements.txt
-
-# Verify no conflicts
-python -c "import streamlit_carbon_button; print('Success!')"
-```
-
-**Create core utilities**:
-
-`utils/carbon_button_helpers.py`:
+#### 1.1 Test Suite Structure
 ```python
-from streamlit_carbon_button import carbon_button, CarbonIcons
-from typing import Optional, Dict, Any
-import streamlit as st
-
-# Extended icon mapping for APE-specific actions
-ICON_MAP = {
-    # Navigation
-    'home': CarbonIcons.HOME,
-    'settings': CarbonIcons.SETTINGS,
-    'back': CarbonIcons.ARROW_LEFT,
-    'forward': CarbonIcons.ARROW_RIGHT,
-    
-    # Actions
-    'save': CarbonIcons.SAVE,
-    'load': CarbonIcons.UPLOAD,
-    'delete': CarbonIcons.DELETE,
-    'run': CarbonIcons.PLAY,
-    'stop': CarbonIcons.STOP,
-    'reset': CarbonIcons.RESET,
-    'refresh': CarbonIcons.RENEW,
-    
-    # Data operations
-    'export': CarbonIcons.EXPORT,
-    'download': CarbonIcons.DOWNLOAD,
-    'copy': CarbonIcons.COPY,
-    'filter': CarbonIcons.FILTER,
-    'search': CarbonIcons.SEARCH,
-    
-    # Visualization
-    'chart': CarbonIcons.CHART_BAR,
-    'view': CarbonIcons.VIEW,
-    'analyze': CarbonIcons.ANALYTICS,
-    'visualize': CarbonIcons.DATA_VIS,
-    'visualise': CarbonIcons.DATA_VIS,  # British spelling
-    
-    # File operations
-    'document': CarbonIcons.DOCUMENT,
-    'folder': CarbonIcons.FOLDER,
-    'add': CarbonIcons.ADD,
-    'new': CarbonIcons.ADD,
-    
-    # Status
-    'info': CarbonIcons.INFORMATION,
-    'help': CarbonIcons.HELP,
-    'warning': CarbonIcons.WARNING,
-    'success': CarbonIcons.CHECKMARK,
-    'error': CarbonIcons.ERROR,
-    
-    # APE-specific
-    'protocol': CarbonIcons.DOCUMENT,
-    'simulation': CarbonIcons.PLAY,
-    'patient': CarbonIcons.USER,
-    'treatment': CarbonIcons.MEDICATION,
-    'analysis': CarbonIcons.ANALYTICS,
-    'overview': CarbonIcons.DASHBOARD,
-    'experiment': CarbonIcons.CHEMISTRY,
-}
-
-# Button style configuration
-BUTTON_STYLES = {
-    'navigation': {'button_type': 'ghost', 'size': 'sm'},
-    'primary_action': {'button_type': 'primary', 'is_default': True, 'default_style': 'teal-shadow'},
-    'secondary_action': {'button_type': 'secondary'},
-    'danger_action': {'button_type': 'danger'},
-    'export': {'button_type': 'ghost', 'size': 'sm'},
-}
-
-def ape_button(
-    label: str,
-    key: str,
-    icon: Optional[str] = None,
-    button_type: str = "secondary",
-    is_primary_action: bool = False,
-    is_danger: bool = False,
-    full_width: bool = False,
-    disabled: bool = False,
-    help_text: Optional[str] = None,
-    **kwargs
-) -> bool:
-    """
-    APE-specific wrapper for carbon_button with sensible defaults.
-    
-    Args:
-        label: Button text (can be empty for icon-only buttons)
-        key: Unique key for button (required by Streamlit)
-        icon: Icon name (string) or CarbonIcons enum value
-        button_type: "primary", "secondary", "danger", "ghost"
-        is_primary_action: Makes this the default action with special styling
-        is_danger: Shorthand for button_type="danger"
-        full_width: Expand button to container width
-        disabled: Disable button interaction
-        help_text: Tooltip text on hover
-        **kwargs: Additional arguments passed to carbon_button
-    
-    Returns:
-        bool: True if button was clicked
-    """
-    # Handle danger shorthand
-    if is_danger:
-        button_type = "danger"
-    
-    # Auto-detect icon if not provided
-    if icon is None:
-        # Try exact match first
-        label_lower = label.lower()
-        if label_lower in ICON_MAP:
-            icon = ICON_MAP[label_lower]
-        else:
-            # Try to find icon from keywords in label
-            for keyword, icon_value in ICON_MAP.items():
-                if keyword in label_lower:
-                    icon = icon_value
-                    break
-    elif isinstance(icon, str) and icon in ICON_MAP:
-        icon = ICON_MAP[icon]
-    
-    # Apply primary action settings
-    if is_primary_action:
-        button_type = "primary"
-        kwargs['is_default'] = True
-        kwargs['default_style'] = "teal-shadow"
-    
-    # Handle icon-only buttons
-    if not label and icon:
-        kwargs['aria_label'] = kwargs.get('aria_label', key.replace('_', ' ').title())
-    
-    # Add help text as tooltip
-    if help_text:
-        kwargs['title'] = help_text
-    
-    return carbon_button(
-        label=label,
-        key=key,
-        icon=icon,
-        button_type=button_type,
-        use_container_width=full_width,
-        disabled=disabled,
-        **kwargs
-    )
-
-def create_button_group(buttons: list[Dict[str, Any]], cols: Optional[list[float]] = None) -> list[bool]:
-    """
-    Create a group of buttons in columns.
-    
-    Args:
-        buttons: List of button configurations
-        cols: Column width ratios (defaults to equal widths)
-    
-    Returns:
-        List of button states (True if clicked)
-    """
-    if cols is None:
-        cols = [1] * len(buttons)
-    
-    columns = st.columns(cols)
-    results = []
-    
-    for col, btn_config in zip(columns, buttons):
-        with col:
-            result = ape_button(**btn_config)
-            results.append(result)
-    
-    return results
+# tests/test_simulation_package.py
+class TestSimulationPackage:
+    def test_create_package_manifest()
+    def test_validate_package_structure()
+    def test_package_data_integrity()
+    def test_round_trip_consistency()
+    def test_compression_efficiency()
+    def test_security_validation()
+    def test_version_compatibility()
+    def test_error_handling()
 ```
 
-**Create test comparison page**:
-
-`pages/99_Carbon_Button_Test.py`:
+#### 1.2 Package Creation Tests
 ```python
-import streamlit as st
-from utils.carbon_button_helpers import ape_button, create_button_group, CarbonIcons
-import time
+def test_create_package_from_results():
+    """Test creating package from SimulationResults object"""
+    # Given: Valid simulation results
+    # When: Creating package
+    # Then: Package contains all required files with correct structure
 
-st.set_page_config(page_title="Carbon Button Test", page_icon="🧪", layout="wide")
+def test_package_manifest_generation():
+    """Test manifest contains all required metadata"""
+    # Given: Simulation results with metadata
+    # When: Generating manifest
+    # Then: Manifest includes version, checksums, timestamps
 
-st.title("Carbon Button Migration Test Page")
-st.markdown("Compare old and new button styles side by side")
+def test_package_compression():
+    """Test package size is reasonable"""
+    # Given: Large simulation dataset
+    # When: Creating package
+    # Then: Package size < 20% of memory footprint
+```
 
-# Toggle for comparison
-use_carbon = st.checkbox("Use Carbon Buttons", value=True)
+#### 1.3 Package Import Tests
+```python
+def test_import_valid_package():
+    """Test importing a valid package"""
+    # Given: Valid package file
+    # When: Importing package
+    # Then: Returns equivalent SimulationResults object
 
-# Test different button scenarios
-st.header("1. Navigation Buttons")
-col1, col2 = st.columns(2)
+def test_import_security_validation():
+    """Test package security checks"""
+    # Given: Package with malicious content
+    # When: Importing package
+    # Then: Raises appropriate security exception
 
-with col1:
-    st.subheader("Old Style" if not use_carbon else "Carbon Style")
-    if use_carbon:
-        if ape_button("Home", key="c_home", icon="home", button_type="ghost"):
-            st.success("Home clicked!")
-        if ape_button("Protocol Manager", key="c_protocol", icon="protocol", button_type="ghost"):
-            st.success("Protocol Manager clicked!")
-    else:
-        if st.button("🏠 Home", key="s_home"):
-            st.success("Home clicked!")
-        if st.button("📄 Protocol Manager", key="s_protocol"):
-            st.success("Protocol Manager clicked!")
+def test_import_version_compatibility():
+    """Test handling different package versions"""
+    # Given: Package with older/newer version
+    # When: Importing package
+    # Then: Handles gracefully or provides clear error
+```
 
-with col2:
-    st.subheader("Button Variations")
-    if use_carbon:
-        # Show different Carbon button types
-        if ape_button("Primary Action", key="c_primary", is_primary_action=True):
-            st.info("Primary action triggered")
-        if ape_button("Secondary", key="c_secondary"):
-            st.info("Secondary action")
-        if ape_button("Danger Zone", key="c_danger", is_danger=True):
-            st.error("Danger action!")
-        if ape_button("", key="c_icon_only", icon=CarbonIcons.SETTINGS, 
-                     aria_label="Settings"):
-            st.info("Icon-only button clicked")
-    else:
-        if st.button("Primary Action", key="s_primary", type="primary"):
-            st.info("Primary action triggered")
-        if st.button("Secondary", key="s_secondary"):
-            st.info("Secondary action")
-        if st.button("⚠️ Danger Zone", key="s_danger"):
-            st.error("Danger action!")
-        if st.button("⚙️", key="s_icon_only"):
-            st.info("Icon-only button clicked")
+#### 1.4 Data Integrity Tests
+```python
+def test_round_trip_data_integrity():
+    """Test export → import preserves all data exactly"""
+    # Given: Original simulation results
+    # When: Export then import
+    # Then: Imported results identical to original
 
-# Test form actions
-st.header("2. Form Actions")
-with st.form("test_form"):
-    st.text_input("Protocol Name", key="protocol_name")
+def test_parquet_preservation():
+    """Test parquet files maintain data types"""
+    # Given: Results with complex data types
+    # When: Export/import cycle
+    # Then: Data types preserved exactly
+
+def test_checksum_validation():
+    """Test package integrity via checksums"""
+    # Given: Package with corrupted data
+    # When: Importing package
+    # Then: Detects corruption and fails safely
+```
+
+### Phase 2: Core Implementation
+
+#### 2.1 Package Manager Class
+```python
+# utils/simulation_package.py
+from typing import Dict, Any, Optional
+import zipfile
+import json
+import hashlib
+from pathlib import Path
+import tempfile
+
+class SimulationPackageManager:
+    """Manages export/import of simulation packages"""
     
-    col1, col2, col3 = st.columns([3, 1, 1])
+    PACKAGE_VERSION = "1.0"
+    REQUIRED_FILES = {
+        "manifest.json",
+        "data/patients.parquet", 
+        "data/visits.parquet",
+        "data/metadata.parquet",
+        "data/patient_index.parquet",
+        "protocol.yaml",
+        "parameters.json"
+    }
+    
+    def create_package(self, results: 'SimulationResults', 
+                      output_path: Optional[Path] = None) -> bytes:
+        """Create simulation package from results"""
+        pass  # Implement after tests
+    
+    def import_package(self, package_data: bytes) -> 'SimulationResults':
+        """Import simulation package"""
+        pass  # Implement after tests
+    
+    def validate_package(self, package_path: Path) -> Dict[str, Any]:
+        """Validate package structure and integrity"""
+        pass  # Implement after tests
+    
+    def _generate_manifest(self, sim_id: str, files: Dict[str, Path]) -> Dict[str, Any]:
+        """Generate package manifest with checksums"""
+        pass  # Implement after tests
+    
+    def _calculate_checksums(self, files: Dict[str, Path]) -> Dict[str, str]:
+        """Calculate SHA256 checksums for all files"""
+        pass  # Implement after tests
+    
+    def _validate_security(self, package_path: Path) -> None:
+        """Validate package for security concerns"""
+        pass  # Implement after tests
+```
+
+#### 2.2 Integration with Results System
+```python
+# core/results/package_manager.py
+from core.results.factory import ResultsFactory
+from utils.simulation_package import SimulationPackageManager
+
+class ResultsPackageIntegration:
+    """Integration layer between package manager and results system"""
+    
+    @classmethod
+    def export_simulation_package(cls, sim_id: str) -> bytes:
+        """Export simulation as package using existing results system"""
+        results = ResultsFactory.load_results(sim_id)
+        package_manager = SimulationPackageManager()
+        return package_manager.create_package(results)
+    
+    @classmethod
+    def import_simulation_package(cls, package_data: bytes) -> str:
+        """Import package and return new simulation ID"""
+        package_manager = SimulationPackageManager()
+        results = package_manager.import_package(package_data)
+        return ResultsFactory.save_imported_results(results)
+```
+
+### Phase 3: UI Integration (Test-First)
+
+#### 3.1 UI Test Structure
+```python
+# tests/ui/test_package_ui.py
+class TestPackageUI:
+    def test_export_button_visibility()
+    def test_export_download_flow()
+    def test_import_upload_flow()
+    def test_import_validation_messages()
+    def test_imported_simulation_indicators()
+```
+
+#### 3.2 Analysis Overview Integration
+```python
+# In pages/3_Analysis_Overview.py - Export functionality
+def render_audit_trail_tab():
+    """Enhanced audit trail with export capability"""
+    
+    # Existing audit trail content...
+    
+    st.subheader("Export Simulation")
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.write("Download this simulation as a portable package for sharing or archival.")
+        
     with col2:
-        if use_carbon:
-            submitted = st.form_submit_button("Save", type="primary")
-        else:
-            submitted = st.form_submit_button("💾 Save", type="primary")
-    
-    with col3:
-        if use_carbon:
-            if st.form_submit_button("Cancel"):
-                st.info("Cancelled")
-        else:
-            if st.form_submit_button("Cancel"):
-                st.info("Cancelled")
-    
-    if submitted:
-        st.success("Form submitted!")
-
-# Test full-width buttons
-st.header("3. Full Width Actions")
-if use_carbon:
-    if ape_button("Run Simulation", key="c_run_full", icon="run", 
-                 is_primary_action=True, full_width=True):
-        with st.spinner("Running simulation..."):
-            time.sleep(2)
-        st.success("Simulation complete!")
-else:
-    if st.button("▶️ Run Simulation", key="s_run_full", type="primary", 
-                use_container_width=True):
-        with st.spinner("Running simulation..."):
-            time.sleep(2)
-        st.success("Simulation complete!")
-
-# Test export buttons
-st.header("4. Export Actions")
-export_formats = ['PNG', 'SVG', 'JPEG', 'WebP']
-
-if use_carbon:
-    # Using button group helper
-    buttons = [
-        {"label": fmt, "key": f"c_export_{fmt.lower()}", "icon": "export", 
-         "button_type": "ghost"}
-        for fmt in export_formats
-    ]
-    results = create_button_group(buttons)
-    for fmt, clicked in zip(export_formats, results):
-        if clicked:
-            st.info(f"Exporting as {fmt}...")
-else:
-    cols = st.columns(len(export_formats))
-    for col, fmt in zip(cols, export_formats):
-        with col:
-            if st.button(f"📥 {fmt}", key=f"s_export_{fmt.lower()}"):
-                st.info(f"Exporting as {fmt}...")
-
-# Performance metrics
-st.header("5. Performance Metrics")
-if st.checkbox("Show Performance Comparison"):
-    st.info("Performance metrics would be displayed here")
-    # Add actual performance comparison code
-
-# Accessibility test
-st.header("6. Accessibility Features")
-if use_carbon:
-    st.markdown("""
-    Carbon buttons include:
-    - ✅ Built-in ARIA labels
-    - ✅ Keyboard navigation support
-    - ✅ High contrast mode compatibility
-    - ✅ Screen reader optimizations
-    """)
-else:
-    st.markdown("""
-    Standard buttons:
-    - ⚠️ Limited ARIA support
-    - ✅ Basic keyboard navigation
-    - ⚠️ Manual contrast adjustments needed
-    - ⚠️ Limited screen reader support
-    """)
+        if st.button("📦 Download Package", type="primary"):
+            try:
+                package_data = export_simulation_package(st.session_state.current_sim_id)
+                package_name = f"APE_simulation_{st.session_state.current_sim_id}_{datetime.now().strftime('%Y%m%d')}.zip"
+                
+                st.download_button(
+                    label="⬇️ Download Package",
+                    data=package_data,
+                    file_name=package_name,
+                    mime="application/zip"
+                )
+                st.success("Package ready for download!")
+                
+            except Exception as e:
+                st.error(f"Failed to create package: {e}")
 ```
 
-### Day 3-4: Navigation & Main Pages (TDD Migration)
-
-**Before ANY code changes**:
-```bash
-# Run navigation tests to ensure baseline
-npm run test:watch -- --grep "Navigation"
-
-# Keep tests running in watch mode during migration
-```
-
-**Migration Process**:
-1. Run navigation tests - verify all green ✅
-2. Migrate ONE navigation button
-3. Run tests - fix if broken
-4. Commit when tests pass
-5. Repeat for next button
-
-**Create migration tracking sheet**:
-
-`docs/CARBON_BUTTON_MIGRATION_TRACKER.md`:
-```markdown
-# Carbon Button Migration Tracker
-
-## Status Legend
-- 🟢 Complete
-- 🟡 In Progress
-- 🔴 Not Started
-- ⚠️ Needs Review
-
-## File Status
-
-### Main Application
-| File | Status | Notes | Reviewer |
-|------|--------|-------|----------|
-| APE.py | 🔴 | Main navigation | - |
-| requirements.txt | 🔴 | Add carbon dependency | - |
-
-### Pages
-| File | Status | Notes | Reviewer |
-|------|--------|-------|----------|
-| pages/1_Protocol_Manager.py | 🔴 | Complex forms | - |
-| pages/2_Run_Simulation.py | 🔴 | Primary actions | - |
-| pages/3_Analysis_Overview.py | 🔴 | Export buttons | - |
-| pages/4_Experiments.py | 🔴 | If exists | - |
-
-### Components
-| File | Status | Notes | Reviewer |
-|------|--------|-------|----------|
-| components/treatment_patterns/enhanced_tab.py | 🔴 | Export actions | - |
-| components/treatment_patterns/interval_analyzer.py | 🔴 | Check for buttons | - |
-| components/treatment_patterns/pattern_analyzer.py | 🔴 | Check for buttons | - |
-
-### Utilities
-| File | Status | Notes | Reviewer |
-|------|--------|-------|----------|
-| utils/carbon_button_helpers.py | 🟢 | Created | - |
-| utils/button_styling.py | 🔴 | To be removed | - |
-| utils/export_config.py | 🔴 | Export buttons | - |
-| utils/style_constants.py | 🔴 | Remove button styles | - |
-
-## Button Inventory
-
-### Navigation Buttons
-- [ ] Home (all pages)
-- [ ] Protocol Manager nav
-- [ ] Run Simulation nav
-- [ ] Analysis Overview nav
-- [ ] Back/Forward buttons
-
-### Action Buttons
-- [ ] Save Protocol (primary)
-- [ ] Load Protocol
-- [ ] Delete Protocol (danger)
-- [ ] Run Simulation (primary, full-width)
-- [ ] Reset Parameters
-- [ ] Stop Simulation
-
-### Export Buttons
-- [ ] Export PNG
-- [ ] Export SVG
-- [ ] Export JPEG
-- [ ] Export WebP
-- [ ] Export Data (CSV)
-
-### Form Buttons
-- [ ] Submit forms
-- [ ] Cancel actions
-- [ ] Reset forms
-
-## Testing Checklist
-- [ ] All buttons have unique keys
-- [ ] Icon-only buttons have aria-labels
-- [ ] Session state preserved
-- [ ] No visual regressions
-- [ ] Performance acceptable
-- [ ] Accessibility improved
-```
-
-### Day 5-6: Form Actions & Primary Buttons (TDD Migration)
-
-**Test-Driven Process**:
-```bash
-# Focus on form functionality tests
-npm run test:watch -- --grep "Form|Save|Load|Delete"
-
-# After each button migration, run full suite
-npm run test:all -- --grep "Protocol Manager"
-```
-
-**Migration Checklist**:
-- [ ] Run form action tests - baseline ✅
-- [ ] Migrate Save button → run tests → fix issues
-- [ ] Migrate Load button → run tests → fix issues  
-- [ ] Migrate Delete button → run tests → fix issues
-- [ ] Run visual regression tests
-- [ ] Run accessibility tests
-- [ ] Commit when all tests green
-
-**Add error handling patterns**:
-
+#### 3.3 Protocol Manager Integration
 ```python
-# In carbon_button_helpers.py, add:
+# In pages/1_Protocol_Manager.py - Import functionality
+def render_import_section():
+    """Import simulation package section"""
+    
+    with st.expander("📥 Import Simulation Package"):
+        st.write("Upload a simulation package to analyse previously exported results.")
+        
+        uploaded_file = st.file_uploader(
+            "Choose simulation package",
+            type=['zip'],
+            help="Select a .zip file exported from APE"
+        )
+        
+        if uploaded_file:
+            if st.button("Import Simulation", type="primary"):
+                try:
+                    package_data = uploaded_file.read()
+                    sim_id = import_simulation_package(package_data)
+                    
+                    st.success(f"✅ Simulation imported successfully!")
+                    st.session_state.current_sim_id = sim_id
+                    st.session_state.imported_simulation = True
+                    
+                    # Navigate to Analysis Overview
+                    st.rerun()
+                    
+                except Exception as e:
+                    st.error(f"Failed to import package: {e}")
+```
 
-def safe_button_migration(old_button_func, new_button_func, *args, **kwargs):
-    """
-    Safe migration wrapper that can fall back to old buttons if needed.
-    """
+### Phase 4: Security & Validation Implementation
+
+#### 4.1 Security Tests
+```python
+def test_zip_bomb_protection():
+    """Test protection against zip bombs"""
+    # Given: Malicious zip with extreme compression
+    # When: Attempting import
+    # Then: Rejects before extraction
+
+def test_path_traversal_protection():
+    """Test protection against directory traversal"""
+    # Given: Package with ../../../etc/passwd entries
+    # When: Attempting import
+    # Then: Sanitises paths safely
+
+def test_file_size_limits():
+    """Test reasonable file size limits"""
+    # Given: Package exceeding size limits
+    # When: Attempting import
+    # Then: Rejects with clear error message
+```
+
+#### 4.2 Security Implementation
+```python
+def _validate_security(self, package_path: Path) -> None:
+    """Comprehensive security validation"""
+    
+    with zipfile.ZipFile(package_path, 'r') as zf:
+        # Check for zip bombs
+        total_size = sum(info.file_size for info in zf.infolist())
+        compressed_size = sum(info.compress_size for info in zf.infolist())
+        
+        if total_size > 1_000_000_000:  # 1GB limit
+            raise SecurityError("Package too large")
+            
+        if compressed_size > 0 and total_size / compressed_size > 100:
+            raise SecurityError("Suspicious compression ratio")
+        
+        # Check for path traversal
+        for info in zf.infolist():
+            if '..' in info.filename or info.filename.startswith('/'):
+                raise SecurityError(f"Unsafe path: {info.filename}")
+                
+        # Validate file types
+        allowed_extensions = {'.parquet', '.json', '.yaml', '.txt'}
+        for info in zf.infolist():
+            ext = Path(info.filename).suffix.lower()
+            if ext not in allowed_extensions:
+                raise SecurityError(f"Disallowed file type: {ext}")
+```
+
+### Phase 5: Error Handling & User Experience
+
+#### 5.1 Error Handling Tests
+```python
+def test_corrupted_package_handling():
+    """Test graceful handling of corrupted packages"""
+    
+def test_version_mismatch_handling():
+    """Test handling of incompatible package versions"""
+    
+def test_missing_files_handling():
+    """Test handling of packages with missing required files"""
+    
+def test_network_timeout_handling():
+    """Test handling of upload/download timeouts"""
+```
+
+#### 5.2 User Experience Enhancements
+```python
+# Progress indicators for large packages
+def create_package_with_progress(self, results: 'SimulationResults') -> bytes:
+    """Create package with progress updates"""
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
     try:
-        return new_button_func(*args, **kwargs)
-    except Exception as e:
-        st.warning(f"Carbon button error: {e}. Falling back to standard button.")
-        # Extract label from args/kwargs
-        label = args[0] if args else kwargs.get('label', 'Click')
-        key = kwargs.get('key', 'fallback_' + str(hash(label)))
-        return old_button_func(label, key=key)
-
-# Usage during migration:
-if safe_button_migration(st.button, ape_button, "Save", key="save_btn", is_primary_action=True):
-    save_data()
+        status_text.text("Preparing data files...")
+        progress_bar.progress(20)
+        
+        status_text.text("Generating manifest...")
+        progress_bar.progress(40)
+        
+        status_text.text("Compressing package...")
+        progress_bar.progress(60)
+        
+        status_text.text("Validating integrity...")
+        progress_bar.progress(80)
+        
+        status_text.text("Package ready!")
+        progress_bar.progress(100)
+        
+        return package_data
+        
+    finally:
+        progress_bar.empty()
+        status_text.empty()
 ```
 
-### Day 7: Analysis & Export Buttons (TDD Migration)
+## Testing Strategy
 
-**Test-Driven Export Migration**:
-```bash
-# Test export functionality continuously
-npm run test:watch -- --grep "Export"
+### 1. Unit Tests (First Priority)
+- Test each function in isolation
+- Mock external dependencies
+- Cover all error conditions
+- Achieve 100% code coverage
 
-# Verify downloads work
-npm run test:comparison -- --grep "download"
-```
+### 2. Integration Tests
+- Test package manager with real results
+- Test UI components with actual packages
+- Test round-trip scenarios end-to-end
 
-**Export Migration Steps**:
-1. Run export tests with old buttons ✅
-2. Migrate PNG export → test → verify download
-3. Migrate SVG export → test → verify download
-4. Migrate other formats → test each
-5. Run performance comparison tests
-6. Commit when all exports working
+### 3. Performance Tests
+- Test with large simulation datasets (10k+ patients)
+- Measure compression ratios
+- Validate memory usage during package operations
 
-**Enhanced export pattern with error handling**:
+### 4. Security Tests
+- Test all attack vectors
+- Validate input sanitisation
+- Test with malformed packages
 
-```python
-def create_export_buttons(formats: list[str], prefix: str = "export"):
-    """Create a row of export buttons with consistent styling."""
-    cols = st.columns(len(formats))
-    
-    for col, fmt in zip(cols, formats):
-        with col:
-            # Icon-only for space efficiency
-            if carbon_button(
-                "",
-                key=f"{prefix}_{fmt.lower()}",
-                icon=CarbonIcons.DOWNLOAD,
-                button_type="ghost",
-                aria_label=f"Export as {fmt}",
-                title=f"Export as {fmt}",  # Tooltip
-                use_container_width=True
-            ):
-                return fmt  # Return which format was clicked
-    
-    return None
+## Implementation Order
 
-# Usage:
-selected_format = create_export_buttons(['PNG', 'SVG', 'JPEG', 'WebP'])
-if selected_format:
-    export_chart(selected_format)
-```
+### Day 1: Foundation
+1. Create test suite structure
+2. Write core package creation tests
+3. Implement basic SimulationPackageManager class
+4. Make tests pass
 
-## Week 2: Polish & Optimization
+### Day 2: Data Integrity
+1. Write round-trip integrity tests
+2. Implement checksum validation
+3. Test with real simulation data
+4. Ensure parquet preservation
 
-### Day 8-9: Remove Old Code (With Test Coverage)
+### Day 3: Security & Validation
+1. Write security validation tests
+2. Implement security checks
+3. Test error handling scenarios
+4. Add input sanitisation
 
-**Pre-removal Testing**:
-```bash
-# Run FULL test suite before removing old code
-npm run test:all
+### Day 4: UI Integration
+1. Write UI integration tests
+2. Add export button to Analysis Overview
+3. Add import functionality to Protocol Manager
+4. Test user workflows
 
-# Generate coverage report
-npm run test:all -- --reporter=html
+### Day 5: Polish & Documentation
+1. Add progress indicators
+2. Improve error messages
+3. Write user documentation
+4. Final testing and validation
 
-# Ensure 100% button functionality covered
-```
+## Success Criteria
 
-**Safe removal checklist**:
-```bash
-# Before removing old code, create safety backup
-git checkout -b backup/pre-carbon-removal
-git push origin backup/pre-carbon-removal
+### Functional Requirements
+- ✅ Export any simulation as portable package
+- ✅ Import packages maintaining perfect data integrity
+- ✅ Round-trip exports preserve all data exactly
+- ✅ Package size < 20% of memory footprint
+- ✅ Import/export completes in < 30 seconds for typical simulations
 
-# Search for all button references
-grep -r "st.button" --include="*.py" . > button_references.txt
-grep -r "button_styling" --include="*.py" . > styling_references.txt
+### Security Requirements
+- ✅ Protection against zip bombs
+- ✅ Path traversal prevention
+- ✅ File type validation
+- ✅ Size limit enforcement
+- ✅ Checksum integrity validation
 
-# Review before deletion
-```
+### User Experience Requirements
+- ✅ Clear progress indicators for large operations
+- ✅ Helpful error messages with recovery suggestions
+- ✅ Intuitive UI integration
+- ✅ Imported simulation indicators
+- ✅ Seamless workflow integration
 
-### Day 10-11: Testing & Refinement
+## Quality Gates
 
-**Comprehensive Test Suite Execution**:
-```bash
-# Run all test categories
-npm run test:all             # Functional tests
-npm run test:visual          # Visual regression
-npm run test:a11y           # Accessibility 
-npm run test:perf           # Performance
+Each phase must pass all tests before proceeding:
+1. All unit tests pass (100% coverage)
+2. Integration tests pass with real data
+3. Security tests pass all attack scenarios
+4. Performance tests meet benchmarks
+5. UI tests validate user workflows
 
-# Generate final test report
-npm run test:all -- --reporter=html
-open playwright-report/index.html
-```
+---
 
-**Test Results Review**:
-- [ ] All functional tests passing
-- [ ] Visual changes approved
-- [ ] Accessibility improved (fewer violations)
-- [ ] Performance within limits (<100ms increase)
-- [ ] No console errors
-- [ ] Downloads working correctly
-
-**Automated testing script**:
-
-`tests/test_carbon_migration.py`:
-```python
-import pytest
-import streamlit as st
-from utils.carbon_button_helpers import ape_button, ICON_MAP
-
-def test_icon_mapping():
-    """Ensure all common words have icon mappings."""
-    common_terms = ['save', 'load', 'export', 'home', 'run', 'delete']
-    for term in common_terms:
-        assert term in ICON_MAP, f"Missing icon mapping for '{term}'"
-
-def test_button_keys_unique():
-    """Verify button keys are unique across pages."""
-    # This would scan all files and check for duplicate keys
-    pass
-
-def test_aria_labels():
-    """Ensure icon-only buttons have aria labels."""
-    # Test that empty label buttons have aria-label set
-    pass
-
-@pytest.mark.parametrize("button_type", ["primary", "secondary", "danger", "ghost"])
-def test_button_types(button_type):
-    """Test all button types render correctly."""
-    # Would need Streamlit testing framework
-    pass
-```
-
-### Day 12-13: Documentation
-
-**Add troubleshooting section**:
-
-```markdown
-## Troubleshooting Guide
-
-### Common Issues
-
-#### 1. Button not responding
-- Check key uniqueness
-- Verify session state isn't conflicting
-- Ensure Carbon button is properly imported
-
-#### 2. Icon not showing
-- Verify icon name in ICON_MAP
-- Check CarbonIcons enum has the icon
-- Use text fallback for unclear icons
-
-#### 3. Styling issues
-- Clear browser cache
-- Check for CSS conflicts
-- Verify Carbon button version
-
-#### 4. Session state problems
-```python
-# Debug session state
-if st.checkbox("Debug Session State"):
-    st.json(dict(st.session_state))
-```
-
-### Migration Rollback Plan
-
-If critical issues arise:
-```bash
-# Quick rollback
-git checkout backup/pre-carbon-removal
-git checkout -b fix/carbon-issues
-
-# Or use feature flag
-USE_CARBON_BUTTONS = st.secrets.get("USE_CARBON_BUTTONS", False)
-```
-```
-
-## Performance Optimization
-
-### Button Rendering Optimization
-```python
-# Cache icon lookups
-@st.cache_data
-def get_icon_for_label(label: str):
-    """Cache icon lookups for performance."""
-    label_lower = label.lower()
-    if label_lower in ICON_MAP:
-        return ICON_MAP[label_lower]
-    
-    for keyword, icon in ICON_MAP.items():
-        if keyword in label_lower:
-            return icon
-    
-    return None
-```
-
-### Lazy Loading
-```python
-# Only import Carbon buttons when needed
-def lazy_import_carbon():
-    """Lazy import to improve initial page load."""
-    global carbon_button, CarbonIcons
-    if 'carbon_button' not in globals():
-        from streamlit_carbon_button import carbon_button, CarbonIcons
-    return carbon_button, CarbonIcons
-```
-
-## Success Metrics
-
-### Test-Driven Success Criteria
-All metrics verified through automated Playwright tests:
-
-### Quantitative Metrics (Automated)
-- [ ] Page load time: ≤ 100ms increase (measured by performance tests)
-- [ ] Button response time: < 50ms (measured by interaction tests)
-- [ ] Memory usage: ≤ 10% increase (measured by performance monitor)
-- [ ] Bundle size: Document increase (measured by build analysis)
-- [ ] Test coverage: 100% of button functionality
-- [ ] Zero failing tests before deployment
-
-### Qualitative Metrics (Test Reports)
-- [ ] Visual consistency: 0 unapproved visual changes
-- [ ] Accessibility: Fewer violations than baseline
-- [ ] All user journeys: Passing E2E tests
-- [ ] Download functionality: All formats working
-
-### Test Dashboard
-```bash
-# View test metrics dashboard
-npm run test:all -- --reporter=html
-# Includes: pass/fail rates, performance metrics, screenshots
-```
-
-## Risk Mitigation
-
-### High-Risk Areas
-1. **Session State Conflicts**
-   - Test extensively with forms
-   - Document any behavior changes
-   
-2. **Performance on Button-Heavy Pages**
-   - Profile Analysis Overview page
-   - Consider pagination if needed
-
-3. **Mobile Responsiveness**
-   - Test on various screen sizes
-   - Adjust button sizes for mobile
-
-4. **Browser Compatibility**
-   - Test on Chrome, Firefox, Safari, Edge
-   - Document any limitations
-
-## Post-Implementation Monitoring
-
-### Week 3: Monitoring Phase
-- Monitor error logs for button-related issues
-- Track performance metrics via automated tests
-- Run nightly regression tests
-- Fix any edge cases found by tests
-
-### Continuous Testing
-```yaml
-# .github/workflows/nightly-tests.yml
-name: Nightly Carbon Button Tests
-on:
-  schedule:
-    - cron: '0 2 * * *'  # 2 AM daily
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - run: npm ci
-      - run: npx playwright install
-      - run: npm run test:all
-      - run: npm run test:perf
-```
-
-### Success Celebration
-- Team demo of new UI with test results
-- Document lessons learned
-- Share performance improvements (with metrics)
-- Plan next UI enhancements
-
-## TDD Benefits Realized
-
-1. **Zero Regressions**: Every button behavior preserved
-2. **Confidence**: Tests prove functionality works
-3. **Documentation**: Tests document expected behavior
-4. **Performance**: Metrics tracked automatically
-5. **Accessibility**: Improvements measured objectively
-6. **Maintenance**: Tests catch future breaks
-
-## Test Maintenance Going Forward
-
-- Keep all tests running in CI/CD
-- Update tests when adding new buttons
-- Visual regression baseline updates quarterly
-- Performance benchmarks tracked over time
-- Accessibility scores monitored monthly
+**Status**: Ready for Implementation  
+**Approach**: Test-Driven Development  
+**Timeline**: 5 days  
+**Risk Level**: Low (building on established architecture)

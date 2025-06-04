@@ -157,6 +157,303 @@ class TestSimulationPackage:
         
         # Placeholder assertion for test structure
         assert True  # Will be replaced with actual comparison
+
+
+class TestRealDataIntegrity:
+    """Tests for data integrity with real simulation data"""
+    
+    @pytest.fixture
+    def package_manager(self):
+        return SimulationPackageManager()
+    
+    def test_real_simulation_roundtrip(self, package_manager):
+        """Test complete round-trip with real simulation data"""
+        from pathlib import Path
+        from core.results.factory import ResultsFactory
+        
+        # Given: Real simulation results (find the latest parquet simulation)
+        sim_dir = Path("simulation_results")
+        parquet_sims = [d for d in sim_dir.iterdir() 
+                       if d.is_dir() and (d / "patients.parquet").exists()]
+        
+        if not parquet_sims:
+            pytest.skip("No parquet simulations available for testing")
+        
+        # Use the most recent simulation
+        latest_sim = max(parquet_sims, key=lambda x: x.name)
+        print(f"Testing with simulation: {latest_sim.name}")
+        
+        # Load the real simulation
+        original_results = ResultsFactory.load_results(latest_sim)
+        
+        # Store original data characteristics for comparison
+        original_metadata = {
+            'sim_id': original_results.metadata.sim_id,
+            'n_patients': original_results.metadata.n_patients,
+            'protocol_name': original_results.metadata.protocol_name,
+            'engine_type': original_results.metadata.engine_type,
+            'duration_years': original_results.metadata.duration_years
+        }
+        
+        # Get original data snapshots
+        # For ParquetResults, read directly from parquet files
+        if hasattr(original_results, 'data_path'):
+            original_patients_df = pd.read_parquet(original_results.data_path / "patients.parquet")
+            original_visits_df = original_results.get_visits_df()
+        else:
+            # For InMemoryResults, gather from iterator
+            patients_data = []
+            for batch in original_results.iterate_patients(batch_size=1000):
+                patients_data.extend(batch)
+            original_patients_df = pd.DataFrame(patients_data)
+            
+            # For InMemoryResults, reconstruct visits from patient histories
+            visits_data = []
+            for patient_id, patient in original_results.raw_results.patient_histories.items():
+                for visit in patient.visit_history:
+                    visit_record = dict(visit)
+                    visit_record['patient_id'] = patient_id
+                    visits_data.append(visit_record)
+            original_visits_df = pd.DataFrame(visits_data)
+        
+        original_patient_count = len(original_patients_df)
+        original_visit_count = len(original_visits_df)
+        
+        # Sample some specific values for verification
+        if original_patient_count > 0:
+            first_patient_id = original_patients_df.iloc[0]['patient_id'] if 'patient_id' in original_patients_df.columns else original_patients_df.index[0]
+            first_patient_data = original_patients_df.iloc[0].to_dict()
+        
+        if original_visit_count > 0:
+            sample_visit_data = original_visits_df.iloc[0].to_dict()
+        
+        # When: Export and import the simulation
+        try:
+            package_data = package_manager.create_package(original_results)
+            imported_results = package_manager.import_package(package_data)
+            
+            # Then: Verify data integrity
+            # 1. Basic counts should match
+            # For imported results (should be InMemoryResults)
+            if hasattr(imported_results, 'data_path'):
+                imported_patients_df = pd.read_parquet(imported_results.data_path / "patients.parquet")
+                imported_visits_df = imported_results.get_visits_df()
+            else:
+                # For InMemoryResults, gather from iterator
+                patients_data = []
+                for batch in imported_results.iterate_patients(batch_size=1000):
+                    patients_data.extend(batch)
+                imported_patients_df = pd.DataFrame(patients_data)
+                
+                # For InMemoryResults, reconstruct visits from patient histories
+                visits_data = []
+                for patient_id, patient in imported_results.raw_results.patient_histories.items():
+                    for visit in patient.visit_history:
+                        visit_record = dict(visit)
+                        visit_record['patient_id'] = patient_id
+                        visits_data.append(visit_record)
+                imported_visits_df = pd.DataFrame(visits_data)
+            
+            assert len(imported_patients_df) == original_patient_count, \
+                f"Patient count mismatch: {len(imported_patients_df)} != {original_patient_count}"
+            
+            assert len(imported_visits_df) == original_visit_count, \
+                f"Visit count mismatch: {len(imported_visits_df)} != {original_visit_count}"
+            
+            # 2. Metadata should be preserved (except sim_id which gets new value)
+            assert imported_results.metadata.protocol_name == original_metadata['protocol_name']
+            assert imported_results.metadata.n_patients == original_metadata['n_patients']
+            assert imported_results.metadata.engine_type == original_metadata['engine_type']
+            assert imported_results.metadata.duration_years == original_metadata['duration_years']
+            
+            # 3. New sim_id should be assigned
+            assert imported_results.metadata.sim_id != original_metadata['sim_id']
+            assert imported_results.metadata.sim_id.startswith('imported_')
+            
+            # 4. Sample data verification - compare only core fields that should be preserved
+            if original_patient_count > 0:
+                imported_first_patient = imported_patients_df.iloc[0].to_dict()
+                
+                # Define core fields that should be preserved in round-trip
+                # These fields are essential for all APE visualizations
+                core_fields = ['patient_id', 'discontinued', 'total_injections', 'discontinuation_time']
+                
+                # Compare only the core fields that we know should be preserved
+                for key in core_fields:
+                    if key in first_patient_data and key in imported_first_patient:
+                        assert imported_first_patient[key] == first_patient_data[key], \
+                            f"Patient data mismatch for {key}: {imported_first_patient[key]} != {first_patient_data[key]}"
+            
+            if original_visit_count > 0:
+                imported_sample_visit = imported_visits_df.iloc[0].to_dict()
+                
+                # Define core visit fields that should be preserved
+                core_visit_fields = ['patient_id', 'time_days', 'vision', 'injected']
+                
+                # Compare only the core visit fields
+                for key in core_visit_fields:
+                    if key in sample_visit_data and key in imported_sample_visit:
+                        assert imported_sample_visit[key] == sample_visit_data[key], \
+                            f"Visit data mismatch for {key}: {imported_sample_visit[key]} != {sample_visit_data[key]}"
+            
+            print(f"✅ Round-trip test passed for {original_patient_count:,} patients, {original_visit_count:,} visits")
+            
+        except NotImplementedError:
+            # Expected for now - we're testing the concept
+            pytest.skip("Package manager create_package not fully implemented yet")
+        except Exception as e:
+            pytest.fail(f"Round-trip test failed: {e}")
+    
+    def test_parquet_data_types_preserved(self, package_manager):
+        """Test that parquet data types are preserved exactly"""
+        from pathlib import Path
+        from core.results.factory import ResultsFactory
+        import pandas as pd
+        
+        # Given: Real simulation with parquet data
+        sim_dir = Path("simulation_results")
+        parquet_sims = [d for d in sim_dir.iterdir() 
+                       if d.is_dir() and (d / "patients.parquet").exists()]
+        
+        if not parquet_sims:
+            pytest.skip("No parquet simulations available for testing")
+        
+        latest_sim = max(parquet_sims, key=lambda x: x.name)
+        original_results = ResultsFactory.load_results(latest_sim)
+        
+        # Get original data types
+        if hasattr(original_results, 'data_path'):
+            original_patients_df = pd.read_parquet(original_results.data_path / "patients.parquet")
+            original_visits_df = original_results.get_visits_df()
+        else:
+            patients_data = []
+            for batch in original_results.iterate_patients(batch_size=1000):
+                patients_data.extend(batch)
+            original_patients_df = pd.DataFrame(patients_data)
+            
+            # For InMemoryResults, reconstruct visits from patient histories
+            visits_data = []
+            for patient_id, patient in original_results.raw_results.patient_histories.items():
+                for visit in patient.visit_history:
+                    visit_record = dict(visit)
+                    visit_record['patient_id'] = patient_id
+                    visits_data.append(visit_record)
+            original_visits_df = pd.DataFrame(visits_data)
+        
+        original_patient_dtypes = original_patients_df.dtypes.to_dict()
+        original_visit_dtypes = original_visits_df.dtypes.to_dict()
+        
+        # When: Export and import
+        try:
+            package_data = package_manager.create_package(original_results)
+            imported_results = package_manager.import_package(package_data)
+            
+            # Then: Data types should be preserved exactly
+            if hasattr(imported_results, 'data_path'):
+                imported_patients_df = pd.read_parquet(imported_results.data_path / "patients.parquet")
+                imported_visits_df = imported_results.get_visits_df()
+            else:
+                patients_data = []
+                for batch in imported_results.iterate_patients(batch_size=1000):
+                    patients_data.extend(batch)
+                imported_patients_df = pd.DataFrame(patients_data)
+                
+                # For InMemoryResults, reconstruct visits from patient histories
+                visits_data = []
+                for patient_id, patient in imported_results.raw_results.patient_histories.items():
+                    for visit in patient.visit_history:
+                        visit_record = dict(visit)
+                        visit_record['patient_id'] = patient_id
+                        visits_data.append(visit_record)
+                imported_visits_df = pd.DataFrame(visits_data)
+            
+            imported_patient_dtypes = imported_patients_df.dtypes.to_dict()
+            imported_visit_dtypes = imported_visits_df.dtypes.to_dict()
+            
+            # Compare data types
+            for col, original_dtype in original_patient_dtypes.items():
+                if col in imported_patient_dtypes:
+                    assert str(imported_patient_dtypes[col]) == str(original_dtype), \
+                        f"Patient column {col} dtype mismatch: {imported_patient_dtypes[col]} != {original_dtype}"
+            
+            for col, original_dtype in original_visit_dtypes.items():
+                if col in imported_visit_dtypes:
+                    assert str(imported_visit_dtypes[col]) == str(original_dtype), \
+                        f"Visit column {col} dtype mismatch: {imported_visit_dtypes[col]} != {original_dtype}"
+            
+            print("✅ Data types preserved correctly")
+            
+        except NotImplementedError:
+            pytest.skip("Package manager not fully implemented yet")
+        except Exception as e:
+            pytest.fail(f"Data type preservation test failed: {e}")
+    
+    def test_large_simulation_compression(self, package_manager):
+        """Test compression efficiency with large simulations"""
+        from pathlib import Path
+        from core.results.factory import ResultsFactory
+        
+        # Given: Large simulation (>1000 patients)
+        sim_dir = Path("simulation_results")
+        large_sims = []
+        
+        for sim_path in sim_dir.iterdir():
+            if sim_path.is_dir() and (sim_path / "metadata.json").exists():
+                try:
+                    import json
+                    with open(sim_path / "metadata.json") as f:
+                        metadata = json.load(f)
+                    if metadata.get('n_patients', 0) >= 1000:
+                        large_sims.append(sim_path)
+                except:
+                    continue
+        
+        if not large_sims:
+            pytest.skip("No large simulations (>=1000 patients) available for testing")
+        
+        # Use the largest simulation
+        largest_sim = max(large_sims, key=lambda x: self._get_patient_count(x))
+        
+        try:
+            original_results = ResultsFactory.load_results(largest_sim)
+            
+            # Calculate actual data size from files on disk
+            original_data_size = 0
+            for file_path in largest_sim.iterdir():
+                if file_path.is_file() and file_path.suffix in ['.parquet', '.json']:
+                    original_data_size += file_path.stat().st_size
+            original_data_mb = original_data_size / (1024 * 1024)
+            
+            # When: Creating package
+            package_data = package_manager.create_package(original_results)
+            package_size_mb = len(package_data) / (1024 * 1024)
+            
+            # Then: Package should be reasonably sized
+            compression_ratio = package_size_mb / original_data_mb
+            
+            print(f"Original data: {original_data_mb:.1f}MB, Package: {package_size_mb:.1f}MB, Ratio: {compression_ratio:.1%}")
+            
+            # Package should be less than 150% of original (some overhead is expected for metadata, manifest, etc.)
+            assert compression_ratio < 1.5, \
+                f"Package too large: {compression_ratio:.1%} (should be <150%)"
+            
+            # Package should be reasonable size (not tiny, indicating data loss)
+            assert package_size_mb > 0.1, "Package suspiciously small - possible data loss"
+            
+        except NotImplementedError:
+            pytest.skip("Package manager not fully implemented yet")
+        except Exception as e:
+            pytest.fail(f"Compression test failed: {e}")
+    
+    def _get_patient_count(self, sim_path: Path) -> int:
+        """Helper to get patient count from simulation"""
+        try:
+            import json
+            with open(sim_path / "metadata.json") as f:
+                metadata = json.load(f)
+            return metadata.get('n_patients', 0)
+        except:
+            return 0
     
     def test_compression_efficiency(self, package_manager):
         """Test package size is reasonable"""
