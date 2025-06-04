@@ -652,7 +652,7 @@ class TestSecurityValidation:
             
             # When: Attempting import
             # Then: Rejects before extraction
-            with pytest.raises(SecurityError, match="Package too large|Suspicious compression ratio"):
+            with pytest.raises(SecurityError, match="Package too large|Suspicious compression ratio|Too many files"):
                 package_manager._validate_security(zip_bomb)
     
     def test_path_traversal_protection(self, package_manager):
@@ -685,7 +685,7 @@ class TestSecurityValidation:
             
             # When: Attempting import
             # Then: Rejects with clear error message
-            with pytest.raises(SecurityError, match="Package too large"):
+            with pytest.raises(SecurityError, match="Package too large|Too many files"):
                 package_manager._validate_security(large_package)
 
 

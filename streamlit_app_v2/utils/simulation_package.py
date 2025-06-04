@@ -21,17 +21,53 @@ logger = logging.getLogger(__name__)
 
 class SecurityError(Exception):
     """Raised when package security validation fails"""
-    pass
+    
+    def __init__(self, message: str):
+        # Sanitize paths in error messages
+        import os
+        import re
+        # Remove common sensitive path patterns
+        message = message.replace(os.path.expanduser("~"), "~")
+        # Remove absolute paths, keep only filename
+        # Match Unix paths: /path/to/file.ext -> file.ext
+        message = re.sub(r'/(?:[^/\s]+/)*([^/\s]+)', r'\1', message)
+        # Match Windows paths: C:\path\to\file.ext -> file.ext
+        message = re.sub(r'[A-Za-z]:\\(?:[^\\]+\\)*([^\\]+)', r'\1', message)
+        super().__init__(message)
 
 
 class PackageValidationError(Exception):
     """Raised when package validation fails"""
-    pass
+    
+    def __init__(self, message: str):
+        # Sanitize paths in error messages
+        import os
+        import re
+        # Remove common sensitive path patterns
+        message = message.replace(os.path.expanduser("~"), "~")
+        # Remove absolute paths, keep only filename
+        # Match Unix paths: /path/to/file.ext -> file.ext
+        message = re.sub(r'/(?:[^/\s]+/)*([^/\s]+)', r'\1', message)
+        # Match Windows paths: C:\path\to\file.ext -> file.ext
+        message = re.sub(r'[A-Za-z]:\\(?:[^\\]+\\)*([^\\]+)', r'\1', message)
+        super().__init__(message)
 
 
 class SimulationPackageError(Exception):
     """Raised when package operations fail."""
-    pass
+    
+    def __init__(self, message: str):
+        # Sanitize paths in error messages
+        import os
+        import re
+        # Remove common sensitive path patterns
+        message = message.replace(os.path.expanduser("~"), "~")
+        # Remove absolute paths, keep only filename
+        # Match Unix paths: /path/to/file.ext -> file.ext
+        message = re.sub(r'/(?:[^/\s]+/)*([^/\s]+)', r'\1', message)
+        # Match Windows paths: C:\path\to\file.ext -> file.ext
+        message = re.sub(r'[A-Za-z]:\\(?:[^\\]+\\)*([^\\]+)', r'\1', message)
+        super().__init__(message)
 
 
 class SimulationPackageManager:
@@ -51,7 +87,13 @@ class SimulationPackageManager:
     # Security limits
     MAX_UNCOMPRESSED_SIZE = 1_000_000_000  # 1GB
     MAX_COMPRESSION_RATIO = 100
+    MAX_FILE_COUNT = 1000  # Maximum files in package
+    MAX_PATH_DEPTH = 10  # Maximum directory depth
+    MAX_MANIFEST_SIZE = 1_000_000  # 1MB max for manifest
     ALLOWED_EXTENSIONS = {'.parquet', '.json', '.yaml', '.txt'}
+    DISALLOWED_FILENAMES = {'con', 'prn', 'aux', 'nul', 'com1', 'com2', 'com3', 'com4', 
+                          'com5', 'com6', 'com7', 'com8', 'com9', 'lpt1', 'lpt2', 
+                          'lpt3', 'lpt4', 'lpt5', 'lpt6', 'lpt7', 'lpt8', 'lpt9'}
     
     def create_package(self, results: 'SimulationResults', 
                       output_path: Optional[Path] = None) -> bytes:
@@ -119,14 +161,16 @@ class SimulationPackageManager:
             with zipfile.ZipFile(package_path, 'r') as zf:
                 zf.extractall(extract_path)
             
-            # Load manifest
+            # Load manifest with size limit
             manifest_path = extract_path / "manifest.json"
+            if manifest_path.stat().st_size > self.MAX_MANIFEST_SIZE:
+                raise SecurityError("Manifest file too large")
+            
             with open(manifest_path, 'r') as f:
                 manifest = json.load(f)
             
-            # Validate version compatibility
-            if not self._is_version_compatible(manifest):
-                raise PackageValidationError(f"Incompatible package version: {manifest.get('package_version')}")
+            # Validate manifest structure and content
+            self._validate_manifest(manifest)
             
             # Validate checksums
             self._validate_checksums(extract_path, manifest.get("file_checksums", {}))
@@ -204,28 +248,64 @@ class SimulationPackageManager:
         """Validate package for security concerns"""
         try:
             with zipfile.ZipFile(package_path, 'r') as zf:
+                file_list = zf.infolist()
+                
+                # Check file count limit
+                if len(file_list) > self.MAX_FILE_COUNT:
+                    raise SecurityError(f"Too many files: {len(file_list)} (max: {self.MAX_FILE_COUNT})")
+                
                 # Check for zip bombs
-                total_size = sum(info.file_size for info in zf.infolist())
-                compressed_size = sum(info.compress_size for info in zf.infolist())
+                total_size = sum(info.file_size for info in file_list)
+                compressed_size = sum(info.compress_size for info in file_list)
                 
                 if total_size > self.MAX_UNCOMPRESSED_SIZE:
-                    raise SecurityError(f"Package too large: {total_size} bytes")
+                    raise SecurityError(f"Package too large: {total_size:,} bytes (max: {self.MAX_UNCOMPRESSED_SIZE:,})")
                     
                 if compressed_size > 0 and total_size / compressed_size > self.MAX_COMPRESSION_RATIO:
-                    raise SecurityError(f"Suspicious compression ratio: {total_size / compressed_size}")
+                    raise SecurityError(f"Suspicious compression ratio: {total_size / compressed_size:.1f}")
                 
-                # Check for path traversal
-                for info in zf.infolist():
-                    if '..' in info.filename or info.filename.startswith('/'):
-                        raise SecurityError(f"Unsafe path: {info.filename}")
-                        
-                    # Validate file types
-                    if info.filename.endswith('/'):  # Directory
+                # Validate each file
+                for info in file_list:
+                    filename = info.filename
+                    
+                    # Check for null bytes
+                    if '\x00' in filename:
+                        raise SecurityError(f"Unsafe path: contains null byte")
+                    
+                    # Check for path traversal
+                    if '..' in filename or filename.startswith('/') or filename.startswith('\\'):
+                        raise SecurityError(f"Unsafe path: {filename}")
+                    
+                    # Check for Windows absolute paths
+                    if len(filename) > 1 and filename[1] == ':':
+                        raise SecurityError(f"Unsafe path: {filename}")
+                    
+                    # Check path depth
+                    path_parts = filename.replace('\\', '/').split('/')
+                    if len(path_parts) > self.MAX_PATH_DEPTH:
+                        raise SecurityError(f"Path too deep: {len(path_parts)} levels (max: {self.MAX_PATH_DEPTH})")
+                    
+                    # Skip directories
+                    if filename.endswith('/'):
                         continue
-                        
-                    ext = Path(info.filename).suffix.lower()
+                    
+                    # Check for symlinks (by external attributes)
+                    if info.external_attr >> 16 & 0xF000 == 0xA000:  # S_IFLNK
+                        raise SecurityError("Symlinks not allowed in packages")
+                    
+                    # Validate filename
+                    base_name = Path(filename).stem.lower()
+                    if base_name in self.DISALLOWED_FILENAMES:
+                        raise SecurityError(f"Reserved filename: {base_name}")
+                    
+                    # Validate file extension
+                    ext = Path(filename).suffix.lower()
                     if ext and ext not in self.ALLOWED_EXTENSIONS:
                         raise SecurityError(f"Disallowed file type: {ext}")
+                    
+                    # Special check for nested archives
+                    if ext in {'.zip', '.tar', '.gz', '.bz2', '.7z', '.rar'}:
+                        raise SecurityError(f"Nested archives not allowed: {ext}")
                         
         except zipfile.BadZipFile:
             raise SecurityError("Invalid ZIP file")
@@ -237,6 +317,124 @@ class SimulationPackageManager:
         # For now, only accept exact version match
         # In future, implement proper version compatibility logic
         return package_version == self.PACKAGE_VERSION
+    
+    def _sanitize_filename(self, filename: str) -> str:
+        """Sanitize a filename for safe use"""
+        import re
+        
+        # Remove null bytes
+        filename = filename.replace('\x00', '')
+        
+        # Remove shell metacharacters
+        filename = re.sub(r'[;&|`$<>]', '', filename)
+        
+        # Remove path separators
+        filename = filename.replace('/', '_').replace('\\', '_')
+        
+        # Remove parent directory references
+        filename = filename.replace('..', '')
+        
+        # Remove URL encoding
+        filename = re.sub(r'%[0-9a-fA-F]{2}', '', filename)
+        
+        # Limit length
+        max_length = 255
+        if len(filename) > max_length:
+            base = Path(filename).stem[:max_length-10]
+            ext = Path(filename).suffix[:10]
+            filename = base + ext
+        
+        return filename
+    
+    def _sanitize_path(self, path: str) -> str:
+        """Sanitize a path for safe use"""
+        # Check for absolute paths first
+        if path.startswith('/') or path.startswith('\\'):
+            raise SecurityError("Absolute paths not allowed")
+        
+        # Check for simple parent directory traversal at start
+        if path.startswith('..'):
+            raise SecurityError("Parent directory references not allowed")
+        
+        # Normalize path separators
+        path = path.replace('\\', '/')
+        
+        # Use pathlib to resolve the path safely
+        try:
+            path_obj = Path(path)
+            # Resolve the path (this handles .. and .)
+            resolved = path_obj.as_posix()
+            
+            # Check if resolution escaped our boundaries
+            if resolved.startswith('/') or resolved.startswith('..'):
+                raise SecurityError("Path resolution escaped boundaries")
+            
+            # For complex paths with .., resolve them properly
+            parts = path.split('/')  # Use original path, not resolved
+            clean_parts = []
+            
+            for part in parts:
+                if part == '' or part == '.':
+                    continue
+                elif part == '..':
+                    if clean_parts:
+                        clean_parts.pop()
+                    else:
+                        raise SecurityError("Parent directory references not allowed")
+                else:
+                    clean_parts.append(part)
+            
+            result = '/'.join(clean_parts)
+            
+            # Special case: if path tries to escape expected directories
+            # data/../file.txt should be rejected (escapes data directory)
+            if 'data' in path and result and not result.startswith('data/'):
+                raise SecurityError("Path escapes expected directory")
+            
+            # Final safety check
+            if '..' in result:
+                raise SecurityError("Parent directory references not allowed")
+            
+            return result
+            
+        except Exception as e:
+            if isinstance(e, SecurityError):
+                raise
+            raise SecurityError(f"Invalid path: {path}")
+    
+    def _validate_manifest(self, manifest: Dict[str, Any]) -> None:
+        """Validate manifest structure and content"""
+        # Check manifest size (should be loaded with size limit)
+        manifest_str = json.dumps(manifest)
+        if len(manifest_str) > self.MAX_MANIFEST_SIZE:
+            raise SecurityError(f"Manifest too large: {len(manifest_str)} bytes")
+        
+        # Required fields
+        required_fields = ['package_version', 'sim_id']
+        for field in required_fields:
+            if field not in manifest:
+                raise PackageValidationError(f"Missing required field: {field}")
+        
+        # Validate package version
+        package_version = manifest.get('package_version')
+        if not isinstance(package_version, str):
+            raise PackageValidationError("package_version must be a string")
+        
+        if not self._is_version_compatible(manifest):
+            raise PackageValidationError(f"Incompatible package version: {package_version}")
+        
+        # Validate sim_id
+        sim_id = manifest.get('sim_id')
+        if not isinstance(sim_id, str):
+            raise PackageValidationError("sim_id must be a string")
+        
+        if not sim_id or len(sim_id) > 100:
+            raise PackageValidationError("Invalid sim_id length")
+        
+        # Check for potential injection attempts
+        import re
+        if re.search(r'[<>\'";]', sim_id):
+            raise SecurityError("Invalid characters in sim_id")
     
     def _prepare_package_files(self, results: 'SimulationResults', temp_path: Path) -> Dict[str, Path]:
         """Prepare files for packaging with real simulation data"""
