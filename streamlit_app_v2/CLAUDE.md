@@ -217,6 +217,103 @@ These principles are NON-NEGOTIABLE. As the postmortem in meta/streamgraph_synth
 # Workflow Reminder
 - Every summary should be followed by an offer to git commit and push and update documentation
 
+# Test-Driven Development (TDD) Requirements
+
+## CRITICAL: Always Follow TDD Process
+Based on lessons learned from regression incidents, these TDD practices are MANDATORY:
+
+### 1. Strict TDD Discipline
+**ALWAYS start with a failing test before implementing any fix or feature:**
+```python
+# Example: Before adding a missing method
+def test_get_visits_df_exists():
+    results = create_test_results()
+    visits_df = results.get_visits_df()
+    assert 'patient_id' in visits_df.columns
+```
+
+### 2. Regression Test for Every Bug
+**Every bug fix MUST include a test that fails without the fix:**
+```python
+# Example: Test that would have caught downstream issues
+def test_treatment_patterns_with_memory_results():
+    results = InMemoryResults(...)
+    transitions, visits = extract_treatment_patterns(results)
+    assert len(visits) > 0
+```
+
+### 3. Run Full Test Suite Before Committing
+- **Manual testing first**: Run `python scripts/run_tests.py` before attempting to commit
+- **Don't rely on pre-commit hooks**: They're a safety net, not a primary validation
+- **Check for warnings**: Even if tests pass, investigate any warnings
+
+### 4. Understand Before Fixing
+Before implementing any fix, ask:
+- Why is this broken? What's the root cause?
+- Was the missing functionality intentional? What's the design pattern?
+- What other components might be affected by this change?
+- Are there existing tests that should have caught this?
+
+### 5. NaN and Data Type Handling
+When working with data comparisons:
+```python
+# WRONG: Direct comparison fails for NaN
+assert value1 == value2  # Fails if both are NaN
+
+# CORRECT: Handle NaN properly
+if pd.isna(value1) and pd.isna(value2):
+    pass  # Both NaN is OK
+elif pd.isna(value1) or pd.isna(value2):
+    pytest.fail("One value is NaN, other is not")
+else:
+    assert value1 == value2
+```
+
+### 6. Dangers of Mock-Driven Development
+
+**CRITICAL WARNING**: Avoid over-mocking in tests, especially for scientific computing tools like APE.
+
+#### Why Mock-Driven Development is Dangerous
+
+1. **Mock-driven instead of test-driven**: Creating mocks that mirror what you *think* the code should do, rather than testing actual behavior. This leads to tests that pass even when the real code is broken.
+
+2. **Mock contamination risk**: There's a real danger of accidentally using mock patterns or data structures in production code, thinking they're real. The "sample"/"synthetic" data issue is a prime example.
+
+3. **Over-mocking hides integration issues**: By mocking everything, you miss actual integration problems - like the missing `get_visits_df` method that only showed up when real code tried to use it.
+
+4. **Tests document mocks, not behavior**: Tests end up verifying that mocks work as configured, not that the actual system works correctly.
+
+#### For Scientific Tools Like APE
+
+This is particularly dangerous because:
+- Mock data might not represent real simulation behavior
+- Integration between components is critical for data integrity  
+- The actual data flow matters more than individual unit behavior
+- Scientific accuracy depends on real data transformations
+
+#### Better Approach
+
+```python
+# WRONG: Over-mocked test
+def test_simulation():
+    mock_engine = Mock()
+    mock_engine.run.return_value = Mock(patients=100)
+    assert mock_engine.run().patients == 100  # Tests the mock!
+
+# CORRECT: Use real components with minimal test data
+def test_simulation():
+    engine = SimulationEngine()
+    results = engine.run(n_patients=10, duration_years=0.1)
+    assert results.patient_count == 10  # Tests actual behavior
+```
+
+**Rules for Mocking**:
+- Use real simulation data, even if small (10 patients, 0.1 years)
+- Test actual integration points between components
+- Only mock external dependencies (file system, network, databases)
+- NEVER mock core business logic or data structures
+- If a test needs many mocks, it's testing at the wrong level
+
 # Always run these tests before committing changes
 When making changes to the codebase, always run the following tests before committing:
 1. For discontinuation tracking changes:
@@ -228,6 +325,11 @@ When making changes to the codebase, always run the following tests before commi
 
 3. Always confirm ABS/DES compatibility:
    - Test both ABS and DES implementations with the same configuration
+   
+4. For any core interface changes (SimulationResults, etc.):
+   - Run full test suite: `python scripts/run_tests.py --all`
+   - Check integration tests specifically
+   - Add regression tests for the specific functionality
 
 # DATA INTEGRITY VERIFICATION PROTOCOL
 

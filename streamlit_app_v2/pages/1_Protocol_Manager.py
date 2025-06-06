@@ -474,6 +474,12 @@ with col4:
         # For default protocols, just leave an empty space
         st.empty()
 
+# Import simulation package section
+st.markdown("---")
+from pages.protocol_manager_import import render_import_section
+render_import_section()
+st.markdown("---")
+
 # Load selected protocol
 try:
     spec = ProtocolSpecification.from_yaml(selected_file)

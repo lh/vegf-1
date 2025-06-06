@@ -281,8 +281,20 @@ class TestRealDataIntegrity:
                 # Compare only the core fields that we know should be preserved
                 for key in core_fields:
                     if key in first_patient_data and key in imported_first_patient:
-                        assert imported_first_patient[key] == first_patient_data[key], \
-                            f"Patient data mismatch for {key}: {imported_first_patient[key]} != {first_patient_data[key]}"
+                        # Handle NaN comparisons properly
+                        original_val = first_patient_data[key]
+                        imported_val = imported_first_patient[key]
+                        
+                        if pd.isna(original_val) and pd.isna(imported_val):
+                            # Both are NaN, this is OK
+                            continue
+                        elif pd.isna(original_val) or pd.isna(imported_val):
+                            # One is NaN, one isn't - this is a mismatch
+                            pytest.fail(f"Patient data mismatch for {key}: one is NaN, other is {original_val if pd.isna(imported_val) else imported_val}")
+                        else:
+                            # Neither is NaN, normal comparison
+                            assert imported_val == original_val, \
+                                f"Patient data mismatch for {key}: {imported_val} != {original_val}"
             
             if original_visit_count > 0:
                 imported_sample_visit = imported_visits_df.iloc[0].to_dict()
@@ -293,8 +305,20 @@ class TestRealDataIntegrity:
                 # Compare only the core visit fields
                 for key in core_visit_fields:
                     if key in sample_visit_data and key in imported_sample_visit:
-                        assert imported_sample_visit[key] == sample_visit_data[key], \
-                            f"Visit data mismatch for {key}: {imported_sample_visit[key]} != {sample_visit_data[key]}"
+                        # Handle NaN comparisons properly
+                        original_val = sample_visit_data[key]
+                        imported_val = imported_sample_visit[key]
+                        
+                        if pd.isna(original_val) and pd.isna(imported_val):
+                            # Both are NaN, this is OK
+                            continue
+                        elif pd.isna(original_val) or pd.isna(imported_val):
+                            # One is NaN, one isn't - this is a mismatch
+                            pytest.fail(f"Visit data mismatch for {key}: one is NaN, other is {original_val if pd.isna(imported_val) else imported_val}")
+                        else:
+                            # Neither is NaN, normal comparison
+                            assert imported_val == original_val, \
+                                f"Visit data mismatch for {key}: {imported_val} != {original_val}"
             
             print(f"✅ Round-trip test passed for {original_patient_count:,} patients, {original_visit_count:,} visits")
             

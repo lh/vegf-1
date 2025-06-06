@@ -378,3 +378,7 @@ with tab5:
         )
     else:
         st.info("No audit trail available for this session.")
+    
+    # Add export functionality
+    from pages.analysis_overview_export import add_export_to_audit_trail_tab
+    add_export_to_audit_trail_tab()

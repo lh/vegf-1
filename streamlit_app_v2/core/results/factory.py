@@ -183,6 +183,34 @@ class ResultsFactory:
             raise ValueError(f"Cannot convert {type(results)} to Parquet")
             
     @classmethod
+    def save_imported_results(cls, results: SimulationResults) -> str:
+        """
+        Save imported simulation results.
+        
+        Args:
+            results: Imported SimulationResults instance
+            
+        Returns:
+            New simulation ID
+        """
+        # The imported results should already have a new sim_id
+        sim_id = results.metadata.sim_id
+        
+        # For InMemoryResults, we can save directly
+        if isinstance(results, InMemoryResults):
+            # Save path
+            save_path = cls.DEFAULT_RESULTS_DIR / sim_id
+            save_path.mkdir(parents=True, exist_ok=True)
+            
+            # Save the results
+            results.save(save_path)
+            
+            return sim_id
+        else:
+            # For other types, might need different handling
+            raise NotImplementedError(f"Saving imported {type(results)} not implemented")
+    
+    @classmethod
     def estimate_memory_usage(cls, n_patients: int, duration_years: float) -> Dict[str, float]:
         """
         Estimate memory usage for a simulation.
