@@ -2,11 +2,17 @@
 # Based on UK NHS costs with simplified visit structure
 
 # Drug costs (NHS procurement with patient access schemes)
+# Updated January 2025 with actual pricing
 drug_costs:
   aflibercept_2mg:
-    unit_cost: 475         # GBP - NHS cost after patient access scheme
-    list_price: 816        # GBP - Before discount
-    procurement_discount: 0.42
+    unit_cost: 457         # GBP - NHS actual price (56% of list)
+    list_price: 816        # GBP - NHS drug tariff price
+    procurement_discount: 0.44  # 44% discount
+    
+  aflibercept_biosimilar:
+    unit_cost: 229         # GBP - estimated 50% of current 2mg price
+    list_price: 400        # GBP - estimated (TBD)
+    note: "Expected imminent market entry"
     
 # Visit-specific costs for treat-and-treat protocol
 visit_costs:
@@ -65,21 +71,30 @@ efficiency_benefits:
   # Predictable capacity planning
   capacity_utilization: 0.90     # 90% vs 75% for flexible protocols
 
-# Annual cost calculations
+# Annual cost calculations - UPDATED PRICING
 annual_costs:
+  # Current 2mg pricing
   year_1:
     injections: 6.5
-    drug_cost: 3088              # GBP (6.5 × £475)
+    drug_cost: 2971              # GBP (6.5 × £457)
     injection_visits: 2301       # GBP (6.5 × £354)
     monitoring_visits: 812       # GBP (£306 + £506)
-    total: 6201                  # GBP
+    total: 6084                  # GBP
     
   year_2_plus:
     injections: 6
-    drug_cost: 2850              # GBP (6 × £475)
+    drug_cost: 2742              # GBP (6 × £457)
     injection_visits: 2124       # GBP (6 × £354)
     monitoring_visits: 506       # GBP (annual review only)
-    total: 5480                  # GBP
+    total: 5372                  # GBP
+    
+  # With biosimilar
+  biosimilar_year_1:
+    injections: 6.5
+    drug_cost: 1489              # GBP (6.5 × £229)
+    injection_visits: 2301       # GBP (6.5 × £354)
+    monitoring_visits: 812       # GBP (£306 + £506)
+    total: 4602                  # GBP
 
 # Comparison to other protocols
 comparative_costs:

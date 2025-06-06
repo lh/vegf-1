@@ -1,0 +1,77 @@
+# NHS Net Prices After Discounts
+# Calculated from list_prices.yaml × (1 - discount_rates)
+# These are the estimated actual prices paid by NHS Trusts
+# Last updated: January 2025
+
+net_prices:
+  aflibercept:
+    eylea_2mg:
+      list_price: 816
+      discount_rate: 0.44
+      net_price: 457      # £816 × 0.56 = £457
+      per_patient_year: 3153  # 6.9 injections/year typical
+      
+    eylea_8mg:
+      list_price: 998
+      discount_rate: 0.66
+      net_price: 339      # £998 × 0.34 = £339 - CHEAPER THAN 2mg!
+      per_patient_year: 2068  # 6.1 injections/year typical
+      savings_vs_2mg: 118    # £457 - £339 per injection
+      
+  ranibizumab:
+    lucentis:
+      list_price: 742
+      discount_rate: 0.30
+      net_price: 519      # £742 × 0.70
+      
+    biosimilar_average:
+      list_price: 613
+      discount_rate: 0.52
+      net_price: 294      # £613 × 0.48
+      
+  bevacizumab:
+    avastin_compounded:
+      list_price: 50
+      discount_rate: 0
+      net_price: 50       # No discount on compounding
+      
+    lytenava:
+      list_price: 470
+      discount_rate: 0.15
+      net_price: 400      # £470 × 0.85
+      
+  faricimab:
+    vabysmo:
+      list_price: 1445
+      discount_rate: 0.25
+      net_price: 1084     # £1445 × 0.75
+      
+  # Projected biosimilar pricing
+  aflibercept_biosimilar:
+    estimated_list_price: 400
+    estimated_discount_rate: 0.43
+    estimated_net_price: 228   # £400 × 0.57
+    target: "~50% of Eylea 2mg net price"
+
+# Cost rankings (lowest to highest net price)
+cost_ranking:
+  1: "Bevacizumab compounded - £50"
+  2: "Aflibercept biosimilar (projected) - £228"
+  3: "Ranibizumab biosimilar - £294"
+  4: "Aflibercept 8mg - £339"  # KEY: Cheaper than 2mg!
+  5: "Bevacizumab licensed - £400"
+  6: "Aflibercept 2mg - £457"
+  7: "Ranibizumab originator - £519"
+  8: "Faricimab - £1084"
+
+# Strategic pricing insights
+pricing_strategy:
+  eylea_8mg_strategy:
+    current: "Priced below 2mg to drive rapid adoption"
+    rationale: "Capture market share before biosimilar entry"
+    risk: "Discount may reduce when biosimilar launches"
+    
+  biosimilar_impact:
+    on_2mg: "Will force increased discounts or loss of market share"
+    on_8mg: "May allow price increase if differentiated by intervals"
+    market_segmentation: "8mg for premium segment, biosimilar for cost-sensitive"

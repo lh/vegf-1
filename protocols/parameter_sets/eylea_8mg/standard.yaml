@@ -1,12 +1,14 @@
 # Eylea 8mg Standard Cost Parameters
 # Economic parameters for high-dose aflibercept
 
-# Drug costs (higher than 2mg due to 4x molar dose)
+# Drug costs - NOTE: OUTDATED - See nhs_costs.yaml for actual pricing
+# 8mg is actually CHEAPER than 2mg due to strategic discounting
 drug_costs:
   aflibercept_8mg:
-    unit_cost: 2400  # Estimated ~20% premium over 2mg for 4x molar dose
+    unit_cost: 2400  # INCORRECT - actual NHS price is £339
     administration_cost: 150
     preparation_cost: 25
+    note: "UPDATE NEEDED - Use nhs_costs.yaml for correct pricing"
     
   # Comparator for economic analysis
   aflibercept_2mg:

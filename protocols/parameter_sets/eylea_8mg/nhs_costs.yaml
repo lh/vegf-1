@@ -2,18 +2,26 @@
 # Based on UK NHS cost data from compass_artifact (2024-2025)
 
 # Drug costs (NHS procurement with patient access schemes)
+# Updated January 2025 with actual pricing information
 drug_costs:
   aflibercept_8mg:
-    unit_cost: 1750  # GBP - estimated from compass data for high-dose formulation
-    list_price: 2400  # GBP - before NHS discounts
-    procurement_discount: 0.27  # Estimated discount rate
+    unit_cost: 339   # GBP - NHS actual price (aggressive discount)
+    list_price: 998  # GBP - NHS drug tariff price
+    procurement_discount: 0.66  # 66% discount (34% of list)
+    note: "Strategic pricing - CHEAPER than 2mg to drive adoption"
     
   aflibercept_2mg:
-    unit_cost: 475   # GBP - NHS cost after patient access scheme (£450-500 range)
-    list_price: 816  # GBP - Eylea list price
-    procurement_discount: 0.42  # NHS discount rate
+    unit_cost: 457   # GBP - NHS actual price  
+    list_price: 816  # GBP - NHS drug tariff price
+    procurement_discount: 0.44  # 44% discount (56% of list)
     
-  # Comparators
+  # Comparators and biosimilars
+  aflibercept_biosimilar:
+    unit_cost: 229   # GBP - estimated 50% of current 2mg price
+    list_price: 400  # GBP - estimated list (TBD)
+    procurement_discount: 0.43  # Estimated
+    note: "Expected market entry imminent"
+    
   ranibizumab_biosimilar:
     unit_cost: 275   # GBP - midpoint of £200-350 range
     
@@ -94,26 +102,34 @@ safety_costs:
     post_injection_visit: 126  # GBP - additional OCT scan
     weekly_follow_up: 126      # GBP - during IOI management
 
-# Annual treatment cost calculations (NHS)
+# Annual treatment cost calculations (NHS) - UPDATED PRICING
 annual_costs:
   # Eylea 8mg q12 schedule
   eylea_8mg_q12:
     loading_phase: 3       # injections
     maintenance: 3.1       # additional injections (6.1 total - 3 loading)
     total_injections: 6.1
-    drug_cost: 10675       # GBP (6.1 × £1750)
+    drug_cost: 2068        # GBP (6.1 × £339) - NOW CHEAPER!
     procedure_costs: 3032  # GBP (6.1 × £497)
-    annual_total: 13707    # GBP
+    annual_total: 5100     # GBP
     
   # Eylea 2mg q8 schedule  
   eylea_2mg_q8:
     total_injections: 6.9  # from clinical data
-    drug_cost: 3278        # GBP (6.9 × £475)
+    drug_cost: 3153        # GBP (6.9 × £457)
     procedure_costs: 3429  # GBP (6.9 × £497)
-    annual_total: 6707     # GBP
+    annual_total: 6582     # GBP
     
-  # Cost difference
-  annual_difference: 7000  # GBP - 8mg costs £7k more per patient per year
+  # Biosimilar q8 schedule
+  eylea_biosimilar_q8:
+    total_injections: 6.9
+    drug_cost: 1580        # GBP (6.9 × £229)
+    procedure_costs: 3429  # GBP (6.9 × £497)
+    annual_total: 5009     # GBP
+    
+  # Cost difference - 8mg NOW SAVES MONEY!
+  annual_difference: -1482  # GBP - 8mg SAVES £1,482 vs 2mg per year
+  vs_biosimilar: 91        # GBP - 8mg costs only £91 more than biosimilar
 
 # Extended interval benefits (NHS resource savings)
 interval_benefits:
@@ -141,9 +157,10 @@ economic_parameters:
   # NICE cost-effectiveness threshold
   willingness_to_pay_per_qaly: 30000  # GBP - NICE threshold
   
-# Budget impact (indicative NHS numbers)
+# Budget impact (indicative NHS numbers) - UPDATED WITH NEW PRICING
 budget_impact:
   eligible_patients_uk: 65000    # Estimated wet AMD patients
   current_eylea_users: 35000     # Estimated current usage
   potential_8mg_switchers: 28000 # 80% of current users
-  annual_budget_increase: 196000000  # GBP - £7k × 28k patients
+  annual_budget_savings: 41496000   # GBP - £1,482 × 28k patients SAVED
+  note: "8mg adoption would SAVE NHS £41.5 million annually"

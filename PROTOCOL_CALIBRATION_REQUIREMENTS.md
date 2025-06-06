@@ -51,17 +51,18 @@ How treatment modifies natural disease transitions:
 **Need:** Parameters that reproduce these outcomes
 
 ### Eylea 2mg Treat-and-Extend  
-**Need:** Reference trial data
-- VIEW studies for flexible dosing outcomes
-- CATT/IVAN for treat-and-extend arms
-- Real-world T&E effectiveness data
+**Need:** AFLIBERCEPT-SPECIFIC trial data
+- ALTAIR trial (aflibercept T&E in Japanese patients)
+- ARIES study (aflibercept T&E)
+- Real-world aflibercept T&E effectiveness data
+- NOT ranibizumab or bevacizumab trials
 
 ### Eylea 2mg Treat-and-Treat (Fixed)
-**Need:** Fixed dosing trial data
-- CATT monthly/quarterly arms
-- VIEW fixed dosing cohorts
-- PIER study fixed quarterly dosing
-- Real-world fixed interval outcomes
+**Need:** AFLIBERCEPT fixed dosing trial data
+- VIEW 1 and VIEW 2 fixed dosing arms (2q4 and 2q8)
+- Real-world aflibercept fixed interval outcomes
+- NOT CATT (wrong drugs: bevacizumab/ranibizumab)
+- NOT IVAN (wrong drugs: bevacizumab/ranibizumab)
 
 ## Calibration Process
 
