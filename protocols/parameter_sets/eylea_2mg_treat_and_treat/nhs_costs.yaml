@@ -123,14 +123,5 @@ economic_parameters:
   micro_costing_required: false  # Fixed costs known
   
 # Quality considerations
-quality_metrics:
-  # Clinical effectiveness (vs flexible protocols)
-  relative_effectiveness: 0.85   # 85% as effective
-  
-  # Patient satisfaction
-  scheduling_satisfaction: 0.90  # High due to predictability
-  treatment_burden: 0.70         # Lower burden score
-  
-  # Risk factors
-  undertreatment_risk: 0.25      # 25% may need more
-  overtreatment_risk: 0.20       # 20% could have less
+# To be determined by simulation and patient-reported outcomes
+# No assumptions made about relative effectiveness
