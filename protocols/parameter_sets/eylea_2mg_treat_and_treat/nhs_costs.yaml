@@ -1,0 +1,136 @@
+# Eylea 2mg Treat-and-Treat NHS Cost Parameters
+# Based on UK NHS costs with simplified visit structure
+
+# Drug costs (NHS procurement with patient access schemes)
+drug_costs:
+  aflibercept_2mg:
+    unit_cost: 475         # GBP - NHS cost after patient access scheme
+    list_price: 816        # GBP - Before discount
+    procurement_discount: 0.42
+    
+# Visit-specific costs for treat-and-treat protocol
+visit_costs:
+  # Streamlined injection visits (no routine monitoring)
+  injection_only:
+    drug_administration: 54      # GBP - Injection procedure only
+    brief_safety_check: 50       # GBP - Quick safety assessment
+    consumables: 250             # GBP - Sterile setup
+    total_excluding_drug: 354    # GBP - Lower than full monitoring
+    
+  # Monitoring visits (no injection)
+  clinical_assessment:
+    oct_scan: 126               # GBP - Standard OCT
+    visual_acuity: 50           # GBP - VA testing
+    iop_check: 30               # GBP - Pressure check
+    clinical_exam: 100          # GBP - Ophthalmologist review
+    total: 306                  # GBP - Full assessment
+    
+  # Annual review (comprehensive)
+  annual_review:
+    oct_scan: 126
+    visual_acuity: 50
+    iop_check: 30
+    clinical_exam: 100
+    consultation: 150           # GBP - Extended consultation
+    treatment_planning: 50      # GBP - Future planning
+    total: 506                  # GBP - Comprehensive review
+
+# Staff costs for treat-and-treat
+staff_costs:
+  injection_only_visit:
+    nurse_led: true             # Can be nurse-led
+    band_6_nurse_minutes: 30
+    consultant_backup_minutes: 5  # Available if needed
+    total_cost: 34              # GBP
+    
+  clinical_assessment_visit:
+    consultant_minutes: 30
+    band_6_nurse_minutes: 15
+    total_cost: 48              # GBP
+    
+  annual_review_visit:
+    consultant_minutes: 45
+    band_6_nurse_minutes: 15
+    admin_minutes: 15
+    total_cost: 71              # GBP
+
+# Protocol efficiency benefits
+efficiency_benefits:
+  # Batch scheduling possible with fixed intervals
+  scheduling_efficiency: 0.20    # 20% admin time saving
+  
+  # Reduced phone calls and rescheduling
+  reduced_admin_burden: 0.30     # 30% less admin work
+  
+  # Predictable capacity planning
+  capacity_utilization: 0.90     # 90% vs 75% for flexible protocols
+
+# Annual cost calculations
+annual_costs:
+  year_1:
+    injections: 6.5
+    drug_cost: 3088              # GBP (6.5 × £475)
+    injection_visits: 2301       # GBP (6.5 × £354)
+    monitoring_visits: 812       # GBP (£306 + £506)
+    total: 6201                  # GBP
+    
+  year_2_plus:
+    injections: 6
+    drug_cost: 2850              # GBP (6 × £475)
+    injection_visits: 2124       # GBP (6 × £354)
+    monitoring_visits: 506       # GBP (annual review only)
+    total: 5480                  # GBP
+
+# Comparison to other protocols
+comparative_costs:
+  vs_treat_and_extend:
+    visit_difference: -3         # 3 fewer visits per year
+    cost_difference: -1500       # GBP saved (mainly monitoring)
+    
+  vs_prn:
+    visit_difference: -5         # 5 fewer visits per year
+    cost_difference: -2000       # GBP saved (reduced monitoring)
+
+# Patient cost benefits
+patient_benefits:
+  # Predictable scheduling
+  time_off_work_days: 7          # Known in advance
+  travel_costs_annual: 56        # GBP (7 visits × £8)
+  
+  # Reduced burden vs other protocols
+  vs_treat_and_extend:
+    fewer_visits: 3
+    time_saved_hours: 12         # Including travel
+    cost_saved: 90               # GBP in travel/parking
+    
+# System-wide benefits
+system_benefits:
+  # For 10,000 patients
+  annual_capacity_saved: 30000   # Clinic slots
+  admin_hours_saved: 5000        # Hours
+  
+  # Financial impact
+  budget_predictability: 0.95    # 95% accurate forecasting
+  reduced_did_not_attend: 0.30  # 30% fewer DNAs
+
+# Economic modeling parameters
+economic_parameters:
+  perspective: "NHS"
+  time_horizon_years: 2
+  discount_rate: 0.035
+  
+  # Simplified costing possible
+  micro_costing_required: false  # Fixed costs known
+  
+# Quality considerations
+quality_metrics:
+  # Clinical effectiveness (vs flexible protocols)
+  relative_effectiveness: 0.85   # 85% as effective
+  
+  # Patient satisfaction
+  scheduling_satisfaction: 0.90  # High due to predictability
+  treatment_burden: 0.70         # Lower burden score
+  
+  # Risk factors
+  undertreatment_risk: 0.25      # 25% may need more
+  overtreatment_risk: 0.20       # 20% could have less
