@@ -47,11 +47,12 @@ def create_comparison_table():
     # Known economic factors (costs only, not outcomes)
     economic_data = [
         ['Cost Component', 'Treat-and-Treat 2mg', 'Treat-and-Extend 2mg', 'Treat-and-Extend 8mg'],
-        ['Drug cost/injection', '£475', '£475', '£1,750'],
+        ['Drug cost/injection', '£457', '£457', '£339'],
         ['Injection procedure', '£354', '£497', '£497'],
         ['Monitoring visit', '£306', 'Included above', 'Included above'],
         ['Annual review', '£506', '£506', '£506'],
-        ['Predictable costs', 'Yes', 'No', 'No']
+        ['Predictable costs', 'Yes', 'No', 'No'],
+        ['Note', 'Updated pricing', 'Updated pricing', '66% discount - CHEAPER!']
     ]
     
     print("\n💰 Known Cost Components (NHS):")

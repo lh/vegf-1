@@ -95,13 +95,24 @@ def run_nhs_economic_analysis():
         # Budget impact
         eligible_patients = nhs_costs['budget_impact']['eligible_patients_uk']
         potential_switchers = nhs_costs['budget_impact']['potential_8mg_switchers']
-        budget_increase = nhs_costs['budget_impact']['annual_budget_increase']
+        
+        # Handle both old field name (annual_budget_increase) and new (annual_budget_savings)
+        if 'annual_budget_savings' in nhs_costs['budget_impact']:
+            budget_impact = -nhs_costs['budget_impact']['annual_budget_savings']  # Negative because it's savings
+            impact_text = "Annual budget SAVINGS"
+        else:
+            budget_impact = nhs_costs['budget_impact'].get('annual_budget_increase', 0)
+            impact_text = "Annual budget increase"
         
         print(f"\n💰 NHS Budget Impact Analysis:")
         print(f"   - Eligible wet AMD patients (UK): {eligible_patients:,}")
         print(f"   - Potential 8mg switchers: {potential_switchers:,}")
-        print(f"   - Annual budget increase: £{budget_increase:,}")
-        print(f"   - Cost per QALY: £{budget_increase / (potential_switchers * 0.1):,.0f} (assuming 0.1 QALY gain)")
+        print(f"   - {impact_text}: £{abs(budget_impact):,}")
+        
+        if budget_impact > 0:
+            print(f"   - Cost per QALY: £{budget_impact / (potential_switchers * 0.1):,.0f} (assuming 0.1 QALY gain)")
+        else:
+            print(f"   - 8mg SAVES money - no QALY justification needed!")
         
         # NICE threshold comparison
         nice_threshold = nhs_costs['economic_parameters']['willingness_to_pay_per_qaly']

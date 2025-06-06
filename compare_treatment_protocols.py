@@ -73,15 +73,16 @@ def create_comparison_table():
     for row in clinical_data:
         print(f"{row[0]:<25} {row[1]:<25} {row[2]:<25} {row[3]:<25}")
     
-    # Economic comparison (Year 1)
+    # Economic comparison (Year 1) - WITH UPDATED PRICING
     economic_data = [
         ['Cost Component', 'Treat-and-Treat 2mg', 'Treat-and-Extend 2mg', 'Treat-and-Extend 8mg'],
         ['Annual injections', '6.5', '6.9', '6.1'],
-        ['Drug cost/year', '£3,088', '£3,278', '£10,675'],
+        ['Drug cost/year', '£2,971', '£3,153', '£2,068'],
         ['Procedure costs/year', '£3,113', '£3,429', '£3,032'],
-        ['Total NHS cost/year', '£6,201', '£6,707', '£13,707'],
+        ['Total NHS cost/year', '£6,084', '£6,582', '£5,100'],
         ['Total visits/year', '8.5', '10-12', '8-9'],
-        ['Patient travel cost', '£56', '£80-96', '£64-72']
+        ['Patient travel cost', '£56', '£80-96', '£64-72'],
+        ['NOTE', 'UPDATED PRICES', '8mg NOW CHEAPER!', 'SAVES £1,482/year']
     ]
     
     print("\n💰 Economic Comparison (Year 1):")
