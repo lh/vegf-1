@@ -80,8 +80,10 @@ class SimulationPackageManager:
         "data/visits.parquet",
         "data/metadata.parquet",
         "data/patient_index.parquet",
+        "data/summary_stats.json",
         "protocol.yaml",
-        "parameters.json"
+        "parameters.json",
+        "audit_log.json"
     }
     
     # Security limits
@@ -447,39 +449,32 @@ class SimulationPackageManager:
             logger.info("Exporting simulation data to parquet files...")
             
             # 1. Patients data  
-            # For ParquetResults, read directly from parquet file
-            if hasattr(results, 'data_path'):
-                # This is a ParquetResults - copy the existing parquet file
-                source_patients_path = results.data_path / "patients.parquet"
-                if source_patients_path.exists():
-                    patients_path = data_dir / "patients.parquet"
-                    shutil.copy2(source_patients_path, patients_path)
-                    files["data/patients.parquet"] = patients_path
-                    
-                    # Read to get count for logging
-                    patients_df = pd.read_parquet(patients_path)
-                    logger.info(f"Exported {len(patients_df):,} patients")
-                else:
-                    raise PackageValidationError("Patients parquet file not found")
-            else:
-                # This is InMemoryResults - need to create parquet from data
-                # Try to get patients data through iteration
-                patients_data = []
-                for patient_batch in results.iterate_patients(batch_size=1000):
-                    patients_data.extend(patient_batch)
-                
-                patients_df = pd.DataFrame(patients_data)
+            # All results are ParquetResults now - copy the existing parquet file
+            source_patients_path = results.data_path / "patients.parquet"
+            if source_patients_path.exists():
                 patients_path = data_dir / "patients.parquet"
-                patients_df.to_parquet(patients_path, compression='snappy')
+                shutil.copy2(source_patients_path, patients_path)
                 files["data/patients.parquet"] = patients_path
+                
+                # Read to get count for logging
+                patients_df = pd.read_parquet(patients_path)
                 logger.info(f"Exported {len(patients_df):,} patients")
+            else:
+                raise PackageValidationError("Patients parquet file not found")
             
             # 2. Visits data
-            visits_df = results.get_visits_df()
-            visits_path = data_dir / "visits.parquet"
-            visits_df.to_parquet(visits_path, compression='snappy')
-            files["data/visits.parquet"] = visits_path
-            logger.info(f"Exported {len(visits_df):,} visits")
+            # Copy existing visits.parquet file
+            source_visits_path = results.data_path / "visits.parquet"
+            if source_visits_path.exists():
+                visits_path = data_dir / "visits.parquet"
+                shutil.copy2(source_visits_path, visits_path)
+                files["data/visits.parquet"] = visits_path
+                
+                # Read to get count for logging
+                visits_df = pd.read_parquet(visits_path)
+                logger.info(f"Exported {len(visits_df):,} visits")
+            else:
+                raise PackageValidationError("Visits parquet file not found")
             
             # 3. Metadata parquet (simulation metadata as single-row dataframe)
             metadata_dict = {
@@ -565,7 +560,31 @@ class SimulationPackageManager:
                 json.dump(params_data, f, indent=2)
             files["parameters.json"] = params_path
             
-            # 7. Audit log (create from metadata)
+            # 7. Summary statistics
+            # Copy existing summary_stats.json (all ParquetResults have this)
+            source_stats_path = results.data_path / "summary_stats.json"
+            if source_stats_path.exists():
+                stats_path = data_dir / "summary_stats.json"
+                shutil.copy2(source_stats_path, stats_path)
+                files["data/summary_stats.json"] = stats_path
+            else:
+                # This shouldn't happen with ParquetResults, but create it just in case
+                logger.warning("summary_stats.json not found, creating from results data")
+                vision_stats = results.get_final_vision_stats()
+                stats_data = {
+                    'total_patients': results.get_patient_count(),
+                    'total_injections': results.get_total_injections(),
+                    'mean_final_vision': vision_stats[0],
+                    'std_final_vision': vision_stats[1],
+                    'discontinuation_rate': results.get_discontinuation_rate(),
+                    'patient_count': results.get_patient_count()
+                }
+                stats_path = data_dir / "summary_stats.json"
+                with open(stats_path, 'w') as f:
+                    json.dump(stats_data, f, indent=2)
+                files["data/summary_stats.json"] = stats_path
+            
+            # 8. Audit log (create from metadata)
             audit_log = [
                 {
                     'timestamp': results.metadata.timestamp.isoformat(),
@@ -693,11 +712,39 @@ For support, please refer to APE documentation.
             for parquet_file in data_dir.glob("*.parquet"):
                 shutil.copy2(parquet_file, dest_path / parquet_file.name)
             
-            # 5. Copy other necessary files
-            # Copy summary_stats.json if it exists
-            summary_stats_path = extract_path / "summary_stats.json"
+            # 5. Copy all other necessary files to preserve complete simulation context
+            # Copy summary_stats.json from data directory
+            summary_stats_path = data_dir / "summary_stats.json"
             if summary_stats_path.exists():
                 shutil.copy2(summary_stats_path, dest_path / "summary_stats.json")
+            
+            # Copy protocol.yaml (or protocol.json) to preserve protocol configuration
+            protocol_yaml_path = extract_path / "protocol.yaml"
+            protocol_json_path = extract_path / "protocol.json"
+            if protocol_yaml_path.exists():
+                shutil.copy2(protocol_yaml_path, dest_path / "protocol.yaml")
+            elif protocol_json_path.exists():
+                shutil.copy2(protocol_json_path, dest_path / "protocol.json")
+                
+            # Copy parameters.json to preserve simulation parameters
+            params_path = extract_path / "parameters.json"
+            if params_path.exists():
+                shutil.copy2(params_path, dest_path / "parameters.json")
+                
+            # Copy audit_log.json and append import event
+            audit_path = extract_path / "audit_log.json"
+            if audit_path.exists():
+                with open(audit_path, 'r') as f:
+                    audit_log = json.load(f)
+                # Add import event
+                audit_log.append({
+                    'timestamp': datetime.now().isoformat(),
+                    'action': 'package_imported',
+                    'new_sim_id': new_sim_id,
+                    'original_sim_id': metadata_row['sim_id']
+                })
+                with open(dest_path / "audit_log.json", 'w') as f:
+                    json.dump(audit_log, f, indent=2)
             
             # Save the new metadata
             metadata_dict = {
