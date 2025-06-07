@@ -103,6 +103,17 @@ class MemoryAwareSimulationRunner:
             force_parquet=force_parquet
         )
         
+        # Save the full protocol specification with the results
+        protocol_path = results.data_path / "protocol.yaml"
+        try:
+            import yaml
+            with open(protocol_path, 'w') as f:
+                # Convert protocol spec to dict and save
+                protocol_dict = self.protocol_spec.to_dict()
+                yaml.dump(protocol_dict, f, default_flow_style=False, sort_keys=False)
+        except Exception as e:
+            print(f"Warning: Could not save full protocol spec: {e}")
+        
         # Cleanup memory after simulation
         self.memory_monitor.cleanup_memory()
         

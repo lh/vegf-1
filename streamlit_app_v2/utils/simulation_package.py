@@ -523,28 +523,28 @@ class SimulationPackageManager:
                 minimal_index.to_parquet(index_path, compression='snappy')
                 files["data/patient_index.parquet"] = index_path
             
-            # 5. Protocol YAML (extract from metadata)
-            protocol_data = {
-                'name': results.metadata.protocol_name,
-                'version': results.metadata.protocol_version,
-                'engine_type': results.metadata.engine_type,
-                'duration_years': results.metadata.duration_years,
-                'n_patients': results.metadata.n_patients,
-                'seed': results.metadata.seed
-            }
-            
-            try:
-                import yaml
+            # 5. Protocol YAML - copy the full protocol specification
+            source_protocol_path = results.data_path / "protocol.yaml"
+            if source_protocol_path.exists():
+                # Copy the full protocol spec that was saved with the simulation
                 protocol_path = temp_path / "protocol.yaml"
+                shutil.copy2(source_protocol_path, protocol_path)
+                files["protocol.yaml"] = protocol_path
+                logger.info("Copied full protocol specification from simulation data")
+            else:
+                # This should not happen for new simulations, but handle gracefully
+                logger.warning("Protocol.yaml not found in simulation data, creating minimal version")
+                protocol_data = {
+                    'name': results.metadata.protocol_name,
+                    'version': results.metadata.protocol_version,
+                    '_note': 'Full protocol specification was not saved with this simulation.'
+                }
+                
+                protocol_path = temp_path / "protocol.yaml"
+                import yaml
                 with open(protocol_path, 'w') as f:
                     yaml.dump(protocol_data, f, default_flow_style=False, sort_keys=False)
                 files["protocol.yaml"] = protocol_path
-            except ImportError:
-                # Fallback to JSON if PyYAML not available
-                protocol_path = temp_path / "protocol.json"
-                with open(protocol_path, 'w') as f:
-                    json.dump(protocol_data, f, indent=2)
-                files["protocol.json"] = protocol_path
             
             # 6. Parameters JSON
             params_data = {
