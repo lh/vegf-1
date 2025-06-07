@@ -33,8 +33,8 @@
         "storage_type": "parquet"
       },
       "size_mb": 1.6074371337890625,
-      "created": "2025-06-07T17:55:36.844007",
-      "last_accessed": "2025-06-07T17:55:36.844011",
+      "created": "2025-06-07T20:19:54.203548",
+      "last_accessed": "2025-06-07T20:19:54.203552",
       "access_count": 0
     },
     "imported_sim_20250607_174509_adc1e40e": {
@@ -54,7 +54,25 @@
       "created": "2025-06-07T17:48:12.594776",
       "last_accessed": "2025-06-07T17:48:12.594780",
       "access_count": 0
+    },
+    "imported_sim_20250607_175424_d6271f7f": {
+      "metadata": {
+        "sim_id": "imported_sim_20250607_175424_d6271f7f",
+        "protocol_name": "Eylea Treat and Extend",
+        "protocol_version": "1.0",
+        "engine_type": "abs",
+        "n_patients": 10,
+        "duration_years": 0.5,
+        "seed": 42,
+        "timestamp": "2025-06-07T17:54:24.443880",
+        "runtime_seconds": 0.0004858970642089844,
+        "storage_type": "parquet"
+      },
+      "size_mb": 0.021826744079589844,
+      "created": "2025-06-07T20:19:17.533849",
+      "last_accessed": "2025-06-07T20:19:17.533852",
+      "access_count": 0
     }
   },
-  "last_updated": "2025-06-07T17:55:36.844014"
+  "last_updated": "2025-06-07T20:19:54.203556"
 }

@@ -54,6 +54,25 @@ def load_simulation_results(sim_id: str) -> bool:
             'path': metadata.get('protocol_path', '')
         }
         
+        # Try to load the full protocol specification if available
+        protocol_yaml_path = ResultsFactory.DEFAULT_RESULTS_DIR / sim_id / "protocol.yaml"
+        if protocol_yaml_path.exists():
+            try:
+                import yaml
+                with open(protocol_yaml_path) as f:
+                    protocol_data = yaml.safe_load(f)
+                    
+                # If this is a full protocol spec, load it properly
+                if 'min_interval_days' in protocol_data:
+                    # This looks like a full protocol spec
+                    from simulation_v2.protocols.protocol_spec import ProtocolSpecification
+                    protocol_spec = ProtocolSpecification.from_dict(protocol_data)
+                    protocol_info['spec'] = protocol_spec
+                    
+            except Exception as e:
+                logger.warning(f"Could not load full protocol spec: {e}")
+                # Continue without full spec - some tabs may have reduced functionality
+        
         # Extract parameters
         parameters = {
             'engine': metadata.get('engine_type', 'abs'),
