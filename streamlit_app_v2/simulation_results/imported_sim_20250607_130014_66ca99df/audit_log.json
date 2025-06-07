@@ -8,12 +8,12 @@
     "runtime_seconds": 0.01064300537109375
   },
   {
-    "timestamp": "2025-06-07T13:00:19.525227",
+    "timestamp": "2025-06-07T13:08:27.794313",
     "action": "package_created",
     "original_sim_id": "sim_20250607_130014_66ca99df"
   },
   {
-    "timestamp": "2025-06-07T13:00:36.124948",
+    "timestamp": "2025-06-07T13:08:27.803463",
     "action": "package_imported",
     "new_sim_id": "imported_sim_20250607_130014_66ca99df",
     "original_sim_id": "sim_20250607_130014_66ca99df"

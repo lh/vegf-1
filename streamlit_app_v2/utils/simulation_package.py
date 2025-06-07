@@ -491,9 +491,6 @@ class SimulationPackageManager:
             }
             
             metadata_df = pd.DataFrame(metadata_dict)
-            print(f"DEBUG EXPORT: Creating metadata.parquet with columns: {list(metadata_df.columns)}")
-            print(f"DEBUG EXPORT: Metadata content:")
-            print(metadata_df)
             metadata_path = data_dir / "metadata.parquet"
             metadata_df.to_parquet(metadata_path, compression='snappy')
             files["data/metadata.parquet"] = metadata_path
@@ -671,42 +668,18 @@ For support, please refer to APE documentation.
             
             # 1. Load metadata from parquet
             metadata_df = pd.read_parquet(data_dir / "metadata.parquet")
-            
-            # Log what we loaded for debugging
-            print(f"DEBUG: Metadata columns: {list(metadata_df.columns)}")
-            print(f"DEBUG: Metadata shape: {metadata_df.shape}")
-            print(f"DEBUG: Metadata content:")
-            print(metadata_df)
-            
-            logger.info(f"Loaded metadata with columns: {list(metadata_df.columns)}")
-            
-            # Get the first (and only) row
             metadata_row = metadata_df.iloc[0]
-            print(f"DEBUG: metadata_row type: {type(metadata_row)}")
-            print(f"DEBUG: metadata_row index: {list(metadata_row.index)}")
             
             # 2. Create new simulation metadata with imported prefix
             new_sim_id = f"imported_{metadata_row['sim_id']}"
             
-            # Parse timestamp - it should always exist
+            # Parse timestamp
             from datetime import datetime
-            try:
-                print(f"DEBUG: Accessing timestamp field...")
-                print(f"DEBUG: metadata_row dict: {metadata_row.to_dict()}")
-                timestamp_value = metadata_row['timestamp']
-                print(f"DEBUG: timestamp value: {timestamp_value}, type: {type(timestamp_value)}")
-                
-                # Convert to string if it's not already
-                timestamp_str = str(timestamp_value)
-                
-                # Handle ISO format with or without timezone
-                if timestamp_str.endswith('Z'):
-                    timestamp_str = timestamp_str.replace('Z', '+00:00')
-                timestamp = datetime.fromisoformat(timestamp_str)
-            except KeyError as e:
-                logger.error(f"Missing 'timestamp' in metadata_row. Available keys: {list(metadata_row.index)}")
-                logger.error(f"Full metadata_row: {metadata_row.to_dict()}")
-                raise PackageValidationError(f"Missing required field in metadata: {e}")
+            timestamp_str = metadata_row['timestamp']
+            # Handle ISO format with or without timezone
+            if timestamp_str.endswith('Z'):
+                timestamp_str = timestamp_str.replace('Z', '+00:00')
+            timestamp = datetime.fromisoformat(timestamp_str)
             
             new_metadata = SimulationMetadata(
                 sim_id=new_sim_id,
@@ -772,7 +745,7 @@ For support, please refer to APE documentation.
                 'n_patients': new_metadata.n_patients,
                 'duration_years': new_metadata.duration_years,
                 'seed': new_metadata.seed,
-                'created_date': new_metadata.timestamp.isoformat(),
+                'timestamp': new_metadata.timestamp.isoformat(),
                 'runtime_seconds': new_metadata.runtime_seconds,
                 'storage_type': new_metadata.storage_type
             }
@@ -788,13 +761,7 @@ For support, please refer to APE documentation.
             return results
             
         except Exception as e:
-            import traceback
             logger.error(f"Failed to load simulation from package: {e}")
-            logger.error(f"Exception type: {type(e)}")
-            logger.error(f"Traceback: {traceback.format_exc()}")
-            # Try to provide more context about where it failed
-            if 'metadata_row' in locals():
-                logger.error(f"metadata_row contents: {metadata_row.to_dict()}")
             raise PackageValidationError(f"Could not load simulation data from package: {str(e)}")
 
 
