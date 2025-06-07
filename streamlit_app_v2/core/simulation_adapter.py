@@ -107,10 +107,14 @@ class MemoryAwareSimulationRunner:
         protocol_path = results.data_path / "protocol.yaml"
         try:
             import yaml
+            
+            # Use the built-in to_yaml_dict method
+            protocol_dict = self.protocol_spec.to_yaml_dict()
+            
             with open(protocol_path, 'w') as f:
-                # Convert protocol spec to dict and save
-                protocol_dict = self.protocol_spec.to_dict()
                 yaml.dump(protocol_dict, f, default_flow_style=False, sort_keys=False)
+                    
+            print(f"✅ Saved full protocol specification to {protocol_path}")
         except Exception as e:
             print(f"Warning: Could not save full protocol spec: {e}")
         

@@ -62,16 +62,31 @@ def load_simulation_results(sim_id: str) -> bool:
                 with open(protocol_yaml_path) as f:
                     protocol_data = yaml.safe_load(f)
                     
-                # If this is a full protocol spec, load it properly
-                if 'min_interval_days' in protocol_data:
-                    # This looks like a full protocol spec
+                # Check if this is a full protocol spec (has clinical parameters)
+                if 'min_interval_days' in protocol_data and 'disease_transitions' in protocol_data:
+                    # This is a full protocol spec - save it to temp file and load properly
                     from simulation_v2.protocols.protocol_spec import ProtocolSpecification
-                    protocol_spec = ProtocolSpecification.from_dict(protocol_data)
-                    protocol_info['spec'] = protocol_spec
+                    import tempfile
+                    
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+                        yaml.dump(protocol_data, f, default_flow_style=False, sort_keys=False)
+                        temp_path = Path(f.name)
+                    
+                    try:
+                        protocol_spec = ProtocolSpecification.from_yaml(temp_path)
+                        protocol_info['spec'] = protocol_spec
+                        logger.info(f"Loaded full protocol specification for {sim_id}")
+                    finally:
+                        temp_path.unlink()  # Clean up temp file
+                else:
+                    # This is just basic metadata
+                    logger.warning(f"Protocol file contains only basic metadata for {sim_id}")
+                    raise ValueError("Full protocol specification required but not found")
                     
             except Exception as e:
-                logger.warning(f"Could not load full protocol spec: {e}")
-                # Continue without full spec - some tabs may have reduced functionality
+                logger.error(f"Failed to load protocol spec: {e}")
+                # Fail fast - protocol spec is required
+                raise ValueError(f"Could not load protocol specification: {e}")
         
         # Extract parameters
         parameters = {

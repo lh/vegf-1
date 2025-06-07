@@ -321,25 +321,21 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                 all_intervals = display_df['interval_days'].values
                 
                 # Visit intervals chart
-                chart_builder = (ChartBuilder('Distribution of Visit Intervals')
+                spec = protocol['spec']  # This MUST exist - fail fast if missing
+                
+                chart = (ChartBuilder('Distribution of Visit Intervals')
                         .with_labels(xlabel='Interval Between Visits (days)', ylabel='Frequency')
                         .with_count_axis('y')
                         .plot(lambda ax, colors: 
                               ax.hist(all_intervals, bins=30, color=colors['warning'], 
-                                     alpha=0.7, edgecolor=colors['neutral'], linewidth=1.5)))
-                
-                # Add reference lines only if we have the full protocol spec
-                if 'spec' in protocol:
-                    spec = protocol['spec']
-                    chart_builder = (chart_builder
+                                     alpha=0.7, edgecolor=colors['neutral'], linewidth=1.5))
                         .add_reference_line(spec.min_interval_days, 
                                            f'Min: {spec.min_interval_days} days', 
                                            'vertical', 'secondary')
                         .add_reference_line(spec.max_interval_days, 
                                            f'Max: {spec.max_interval_days} days', 
-                                           'vertical', 'secondary'))
-                
-                chart = chart_builder.build()
+                                           'vertical', 'secondary')
+                        .build())
                 st.pyplot(chart.figure)
                 
                 # Show interval statistics - vectorized operations
