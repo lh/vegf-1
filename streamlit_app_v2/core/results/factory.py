@@ -1,8 +1,8 @@
 """
-Factory for creating appropriate SimulationResults based on size.
+Factory for creating SimulationResults instances.
 
-Automatically selects between in-memory and Parquet storage based on
-simulation size and available memory.
+All simulations are stored in Parquet format for consistency,
+reliability, and simplicity.
 """
 
 import uuid
@@ -11,16 +11,11 @@ from pathlib import Path
 from typing import Any, Optional, Dict
 
 from .base import SimulationResults, SimulationMetadata
-from .memory import InMemoryResults
 from .parquet import ParquetResults
 
 
 class ResultsFactory:
     """Factory for creating SimulationResults instances."""
-    
-    # Thresholds for automatic tier selection
-    MEMORY_THRESHOLD_PATIENT_YEARS = 10_000  # Switch to Parquet above this
-    MEMORY_WARNING_PATIENT_YEARS = 5_000     # Warn about memory usage
     
     # Storage paths
     DEFAULT_RESULTS_DIR = Path("simulation_results")
@@ -36,10 +31,13 @@ class ResultsFactory:
         duration_years: float,
         seed: int,
         runtime_seconds: float,
-        force_parquet: bool = False
+        force_parquet: bool = False  # DEPRECATED - kept for backward compatibility
     ) -> SimulationResults:
         """
-        Create appropriate SimulationResults instance based on size.
+        Create SimulationResults instance using Parquet storage.
+        
+        Note: As of the Parquet-only refactor, all simulations are stored
+        in Parquet format regardless of size for consistency and simplicity.
         
         Args:
             raw_results: Raw results from simulation engine
@@ -50,20 +48,16 @@ class ResultsFactory:
             duration_years: Duration of simulation in years
             seed: Random seed used
             runtime_seconds: Time taken to run simulation
-            force_parquet: If True, always use Parquet storage
+            force_parquet: DEPRECATED - all simulations now use Parquet
             
         Returns:
-            SimulationResults instance (either InMemory or Parquet)
+            ParquetResults instance
         """
         # Generate unique simulation ID
         sim_id = f"sim_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
         
-        # Calculate simulation size
-        patient_years = n_patients * duration_years
-        
-        # Determine storage type
-        use_parquet = force_parquet or (patient_years > cls.MEMORY_THRESHOLD_PATIENT_YEARS)
-        storage_type = 'parquet' if use_parquet else 'memory'
+        # Always use Parquet storage for consistency
+        storage_type = 'parquet'
         
         # Create metadata
         metadata = SimulationMetadata(
@@ -79,62 +73,44 @@ class ResultsFactory:
             storage_type=storage_type
         )
         
-        # Print info about storage choice
-        if use_parquet:
-            print(f"📁 Using Parquet storage for {n_patients:,} patients × {duration_years} years")
+        # Always create Parquet results
+        print(f"📁 Saving simulation ({n_patients:,} patients × {duration_years} years) to disk...")
+        
+        # Create Parquet results with progress
+        save_path = cls.DEFAULT_RESULTS_DIR / sim_id
+        
+        def progress_callback(pct: float, msg: str):
+            print(f"  [{pct:3.0f}%] {msg}")
             
-            # Create Parquet results with progress
-            save_path = cls.DEFAULT_RESULTS_DIR / sim_id
-            
-            def progress_callback(pct: float, msg: str):
-                print(f"  [{pct:3.0f}%] {msg}")
-                
-            return ParquetResults.create_from_raw_results(
-                raw_results,
-                metadata,
-                save_path,
-                progress_callback
-            )
-        else:
-            print(f"💾 Using in-memory storage for {n_patients:,} patients × {duration_years} years")
-            
-            # Warn if approaching threshold
-            if patient_years > cls.MEMORY_WARNING_PATIENT_YEARS:
-                print(f"⚠️  Warning: Simulation size ({patient_years:,} patient-years) "
-                      f"approaching memory limit ({cls.MEMORY_THRESHOLD_PATIENT_YEARS:,})")
-                
-            return InMemoryResults(metadata, raw_results)
+        return ParquetResults.create_from_raw_results(
+            raw_results,
+            metadata,
+            save_path,
+            progress_callback
+        )
             
     @classmethod
     def load_results(cls, path: Path) -> SimulationResults:
         """
         Load results from disk.
         
-        Automatically detects the storage type and loads appropriately.
+        All results are expected to be in Parquet format.
         
         Args:
             path: Path to saved results directory
             
         Returns:
-            SimulationResults instance
+            ParquetResults instance
         """
         path = Path(path)
         
-        # Check metadata to determine type
+        # Check metadata exists
         metadata_path = path / 'metadata.json'
         if not metadata_path.exists():
             raise FileNotFoundError(f"No metadata found at {metadata_path}")
             
-        import json
-        with open(metadata_path, 'r') as f:
-            metadata = json.load(f)
-            
-        storage_type = metadata.get('storage_type', 'memory')
-        
-        if storage_type == 'parquet':
-            return ParquetResults.load(path)
-        else:
-            return InMemoryResults.load(path)
+        # Load as ParquetResults
+        return ParquetResults.load(path)
             
     @classmethod
     def convert_to_parquet(
@@ -145,6 +121,9 @@ class ResultsFactory:
         """
         Convert any results to Parquet format.
         
+        Note: As of the Parquet-only refactor, all results should already
+        be in Parquet format. This method is kept for compatibility.
+        
         Args:
             results: Results to convert
             output_path: Where to save (defaults to sim_id directory)
@@ -154,38 +133,16 @@ class ResultsFactory:
         """
         if isinstance(results, ParquetResults):
             return results
-            
-        if output_path is None:
-            output_path = cls.DEFAULT_RESULTS_DIR / results.metadata.sim_id
-            
-        # For InMemoryResults, we have direct access to raw results
-        if isinstance(results, InMemoryResults):
-            # Update metadata
-            new_metadata = SimulationMetadata(
-                sim_id=results.metadata.sim_id,
-                protocol_name=results.metadata.protocol_name,
-                protocol_version=results.metadata.protocol_version,
-                engine_type=results.metadata.engine_type,
-                n_patients=results.metadata.n_patients,
-                duration_years=results.metadata.duration_years,
-                seed=results.metadata.seed,
-                timestamp=results.metadata.timestamp,
-                runtime_seconds=results.metadata.runtime_seconds,
-                storage_type='parquet'
-            )
-            
-            return ParquetResults.create_from_raw_results(
-                results.raw_results,
-                new_metadata,
-                output_path
-            )
         else:
-            raise ValueError(f"Cannot convert {type(results)} to Parquet")
+            raise ValueError(f"Cannot convert {type(results)} to Parquet - all results should already be ParquetResults")
             
     @classmethod
     def save_imported_results(cls, results: SimulationResults) -> str:
         """
         Save imported simulation results.
+        
+        Note: As of the Parquet-only refactor, all results should already
+        be ParquetResults which are auto-saved during creation.
         
         Args:
             results: Imported SimulationResults instance
@@ -196,19 +153,12 @@ class ResultsFactory:
         # The imported results should already have a new sim_id
         sim_id = results.metadata.sim_id
         
-        # For InMemoryResults, we can save directly
-        if isinstance(results, InMemoryResults):
-            # Save path
-            save_path = cls.DEFAULT_RESULTS_DIR / sim_id
-            save_path.mkdir(parents=True, exist_ok=True)
-            
-            # Save the results
-            results.save(save_path)
-            
+        if isinstance(results, ParquetResults):
+            # ParquetResults are already saved during creation
             return sim_id
         else:
-            # For other types, might need different handling
-            raise NotImplementedError(f"Saving imported {type(results)} not implemented")
+            # All results should be ParquetResults now
+            raise ValueError(f"Expected ParquetResults, got {type(results)}")
     
     @classmethod
     def estimate_memory_usage(cls, n_patients: int, duration_years: float) -> Dict[str, float]:
@@ -236,9 +186,14 @@ class ResultsFactory:
         total_mb = (total_bytes * overhead_factor) / (1024 * 1024)
         
         patient_years = n_patients * duration_years
+        
+        # Estimate Parquet disk usage (compressed)
+        disk_mb = total_mb / 7  # Typical Parquet compression ratio
+        
         return {
-            'estimated_mb': total_mb,
+            'estimated_memory_mb': total_mb,
+            'estimated_disk_mb': disk_mb,
             'patient_years': patient_years,
-            'recommended_storage': 'parquet' if patient_years > cls.MEMORY_THRESHOLD_PATIENT_YEARS else 'memory',
+            'storage_type': 'parquet',  # Always Parquet now
             'warning': total_mb > 300
         }

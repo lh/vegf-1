@@ -82,12 +82,19 @@ class TestPackageExportUI:
                 mock_results = Mock()
                 mock_results.metadata.sim_id = 'sim_test_123'
                 mock_factory.load_results.return_value = mock_results
+                # Mock the DEFAULT_RESULTS_DIR to return a Path
+                from pathlib import Path
+                mock_factory.DEFAULT_RESULTS_DIR = Path('simulation_results')
                 
                 # When: User clicks export button
                 render_export_section()
                 
                 # Then: Package should be created and download offered
-                mock_factory.load_results.assert_called_with('sim_test_123')
+                # Check that load_results was called with a path (not just sim_id)
+                mock_factory.load_results.assert_called_once()
+                call_args = mock_factory.load_results.call_args[0][0]
+                # Verify it's a path-like object ending with our sim_id
+                assert str(call_args).endswith('sim_test_123')
                 mock_create.assert_called_with(mock_results)
                 
                 # Download button should be shown

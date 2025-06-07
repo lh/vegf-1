@@ -114,18 +114,18 @@ class MemoryMonitor:
         # Estimate additional memory needed
         from ..results.factory import ResultsFactory
         estimate = ResultsFactory.estimate_memory_usage(n_patients, duration_years)
-        total_expected_mb = current_mb + estimate['estimated_mb']
+        total_expected_mb = current_mb + estimate['estimated_memory_mb']
         
         if total_expected_mb > self.CRITICAL_THRESHOLD_MB:
             return (
                 f"⚠️ **Memory Warning**\n\n"
                 f"Current usage: {current_mb:.0f}MB\n"
-                f"Estimated need: +{estimate['estimated_mb']:.0f}MB\n"
+                f"Estimated need: +{estimate['estimated_memory_mb']:.0f}MB\n"
                 f"Total: {total_expected_mb:.0f}MB\n\n"
                 f"**Recommendations:**\n"
                 f"• Reduce patients to {int(n_patients * 0.5)}\n"
                 f"• Or reduce duration to {duration_years * 0.5:.1f} years\n"
-                f"• Or use Parquet storage (automatically selected for large simulations)"
+                f"• Data will be efficiently stored using Parquet format"
             )
         elif total_expected_mb > self.WARNING_THRESHOLD_MB:
             return (

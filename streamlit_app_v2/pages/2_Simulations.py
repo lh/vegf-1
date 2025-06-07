@@ -335,6 +335,9 @@ if run_clicked:
         
         progress_bar.progress(90, text="Processing results...")
         
+        # Note: Parquet results are automatically saved to disk during creation,
+        # so we don't need any explicit save logic here
+        
         # Store results and set current simulation
         st.session_state.current_sim_id = results.metadata.sim_id
         st.session_state.simulation_results = {

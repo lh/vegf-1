@@ -31,6 +31,16 @@ def render_export_section():
                     st.error("No simulation selected")
                     return
                 
+                # Check if simulation directory exists
+                results_path = ResultsFactory.DEFAULT_RESULTS_DIR / sim_id
+                if not results_path.exists():
+                    st.error(f"Simulation directory not found: {sim_id}")
+                    st.info("This simulation may have been deleted or moved. Please select another simulation.")
+                    # Clear the invalid sim_id from session state
+                    if 'current_sim_id' in st.session_state:
+                        del st.session_state.current_sim_id
+                    return
+                
                 # Show progress
                 progress_bar = st.progress(0)
                 status_text = st.empty()
@@ -42,7 +52,7 @@ def render_export_section():
                 
                 # Load simulation results
                 status_text.text("Loading simulation...")
-                results = ResultsFactory.load_results(sim_id)
+                results = ResultsFactory.load_results(results_path)
                 
                 # Create package with progress updates
                 status_text.text("Creating package...")
@@ -107,6 +117,16 @@ def render_export_section_with_progress():
                     st.error("No simulation selected")
                     return
                 
+                # Check if simulation directory exists
+                results_path = ResultsFactory.DEFAULT_RESULTS_DIR / sim_id
+                if not results_path.exists():
+                    st.error(f"Simulation directory not found: {sim_id}")
+                    st.info("This simulation may have been deleted or moved. Please select another simulation.")
+                    # Clear the invalid sim_id from session state
+                    if 'current_sim_id' in st.session_state:
+                        del st.session_state.current_sim_id
+                    return
+                
                 # Create progress container
                 with st.container():
                     progress_bar = st.progress(0)
@@ -120,7 +140,7 @@ def render_export_section_with_progress():
                     try:
                         # Load simulation
                         update_progress(10, "Loading simulation data...")
-                        results = ResultsFactory.load_results(sim_id)
+                        results = ResultsFactory.load_results(results_path)
                         
                         # Create package manager with progress
                         update_progress(20, "Initializing package manager...")
