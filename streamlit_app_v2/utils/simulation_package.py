@@ -649,14 +649,28 @@ For support, please refer to APE documentation.
             
             # 1. Load metadata from parquet
             metadata_df = pd.read_parquet(data_dir / "metadata.parquet")
+            
+            # Log what we loaded for debugging
+            logger.info(f"Loaded metadata with columns: {list(metadata_df.columns)}")
+            
+            # Get the first (and only) row
             metadata_row = metadata_df.iloc[0]
             
             # 2. Create new simulation metadata with imported prefix
             new_sim_id = f"imported_{metadata_row['sim_id']}"
             
-            # Parse timestamp
+            # Parse timestamp - it should always exist
             from datetime import datetime
-            timestamp = datetime.fromisoformat(metadata_row['timestamp'].replace('Z', '+00:00') if metadata_row['timestamp'].endswith('Z') else metadata_row['timestamp'])
+            try:
+                timestamp_str = metadata_row['timestamp']
+                # Handle ISO format with or without timezone
+                if timestamp_str.endswith('Z'):
+                    timestamp_str = timestamp_str.replace('Z', '+00:00')
+                timestamp = datetime.fromisoformat(timestamp_str)
+            except KeyError as e:
+                logger.error(f"Missing 'timestamp' in metadata_row. Available keys: {list(metadata_row.index)}")
+                logger.error(f"Full metadata_row: {metadata_row.to_dict()}")
+                raise PackageValidationError(f"Missing required field in metadata: {e}")
             
             new_metadata = SimulationMetadata(
                 sim_id=new_sim_id,
