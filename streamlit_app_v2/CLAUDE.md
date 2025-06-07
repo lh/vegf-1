@@ -314,6 +314,39 @@ def test_simulation():
 - NEVER mock core business logic or data structures
 - If a test needs many mocks, it's testing at the wrong level
 
+### 7. Prefer Integration Tests Over Mock-Heavy Unit Tests
+
+When testing complex features like export/import:
+
+```python
+# PREFERRED: Integration test with real data
+def test_export_import_integration():
+    # Run real simulation (small scale)
+    runner = MemoryAwareSimulationRunner(spec)
+    results = runner.run(n_patients=10, duration_years=0.5, seed=42)
+    
+    # Export to real package
+    manager = SimulationPackageManager()
+    package_data = manager.create_package(results)
+    
+    # Import and verify
+    imported = manager.import_package(package_data)
+    assert imported.get_patient_count() == results.get_patient_count()
+
+# AVOID: Mock-heavy unit test
+def test_export_with_mocks():
+    mock_results = Mock()
+    mock_results.metadata.sim_id = 'test'
+    # ... 20 more lines of mock setup ...
+```
+
+**Why Integration Tests Are Better**:
+- They catch real bugs that mocks would miss
+- They verify the actual user workflow works
+- They're more maintainable (less mock setup)
+- They provide confidence the feature actually works
+- For scientific tools, they ensure data integrity
+
 # Always run these tests before committing changes
 When making changes to the codebase, always run the following tests before committing:
 1. For discontinuation tracking changes:

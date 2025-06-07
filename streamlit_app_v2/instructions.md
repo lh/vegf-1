@@ -50,6 +50,7 @@ npx playwright test
 2. **One feature at a time**
 3. **Tests green = safe to commit**
 4. **No synthetic data in scientific tools**
+5. **Date/Time Standardization**: Always use `timestamp` field name with datetime objects internally, convert to ISO strings only for JSON serialization
 
 ### Verification Before Moving Forward
 - [ ] Can you navigate to `/analysis_overview_export`? (Should NOT exist after fix)

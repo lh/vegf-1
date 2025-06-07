@@ -104,8 +104,10 @@ class TestSimulationPackage:
                 zf.writestr("data/visits.parquet", b"fake_parquet_data")
                 zf.writestr("data/metadata.parquet", b"fake_parquet_data")
                 zf.writestr("data/patient_index.parquet", b"fake_parquet_data")
+                zf.writestr("data/summary_stats.json", '{"patient_count": 100}')
                 zf.writestr("protocol.yaml", "name: test")
                 zf.writestr("parameters.json", '{"test": true}')
+                zf.writestr("audit_log.json", '[{"action": "test"}]')
                 zf.writestr("README.txt", "Test package")
             
             # When: Validating package

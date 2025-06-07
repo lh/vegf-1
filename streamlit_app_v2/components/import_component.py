@@ -73,9 +73,10 @@ def import_simulation_package(uploaded_file):
                 update_progress(60, "Loading simulation...")
                 imported_results = manager.import_package(package_data)
                 
-                # Save to results system
-                update_progress(80, "Saving to database...")
-                sim_id = ResultsFactory.save_imported_results(imported_results)
+                # The import_package method already saves the results to disk
+                # Get the sim_id from the imported results
+                update_progress(80, "Finalizing import...")
+                sim_id = imported_results.metadata.sim_id
                 
                 # Register with simulation registry
                 update_progress(90, "Registering simulation...")
@@ -90,8 +91,8 @@ def import_simulation_package(uploaded_file):
                         if file.is_file():
                             size_mb += file.stat().st_size / (1024 * 1024)
                 
-                # Convert metadata to dict if needed
-                metadata_dict = imported_results.metadata.__dict__ if hasattr(imported_results.metadata, '__dict__') else imported_results.metadata
+                # Convert metadata to dict with proper serialization
+                metadata_dict = imported_results.metadata.to_dict()
                 registry.register_simulation(sim_id, metadata_dict, size_mb)
                 
                 update_progress(100, "Complete!")
@@ -112,8 +113,8 @@ def import_simulation_package(uploaded_file):
                     st.session_state.imported_simulations = set()
                 st.session_state.imported_simulations.add(sim_id)
                 
-                # Show import details
-                with st.expander("📋 Import Details", expanded=True):
+                # Show import details in a container instead of expander
+                with st.container():
                     st.write(f"**New Simulation ID**: `{sim_id}`")
                     st.write(f"**Original ID**: `{imported_results.metadata.sim_id}`")
                     st.write(f"**Protocol**: {imported_results.metadata.protocol_name}")
