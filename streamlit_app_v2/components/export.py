@@ -61,8 +61,8 @@ def render_export_section():
                 # Create package
                 package_data = manager.create_package(results)
                 
-                # Generate filename
-                package_name = f"APE_simulation_{sim_id}_{datetime.now().strftime('%Y%m%d')}.zip"
+                # Generate filename (sim_id already contains date/time)
+                package_name = f"APE_{sim_id}.zip"
                 
                 # Clear progress indicators
                 progress_bar.empty()

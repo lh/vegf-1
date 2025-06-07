@@ -101,10 +101,11 @@ npx playwright test
 
 **Next**: Day 4 - UI Integration
 
-## ✅ Day 4 Status: Complete!
+## ✅ Day 4 Status: Complete with Parquet Refactor!
 
 **Core Functionality**: ✅ Working (package creation, security, data integrity)
 **UI Integration**: ✅ Complete - Navigation regression fixed
+**Storage Architecture**: ✅ Simplified to Parquet-only
 
 ### What's Working:
 - ✅ Components properly located in `components/` directory
@@ -113,19 +114,23 @@ npx playwright test
 - ✅ Session state properly accessed in export component
 - ✅ Old integration points removed from other pages
 - ✅ UI consistency maintained (floppy disk icon for Manage)
+- ✅ Navigation references updated to use `2_Simulations.py`
+- ✅ **Parquet-only refactor complete** - ALL simulations now saved to disk
 
-### Single Blocking Issue:
-**Navigation Regression**: Old page references cause "File not found" error
-- Protocol Manager and Analysis Overview still reference `2_Run_Simulation.py`
-- The file has been renamed to `2_Simulations.py`
-- This breaks navigation between pages
+### Parquet Refactor Benefits:
+- **Fixed export for small simulations** - Root cause of "No metadata found" error resolved
+- **Simplified codebase** - Single storage pathway instead of dual InMemory/Parquet
+- **Consistent behavior** - All simulations handled the same way
+- **Better reliability** - All simulations persisted to disk automatically
 
-### Root Cause of Current Issue:
-- Shell crash occurred after renaming page but before updating references
-- Git shows changes are staged but not committed
-- Two navigation references were missed in the refactoring
+### What Changed in Refactor:
+- ResultsFactory always creates ParquetResults
+- Removed size-based storage selection logic
+- Updated memory estimation keys to use 'estimated_memory_mb'
+- Updated all tests to expect Parquet storage
+- Removed InMemoryResults handling code
 
-**Next Step**: Fix the two navigation references (see IMMEDIATE ACTIONS above)
+**Next Step**: Test export/import functionality with the new Parquet-only implementation
 
 ## 🚨 IMMEDIATE ACTIONS REQUIRED
 
