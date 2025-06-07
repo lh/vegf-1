@@ -29,6 +29,7 @@ from utils.carbon_button_helpers import (
     top_navigation_home_button, ape_button,
     navigation_button
 )
+from utils.simulation_loader import load_simulation_results
 
 # Import export/import components
 from components.export import render_export_section
@@ -52,9 +53,13 @@ st.header("Recent Simulations")
 
 # Get list of simulations from results directory
 results_dir = ResultsFactory.DEFAULT_RESULTS_DIR
+has_any_simulations = False
+simulations = []
+
 if results_dir.exists():
     sim_dirs = sorted([d for d in results_dir.iterdir() if d.is_dir()], 
                      key=lambda x: x.name, reverse=True)[:10]  # Show last 10
+    has_any_simulations = len(sim_dirs) > 0
     
     if sim_dirs:
         # Create a list of simulations with metadata
@@ -117,8 +122,11 @@ if results_dir.exists():
                                     full_width=True,
                                     is_primary_action=not is_selected
                                 ):
-                                    st.session_state.current_sim_id = sim['id']
-                                    st.rerun()
+                                    # Use the unified loader to set both current_sim_id AND load results
+                                    if load_simulation_results(sim['id']):
+                                        st.rerun()
+                                    else:
+                                        st.error(f"Failed to load simulation {sim['id']}")
         else:
             st.info("No recent simulations found. Run a simulation below to get started.")
     else:
@@ -127,7 +135,10 @@ else:
     st.info("No simulations directory found. Run your first simulation below!")
 
 # Manage section with export/import
-if st.session_state.get('current_sim_id'):
+# Show manage button if ANY simulations exist OR if we have a current_sim_id
+show_manage = has_any_simulations or st.session_state.get('current_sim_id')
+
+if show_manage:
     st.markdown("---")
     
     # Manage button with floppy disk icon

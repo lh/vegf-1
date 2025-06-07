@@ -9,6 +9,7 @@ from pathlib import Path
 from utils.simulation_package import SimulationPackageManager, SecurityError, PackageValidationError
 from core.results.factory import ResultsFactory
 from core.storage.registry import SimulationRegistry
+from utils.simulation_loader import load_simulation_results
 import logging
 
 logger = logging.getLogger(__name__)
@@ -104,14 +105,16 @@ def import_simulation_package(uploaded_file):
                 # Success!
                 st.success(f"✅ Simulation imported successfully!")
                 
-                # Update session state
-                st.session_state.current_sim_id = sim_id
-                st.session_state.imported_simulation = True
+                # Use the unified loader to properly set session state
+                if not load_simulation_results(sim_id):
+                    st.error("Failed to load imported simulation")
+                    return
                 
                 # Mark as imported in session state for visual indicators
                 if 'imported_simulations' not in st.session_state:
                     st.session_state.imported_simulations = set()
                 st.session_state.imported_simulations.add(sim_id)
+                st.session_state.imported_simulation = True
                 
                 # Show import details in a container instead of expander
                 with st.container():

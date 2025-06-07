@@ -1,0 +1,21 @@
+[
+  {
+    "timestamp": "2025-06-07T17:45:09.880471",
+    "action": "simulation_created",
+    "engine_type": "abs",
+    "n_patients": 100,
+    "duration_years": 1.0,
+    "runtime_seconds": 0.005836963653564453
+  },
+  {
+    "timestamp": "2025-06-07T17:45:17.166374",
+    "action": "package_created",
+    "original_sim_id": "sim_20250607_174509_adc1e40e"
+  },
+  {
+    "timestamp": "2025-06-07T17:48:12.592672",
+    "action": "package_imported",
+    "new_sim_id": "imported_sim_20250607_174509_adc1e40e",
+    "original_sim_id": "sim_20250607_174509_adc1e40e"
+  }
+]

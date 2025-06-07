@@ -14,6 +14,10 @@ import json
 import tempfile
 import shutil
 from datetime import datetime
+import sys
+
+# Add parent directory
+sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from core.results.factory import ResultsFactory
 from utils.simulation_package import SimulationPackageManager
@@ -42,47 +46,66 @@ class TestSimulationSelectionSync:
         if self.test_dir.exists():
             shutil.rmtree(self.test_dir)
     
-    def create_test_simulation(self, sim_id: str, n_patients: int = 100):
-        """Create a test simulation on disk"""
-        sim_dir = self.test_dir / sim_id
-        sim_dir.mkdir(parents=True)
+    def create_test_simulation(self, sim_id: str = None, n_patients: int = 10, duration_years: float = 0.1):
+        """Create or copy a real test simulation"""
+        from tests.fixtures.create_test_simulation import create_test_simulation
         
-        # Create metadata
-        metadata = {
-            "sim_id": sim_id,
-            "protocol_name": "Test Protocol",
-            "protocol_version": "1.0",
-            "engine_type": "abs",
-            "n_patients": n_patients,
-            "duration_years": 2.0,
-            "seed": 42,
-            "timestamp": datetime.now().isoformat(),
-            "runtime_seconds": 1.5,
-            "storage_type": "parquet"
-        }
+        # Add parent path for imports if needed
+        parent_path = str(Path(__file__).parent.parent.parent.parent)
+        if parent_path not in sys.path:
+            sys.path.append(parent_path)
         
-        with open(sim_dir / "metadata.json", "w") as f:
-            json.dump(metadata, f)
-        
-        # Create dummy parquet files
-        (sim_dir / "patients.parquet").touch()
-        (sim_dir / "visits.parquet").touch()
-        (sim_dir / "metadata.parquet").touch()
-        (sim_dir / "patient_index.parquet").touch()
-        
-        return metadata
+        if sim_id:
+            # Create a simulation and then rename it to the desired ID
+            created_path = create_test_simulation(
+                output_dir=self.test_dir,
+                n_patients=n_patients,
+                duration_years=duration_years
+            )
+            created_path = Path(created_path)
+            
+            # Rename to the desired sim_id
+            target_path = self.test_dir / sim_id
+            if target_path.exists():
+                shutil.rmtree(target_path)
+            created_path.rename(target_path)
+            
+            # Update metadata with new sim_id
+            metadata_path = target_path / "metadata.json"
+            with open(metadata_path, 'r') as f:
+                metadata = json.load(f)
+            
+            metadata['sim_id'] = sim_id
+            
+            with open(metadata_path, 'w') as f:
+                json.dump(metadata, f, indent=2)
+                
+            return metadata
+        else:
+            # Create a real simulation using the test fixture
+            created_path = create_test_simulation(
+                output_dir=self.test_dir,
+                n_patients=n_patients,
+                duration_years=duration_years
+            )
+            
+            # Load and return metadata
+            with open(Path(created_path) / "metadata.json", 'r') as f:
+                return json.load(f)
     
-    @pytest.mark.xfail(reason="Selection doesn't load simulation results - will fail until fixed")
     def test_selecting_simulation_loads_results(self):
         """Test that selecting a simulation from the list loads its results"""
         # Create a test simulation
         sim_id = "sim_20250607_120000_test123"
         metadata = self.create_test_simulation(sim_id)
         
-        # Simulate selecting the simulation (what happens when clicking "Select" button)
-        st.session_state.current_sim_id = sim_id
+        # Import the loader
+        from utils.simulation_loader import load_simulation_results
         
-        # This is what SHOULD happen but currently doesn't:
+        # Simulate selecting the simulation (what the UI now does)
+        success = load_simulation_results(sim_id)
+        assert success is True, "Loading should succeed"
+        
         # The simulation results should be loaded into session state
         assert 'simulation_results' in st.session_state, "Simulation results should be loaded"
         assert st.session_state.simulation_results is not None
@@ -93,7 +116,6 @@ class TestSimulationSelectionSync:
         assert results['parameters']['n_patients'] == metadata['n_patients']
         assert results['parameters']['duration_years'] == metadata['duration_years']
     
-    @pytest.mark.xfail(reason="Import doesn't set simulation as current - will fail until fixed")
     def test_import_sets_current_simulation(self):
         """Test that importing a simulation makes it the current one with loaded results"""
         # Create a simulation to export
@@ -104,14 +126,18 @@ class TestSimulationSelectionSync:
         imported_sim_id = "imported_sim_20250607_120000_test456"
         self.create_test_simulation(imported_sim_id, n_patients=500)
         
-        # Simulate what import_component.py does
-        st.session_state.current_sim_id = imported_sim_id
-        st.session_state.imported_simulation = True
+        # Import the loader
+        from utils.simulation_loader import load_simulation_results
+        
+        # Simulate what import_component.py NOW does
+        success = load_simulation_results(imported_sim_id)
+        assert success is True, "Loading imported simulation should succeed"
+        
         if 'imported_simulations' not in st.session_state:
             st.session_state.imported_simulations = set()
         st.session_state.imported_simulations.add(imported_sim_id)
+        st.session_state.imported_simulation = True
         
-        # This is what SHOULD happen but currently doesn't:
         # The imported simulation's results should be loaded
         assert 'simulation_results' in st.session_state, "Imported simulation results should be loaded"
         assert st.session_state.simulation_results is not None
@@ -120,7 +146,6 @@ class TestSimulationSelectionSync:
         results = st.session_state.simulation_results
         assert results['parameters']['n_patients'] == 500  # The imported sim's patient count
     
-    @pytest.mark.xfail(reason="Analysis Overview doesn't check current_sim_id - will fail until fixed")
     def test_analysis_overview_uses_current_sim_id(self):
         """Test that Analysis Overview loads data from current_sim_id if simulation_results is missing"""
         # Create two simulations
@@ -135,29 +160,32 @@ class TestSimulationSelectionSync:
         if 'simulation_results' in st.session_state:
             del st.session_state.simulation_results
         
-        # Mock the Analysis Overview check
-        # This is what SHOULD happen:
-        # We'll import a function that doesn't exist yet
-        try:
-            from utils.simulation_loader import load_simulation_results
-        except ImportError:
-            # Expected - function doesn't exist yet
-            pytest.fail("load_simulation_results function not implemented yet")
+        # Import the ensure function
+        from utils.simulation_loader import ensure_simulation_loaded
         
+        # Mock the Analysis Overview check
         # It should detect missing results and load from current_sim_id
-        loaded = load_simulation_results(st.session_state.current_sim_id)
+        loaded = ensure_simulation_loaded()
         assert loaded is True, "Should successfully load simulation"
         assert 'simulation_results' in st.session_state
         assert st.session_state.simulation_results['parameters']['n_patients'] == 200
     
-    @pytest.mark.xfail(reason="No load_simulation_results function exists - will fail until implemented")
     def test_load_simulation_results_function(self):
-        """Test the unified loading function that will fix everything"""
-        # Create a test simulation
-        sim_id = "sim_20250607_130000_loader"
-        metadata = self.create_test_simulation(sim_id, n_patients=300)
+        """Test the unified loading function"""
+        # Create a test simulation directly with the fixture
+        from tests.fixtures.create_test_simulation import create_test_simulation
+        sys.path.append(str(Path(__file__).parent.parent.parent.parent))
         
-        # This function doesn't exist yet but will be created
+        # Create the simulation in our test directory
+        created_path = create_test_simulation(output_dir=self.test_dir)
+        created_path = Path(created_path)
+        sim_id = created_path.name  # Get the sim ID from the created path
+        
+        # Load metadata for verification
+        with open(created_path / "metadata.json", 'r') as f:
+            metadata = json.load(f)
+        
+        # Import the actual function
         from utils.simulation_loader import load_simulation_results
         
         # Clear any existing results
@@ -176,7 +204,6 @@ class TestSimulationSelectionSync:
         assert results['parameters']['n_patients'] == metadata['n_patients']
         assert results['parameters']['engine'] == metadata['engine_type']
     
-    @pytest.mark.xfail(reason="Manage button hidden when no current_sim_id - will fail until fixed")
     def test_manage_button_always_visible(self):
         """Test that Manage button is visible even without a current simulation"""
         # Clear session state
@@ -196,7 +223,6 @@ class TestSimulationSelectionSync:
         
         assert show_manage_button is True, "Manage button should be visible when simulations exist"
     
-    @pytest.mark.xfail(reason="Session state not properly synchronized - will fail until fixed")
     def test_complete_selection_workflow(self):
         """Test the complete workflow of selecting different simulations"""
         # Create three simulations
@@ -216,16 +242,20 @@ class TestSimulationSelectionSync:
             'parameters': {'n_patients': 100}
         }
         
-        # Now select the second simulation
-        st.session_state.current_sim_id = sim2
-        # This SHOULD trigger loading sim2's results
+        # Import the loader
+        from utils.simulation_loader import load_simulation_results
         
-        # Verify the results updated (currently fails)
+        # Now select the second simulation (as the UI would)
+        success = load_simulation_results(sim2)
+        assert success is True
+        
+        # Verify the results updated
         assert st.session_state.simulation_results['parameters']['n_patients'] == 200, \
             "Results should update to show sim2's data"
         
         # Now select the imported simulation
-        st.session_state.current_sim_id = sim3
+        success = load_simulation_results(sim3)
+        assert success is True
         st.session_state.imported_simulations = {sim3}
         
         # Verify the results updated to imported sim (currently fails)
@@ -236,7 +266,6 @@ class TestSimulationSelectionSync:
 class TestImportedSimulationBadge:
     """Test that imported simulations show the IMPORTED badge"""
     
-    @pytest.mark.xfail(reason="IMPORTED badge logic may not persist correctly - will fail if broken")
     def test_imported_badge_shows(self):
         """Test that imported simulations display the IMPORTED badge"""
         # Set up imported simulations in session state

@@ -37,6 +37,7 @@ st.set_page_config(
 # Add parent for utils import
 sys.path.append(str(Path(__file__).parent.parent))
 from utils.carbon_button_helpers import top_navigation_home_button, ape_button
+from utils.simulation_loader import ensure_simulation_loaded
 from visualizations.streamgraph_simple import create_simple_streamgraph
 from components.treatment_patterns.enhanced_tab import render_enhanced_treatment_patterns_tab
 
@@ -55,9 +56,9 @@ current_mode = init_visualization_mode()
 # Add export settings to sidebar
 render_export_settings("sidebar")
 
-# Check if results are available
-if not st.session_state.get('simulation_results'):
-    # Just show centered navigation button
+# Check if results are available, try to load if needed
+if not ensure_simulation_loaded():
+    # No simulation available
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if ape_button("Run a Simulation", key="nav_run_sim", 
