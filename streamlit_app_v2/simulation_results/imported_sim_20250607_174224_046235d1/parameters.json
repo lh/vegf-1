@@ -1,7 +1,0 @@
-{
-  "engine_type": "abs",
-  "n_patients": 10000,
-  "duration_years": 10.0,
-  "seed": 42,
-  "runtime_seconds": 4.005854845046997
-}

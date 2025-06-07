@@ -1,6 +1,0 @@
-name: Eylea Treat and Extend
-version: '1.0'
-engine_type: abs
-duration_years: 1.0
-n_patients: 100
-seed: 42

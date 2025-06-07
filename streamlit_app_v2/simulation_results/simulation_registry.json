@@ -72,7 +72,25 @@
       "created": "2025-06-07T20:19:17.533849",
       "last_accessed": "2025-06-07T20:19:17.533852",
       "access_count": 0
+    },
+    "imported_sim_20250607_210155_42989616": {
+      "metadata": {
+        "sim_id": "imported_sim_20250607_210155_42989616",
+        "protocol_name": "Eylea Treat and Extend",
+        "protocol_version": "1.0",
+        "engine_type": "abs",
+        "n_patients": 11,
+        "duration_years": 0.5,
+        "seed": 42,
+        "timestamp": "2025-06-07T21:01:55.829970",
+        "runtime_seconds": 0.0005600452423095703,
+        "storage_type": "parquet"
+      },
+      "size_mb": 0.023403167724609375,
+      "created": "2025-06-07T21:04:48.536743",
+      "last_accessed": "2025-06-07T21:04:48.536745",
+      "access_count": 0
     }
   },
-  "last_updated": "2025-06-07T20:19:54.203556"
+  "last_updated": "2025-06-07T21:04:48.536748"
 }
