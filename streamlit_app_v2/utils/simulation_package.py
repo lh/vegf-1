@@ -691,7 +691,14 @@ For support, please refer to APE documentation.
             # Parse timestamp - it should always exist
             from datetime import datetime
             try:
-                timestamp_str = metadata_row['timestamp']
+                print(f"DEBUG: Accessing timestamp field...")
+                print(f"DEBUG: metadata_row dict: {metadata_row.to_dict()}")
+                timestamp_value = metadata_row['timestamp']
+                print(f"DEBUG: timestamp value: {timestamp_value}, type: {type(timestamp_value)}")
+                
+                # Convert to string if it's not already
+                timestamp_str = str(timestamp_value)
+                
                 # Handle ISO format with or without timezone
                 if timestamp_str.endswith('Z'):
                     timestamp_str = timestamp_str.replace('Z', '+00:00')
@@ -781,8 +788,14 @@ For support, please refer to APE documentation.
             return results
             
         except Exception as e:
+            import traceback
             logger.error(f"Failed to load simulation from package: {e}")
-            raise PackageValidationError(f"Could not load simulation data from package: {e}")
+            logger.error(f"Exception type: {type(e)}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            # Try to provide more context about where it failed
+            if 'metadata_row' in locals():
+                logger.error(f"metadata_row contents: {metadata_row.to_dict()}")
+            raise PackageValidationError(f"Could not load simulation data from package: {str(e)}")
 
 
 # Legacy functions for backward compatibility
