@@ -595,27 +595,19 @@ class SimulationPackageManager:
                     json.dump(stats_data, f, indent=2)
                 files["data/summary_stats.json"] = stats_path
             
-            # 8. Audit log (create from metadata)
-            audit_log = [
-                {
-                    'timestamp': results.metadata.timestamp.isoformat(),
-                    'action': 'simulation_created',
-                    'engine_type': results.metadata.engine_type,
-                    'n_patients': results.metadata.n_patients,
-                    'duration_years': results.metadata.duration_years,
-                    'runtime_seconds': results.metadata.runtime_seconds
-                },
-                {
-                    'timestamp': datetime.now().isoformat(),
-                    'action': 'package_created',
-                    'original_sim_id': results.metadata.sim_id
-                }
-            ]
+            # 8. Audit log - REQUIRED
+            source_audit_path = results.data_path / "audit_log.json"
+            if not source_audit_path.exists():
+                raise PackageValidationError(
+                    f"Simulation {results.metadata.sim_id} has no audit log. "
+                    "All simulations must have audit logs."
+                )
             
+            # Copy the audit log
             audit_path = temp_path / "audit_log.json"
-            with open(audit_path, 'w') as f:
-                json.dump(audit_log, f, indent=2)
+            shutil.copy2(source_audit_path, audit_path)
             files["audit_log.json"] = audit_path
+            logger.info("Copied audit log from simulation data")
             
             logger.info(f"Prepared {len(files)} files for packaging")
             return files
@@ -732,20 +724,12 @@ For support, please refer to APE documentation.
             if params_path.exists():
                 shutil.copy2(params_path, dest_path / "parameters.json")
                 
-            # Copy audit_log.json and append import event
+            # Copy audit_log.json - REQUIRED (preserve as-is)
             audit_path = extract_path / "audit_log.json"
-            if audit_path.exists():
-                with open(audit_path, 'r') as f:
-                    audit_log = json.load(f)
-                # Add import event
-                audit_log.append({
-                    'timestamp': datetime.now().isoformat(),
-                    'action': 'package_imported',
-                    'new_sim_id': new_sim_id,
-                    'original_sim_id': metadata_row['sim_id']
-                })
-                with open(dest_path / "audit_log.json", 'w') as f:
-                    json.dump(audit_log, f, indent=2)
+            if not audit_path.exists():
+                raise PackageValidationError("Package missing required audit_log.json")
+            shutil.copy2(audit_path, dest_path / "audit_log.json")
+            logger.info("Preserved original audit log without modifications")
             
             # Save the new metadata
             metadata_dict = {
