@@ -2,6 +2,14 @@
 
 **IMPORTANT**: This is the active implementation plan. Always refer to this document when working on the current feature.
 
+## 📍 Quick Navigation
+- **Current Issue**: UI Integration (Day 4) - See line 78
+- **Fix Plan**: SIMULATION_IO_IMPLEMENTATION_PLAN.md
+- **Test First**: Run `streamlit run APE.py` to see the broken state
+- **Key Files**: 
+  - `components/export.py` (moved from pages/)
+  - `components/import_component.py` (moved from pages/)
+
 ## 🚀 Current Implementation: Simulation Package Export/Import
 
 ### Current Phase: Fixing UI Integration Issues
@@ -25,11 +33,29 @@ python -m pytest tests/ -x  # Ensure existing tests pass
 python scripts/run_tests.py --all
 ```
 
+### UI Testing Commands
+```bash
+# Test the Streamlit UI locally
+streamlit run APE.py
+
+# Run UI-specific tests
+python -m pytest tests/ui/test_package_ui.py -v
+
+# Test with Playwright for real browser testing
+npx playwright test
+```
+
 ### Golden Rules
 1. **Write tests FIRST, then implement**
 2. **One feature at a time**
 3. **Tests green = safe to commit**
 4. **No synthetic data in scientific tools**
+
+### Verification Before Moving Forward
+- [ ] Can you navigate to `/analysis_overview_export`? (Should NOT exist after fix)
+- [ ] Does Export work with a loaded simulation?
+- [ ] Does Import set the current simulation correctly?
+- [ ] Are all tests still passing after changes?
 
 ## ✅ Day 2 Completion Summary (Data Integrity)
 
@@ -75,36 +101,55 @@ python scripts/run_tests.py --all
 
 **Next**: Day 4 - UI Integration
 
-## ❌ Day 4 Issues Found (UI Integration)
+## 🔄 Day 4 Current Status: Almost Complete, One Critical Bug
 
-**Status**: BROKEN - Core functionality works but UI integration has critical problems
+**Core Functionality**: ✅ Working (package creation, security, data integrity)
+**UI Integration**: 🔄 95% Complete - Just fixing navigation regression
 
-**What Was Attempted**:
-- ✅ Export functionality added to Analysis Overview (Audit Trail tab)
-- ✅ Import functionality added to Protocol Manager
-- ✅ UI components created and tests written
+### What's Working:
+- ✅ Components properly located in `components/` directory
+- ✅ New unified `2_Simulations.py` page with Recent Simulations list
+- ✅ Manage button with Export/Import tabs fully integrated
+- ✅ Session state properly accessed in export component
+- ✅ Old integration points removed from other pages
+- ✅ UI consistency maintained (floppy disk icon for Manage)
 
-**Critical Issues Discovered**:
-1. **Wrong File Locations**: Components placed in `pages/` directory create blank routes
-   - `/analysis_overview_export` and `/protocol_manager_import` are empty pages
-   - Files should be in `components/` directory instead
+### Single Blocking Issue:
+**Navigation Regression**: Old page references cause "File not found" error
+- Protocol Manager and Analysis Overview still reference `2_Run_Simulation.py`
+- The file has been renamed to `2_Simulations.py`
+- This breaks navigation between pages
 
-2. **Session State Problems**: Export shows "No simulation selected" despite simulation being displayed
-   - Not properly accessing `current_sim_id` from session state
+### Root Cause of Current Issue:
+- Shell crash occurred after renaming page but before updating references
+- Git shows changes are staged but not committed
+- Two navigation references were missed in the refactoring
 
-3. **Poor UX Design**: 
-   - Export in Audit Trail tab is illogical placement
-   - Import in Protocol Manager is disconnected from simulation workflow
-   - Should be centralized in "Simulations" page (renamed from "Run Simulation")
+**Next Step**: Fix the two navigation references (see IMMEDIATE ACTIONS above)
 
-4. **Testing Gaps**:
-   - Unit tests passed with mocks but missed real integration issues
-   - No end-to-end testing of actual Streamlit page rendering
-   - Over-mocking hid the real problems
+## 🚨 IMMEDIATE ACTIONS REQUIRED
 
-**Fix Strategy**: See `SIMULATION_IO_IMPLEMENTATION_PLAN.md` for detailed implementation plan
+### ✅ Already Completed (After Shell Crash):
+1. **Components moved** ✅ - Already in `components/` directory
+2. **Page renamed** ✅ - Now `2_Simulations.py` 
+3. **Simulations page created** ✅ - With Recent Simulations list and Manage button
+4. **Session state fixed** ✅ - Export properly checks for `current_sim_id`
+5. **Old integrations removed** ✅ - No export/import in Analysis Overview or Protocol Manager
+6. **UI consistency** ✅ - Manage button uses floppy disk icon
 
-**Next**: Implement fixes following the plan
+### ❌ Critical Regression Fix Needed:
+**The application is broken due to stale page references!**
+
+Fix these navigation references:
+```bash
+# In pages/1_Protocol_Manager.py line 516:
+# Change: st.switch_page("pages/2_Run_Simulation.py")
+# To:     st.switch_page("pages/2_Simulations.py")
+
+# In pages/3_Analysis_Overview.py line 65:
+# Change: st.switch_page("pages/2_Run_Simulation.py") 
+# To:     st.switch_page("pages/2_Simulations.py")
+```
 
 ---
 

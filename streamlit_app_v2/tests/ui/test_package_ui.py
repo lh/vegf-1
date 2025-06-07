@@ -40,7 +40,7 @@ class TestPackageExportUI:
     def test_export_button_visibility(self, mock_streamlit):
         """Test that export button is visible in Analysis Overview"""
         # Import the function we'll implement
-        from pages.analysis_overview_export import render_export_section
+        from components.export import render_export_section
         
         # Mock columns to return column contexts
         col1, col2 = MagicMock(), MagicMock()
@@ -62,7 +62,7 @@ class TestPackageExportUI:
     
     def test_export_download_flow(self, mock_streamlit):
         """Test the complete export and download flow"""
-        from pages.analysis_overview_export import render_export_section
+        from components.export import render_export_section
         from utils.simulation_package import SimulationPackageManager
         
         # Mock columns
@@ -78,7 +78,7 @@ class TestPackageExportUI:
                          return_value=mock_package_data) as mock_create:
             
             # Mock ResultsFactory
-            with patch('pages.analysis_overview_export.ResultsFactory') as mock_factory:
+            with patch('components.export.ResultsFactory') as mock_factory:
                 mock_results = Mock()
                 mock_results.metadata.sim_id = 'sim_test_123'
                 mock_factory.load_results.return_value = mock_results
@@ -102,7 +102,7 @@ class TestPackageExportUI:
     
     def test_export_error_handling(self, mock_streamlit):
         """Test error handling during export"""
-        from pages.analysis_overview_export import render_export_section
+        from components.export import render_export_section
         
         # Mock columns
         col1, col2 = MagicMock(), MagicMock()
@@ -112,7 +112,7 @@ class TestPackageExportUI:
         mock_streamlit['button'].return_value = True
         
         # Mock package creation failure
-        with patch('pages.analysis_overview_export.ResultsFactory') as mock_factory:
+        with patch('components.export.ResultsFactory') as mock_factory:
             mock_factory.load_results.side_effect = Exception("Simulation not found")
             
             # When: Export fails
@@ -163,7 +163,7 @@ class TestPackageImportUI:
     
     def test_import_upload_interface(self, mock_streamlit):
         """Test that import interface is properly rendered"""
-        from pages.protocol_manager_import import render_import_section
+        from components.import_component import render_import_section
         
         # Simulate no file uploaded
         mock_streamlit['file_uploader'].return_value = None
@@ -183,7 +183,7 @@ class TestPackageImportUI:
     
     def test_import_file_validation(self, mock_streamlit):
         """Test file validation during import"""
-        from pages.protocol_manager_import import render_import_section
+        from components.import_component import render_import_section
         
         # Mock uploaded file
         mock_file = Mock()
@@ -225,7 +225,7 @@ class TestPackageImportUI:
             mock_import.return_value = mock_results
             
             # Mock ResultsFactory save
-            with patch('pages.protocol_manager_import.ResultsFactory') as mock_factory:
+            with patch('components.import_component.ResultsFactory') as mock_factory:
                 mock_factory.save_imported_results.return_value = 'imported_sim_123'
                 
                 # Mock rerun
@@ -262,7 +262,7 @@ class TestPackageImportUI:
         mock_streamlit['button'].return_value = True  # Import clicked
         
         # Mock import failure
-        with patch('pages.protocol_manager_import.SimulationPackageManager') as mock_manager_class:
+        with patch('components.import_component.SimulationPackageManager') as mock_manager_class:
             mock_manager = Mock()
             mock_manager.import_package.side_effect = SecurityError("Unsafe path detected")
             mock_manager_class.return_value = mock_manager
