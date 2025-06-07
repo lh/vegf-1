@@ -640,7 +640,9 @@ For support, please refer to APE documentation.
         """Load SimulationResults from extracted package"""
         try:
             from core.results.base import SimulationMetadata
-            from core.results.memory import InMemoryResults
+            from core.results.parquet import ParquetResults
+            from core.results.factory import ResultsFactory
+            import shutil
             
             # Load parquet data files
             data_dir = extract_path / "data"
@@ -666,72 +668,44 @@ For support, please refer to APE documentation.
                 seed=int(metadata_row['seed']),
                 timestamp=timestamp,
                 runtime_seconds=float(metadata_row['runtime_seconds']),
-                storage_type='memory'  # Imported simulations stored in memory
+                storage_type='parquet'  # All simulations now use Parquet
             )
             
-            # 3. Load the actual data files
-            patients_df = pd.read_parquet(data_dir / "patients.parquet")
-            visits_df = pd.read_parquet(data_dir / "visits.parquet")
+            # 3. Create destination directory for the imported simulation
+            dest_path = ResultsFactory.DEFAULT_RESULTS_DIR / new_sim_id
+            dest_path.mkdir(parents=True, exist_ok=True)
             
-            # 4. Create a mock raw_results structure that matches what InMemoryResults expects
-            # We need to create a simple object with the required attributes
-            class MockRawResults:
-                def __init__(self, patients_df, visits_df):
-                    # Create patient_histories - convert DataFrame to dictionary of simple objects
-                    self.patient_histories = {}
-                    
-                    # Group visits by patient for easier reconstruction
-                    visits_by_patient = visits_df.groupby('patient_id') if 'patient_id' in visits_df.columns else {}
-                    
-                    # Create simplified patient objects
-                    for _, patient_row in patients_df.iterrows():
-                        patient_id = str(patient_row.get('patient_id', patient_row.name))
-                        
-                        # Create a simple patient object
-                        patient = type('Patient', (), {})()
-                        patient.patient_id = patient_id
-                        
-                        # Set ALL patient attributes from patient data first
-                        for col, value in patient_row.items():
-                            setattr(patient, col, value)
-                        
-                        # Set visit history from visits data
-                        if patient_id in visits_by_patient.groups:
-                            patient_visits = visits_by_patient.get_group(patient_id)
-                            patient.visit_history = patient_visits.to_dict('records')
-                        else:
-                            patient.visit_history = []
-                        
-                        self.patient_histories[patient_id] = patient
-                    
-                    # Calculate summary statistics
-                    self.total_injections = int(visits_df.get('injected', visits_df.get('injection_given', 0)).sum()) if len(visits_df) > 0 else 0
-                    
-                    # Calculate final vision statistics
-                    if 'visual_acuity' in patients_df.columns:
-                        final_vision = patients_df['visual_acuity']
-                        self.final_vision_mean = float(final_vision.mean())
-                        self.final_vision_std = float(final_vision.std())
-                    elif 'final_vision' in patients_df.columns:
-                        final_vision = patients_df['final_vision']
-                        self.final_vision_mean = float(final_vision.mean())
-                        self.final_vision_std = float(final_vision.std())
-                    else:
-                        self.final_vision_mean = 0.0
-                        self.final_vision_std = 0.0
-                    
-                    # Calculate discontinuation rate
-                    if 'discontinued' in patients_df.columns:
-                        self.discontinuation_rate = float(patients_df['discontinued'].mean())
-                    else:
-                        self.discontinuation_rate = 0.0
+            # 4. Copy parquet files to destination
+            for parquet_file in data_dir.glob("*.parquet"):
+                shutil.copy2(parquet_file, dest_path / parquet_file.name)
             
-            raw_results = MockRawResults(patients_df, visits_df)
+            # 5. Copy other necessary files
+            # Copy summary_stats.json if it exists
+            summary_stats_path = extract_path / "summary_stats.json"
+            if summary_stats_path.exists():
+                shutil.copy2(summary_stats_path, dest_path / "summary_stats.json")
             
-            # 5. Create InMemoryResults instance
-            results = InMemoryResults(new_metadata, raw_results)
+            # Save the new metadata
+            metadata_dict = {
+                'sim_id': new_metadata.sim_id,
+                'protocol_name': new_metadata.protocol_name,
+                'protocol_version': new_metadata.protocol_version,
+                'engine_type': new_metadata.engine_type,
+                'n_patients': new_metadata.n_patients,
+                'duration_years': new_metadata.duration_years,
+                'seed': new_metadata.seed,
+                'created_date': new_metadata.timestamp.isoformat(),
+                'runtime_seconds': new_metadata.runtime_seconds,
+                'storage_type': new_metadata.storage_type
+            }
             
-            logger.info(f"Loaded imported simulation {new_sim_id} with {len(patients_df):,} patients, {len(visits_df):,} visits")
+            with open(dest_path / "metadata.json", 'w') as f:
+                json.dump(metadata_dict, f, indent=2)
+            
+            # 6. Load the ParquetResults from the saved location
+            results = ParquetResults.load(dest_path)
+            
+            logger.info(f"Loaded imported simulation {new_sim_id}")
             
             return results
             
