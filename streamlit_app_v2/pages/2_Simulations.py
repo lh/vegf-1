@@ -232,7 +232,9 @@ col1, col2, col3, col4 = st.columns([1.5, 1, 1, 1.5])
 
 with col1:
     # Use current simulation parameters if loaded, otherwise use simple values
-    if 'simulation_results' in st.session_state and 'parameters' in st.session_state.simulation_results:
+    if ('simulation_results' in st.session_state and 
+        st.session_state.simulation_results is not None and 
+        'parameters' in st.session_state.simulation_results):
         engine_value = st.session_state.simulation_results['parameters']['engine']
         engine_index = 0 if engine_value == "abs" else 1
     else:
@@ -247,7 +249,9 @@ with col1:
 
 with col2:
     # Use current simulation parameters if loaded, otherwise check for preset from buttons
-    if 'simulation_results' in st.session_state and 'parameters' in st.session_state.simulation_results:
+    if ('simulation_results' in st.session_state and 
+        st.session_state.simulation_results is not None and 
+        'parameters' in st.session_state.simulation_results):
         patients_value = st.session_state.simulation_results['parameters']['n_patients']
     elif 'preset_patients' in st.session_state:
         patients_value = st.session_state.preset_patients
@@ -264,7 +268,9 @@ with col2:
 
 with col3:
     # Use current simulation parameters if loaded, otherwise check for preset from buttons
-    if 'simulation_results' in st.session_state and 'parameters' in st.session_state.simulation_results:
+    if ('simulation_results' in st.session_state and 
+        st.session_state.simulation_results is not None and 
+        'parameters' in st.session_state.simulation_results):
         duration_value = st.session_state.simulation_results['parameters']['duration_years']
     elif 'preset_duration' in st.session_state:
         duration_value = st.session_state.preset_duration
@@ -281,7 +287,9 @@ with col3:
 
 with col4:
     # Use current simulation seed if loaded
-    if 'simulation_results' in st.session_state and 'parameters' in st.session_state.simulation_results:
+    if ('simulation_results' in st.session_state and 
+        st.session_state.simulation_results is not None and 
+        'parameters' in st.session_state.simulation_results):
         seed_value = st.session_state.simulation_results['parameters']['seed']
     else:
         seed_value = 42
