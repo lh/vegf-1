@@ -64,7 +64,7 @@ def create_comparison_table():
         ['Maintenance', 'Fixed q8-9 weeks', 'q4-16 weeks', 'q8-24 weeks'],
         ['Dose modification', 'None', 'Based on activity', 'Stricter criteria'],
         ['Monitoring frequency', 'Low (2/year)', 'High (8-12/year)', 'Medium (6-8/year)'],
-        ['Expected VA gain Y1', '~5.5 letters', '~7-8 letters', '~6.7 letters'],
+        ['VA outcomes', 'TBD by simulation', 'TBD by simulation', 'TBD by simulation'],
         ['Interval maintenance', 'N/A (fixed)', '~60-70%', '77-79%']
     ]
     
@@ -73,21 +73,19 @@ def create_comparison_table():
     for row in clinical_data:
         print(f"{row[0]:<25} {row[1]:<25} {row[2]:<25} {row[3]:<25}")
     
-    # Economic comparison (Year 1) - WITH UPDATED PRICING
-    economic_data = [
-        ['Cost Component', 'Treat-and-Treat 2mg', 'Treat-and-Extend 2mg', 'Treat-and-Extend 8mg'],
-        ['Annual injections', '6.5', '6.9', '6.1'],
-        ['Drug cost/year', '£2,971', '£3,153', '£2,068'],
-        ['Procedure costs/year', '£3,113', '£3,429', '£3,032'],
-        ['Total NHS cost/year', '£6,084', '£6,582', '£5,100'],
-        ['Total visits/year', '8.5', '10-12', '8-9'],
-        ['Patient travel cost', '£56', '£80-96', '£64-72'],
-        ['NOTE', 'UPDATED PRICES', '8mg NOW CHEAPER!', 'SAVES £1,482/year']
+    # Resource utilization comparison
+    resource_data = [
+        ['Resource Utilization', 'Treat-and-Treat 2mg', 'Treat-and-Extend 2mg', 'Treat-and-Extend 8mg'],
+        ['Annual injections', 'Fixed (~6.5)', 'Variable', 'Variable'],
+        ['Drug requirements', 'Standard dose', 'Standard dose', 'Higher dose volume'],
+        ['Procedure complexity', 'Standard', 'Standard + monitoring', 'Standard + monitoring'],
+        ['Total visits/year', '8-9', '10-12', '8-9'],
+        ['Visit predictability', 'High', 'Low', 'Low']
     ]
     
-    print("\n💰 Economic Comparison (Year 1):")
+    print("\n📊 Resource Utilization:")
     # Print simple table
-    for row in economic_data:
+    for row in resource_data:
         print(f"{row[0]:<25} {row[1]:<25} {row[2]:<25} {row[3]:<25}")
     
     # Advantages/Disadvantages
@@ -98,18 +96,18 @@ def create_comparison_table():
     print("  ✓ Predictable scheduling (patients know all dates)")
     print("  ✓ Lowest monitoring burden (2 visits/year)")
     print("  ✓ Can be largely nurse-led")
-    print("  ✓ Lowest total cost (£6,201/year)")
+    print("  ✓ Potentially lower resource use")
     print("  ✓ Simplified administration")
     print("Disadvantages:")
     print("  ✗ No personalization")
     print("  ✗ May undertreat active disease (25% risk)")
     print("  ✗ May overtreat stable disease (20% risk)")
-    print("  ✗ Lower expected vision gains")
+    print("  ✗ Fixed schedule may not match disease activity")
     
     print("\n🔵 Treat-and-Extend 2mg:")
     print("Advantages:")
     print("  ✓ Personalized treatment")
-    print("  ✓ Better vision outcomes")
+    print("  ✓ Treatment matches disease activity")
     print("  ✓ Can extend intervals when stable")
     print("  ✓ Responsive to disease activity")
     print("Disadvantages:")
@@ -122,39 +120,37 @@ def create_comparison_table():
     print("Advantages:")
     print("  ✓ Extended intervals (77-79% maintain)")
     print("  ✓ Fewer injections (6.1/year)")
-    print("  ✓ Superior anatomic outcomes")
-    print("  ✓ Good vision gains")
+    print("  ✓ Potential for extended intervals")
     print("Disadvantages:")
-    print("  ✗ Highest drug cost (£10,675/year)")
-    print("  ✗ Exceeds NICE threshold without QALY gains")
+    print("  ✗ Different cost structure")
     print("  ✗ Real-world IOI risk (3.7%)")
     print("  ✗ Requires stricter monitoring criteria")
     
     # Decision framework
     print("\n🎯 Decision Framework:")
-    print("\nChoose Treat-and-Treat when:")
-    print("  • NHS capacity is constrained")
-    print("  • Patient compliance is a concern")
-    print("  • Predictability is valued")
-    print("  • Cost minimization is priority")
+    print("\nTreat-and-Treat characteristics:")
+    print("  • Fixed schedule implementation")
+    print("  • Predictable visit patterns")
+    print("  • Minimal monitoring requirements")
+    print("  • Simplified administration")
     
-    print("\nChoose Treat-and-Extend 2mg when:")
-    print("  • Optimizing vision outcomes")
-    print("  • Adequate monitoring capacity")
-    print("  • Standard of care required")
-    print("  • Cost-effectiveness acceptable")
+    print("\nTreat-and-Extend 2mg characteristics:")
+    print("  • Flexible interval adjustment")
+    print("  • Response-based treatment")
+    print("  • Regular monitoring required")
+    print("  • Standard interval range (4-16 weeks)")
     
-    print("\nChoose Treat-and-Extend 8mg when:")
-    print("  • Reducing injection burden critical")
-    print("  • Patient convenience paramount")
-    print("  • Budget allows premium pricing")
-    print("  • Extended intervals achievable")
+    print("\nTreat-and-Extend 8mg characteristics:")
+    print("  • Extended interval potential")
+    print("  • Stricter modification criteria")
+    print("  • PULSAR protocol requirements")
+    print("  • Longer maximum intervals (up to 24 weeks)")
     
-    # Cost-effectiveness summary
-    print("\n📊 Cost-Effectiveness Summary:")
-    print("• Treat-and-Treat: Lowest cost, acceptable outcomes")
-    print("• T&E 2mg: Standard cost-effectiveness")
-    print("• T&E 8mg: Requires >0.23 QALY gain for NICE threshold")
+    # Summary
+    print("\n📊 Summary:")
+    print("• Different protocols suit different clinical scenarios")
+    print("• Resource requirements vary by protocol type")
+    print("• Clinical outcomes determined by simulation")
 
 if __name__ == "__main__":
     # Note: This is a simplified comparison

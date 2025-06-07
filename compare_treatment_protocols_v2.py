@@ -44,18 +44,17 @@ def create_comparison_table():
     for row in monitoring_data:
         print(f"{row[0]:<25} {row[1]:<25} {row[2]:<25} {row[3]:<30}")
     
-    # Known economic factors (costs only, not outcomes)
+    # Economic factors structure (without specific values)
     economic_data = [
         ['Cost Component', 'Treat-and-Treat 2mg', 'Treat-and-Extend 2mg', 'Treat-and-Extend 8mg'],
-        ['Drug cost/injection', '£457', '£457', '£339'],
-        ['Injection procedure', '£354', '£497', '£497'],
-        ['Monitoring visit', '£306', 'Included above', 'Included above'],
-        ['Annual review', '£506', '£506', '£506'],
-        ['Predictable costs', 'Yes', 'No', 'No'],
-        ['Note', 'Updated pricing', 'Updated pricing', '66% discount - CHEAPER!']
+        ['Drug costs', 'Per injection', 'Per injection', 'Per injection'],
+        ['Injection procedure', 'Standard', 'Standard + monitoring', 'Standard + monitoring'],
+        ['Monitoring visit', 'Separate visits', 'Included in injection', 'Included in injection'],
+        ['Annual review', 'Required', 'Required', 'Required'],
+        ['Cost predictability', 'Yes', 'No', 'No']
     ]
     
-    print("\n💰 Known Cost Components (NHS):")
+    print("\n💰 Cost Structure Components:")
     for row in economic_data:
         print(f"{row[0]:<25} {row[1]:<25} {row[2]:<25} {row[3]:<30}")
     
@@ -96,7 +95,6 @@ def create_comparison_table():
     print("  • Extended intervals possible (up to 24 weeks)")
     print("  • Stricter criteria for interval changes (PULSAR protocol)")
     print("  • 77-79% maintain q12-16 weeks (PULSAR trial data)")
-    print("  • Higher drug cost per injection")
     print("  • Real-world IOI rate: 3.7% vs 1% in trials")
     
     print("\n📊 Outcomes:")

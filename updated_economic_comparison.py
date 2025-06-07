@@ -1,71 +1,52 @@
 #!/usr/bin/env python3
 """
-Updated Economic Comparison with Correct Pricing
-Shows how 8mg is now CHEAPER than 2mg due to strategic pricing
+Economic Structure Comparison
+Compares the structural differences between protocols without making assumptions
 """
 
-def show_updated_economics():
-    """Display the dramatic change in economics with correct pricing."""
+def show_structural_comparison():
+    """Display structural differences between treatment options."""
     
     print("\n" + "="*80)
-    print("AFLIBERCEPT PRICING UPDATE - ECONOMIC IMPACT")
+    print("TREATMENT PROTOCOL STRUCTURAL COMPARISON")
     print("="*80)
     
-    # Pricing comparison
-    print("\n💊 DRUG PRICING (per injection)")
+    # Protocol structures
+    print("\n📋 PROTOCOL STRUCTURES")
     print("-" * 60)
-    print(f"{'Product':<25} {'List Price':<15} {'NHS Price':<15} {'Discount':<15}")
-    print(f"{'Aflibercept 2mg':<25} {'£816':<15} {'£457':<15} {'44% off':<15}")
-    print(f"{'Aflibercept 8mg':<25} {'£998':<15} {'£339':<15} {'66% off':<15}")
-    print(f"{'Biosimilar (est)':<25} {'£400':<15} {'£229':<15} {'43% off':<15}")
-    print(f"\n{'KEY FINDING:':<25} {'8mg is £118 CHEAPER per injection than 2mg!'}")
+    print(f"{'Protocol Type':<30} {'Interval Pattern':<25} {'Monitoring':<25}")
+    print(f"{'Treat & Extend 2mg':<30} {'Flexible (4-16 weeks)':<25} {'Every visit':<25}")
+    print(f"{'Treat & Extend 8mg':<30} {'Flexible (8-24 weeks)':<25} {'Every visit':<25}")
+    print(f"{'Treat & Treat 2mg':<30} {'Fixed (8-9 weeks)':<25} {'2x per year':<25}")
+    print(f"{'Future biosimilars':<30} {'TBD':<25} {'TBD':<25}")
     
-    # Annual cost comparison
-    print("\n📊 ANNUAL COST COMPARISON (Drug + Procedure costs)")
-    print("-" * 80)
-    print(f"{'Protocol':<30} {'Injections/yr':<15} {'Drug Cost':<15} {'Total Cost':<15} {'vs 2mg T&E':<15}")
-    print(f"{'Treat & Extend 2mg':<30} {'6.9':<15} {'£3,153':<15} {'£6,582':<15} {'--':<15}")
-    print(f"{'Treat & Extend 8mg':<30} {'6.1':<15} {'£2,068':<15} {'£5,100':<15} {'SAVES £1,482':<15}")
-    print(f"{'Treat & Treat 2mg':<30} {'6.5':<15} {'£2,971':<15} {'£6,084':<15} {'SAVES £498':<15}")
-    print(f"{'Biosimilar T&E':<30} {'6.9':<15} {'£1,580':<15} {'£5,009':<15} {'SAVES £1,573':<15}")
-    
-    # Strategic implications
-    print("\n🎯 STRATEGIC IMPLICATIONS")
+    # Resource requirements
+    print("\n🏥 RESOURCE REQUIREMENTS")
     print("-" * 60)
-    print("1. Eylea 8mg is now the CHEAPEST branded option")
-    print("2. Only biosimilars will be cheaper (by just £91/year)")
-    print("3. Complete reversal of previous economic analysis")
-    print("4. No QALY justification needed - 8mg SAVES money")
+    print("• Treat & Extend protocols require full assessment at each visit")
+    print("• Fixed interval protocols allow nurse-led injection visits")
+    print("• Extended intervals reduce visit frequency but not complexity")
+    print("• Monitoring requirements vary by protocol design")
     
-    # Budget impact
-    print("\n💰 NHS BUDGET IMPACT")
+    # Implementation considerations
+    print("\n🔧 IMPLEMENTATION CONSIDERATIONS")
     print("-" * 60)
-    print("If 28,000 patients switch from 2mg to 8mg:")
-    print(f"  • Annual savings: £41.5 million")
-    print(f"  • Per CCG (assuming 200 CCGs): £207,500 saved")
-    print(f"  • Plus capacity savings from fewer visits")
+    print("• Staff training requirements differ by protocol")
+    print("• Scheduling complexity varies with interval flexibility")
+    print("• Patient pathway design depends on monitoring frequency")
+    print("• Clinical decision support needs vary by protocol")
     
-    # Decision matrix
-    print("\n📋 UPDATED DECISION MATRIX")
+    # Data requirements
+    print("\n📊 DATA REQUIREMENTS FOR ANALYSIS")
     print("-" * 60)
-    print("Clinical Need                    Recommended Option           Rationale")
-    print("-" * 80)
-    print("New to treatment                 Eylea 8mg                   Lowest cost + best intervals")
-    print("Stable on 2mg                    Switch to 8mg               Save money + reduce visits")
-    print("Cost minimization only           Biosimilar when available   Cheapest option")
-    print("Extended intervals crucial       Eylea 8mg                   Best interval maintenance")
-    
-    # Timeline considerations
-    print("\n⏰ TIMING CONSIDERATIONS")
-    print("-" * 60)
-    print("• Current window: 8mg priced to gain market share")
-    print("• Biosimilar entry: Will disrupt 2mg market")
-    print("• Strategic opportunity: Lock in 8mg before biosimilar launch")
-    print("• Price risk: 8mg discount may reduce post-biosimilar")
+    print("• Clinical trial data for effectiveness parameters")
+    print("• Real-world evidence for adherence patterns")
+    print("• Local capacity constraints and staffing models")
+    print("• Patient population characteristics")
     
     print("\n" + "="*80)
-    print("CONCLUSION: Eylea 8mg has transformed from premium product to cost-saving option")
+    print("Note: Economic evaluations require simulation with appropriate parameters")
     print("="*80)
 
 if __name__ == "__main__":
-    show_updated_economics()
+    show_structural_comparison()
