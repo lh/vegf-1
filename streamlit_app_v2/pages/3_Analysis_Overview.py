@@ -345,8 +345,11 @@ with tab5:
     st.header("Audit Trail")
     st.markdown("Complete parameter tracking and simulation events.")
     
-    if st.session_state.get('audit_trail'):
-        audit_log = st.session_state.audit_trail
+    # Get audit trail from the loaded simulation data
+    if ('simulation_results' in st.session_state and 
+        st.session_state.simulation_results is not None and
+        'audit_trail' in st.session_state.simulation_results):
+        audit_log = st.session_state.simulation_results['audit_trail']
         
         # Display audit events
         for i, event in enumerate(audit_log):

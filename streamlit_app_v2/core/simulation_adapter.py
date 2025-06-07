@@ -117,6 +117,17 @@ class MemoryAwareSimulationRunner:
             print(f"✅ Saved full protocol specification to {protocol_path}")
         except Exception as e:
             print(f"Warning: Could not save full protocol spec: {e}")
+            
+        # Save audit log if available
+        if hasattr(self, 'v2_runner') and hasattr(self.v2_runner, 'audit_log'):
+            audit_log_path = results.data_path / "audit_log.json"
+            try:
+                import json
+                with open(audit_log_path, 'w') as f:
+                    json.dump(self.v2_runner.audit_log, f, indent=2)
+                print(f"✅ Saved audit log with {len(self.v2_runner.audit_log)} events")
+            except Exception as e:
+                print(f"Warning: Could not save audit log: {e}")
         
         # Cleanup memory after simulation
         self.memory_monitor.cleanup_memory()

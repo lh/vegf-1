@@ -97,8 +97,16 @@ def load_simulation_results(sim_id: str) -> bool:
             'runtime': metadata.get('runtime_seconds', 0)
         }
         
-        # Get audit trail if available
-        audit_trail = metadata.get('audit_trail', [])
+        # Load audit trail from dedicated file
+        audit_log_path = ResultsFactory.DEFAULT_RESULTS_DIR / sim_id / "audit_log.json"
+        if audit_log_path.exists():
+            with open(audit_log_path) as f:
+                audit_trail = json.load(f)
+            logger.info(f"Loaded audit log with {len(audit_trail)} events")
+        else:
+            # No audit trail - this is expected for simulations that don't have one
+            audit_trail = []
+            logger.info(f"No audit log file found for {sim_id}")
         
         # Set session state with all required data
         st.session_state.simulation_results = {
