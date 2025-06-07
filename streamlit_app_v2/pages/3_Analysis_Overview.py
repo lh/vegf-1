@@ -62,7 +62,7 @@ if not st.session_state.get('simulation_results'):
     with col2:
         if ape_button("Run a Simulation", key="nav_run_sim", 
                      icon="play", full_width=True, is_primary_action=True):
-            st.switch_page("pages/2_Run_Simulation.py")
+            st.switch_page("pages/2_Simulations.py")
     st.stop()
 
 results_data = st.session_state.simulation_results
