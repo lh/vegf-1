@@ -231,40 +231,66 @@ with preset_col4:
 col1, col2, col3, col4 = st.columns([1.5, 1, 1, 1.5])
 
 with col1:
+    # Use current simulation parameters if loaded, otherwise use simple values
+    if 'simulation_results' in st.session_state and 'parameters' in st.session_state.simulation_results:
+        engine_value = st.session_state.simulation_results['parameters']['engine']
+        engine_index = 0 if engine_value == "abs" else 1
+    else:
+        engine_index = 0  # Start with ABS
+    
     engine_type = st.selectbox(
         "Engine",
         ["abs", "des"],
-        format_func=lambda x: {"abs": "Agent-Based", "des": "Discrete Event"}[x]
+        format_func=lambda x: {"abs": "Agent-Based", "des": "Discrete Event"}[x],
+        index=engine_index
     )
 
 with col2:
-    # Use preset values if available
-    default_patients = st.session_state.get('preset_patients', 100)
+    # Use current simulation parameters if loaded, otherwise check for preset from buttons
+    if 'simulation_results' in st.session_state and 'parameters' in st.session_state.simulation_results:
+        patients_value = st.session_state.simulation_results['parameters']['n_patients']
+    elif 'preset_patients' in st.session_state:
+        patients_value = st.session_state.preset_patients
+    else:
+        patients_value = 100
+    
     n_patients = st.number_input(
         "Patients",
         min_value=10,
         max_value=50000,
-        value=default_patients,
+        value=patients_value,
         step=10
     )
 
 with col3:
-    # Use preset values if available
-    default_duration = st.session_state.get('preset_duration', 2.0)
+    # Use current simulation parameters if loaded, otherwise check for preset from buttons
+    if 'simulation_results' in st.session_state and 'parameters' in st.session_state.simulation_results:
+        duration_value = st.session_state.simulation_results['parameters']['duration_years']
+    elif 'preset_duration' in st.session_state:
+        duration_value = st.session_state.preset_duration
+    else:
+        duration_value = 2.0
+    
     duration_years = st.number_input(
         "Years",
         min_value=0.5,
         max_value=20.0,
-        value=default_duration,
+        value=duration_value,
         step=0.5
     )
 
 with col4:
+    # Use current simulation seed if loaded
+    if 'simulation_results' in st.session_state and 'parameters' in st.session_state.simulation_results:
+        seed_value = st.session_state.simulation_results['parameters']['seed']
+    else:
+        seed_value = 42
+    
     seed = st.number_input(
         "Random Seed",
         min_value=0,
         max_value=999999,
-        value=42
+        value=seed_value
     )
 
 # Runtime estimate as a simple line

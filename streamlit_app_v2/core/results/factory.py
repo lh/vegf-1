@@ -53,8 +53,25 @@ class ResultsFactory:
         Returns:
             ParquetResults instance
         """
-        # Generate unique simulation ID
-        sim_id = f"sim_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
+        # Generate unique simulation ID with duration encoding
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        
+        # Encode duration as YY-FF format
+        years = int(duration_years)
+        fraction = int((duration_years - years) * 100)
+        duration_code = f"{years:02d}-{fraction:02d}"
+        
+        # Generate memorable name using haikunator
+        try:
+            from haikunator import Haikunator
+            haikunator = Haikunator()
+            # Use seed for reproducibility if needed
+            memorable_name = haikunator.haikunate(token_length=0, delimiter='-')
+        except ImportError:
+            # Fallback to hex if haikunator not installed
+            memorable_name = uuid.uuid4().hex[:8]
+        
+        sim_id = f"sim_{timestamp}_{duration_code}_{memorable_name}"
         
         # Always use Parquet storage for consistency
         storage_type = 'parquet'

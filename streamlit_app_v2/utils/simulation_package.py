@@ -104,7 +104,18 @@ class SimulationPackageManager:
         
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
-            package_path = temp_path / f"APE_simulation_{results.metadata.sim_id}_{datetime.now().strftime('%Y%m%d')}.zip"
+            
+            # Extract duration info from sim_id if available (new format has duration encoding)
+            sim_id_parts = results.metadata.sim_id.split('_')
+            if len(sim_id_parts) >= 4:  # New format: sim_TIMESTAMP_DURATION_NAME
+                duration_code = sim_id_parts[2]  # YY-FF format
+                memorable_name = '_'.join(sim_id_parts[3:])  # Rejoin name parts
+                package_name = f"APE_sim_{sim_id_parts[1]}_{duration_code}_{memorable_name}.zip"
+            else:
+                # Old format fallback
+                package_name = f"APE_simulation_{results.metadata.sim_id}_{datetime.now().strftime('%Y%m%d')}.zip"
+                
+            package_path = temp_path / package_name
             
             # Create package structure
             files = self._prepare_package_files(results, temp_path)
