@@ -289,9 +289,9 @@ def render_recent_simulations():
                     continue
             
             if simulations:
-                # Display as cards
-                for i in range(0, len(simulations), 3):
-                    cols = st.columns(3)
+                # Display as cards - 5 per row
+                for i in range(0, len(simulations), 5):
+                    cols = st.columns(5)
                     for j, col in enumerate(cols):
                         if i + j < len(simulations):
                             sim = simulations[i + j]
