@@ -278,8 +278,6 @@ with col2:
     # Check for preset from buttons FIRST, then fall back to current simulation
     if 'preset_patients' in st.session_state:
         patients_value = st.session_state.preset_patients
-        # Clear the preset after using it
-        del st.session_state.preset_patients
     elif ('simulation_results' in st.session_state and 
           st.session_state.simulation_results is not None and 
           'parameters' in st.session_state.simulation_results):
@@ -287,20 +285,24 @@ with col2:
     else:
         patients_value = 100
     
+    # Force update the widget by changing its key when preset is used
+    widget_key = "n_patients_input"
+    if 'preset_patients' in st.session_state:
+        widget_key = f"n_patients_input_{st.session_state.preset_patients}"
+    
     n_patients = st.number_input(
         "Patients",
         min_value=10,
         max_value=50000,
         value=patients_value,
-        step=10
+        step=10,
+        key=widget_key
     )
 
 with col3:
     # Check for preset from buttons FIRST, then fall back to current simulation
     if 'preset_duration' in st.session_state:
         duration_value = st.session_state.preset_duration
-        # Clear the preset after using it
-        del st.session_state.preset_duration
     elif ('simulation_results' in st.session_state and 
           st.session_state.simulation_results is not None and 
           'parameters' in st.session_state.simulation_results):
@@ -308,12 +310,18 @@ with col3:
     else:
         duration_value = 2.0
     
+    # Force update the widget by changing its key when preset is used
+    widget_key = "duration_years_input"
+    if 'preset_duration' in st.session_state:
+        widget_key = f"duration_years_input_{st.session_state.preset_duration}"
+    
     duration_years = st.number_input(
         "Years",
         min_value=0.5,
         max_value=20.0,
         value=duration_value,
-        step=0.5
+        step=0.5,
+        key=widget_key
     )
 
 with col4:
@@ -442,6 +450,12 @@ if run_clicked:
         
         # Set as active simulation
         set_active_simulation(sim_id)
+        
+        # Clear preset values after successful simulation
+        if 'preset_patients' in st.session_state:
+            del st.session_state.preset_patients
+        if 'preset_duration' in st.session_state:
+            del st.session_state.preset_duration
         
         progress_bar.progress(100, text="Simulation complete!")
         
