@@ -184,36 +184,40 @@ def _calculate_workload_summary_stats(intensity_categories: pd.DataFrame,
 
 
 def _get_category_definitions() -> Dict:
-    """Return definitions for treatment intensity categories."""
+    """Return definitions for treatment intensity categories using semantic colors."""
+    # Import central color system
+    from utils.visualization_modes import get_mode_colors
+    colors = get_mode_colors()
+    
     return {
         'Intensive': {
             'description': 'Very frequent visits (≤6 weeks average)',
-            'color': '#e74c3c',  # Red - high intensity
+            'color': colors.get('intensive_monthly', '#6B9DC7'),  # Semantic color for intensive treatment
             'clinical_note': 'Patients requiring close monitoring'
         },
         'Regular': {
             'description': 'Standard visit frequency (6-12 weeks)',
-            'color': '#f39c12',  # Orange - moderate intensity
+            'color': colors.get('regular_6_8_weeks', '#8FC15C'),  # Semantic color for regular treatment
             'clinical_note': 'Typical maintenance treatment'
         },
         'Extended': {
             'description': 'Extended intervals (12-16 weeks)',
-            'color': '#f1c40f',  # Yellow - lower intensity
+            'color': colors.get('extended_12_weeks', '#6F9649'),  # Semantic color for extended treatment
             'clinical_note': 'Stable patients on extended intervals'
         },
         'Interrupted': {
             'description': 'Treatment gaps >6 months detected',
-            'color': '#9b59b6',  # Purple - interrupted pattern
+            'color': colors.get('extended_gap_6_12', '#E6A04D'),  # Semantic color for gaps
             'clinical_note': 'Patients with treatment interruptions'
         },
         'Sparse': {
             'description': 'Infrequent visits (>16 weeks)',
-            'color': '#3498db',  # Blue - sparse pattern
+            'color': colors.get('long_gap_12_plus', '#D97A6B'),  # Semantic color for long gaps
             'clinical_note': 'Very stable or discontinuing patients'
         },
         'Single Visit': {
             'description': 'Only one visit recorded',
-            'color': '#95a5a6',  # Grey - insufficient data
+            'color': colors.get('no_further_visits', '#A6A6A6'),  # Semantic color for discontinued
             'clinical_note': 'Insufficient data for pattern analysis'
         }
     }
