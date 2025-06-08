@@ -66,7 +66,6 @@ def format_timestamp(timestamp_str: str) -> str:
 
 def render_preset_buttons():
     """Render simulation preset buttons (Small/Medium/Large/XL)"""
-    st.markdown("**Quick Presets**")
     preset_col1, preset_col2, preset_col3, preset_col4 = st.columns(4)
 
     with preset_col1:

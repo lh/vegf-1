@@ -99,9 +99,6 @@ st.header("New")
 protocol_info = st.session_state.current_protocol
 st.caption(f"Protocol: **{protocol_info['name']}** v{protocol_info['version']}")
 
-# Simulation parameters
-st.subheader("Simulation Parameters")
-
 # Preset buttons
 render_preset_buttons()
 
