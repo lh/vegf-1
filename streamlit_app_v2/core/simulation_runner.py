@@ -1,13 +1,14 @@
 """
-Adapter to integrate memory-aware results with existing simulation infrastructure.
+Streamlit simulation runner for APE V2.
 
-This module provides a bridge between the V2 simulation engine and the new
-memory-aware results architecture.
+Provides a clean interface between Streamlit UI and the V2 simulation engine,
+handling progress reporting, timing, and result conversion to Parquet format.
 """
 
 import sys
+import time
 from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, List, Optional
 
 # Add parent to path for imports
 sys.path.append(str(Path(__file__).parent.parent.parent))
@@ -17,15 +18,16 @@ from simulation_v2.protocols.protocol_spec import ProtocolSpecification
 
 from .results.factory import ResultsFactory
 from .results.base import SimulationResults
-from .monitoring.memory import MemoryMonitor, monitor_function
 
 
-class MemoryAwareSimulationRunner:
+class SimulationRunner:
     """
-    Simulation runner with memory-aware results handling.
+    Simulation runner that bridges Streamlit UI with V2 engine.
     
-    This wraps the V2 simulation runner and automatically selects
-    appropriate storage based on simulation size.
+    Handles:
+    - Running simulations with progress feedback
+    - Converting results to Parquet format
+    - Tracking runtime and audit logs
     """
     
     def __init__(self, protocol_spec: ProtocolSpecification):
@@ -37,47 +39,37 @@ class MemoryAwareSimulationRunner:
         """
         self.v2_runner = V2SimulationRunner(protocol_spec)
         self.protocol_spec = protocol_spec
-        self.memory_monitor = MemoryMonitor()
         
-    @monitor_function
     def run(
         self,
         engine_type: str,
         n_patients: int,
         duration_years: float,
         seed: int,
-        force_parquet: bool = False,
         show_progress: bool = True
     ) -> SimulationResults:
         """
-        Run simulation with memory-aware results handling.
+        Run simulation and return results in Parquet format.
         
         Args:
             engine_type: 'abs' or 'des'
             n_patients: Number of patients to simulate
             duration_years: Duration in years
             seed: Random seed
-            force_parquet: Force Parquet storage even for small simulations
             show_progress: Show progress indicators
             
         Returns:
-            Memory-aware SimulationResults instance
+            ParquetResults instance with simulation data
         """
-        # Check memory before starting
-        suggestion = self.memory_monitor.suggest_memory_optimization(
-            n_patients, duration_years
-        )
-        if suggestion and show_progress:
-            print(suggestion)
-            
-        # Run V2 simulation
+        # Show start message
         if show_progress:
             print(f"🚀 Starting {engine_type.upper()} simulation: "
-                  f"{n_patients} patients × {duration_years} years")
+                  f"{n_patients:,} patients × {duration_years} years")
             
-        import time
+        # Track runtime
         start_time = time.time()
         
+        # Run V2 simulation
         raw_results = self.v2_runner.run(
             engine_type=engine_type,
             n_patients=n_patients,
@@ -90,7 +82,7 @@ class MemoryAwareSimulationRunner:
         if show_progress:
             print(f"✅ Simulation completed in {runtime_seconds:.1f} seconds")
             
-        # Create memory-aware results
+        # Convert to Parquet results
         results = ResultsFactory.create_results(
             raw_results=raw_results,
             protocol_name=self.protocol_spec.name,
@@ -99,12 +91,8 @@ class MemoryAwareSimulationRunner:
             n_patients=n_patients,
             duration_years=duration_years,
             seed=seed,
-            runtime_seconds=runtime_seconds,
-            force_parquet=force_parquet
+            runtime_seconds=runtime_seconds
         )
-        
-        # Cleanup memory after simulation
-        self.memory_monitor.cleanup_memory()
         
         return results
         
@@ -119,7 +107,7 @@ def upgrade_existing_results(
     protocol_info: Dict[str, Any]
 ) -> SimulationResults:
     """
-    Upgrade existing session state results to memory-aware format.
+    Upgrade existing session state results to Parquet format.
     
     This is used for backward compatibility with results already
     in Streamlit session state.
@@ -129,7 +117,7 @@ def upgrade_existing_results(
         protocol_info: Protocol information dictionary
         
     Returns:
-        Memory-aware SimulationResults instance
+        ParquetResults instance
     """
     raw_results = existing_results['results']
     params = existing_results['parameters']
@@ -142,6 +130,5 @@ def upgrade_existing_results(
         n_patients=params['n_patients'],
         duration_years=params['duration_years'],
         seed=params['seed'],
-        runtime_seconds=existing_results.get('runtime', 0.0),
-        force_parquet=False  # Keep in memory for existing results
+        runtime_seconds=existing_results.get('runtime', 0.0)
     )

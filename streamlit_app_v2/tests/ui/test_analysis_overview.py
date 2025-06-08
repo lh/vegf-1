@@ -11,7 +11,7 @@ import numpy as np
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
-from core.simulation_adapter import MemoryAwareSimulationRunner
+from core.simulation_runner import SimulationRunner
 
 
 class TestAnalysisOverview:
@@ -25,13 +25,12 @@ class TestAnalysisOverview:
     def test_analysis_overview_with_parquet(self, protocol_spec):
         """Test that Analysis Overview works with Parquet storage."""
         # Run simulation that uses Parquet
-        runner = MemoryAwareSimulationRunner(protocol_spec)
+        runner = SimulationRunner(protocol_spec)
         results = runner.run(
             engine_type="abs",
             n_patients=100,
             duration_years=1.0,
             seed=42,
-            force_parquet=True,
             show_progress=False
         )
         
@@ -70,10 +69,10 @@ class TestAnalysisOverview:
         vision_changes = [f - b for b, f in zip(baseline_visions, final_visions)]
         assert len(vision_changes) == len(baseline_visions)
         
-    def test_analysis_overview_with_memory(self, protocol_spec):
-        """Test that Analysis Overview still works with in-memory storage."""
-        # Run small simulation that uses in-memory
-        runner = MemoryAwareSimulationRunner(protocol_spec)
+    def test_analysis_overview_with_small_simulation(self, protocol_spec):
+        """Test that Analysis Overview works with small simulations."""
+        # Run small simulation
+        runner = SimulationRunner(protocol_spec)
         results = runner.run(
             engine_type="abs",
             n_patients=50,
@@ -82,11 +81,10 @@ class TestAnalysisOverview:
             show_progress=False
         )
         
-        # With in-memory, patient_histories should be available
-        if hasattr(results, 'patient_histories'):
-            assert len(results.patient_histories) == 50
+        # Should use Parquet storage
+        assert hasattr(results, 'data_path')
             
-        # But the same methods should also work
+        # Test the same methods work
         stats = results.get_summary_statistics()
         assert stats['patient_count'] == 50
         

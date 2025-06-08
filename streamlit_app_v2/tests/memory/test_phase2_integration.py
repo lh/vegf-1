@@ -23,6 +23,7 @@ class TestPhase2Integration:
     
     def test_parquet_writer_with_progress(self):
         """Test ParquetWriter with progress tracking."""
+        # Use the centralized mock function
         raw_results = create_mock_v2_results(100)
         
         progress_history = []
@@ -46,6 +47,7 @@ class TestPhase2Integration:
             
     def test_parquet_reader_lazy_iteration(self):
         """Test ParquetReader lazy iteration."""
+        # Use the centralized mock function
         raw_results = create_mock_v2_results(50)
         
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -113,10 +115,9 @@ class TestPhase2Integration:
                 protocol_version="1.0",
                 engine_type="abs",
                 n_patients=5000,
-                duration_years=5.0,  # 25K patient-years - should use Parquet
+                duration_years=5.0,  # 25K patient-years
                 seed=42,
-                runtime_seconds=10.0,
-                force_parquet=False
+                runtime_seconds=10.0
             )
             
             # Should be Parquet
@@ -149,12 +150,12 @@ class TestPhase2Integration:
             reader = ParquetReader(Path(tmpdir))
             
             # Get specific patient
-            patient = reader.get_patient_by_id('patient_0')
+            patient = reader.get_patient_by_id('P0000')
             assert patient is not None
-            assert patient['patient_id'] == 'patient_0'
+            assert patient['patient_id'] == 'P0000'
             
             # Get patient visits
-            visits = reader.get_patient_visits('patient_0')
+            visits = reader.get_patient_visits('P0000')
             assert len(visits) == 12  # Our mock creates 12 visits
             
     def test_parquet_results_constant_memory(self):
@@ -172,8 +173,7 @@ class TestPhase2Integration:
                 n_patients=1000,
                 duration_years=5.0,
                 seed=42,
-                runtime_seconds=10.0,
-                force_parquet=True
+                runtime_seconds=10.0
             )
             
             # Memory usage should be constant (~1MB) regardless of data size

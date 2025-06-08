@@ -10,22 +10,35 @@ import os
 import gc
 from typing import Dict, Tuple, Optional
 import streamlit as st
+import sys
+from pathlib import Path
+
+# Add parent for imports
+sys.path.append(str(Path(__file__).parent.parent.parent))
+from utils.environment import is_streamlit_cloud, get_memory_limit_mb
 
 
 class MemoryMonitor:
     """Monitor and report memory usage."""
     
-    # Memory thresholds (MB)
-    WARNING_THRESHOLD_MB = 500
-    CRITICAL_THRESHOLD_MB = 700
-    
-    # Streamlit Cloud free tier limit
-    STREAMLIT_CLOUD_LIMIT_MB = 1024
-    STREAMLIT_CLOUD_USABLE_MB = 700  # Conservative estimate
-    
     def __init__(self):
         """Initialize memory monitor."""
         self.process = psutil.Process(os.getpid())
+        
+        # Set thresholds based on environment
+        if is_streamlit_cloud():
+            # Streamlit Cloud thresholds
+            self.WARNING_THRESHOLD_MB = 500
+            self.CRITICAL_THRESHOLD_MB = 700
+            self.LIMIT_MB = 1024
+            self.USABLE_MB = 700  # Conservative estimate
+        else:
+            # Local development - more generous thresholds
+            total_mb = get_memory_limit_mb()
+            self.WARNING_THRESHOLD_MB = int(total_mb * 0.6)
+            self.CRITICAL_THRESHOLD_MB = int(total_mb * 0.8)
+            self.LIMIT_MB = total_mb
+            self.USABLE_MB = int(total_mb * 0.9)
         
     def get_memory_info(self) -> Dict[str, float]:
         """
@@ -88,8 +101,8 @@ class MemoryMonitor:
                 st.success(message)
                 
             # Progress bar
-            progress = min(info['used_mb'] / self.STREAMLIT_CLOUD_USABLE_MB, 1.0)
-            st.progress(progress, text=f"{info['used_mb']:.0f} / {self.STREAMLIT_CLOUD_USABLE_MB:.0f} MB")
+            progress = min(info['used_mb'] / self.USABLE_MB, 1.0)
+            st.progress(progress, text=f"{info['used_mb']:.0f} / {self.USABLE_MB:.0f} MB")
             
             # Details in expander
             with st.expander("Details"):
@@ -97,43 +110,50 @@ class MemoryMonitor:
                 st.text(f"Available: {info['available_mb']:.1f} MB")
                 st.text(f"System: {info['percent']:.1f}% used")
                 
-    def suggest_memory_optimization(self, n_patients: int, duration_years: float) -> Optional[str]:
+    def check_simulation_feasibility(self, n_patients: int, duration_years: float) -> Tuple[bool, Optional[str]]:
         """
-        Suggest memory optimization based on current usage and planned simulation.
+        Check if a simulation is feasible within memory constraints.
         
         Args:
             n_patients: Planned number of patients
             duration_years: Planned simulation duration
             
         Returns:
-            Suggestion message or None if no optimization needed
+            Tuple of (is_feasible, warning_message)
         """
         info = self.get_memory_info()
         current_mb = info['used_mb']
         
-        # Estimate additional memory needed
-        from ..results.factory import ResultsFactory
-        estimate = ResultsFactory.estimate_memory_usage(n_patients, duration_years)
-        total_expected_mb = current_mb + estimate['estimated_mb']
+        # Estimate additional memory needed during simulation
+        # Note: Parquet storage keeps memory low, but simulation itself needs memory
+        visits_per_patient = duration_years * 12  # ~1 visit per month
+        # Rough estimate: 1KB per patient + 200 bytes per visit during processing
+        processing_mb = (n_patients * (1024 + visits_per_patient * 200)) / (1024 * 1024)
+        processing_mb *= 1.5  # Safety factor
+        
+        total_expected_mb = current_mb + processing_mb
         
         if total_expected_mb > self.CRITICAL_THRESHOLD_MB:
-            return (
-                f"⚠️ **Memory Warning**\n\n"
+            suggestion = (
+                f"⚠️ **Memory Constraint**\n\n"
                 f"Current usage: {current_mb:.0f}MB\n"
-                f"Estimated need: +{estimate['estimated_mb']:.0f}MB\n"
-                f"Total: {total_expected_mb:.0f}MB\n\n"
-                f"**Recommendations:**\n"
-                f"• Reduce patients to {int(n_patients * 0.5)}\n"
-                f"• Or reduce duration to {duration_years * 0.5:.1f} years\n"
-                f"• Or use Parquet storage (automatically selected for large simulations)"
+                f"Processing needs: ~{processing_mb:.0f}MB\n"
+                f"Total: {total_expected_mb:.0f}MB (exceeds {self.CRITICAL_THRESHOLD_MB}MB limit)\n\n"
+                f"**Suggestions:**\n"
+                f"• Reduce to {int(n_patients * 0.7):,} patients\n"
+                f"• Or reduce to {max(1, int(duration_years * 0.7)):.1f} years"
             )
+            return (False, suggestion)
+            
         elif total_expected_mb > self.WARNING_THRESHOLD_MB:
-            return (
-                f"💡 **Memory Notice**\n\n"
-                f"Expected total usage: {total_expected_mb:.0f}MB\n"
-                f"This simulation will use Parquet storage to stay within limits."
+            warning = (
+                f"💡 **Memory Notice**\n"
+                f"Expected usage: ~{total_expected_mb:.0f}MB\n"
+                f"Approaching memory limit of {self.USABLE_MB}MB"
             )
-        return None
+            return (True, warning)
+            
+        return (True, None)
         
     def cleanup_memory(self):
         """

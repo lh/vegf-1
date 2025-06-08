@@ -11,13 +11,14 @@ from datetime import datetime
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
-from core.simulation_adapter import MemoryAwareSimulationRunner
+from core.simulation_runner import SimulationRunner
 from core.monitoring.memory import MemoryMonitor
 from utils.state_helpers import (
     add_simulation_to_registry, save_protocol_spec,
     set_active_simulation, list_simulation_summaries,
     get_active_simulation
 )
+from utils.environment import should_check_memory_limits, is_streamlit_cloud
 
 st.set_page_config(
     page_title="Simulations", 
@@ -37,6 +38,26 @@ from utils.carbon_button_helpers import (
 monitor = MemoryMonitor()
 monitor.display_in_sidebar()
 
+# Memory limit toggle in sidebar (only show if running locally)
+with st.sidebar:
+    st.markdown("### ⚙️ Settings")
+    
+    # Only show toggle if running locally
+    if not is_streamlit_cloud():
+        st.session_state['check_memory_limits'] = st.checkbox(
+            "Check memory limits",
+            value=st.session_state.get('check_memory_limits', False),
+            help="Enable memory limit checking (automatically enabled on Streamlit Cloud)"
+        )
+    else:
+        # Always check on Streamlit Cloud
+        st.session_state['check_memory_limits'] = True
+        st.info("📊 Memory limits enforced (Streamlit Cloud)")
+    
+    # Debug info in expander
+    with st.expander("Environment Info", expanded=False):
+        st.text(f"Environment: {'☁️ Cloud' if is_streamlit_cloud() else '💻 Local'}")
+        st.text(f"Memory checking: {'✅ On' if st.session_state.get('check_memory_limits', should_check_memory_limits()) else '❌ Off'}")
 
 # Top navigation
 col1, col2, col3 = st.columns([1, 6, 1])
@@ -224,28 +245,33 @@ if run_clicked:
         progress_bar.progress(10, text="Loading protocol specification...")
         spec = ProtocolSpecification.from_yaml(Path(protocol_info['path']))
         
-        # Create memory-aware runner
-        progress_bar.progress(20, text="Creating memory-aware simulation runner...")
-        runner = MemoryAwareSimulationRunner(spec)
+        # Create simulation runner
+        progress_bar.progress(20, text="Creating simulation runner...")
+        runner = SimulationRunner(spec)
         
-        # Check memory before starting
-        monitor = MemoryMonitor()
-        suggestion = monitor.suggest_memory_optimization(n_patients, duration_years)
-        if suggestion:
-            with st.expander("⚠️ Memory Notice", expanded=True):
-                st.warning(suggestion)
+        # Check memory feasibility (optional)
+        if st.session_state.get('check_memory_limits', True):
+            monitor = MemoryMonitor()
+            is_feasible, warning = monitor.check_simulation_feasibility(n_patients, duration_years)
+            if warning:
+                with st.expander("💾 Memory Check", expanded=not is_feasible):
+                    if is_feasible:
+                        st.warning(warning)
+                    else:
+                        st.error(warning)
+                        if not st.checkbox("Run anyway (may cause errors)"):
+                            st.stop()
         
         # Run simulation
         progress_bar.progress(30, text=f"Running {engine_type.upper()} simulation...")
         start_time = datetime.now()
         
-        # Run with memory-aware storage
+        # Run simulation (always saves to Parquet)
         results = runner.run(
             engine_type=engine_type,
             n_patients=n_patients,
             duration_years=duration_years,
             seed=seed,
-            force_parquet=False,
             show_progress=False  # We have our own progress bar
         )
         

@@ -12,7 +12,7 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
-from core.simulation_adapter import MemoryAwareSimulationRunner
+from core.simulation_runner import SimulationRunner
 from core.results import ResultsFactory
 from core.results.parquet import ParquetResults
 
@@ -31,7 +31,7 @@ class TestRealSimulation:
         spec = ProtocolSpecification.from_yaml(protocol_path)
         
         # Run small simulation
-        runner = MemoryAwareSimulationRunner(spec)
+        runner = SimulationRunner(spec)
         results = runner.run(
             engine_type="abs",
             n_patients=50,
@@ -40,8 +40,8 @@ class TestRealSimulation:
             show_progress=False
         )
         
-        # Should use in-memory storage
-        assert results.metadata.storage_type == "memory"
+        # Should use Parquet storage
+        assert results.metadata.storage_type == "parquet"
         
         # Verify we can access data
         assert results.get_patient_count() == 50
@@ -69,7 +69,7 @@ class TestRealSimulation:
             ResultsFactory.DEFAULT_RESULTS_DIR = Path(tmpdir)
             
             # Run large simulation (15K patient-years)
-            runner = MemoryAwareSimulationRunner(spec)
+            runner = SimulationRunner(spec)
             results = runner.run(
                 engine_type="abs",
                 n_patients=10000,
@@ -143,13 +143,12 @@ class TestRealSimulation:
             ResultsFactory.DEFAULT_RESULTS_DIR = Path(tmpdir)
             
             # Run simulation that should use Parquet
-            runner = MemoryAwareSimulationRunner(spec)
+            runner = SimulationRunner(spec)
             results = runner.run(
                 engine_type="abs",
                 n_patients=5000,
                 duration_years=3.0,
                 seed=42,
-                force_parquet=True,
                 show_progress=False
             )
             
