@@ -103,6 +103,32 @@ class MemoryAwareSimulationRunner:
             force_parquet=force_parquet
         )
         
+        # Save the full protocol specification with the results
+        protocol_path = results.data_path / "protocol.yaml"
+        try:
+            import yaml
+            
+            # Use the built-in to_yaml_dict method
+            protocol_dict = self.protocol_spec.to_yaml_dict()
+            
+            with open(protocol_path, 'w') as f:
+                yaml.dump(protocol_dict, f, default_flow_style=False, sort_keys=False)
+                    
+            print(f"✅ Saved full protocol specification to {protocol_path}")
+        except Exception as e:
+            print(f"Warning: Could not save full protocol spec: {e}")
+            
+        # Save audit log if available
+        if hasattr(self, 'v2_runner') and hasattr(self.v2_runner, 'audit_log'):
+            audit_log_path = results.data_path / "audit_log.json"
+            try:
+                import json
+                with open(audit_log_path, 'w') as f:
+                    json.dump(self.v2_runner.audit_log, f, indent=2)
+                print(f"✅ Saved audit log with {len(self.v2_runner.audit_log)} events")
+            except Exception as e:
+                print(f"Warning: Could not save audit log: {e}")
+        
         # Cleanup memory after simulation
         self.memory_monitor.cleanup_memory()
         

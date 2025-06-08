@@ -40,8 +40,8 @@ class TestRealSimulation:
             show_progress=False
         )
         
-        # Should use in-memory storage
-        assert results.metadata.storage_type == "memory"
+        # Should use parquet storage (all simulations now use Parquet)
+        assert results.metadata.storage_type == "parquet"
         
         # Verify we can access data
         assert results.get_patient_count() == 50

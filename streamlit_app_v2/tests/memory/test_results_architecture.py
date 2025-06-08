@@ -11,7 +11,7 @@ import sys
 sys.path.append(str(Path(__file__).parent.parent.parent))
 sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
-from core.results import SimulationResults, InMemoryResults, ParquetResults, ResultsFactory
+from core.results import SimulationResults, ParquetResults, ResultsFactory
 from core.results.base import SimulationMetadata
 from simulation_v2.engines.abs_engine import SimulationResults as V2Results
 from datetime import datetime
@@ -70,69 +70,31 @@ def create_mock_v2_results(n_patients: int = 10):
 class TestResultsArchitecture:
     """Test the memory-aware results architecture."""
     
-    def test_in_memory_results(self):
-        """Test InMemoryResults implementation."""
-        # Create metadata
-        metadata = SimulationMetadata(
-            sim_id="test_001",
-            protocol_name="Test Protocol",
-            protocol_version="1.0",
-            engine_type="abs",
-            n_patients=10,
-            duration_years=1.0,
-            seed=42,
-            timestamp=datetime.now(),
-            runtime_seconds=1.5,
-            storage_type="memory"
-        )
-        
-        # Create mock results
-        raw_results = create_mock_v2_results(10)
-        
-        # Create InMemoryResults
-        results = InMemoryResults(metadata, raw_results)
-        
-        # Test basic methods
-        assert results.get_patient_count() == 10
-        assert results.get_total_injections() == 100
-        assert results.get_discontinuation_rate() == 0.1
-        
-        # Test final vision stats
-        mean, std = results.get_final_vision_stats()
-        assert mean == 65.0
-        assert std == 5.0
-        
-        # Test patient iteration
-        all_patients = []
-        for batch in results.iterate_patients(batch_size=3):
-            all_patients.extend(batch)
-        assert len(all_patients) == 10
-        
-        # Test specific patient access
-        patient = results.get_patient("patient_0")
-        assert patient is not None
-        assert patient['patient_id'] == "patient_0"
-        assert len(patient['visits']) == 12
+    # Removed test_in_memory_results since we're using Parquet-only storage now
         
     def test_results_factory_small_simulation(self):
-        """Test factory creates InMemoryResults for small simulations."""
+        """Test factory creates ParquetResults for small simulations."""
         raw_results = create_mock_v2_results(100)
         
-        results = ResultsFactory.create_results(
-            raw_results=raw_results,
-            protocol_name="Test",
-            protocol_version="1.0",
-            engine_type="abs",
-            n_patients=100,
-            duration_years=1.0,
-            seed=42,
-            runtime_seconds=1.0,
-            force_parquet=False
-        )
-        
-        # Should be InMemoryResults for small simulation
-        assert isinstance(results, InMemoryResults)
-        assert results.metadata.storage_type == "memory"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Override default directory
+            ResultsFactory.DEFAULT_RESULTS_DIR = Path(tmpdir)
+            
+            results = ResultsFactory.create_results(
+                raw_results=raw_results,
+                protocol_name="Test",
+                protocol_version="1.0",
+                engine_type="abs",
+                n_patients=100,
+                duration_years=1.0,
+                seed=42,
+                runtime_seconds=1.0,
+                force_parquet=False
+            )
+            
+            # Should be ParquetResults even for small simulation
+            assert isinstance(results, ParquetResults)
+            assert results.metadata.storage_type == "parquet"
         
     def test_results_factory_large_simulation(self):
         """Test factory creates ParquetResults for large simulations."""
@@ -184,43 +146,46 @@ class TestResultsArchitecture:
         """Test memory usage estimation."""
         estimates = ResultsFactory.estimate_memory_usage(1000, 5.0)
         
-        assert 'estimated_mb' in estimates
+        assert 'estimated_memory_mb' in estimates
+        assert 'estimated_disk_mb' in estimates
         assert 'patient_years' in estimates
-        assert 'recommended_storage' in estimates
+        assert 'storage_type' in estimates
         assert estimates['patient_years'] == 5000
+        assert estimates['storage_type'] == 'parquet'
         
-        # Large simulation should recommend Parquet
+        # Check warning flag for large simulations
         large_estimates = ResultsFactory.estimate_memory_usage(10000, 5.0)
-        assert large_estimates['recommended_storage'] == 'parquet'
+        assert large_estimates['storage_type'] == 'parquet'
+        assert 'warning' in large_estimates
         
     def test_save_and_load(self):
         """Test saving and loading results."""
-        metadata = SimulationMetadata(
-            sim_id="test_save",
-            protocol_name="Test Protocol",
-            protocol_version="1.0",
-            engine_type="abs",
-            n_patients=10,
-            duration_years=1.0,
-            seed=42,
-            timestamp=datetime.now(),
-            runtime_seconds=1.5,
-            storage_type="memory"
-        )
-        
         raw_results = create_mock_v2_results(10)
-        results = InMemoryResults(metadata, raw_results)
         
         with tempfile.TemporaryDirectory() as tmpdir:
-            save_path = Path(tmpdir) / "test_results"
+            # Override default directory
+            ResultsFactory.DEFAULT_RESULTS_DIR = Path(tmpdir)
             
-            # Save
-            results.save(save_path)
+            # Create results (will be saved automatically)
+            results = ResultsFactory.create_results(
+                raw_results=raw_results,
+                protocol_name="Test Protocol",
+                protocol_version="1.0",
+                engine_type="abs",
+                n_patients=10,
+                duration_years=1.0,
+                seed=42,
+                runtime_seconds=1.5
+            )
+            
+            # Get the sim_id for loading
+            sim_id = results.metadata.sim_id
+            save_path = Path(tmpdir) / sim_id
             
             # Load
             loaded = ResultsFactory.load_results(save_path)
             
             # Verify
-            assert isinstance(loaded, InMemoryResults)
+            assert isinstance(loaded, ParquetResults)
             assert loaded.get_patient_count() == 10
-            assert loaded.metadata.sim_id == "test_save"
+            assert loaded.metadata.sim_id == sim_id

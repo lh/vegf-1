@@ -138,6 +138,46 @@ class InMemoryResults(SimulationResults):
                 
         return pd.DataFrame(records)
         
+    def get_visits_df(self) -> pd.DataFrame:
+        """Get all visits as DataFrame with patient_id, time_days, and vision."""
+        records = []
+        for patient_id, patient in self.raw_results.patient_histories.items():
+            for i, visit in enumerate(patient.visit_history):
+                # Extract time in days
+                if 'time' in visit:
+                    time_days = visit['time'] * (365.25 / 12)  # Convert months to days
+                elif 'date' in visit and hasattr(visit['date'], 'days'):
+                    time_days = visit['date'].days
+                else:
+                    # Fallback: assume monthly visits
+                    time_days = i * 30
+                    
+                record = {
+                    'patient_id': patient_id,
+                    'time_days': time_days,
+                    'vision': visit['vision']
+                }
+                
+                # Add discontinuation info if present
+                if 'is_discontinuation_visit' in visit:
+                    record['is_discontinuation_visit'] = visit['is_discontinuation_visit']
+                else:
+                    record['is_discontinuation_visit'] = False
+                    
+                if 'discontinuation_reason' in visit:
+                    record['discontinuation_reason'] = visit['discontinuation_reason']
+                else:
+                    record['discontinuation_reason'] = None
+                    
+                if 'is_retreatment_visit' in visit:
+                    record['is_retreatment_visit'] = visit['is_retreatment_visit']
+                else:
+                    record['is_retreatment_visit'] = False
+                    
+                records.append(record)
+                
+        return pd.DataFrame(records)
+        
     def get_treatment_intervals_df(self) -> pd.DataFrame:
         """Get treatment intervals as DataFrame - VECTORIZED."""
         # First collect all visits into a list

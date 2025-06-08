@@ -11,6 +11,9 @@ pyarrow>=12.0.0  # For Parquet support
 # UI Components
 streamlit-carbon-button>=1.0.0  # Carbon Design System buttons
 
+# Naming and identification
+haikunator>=2.1.0  # For memorable simulation names
+
 # Testing and monitoring
 pytest>=7.4.0
 pytest-cov>=4.1.0

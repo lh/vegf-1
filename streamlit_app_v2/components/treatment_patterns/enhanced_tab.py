@@ -321,7 +321,7 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                 all_intervals = display_df['interval_days'].values
                 
                 # Visit intervals chart
-                spec = protocol['spec']
+                spec = protocol['spec']  # This MUST exist - fail fast if missing
                 
                 chart = (ChartBuilder('Distribution of Visit Intervals')
                         .with_labels(xlabel='Interval Between Visits (days)', ylabel='Frequency')

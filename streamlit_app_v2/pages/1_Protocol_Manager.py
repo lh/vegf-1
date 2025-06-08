@@ -255,8 +255,8 @@ with col1:
 
 with col2:
     st.subheader(" ")  # Invisible subheader for alignment
-    # Single Manage button for upload/download
-    if ape_button("Manage", key="manage_btn", icon="settings", full_width=True):
+    # Single Manage button for upload/download (using save/floppy disk icon)
+    if ape_button("Manage", key="manage_btn", icon="save", full_width=True):
         st.session_state.show_manage = not st.session_state.get('show_manage', False)
     
     if st.session_state.get('show_manage', False):
@@ -474,6 +474,11 @@ with col4:
         # For default protocols, just leave an empty space
         st.empty()
 
+# Import simulation package section
+st.markdown("---")
+# Import functionality removed - now in Simulations page
+st.markdown("---")
+
 # Load selected protocol
 try:
     spec = ProtocolSpecification.from_yaml(selected_file)
@@ -508,7 +513,7 @@ try:
         if ape_button("Next: Run Simulation", key="main_sim_btn",
                      icon="play", full_width=True,
                      is_primary_action=True):
-            st.switch_page("pages/2_Run_Simulation.py")
+            st.switch_page("pages/2_Simulations.py")
     
     # Protocol parameters tabs
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
