@@ -74,7 +74,6 @@ with col1:
         st.switch_page("APE.py")
 with col2:
     st.title("Simulations")
-    st.markdown("Run new simulations and manage existing ones.")
 with col3:
     # Display ape logo - closed eyes if simulation is running
     if st.session_state.get('simulation_running', False):
