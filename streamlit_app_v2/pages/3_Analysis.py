@@ -489,7 +489,6 @@ with tab5:
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("#### Distribution of Treatment Intervals")
         if len(transitions_df) > 0:
             interval_fig = create_interval_distribution_chart(transitions_df)
             # Apply export config
@@ -500,7 +499,6 @@ with tab5:
             st.info("No interval data available yet - patterns will appear as the simulation progresses")
     
     with col2:
-        st.markdown("#### Patient Gap Analysis")
         if len(visits_df) > 0:
             gap_fig = create_gap_analysis_chart_tufte(visits_df)
             # Apply export config

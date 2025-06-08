@@ -113,7 +113,7 @@ def create_gap_analysis_chart_tufte(visits_df):
     
     # Tufte-style clean layout
     fig.update_layout(
-        title=None,  # Title in text above instead
+        title="Patient Gap Analysis",
         xaxis=dict(
             title="Number of Patients",
             showgrid=False,
