@@ -13,6 +13,56 @@ from core.results.factory import ResultsFactory
 from utils.carbon_button_helpers import ape_button
 from utils.simulation_loader import load_simulation_results
 
+try:
+    import pendulum
+    HAS_PENDULUM = True
+except ImportError:
+    HAS_PENDULUM = False
+
+
+def format_timestamp(timestamp_str: str) -> str:
+    """
+    Format a timestamp string into a human-friendly format.
+    
+    Examples:
+        "2025-06-07T23:20:49" -> "2 hours ago"
+        "2025-06-07T23:20:49" -> "Yesterday at 11:20 PM"
+        "2025-05-07T23:20:49" -> "May 7 at 11:20 PM"
+    """
+    if not timestamp_str or timestamp_str == 'Unknown':
+        return 'Unknown'
+    
+    try:
+        if HAS_PENDULUM:
+            # Parse the timestamp and make it timezone-aware
+            dt = pendulum.parse(timestamp_str)
+            now = pendulum.now()
+            
+            # Use pendulum's human-friendly formatting
+            diff_days = (now - dt).days
+            
+            if diff_days == 0:
+                # Today - show relative time
+                return dt.diff_for_humans()
+            elif diff_days == 1:
+                # Yesterday
+                return f"Yesterday at {dt.format('h:mm A')}"
+            elif diff_days < 7:
+                # This week
+                return dt.format('dddd [at] h:mm A')
+            elif diff_days < 30:
+                # This month
+                return dt.format('MMM D [at] h:mm A')
+            else:
+                # Older
+                return dt.format('MMM D, YYYY')
+        else:
+            # Fallback to basic formatting
+            dt = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+            return dt.strftime('%Y-%m-%d %H:%M')
+    except:
+        return timestamp_str[:19]  # Just return the date part if parsing fails
+
 
 def render_preset_buttons():
     """Render simulation preset buttons (Small/Medium/Large/XL)"""
@@ -278,7 +328,7 @@ def render_simulation_card(sim: Dict[str, Any]):
                 {sim['patients']:,} patients • {sim['duration']} years
             </p>
             <p style="margin: 0; font-size: 0.8rem; color: #999;">
-                {sim['timestamp'][:19]}
+                {format_timestamp(sim['timestamp'])}
             </p>
             {f'<span style="background: #0F62FE; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">IMPORTED</span>' if is_imported else ''}
         </div>

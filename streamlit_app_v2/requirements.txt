@@ -13,6 +13,7 @@ streamlit-carbon-button>=1.0.0  # Carbon Design System buttons
 
 # Naming and identification
 haikunator>=2.1.0  # For memorable simulation names
+pendulum>=3.0.0  # For human-friendly datetime formatting
 
 # Testing and monitoring
 pytest>=7.4.0
