@@ -72,14 +72,15 @@ def create_dual_bar_chart(workload_data: Dict[str, Any], tufte_mode: bool = True
             name="% of Patients",
             x=categories,
             y=patient_percentages,
-            marker_color=[f"rgba{_hex_to_rgba(c, 0.7)}" for c in colors],
+            marker_color=[f"rgba{_hex_to_rgba(c, 0.6)}" for c in colors],
             marker_line=dict(width=0 if tufte_mode else 1),
             text=[f"{p:.1f}%" for p in patient_percentages],
             textposition="outside",
             textfont=dict(size=10),
             hovertemplate="<b>%{x}</b><br>" +
                          "Patient Percentage: %{y:.1f}%<br>" +
-                         "<extra></extra>"
+                         "<extra></extra>",
+            offsetgroup=1
         )
     )
     
@@ -97,8 +98,7 @@ def create_dual_bar_chart(workload_data: Dict[str, Any], tufte_mode: bool = True
             hovertemplate="<b>%{x}</b><br>" +
                          "Visit Percentage: %{y:.1f}%<br>" +
                          "<extra></extra>",
-            xaxis="x",
-            offsetgroup=1
+            offsetgroup=2
         )
     )
     
@@ -110,6 +110,7 @@ def create_dual_bar_chart(workload_data: Dict[str, Any], tufte_mode: bool = True
             title_x=0.02,
             xaxis_title="Treatment Intensity Category",
             yaxis_title="Percentage",
+            barmode='group',  # This ensures bars are grouped side by side
             showlegend=True,
             legend=dict(
                 orientation="h",
@@ -148,6 +149,7 @@ def create_dual_bar_chart(workload_data: Dict[str, Any], tufte_mode: bool = True
         fig.update_layout(
             title="Clinical Workload Attribution Analysis",
             title_font_size=18,
+            barmode='group',  # This ensures bars are grouped side by side
             showlegend=True,
             plot_bgcolor='white',
             font=dict(family='Arial', size=12),
