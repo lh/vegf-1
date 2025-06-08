@@ -1,0 +1,195 @@
+# Eylea 8mg V2 Protocol Specification
+# Compliant with V2 simulation requirements - NO DEFAULTS
+# Based on PULSAR/PHOTON clinical trial data
+
+# Required metadata
+name: "Eylea 8mg Treat and Extend V2"
+version: "1.0.0"
+created_date: "2025-01-06"
+author: "Clinical Economics Integration Team"
+description: "High-dose aflibercept 8mg with extended dosing intervals based on PULSAR/PHOTON trials with NHS economic integration"
+
+# Required protocol parameters (all in days for V2)
+protocol_type: "treat_and_extend"
+min_interval_days: 56      # 8 weeks minimum
+max_interval_days: 112     # 16 weeks year 1, extends to 168 (24 weeks) year 2
+extension_days: 28         # 4 week extensions
+shortening_days: 28        # 4 week shortenings
+
+# Required disease transitions - all states to all states, sum to 1.0
+disease_transitions:
+  NAIVE:
+    NAIVE: 0.00
+    STABLE: 0.40      # 40% achieve stability after loading
+    ACTIVE: 0.50      # 50% remain active
+    HIGHLY_ACTIVE: 0.10
+    
+  STABLE:
+    NAIVE: 0.00
+    STABLE: 0.79      # 79% maintain stability (PULSAR q12 data)
+    ACTIVE: 0.20      # 20% develop activity requiring shortening
+    HIGHLY_ACTIVE: 0.01
+    
+  ACTIVE:
+    NAIVE: 0.00
+    STABLE: 0.25      # Can improve with treatment
+    ACTIVE: 0.65      # Most remain active
+    HIGHLY_ACTIVE: 0.10
+    
+  HIGHLY_ACTIVE:
+    NAIVE: 0.00
+    STABLE: 0.05      # Rare to achieve stability
+    ACTIVE: 0.35      # Can improve to active
+    HIGHLY_ACTIVE: 0.60
+
+# Required vision change model - all scenarios with mean and std
+vision_change_model:
+  naive_treated:
+    mean: 2.2         # Letters gained per month during loading (6.7/3)
+    std: 4.2          # Based on PULSAR SD of 12.6 over 48 weeks
+    
+  naive_untreated:
+    mean: -1.5        # Natural history vision loss
+    std: 2.0
+    
+  stable_treated:
+    mean: 0.1         # Slight gains when stable
+    std: 1.5
+    
+  stable_untreated:
+    mean: -0.5        # Slow decline if untreated
+    std: 1.0
+    
+  active_treated:
+    mean: -0.2        # Small losses despite treatment
+    std: 2.0
+    
+  active_untreated:
+    mean: -2.0        # Significant loss without treatment
+    std: 2.5
+    
+  highly_active_treated:
+    mean: -0.8        # Losses even with treatment
+    std: 3.0
+    
+  highly_active_untreated:
+    mean: -4.0        # Severe vision loss
+    std: 3.5
+
+# Required treatment effect on transitions
+treatment_effect_on_transitions:
+  NAIVE:
+    multipliers:
+      NAIVE: 0.0       # Cannot remain naive if treated
+      STABLE: 1.5      # Treatment increases chance of stability
+      ACTIVE: 0.8      # Reduces chance of activity
+      HIGHLY_ACTIVE: 0.7
+      
+  STABLE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 1.2      # Treatment helps maintain stability
+      ACTIVE: 0.8      # Reduces reactivation
+      HIGHLY_ACTIVE: 0.5
+      
+  ACTIVE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 2.0      # Treatment doubles chance of improvement
+      ACTIVE: 0.9
+      HIGHLY_ACTIVE: 0.6
+      
+  HIGHLY_ACTIVE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 3.0      # Aggressive treatment can improve
+      ACTIVE: 1.5
+      HIGHLY_ACTIVE: 0.7
+
+# Required baseline vision parameters
+baseline_vision:
+  mean: 55           # ETDRS letters (20/80 Snellen)
+  std: 15            # Standard deviation
+  min: 25            # 20/320 (legal blindness threshold)
+  max: 85            # 20/20 (normal vision)
+
+# Required discontinuation rules
+discontinuation_rules:
+  # Planned discontinuation
+  stable_extended_interval:
+    criteria:
+      consecutive_stable_visits: 3
+      minimum_interval_weeks: 16
+      vision_stable_threshold: 2    # Letters variation
+    probability: 0.05              # 5% per eligible visit
+    reason: "stable_disease"
+    
+  # Administrative discontinuation
+  non_compliance:
+    criteria:
+      missed_consecutive_visits: 3
+      months_since_last_visit: 6
+    probability: 0.95              # 95% discontinue if criteria met
+    reason: "lost_to_follow_up"
+    
+  # Clinical discontinuation
+  treatment_failure:
+    criteria:
+      vision_loss_from_baseline: 30
+      visits_on_treatment: 6
+    probability: 0.90              # 90% discontinue if severe loss
+    reason: "inadequate_response"
+    
+  futility:
+    criteria:
+      vision_below_threshold: 35   # Less than 20/200
+      no_improvement_visits: 4
+    probability: 0.80
+    reason: "futility"
+    
+  # Safety discontinuation
+  adverse_event:
+    criteria:
+      severe_ioi: true
+      recurrent_ioi: 2             # Number of episodes
+    probability: 0.50              # 50% discontinue after severe AE
+    reason: "adverse_event"
+
+# Additional parameters for economic integration
+economic_parameters:
+  # Visit compositions for costing
+  visit_types:
+    loading_injection:
+      components: ["drug_administration", "oct_scan", "visual_acuity", "clinical_exam"]
+      staff_time_minutes: 60
+      
+    maintenance_injection:
+      components: ["drug_administration", "oct_scan", "visual_acuity"]
+      staff_time_minutes: 45
+      
+    monitoring_only:
+      components: ["oct_scan", "visual_acuity"]
+      staff_time_minutes: 30
+      
+  # Drug specific parameters
+  drug_parameters:
+    name: "aflibercept_8mg"
+    concentration_mg_ml: 114.3
+    volume_ml: 0.07
+    preparation_time_minutes: 15
+    
+  # Safety monitoring
+  safety_parameters:
+    ioi_rate_clinical_trial: 0.01
+    ioi_rate_real_world: 0.037
+    enhanced_monitoring_days: 4
+
+# Clinical trial validation parameters
+clinical_trial_parameters:
+  source: "PULSAR"
+  loading_injections: 3
+  q12_maintenance_rate: 0.79
+  q16_maintenance_rate: 0.77
+  mean_bcva_gain_week48: 6.7
+  injections_year1_q12: 6.1
+  injections_year1_q16: 5.2

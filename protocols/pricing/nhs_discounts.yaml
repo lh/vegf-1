@@ -1,0 +1,63 @@
+# NHS Discount Rates (Commercial in Confidence)
+# These are estimated discount rates from list prices
+# Actual rates are confidential but these reflect market intelligence
+# Last updated: January 2025
+
+# Discount rates expressed as decimals (0.44 = 44% discount)
+discount_rates:
+  aflibercept:
+    eylea_2mg:
+      discount: 0.44          # 44% off list price
+      net_percentage: 0.56    # Pay 56% of list price
+      source: "Market intelligence"
+      confidence: "High"
+      
+    eylea_8mg:
+      discount: 0.66          # 66% off list price - AGGRESSIVE DISCOUNT
+      net_percentage: 0.34    # Pay only 34% of list price
+      source: "Market intelligence"
+      confidence: "High"
+      note: "Strategic pricing to drive adoption before biosimilar entry"
+      
+  ranibizumab:
+    lucentis:
+      discount: 0.30          # Estimate
+      net_percentage: 0.70
+      confidence: "Medium"
+      
+    biosimilars:
+      discount: 0.52          # Competitive biosimilar pricing
+      net_percentage: 0.48
+      confidence: "Medium"
+      
+  bevacizumab:
+    lytenava:
+      discount: 0.15          # Limited discount on new product
+      net_percentage: 0.85
+      confidence: "Low"
+      
+  faricimab:
+    vabysmo:
+      discount: 0.25          # Estimate for newer product
+      net_percentage: 0.75
+      confidence: "Low"
+      
+  # Future products
+  aflibercept_biosimilar:
+    estimated_discount: 0.43   # Typical biosimilar discount
+    estimated_net_percentage: 0.57
+    note: "Projected - aiming for ~50% of current Eylea 2mg net price"
+
+# Discount trends
+market_dynamics:
+  pre_biosimilar_strategy:
+    description: "Manufacturers increase discounts before biosimilar entry"
+    example: "Eylea 8mg at 66% discount"
+    
+  biosimilar_impact:
+    expected_originator_response: "Increase discounts to 50-60%"
+    expected_biosimilar_position: "Price 20-30% below originator net price"
+    
+  volume_discounts:
+    description: "Additional discounts for high-volume centers"
+    typical_range: "5-10% additional"

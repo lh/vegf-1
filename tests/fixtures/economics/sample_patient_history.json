@@ -1,0 +1,21 @@
+{
+  "patient_id": "test_001",
+  "visits": [
+    {
+      "type": "injection",
+      "time": 0,
+      "drug": "test_drug",
+      "metadata": {
+        "visit_subtype": "injection_loading",
+        "phase": "loading"
+      }
+    },
+    {
+      "type": "monitoring",
+      "time": 1,
+      "metadata": {
+        "components_performed": ["oct_scan", "virtual_review"]
+      }
+    }
+  ]
+}

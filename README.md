@@ -119,6 +119,178 @@ The project includes a comprehensive visualization system that follows Edward Tu
 
 For more details, see the [Visualization README](visualization/README.md).
 
+## V2 Economics Integration
+
+The project includes a powerful economics module that enables comprehensive cost analysis of AMD treatment protocols with minimal code.
+
+### Quick Start with Economics
+
+Add economic analysis to any simulation with just one line:
+
+```python
+from simulation_v2.economics import EconomicsIntegration, CostConfig
+from simulation_v2.protocols.protocol_spec import ProtocolSpecification
+
+# Load configurations
+protocol = ProtocolSpecification.from_yaml("protocols/eylea.yaml")
+costs = CostConfig.from_yaml("costs/nhs_standard.yaml")
+
+# Run simulation with economics - ONE LINE!
+clinical, financial = EconomicsIntegration.run_with_economics(
+    'abs', protocol, costs, n_patients=100, duration_years=2.0, seed=42
+)
+
+# Results immediately available
+print(f"Cost per patient: £{financial.cost_per_patient:,.2f}")
+print(f"Cost per letter gained: £{financial.cost_per_letter_gained:,.2f}")
+print(f"Total injections: {financial.total_injections}")
+```
+
+### Key Features
+
+- **One-Line Integration**: Add economics to any simulation with a single method call
+- **Comprehensive Analysis**: Automatic calculation of cost per patient, per injection, and per letter gained
+- **Flexible Configuration**: YAML-based cost configurations for different healthcare systems
+- **Rich Results**: Detailed breakdowns by treatment phase, visit type, and patient
+- **Multiple Formats**: Export results as JSON, CSV, or Parquet
+- **Protocol Comparison**: Easy comparison of economic outcomes across protocols
+
+### Cost Configuration
+
+Define costs in YAML format:
+
+```yaml
+metadata:
+  name: "NHS Standard Costs 2025"
+  currency: "GBP"
+
+drug_costs:
+  eylea_2mg: 800.00
+  eylea_8mg: 1200.00
+  avastin: 50.00
+
+visit_components:
+  vision_test: 25.00
+  oct_scan: 150.00
+  injection: 100.00
+  virtual_review: 50.00
+
+visit_types:
+  loading_injection_visit:
+    components: [vision_test, oct_scan, injection]
+  maintenance_monitoring_visit:
+    components: [vision_test, oct_scan, virtual_review]
+
+special_events:
+  discontinuation_admin: 50.00
+```
+
+### Protocol Comparison Example
+
+```python
+# Compare multiple protocols economically
+protocols = ['eylea_monthly.yaml', 'eylea_treat_extend.yaml', 'faricimab_q8.yaml']
+costs = CostConfig.from_yaml("costs/nhs_standard.yaml")
+
+results = {}
+for protocol_file in protocols:
+    protocol = ProtocolSpecification.from_yaml(f"protocols/{protocol_file}")
+    
+    clinical, financial = EconomicsIntegration.run_with_economics(
+        'abs', protocol, costs, 100, 2.0
+    )
+    
+    results[protocol.name] = {
+        'cost_per_patient': financial.cost_per_patient,
+        'cost_per_injection': financial.cost_per_injection,
+        'cost_per_letter': financial.cost_per_letter_gained
+    }
+
+# Create comparison visualization
+EconomicsIntegration.create_comparison_chart(results, "output/protocol_comparison.png")
+```
+
+### Advanced Usage
+
+For specialized analysis, create custom cost enhancers:
+
+```python
+# Custom cost enhancement for research studies
+def research_enhancer(visit, patient):
+    standard_enhancer = create_v2_cost_enhancer(cost_config, "eylea")
+    enhanced_visit = standard_enhancer(visit, patient)
+    
+    # Add research-specific costs
+    metadata = enhanced_visit['metadata']
+    if patient.age > 80:
+        metadata['components_performed'].append('extended_consultation')
+    
+    return enhanced_visit
+
+# Use with EconomicsIntegration
+engine = EconomicsIntegration.create_enhanced_engine(
+    'abs', protocol, costs, 100,
+    visit_metadata_enhancer=research_enhancer
+)
+```
+
+### Performance and Scalability
+
+The V2 economics system is optimized for performance:
+
+- **ABS Engine**: Ideal for small-medium cohorts (≤1000 patients)
+- **DES Engine**: Optimized for large cohorts (>1000 patients)
+- **Memory Efficient**: No data duplication between clinical and economic analysis
+- **Parallel Processing**: Built-in support for concurrent simulations
+
+### Documentation
+
+- [V2 Economics Usage Guide](docs/V2_ECONOMICS_USAGE_GUIDE.md) - Comprehensive usage examples
+- [V1 to V2 Migration Guide](docs/V1_TO_V2_MIGRATION_GUIDE.md) - Migrate from legacy economics code
+- [API Reference](simulation_v2/economics/README.md) - Detailed API documentation
+
+### Example Scripts
+
+- `run_v2_simulation_with_economics.py` - Simple economics demonstration
+- `compare_protocols_with_economics.py` - Multi-protocol economic comparison
+- `examples/cost_tracking_example.py` - Advanced cost tracking patterns
+
+### Testing
+
+Run the comprehensive economics test suite:
+
+```bash
+pytest tests/test_v2_economics_integration.py -v
+```
+
+The test suite covers:
+- ✅ Cost configuration loading and validation
+- ✅ Visit enhancement and metadata generation
+- ✅ Financial analysis and calculations
+- ✅ EconomicsIntegration API functionality
+- ✅ Edge cases and error handling
+
+### Migration from V1
+
+If you're using the legacy V1 economics system:
+
+**Before (V1 - Complex)**:
+```python
+# 50+ lines of manual setup, data conversion, and analysis
+from simulation.economics import CostAnalyzer, CostTracker, SimulationCostAdapter
+# ... extensive manual configuration ...
+```
+
+**After (V2 - Simple)**:
+```python
+# 3 lines total with better functionality
+clinical, financial = EconomicsIntegration.run_with_economics(
+    'abs', protocol, costs, 100, 2.0
+)
+```
+
+See the [Migration Guide](docs/V1_TO_V2_MIGRATION_GUIDE.md) for complete migration instructions.
+
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.

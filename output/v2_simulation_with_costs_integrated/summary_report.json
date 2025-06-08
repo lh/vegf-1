@@ -1,0 +1,57 @@
+{
+  "simulation_parameters": {
+    "protocol": "streamlit_app_v2/protocols/eylea.yaml",
+    "protocol_name": "Eylea Treat and Extend",
+    "protocol_version": "1.0",
+    "patients": 100,
+    "duration_years": 2.0,
+    "cost_config": "protocols/cost_configs/nhs_standard_2025.yaml"
+  },
+  "clinical_outcomes": {
+    "abs": {
+      "initial_va": 69.99,
+      "final_va": 68.98162262983509,
+      "va_change": -1.008377370164908,
+      "total_injections": 802,
+      "injections_per_patient": 8.02
+    },
+    "des": {
+      "initial_va": 69.21,
+      "final_va": 70.9,
+      "va_change": 1.690000000000012,
+      "total_injections": 933,
+      "injections_per_patient": 9.33
+    }
+  },
+  "financial_outcomes": {
+    "abs": {
+      "total_patients": 100,
+      "total_cost": 221700.0,
+      "avg_cost_per_patient": 2217.0,
+      "cost_by_type": {
+        "visit": 221700.0
+      },
+      "cost_by_category": {
+        "injection_face_to_face": 126900.0,
+        "injection_loading": 53550.0,
+        "loading_regular_visit": 4275.0,
+        "maintenance_monitoring_visit": 10050.0,
+        "maintenance_regular_visit": 26925.0
+      }
+    },
+    "des": {
+      "total_patients": 100,
+      "total_cost": 251775.0,
+      "avg_cost_per_patient": 2517.75,
+      "cost_by_type": {
+        "visit": 251775.0
+      },
+      "cost_by_category": {
+        "injection_face_to_face": 159525.0,
+        "injection_loading": 50400.0,
+        "loading_regular_visit": 5700.0,
+        "maintenance_regular_visit": 36150.0
+      }
+    }
+  }
+}

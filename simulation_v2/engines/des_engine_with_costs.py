@@ -1,16 +1,14 @@
 """
-Discrete Event Simulation (DES) engine for AMD simulation V2.
+Enhanced DES engine with cost tracking support.
 
-In DES, the simulation advances by processing events in chronological order:
-- Visit events
-- State change events  
-- Decision events
+This extends the DES engine to include cost metadata enhancement
+for economic analysis while maintaining all clinical features.
 """
 
 import heapq
 import random
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple, Callable
+from typing import Dict, List, Optional, Callable, Any
 from dataclasses import dataclass
 from enum import Enum
 
@@ -19,31 +17,15 @@ from simulation_v2.core.disease_model import DiseaseModel
 from simulation_v2.core.protocol import Protocol
 from simulation_v2.engines.abs_engine import SimulationResults
 
-
-class EventType(Enum):
-    """Types of events in the simulation."""
-    VISIT = "visit"
-    ENROLLMENT = "enrollment"
-    
-
-@dataclass
-class Event:
-    """An event in the simulation."""
-    time: datetime
-    patient_id: str
-    event_type: EventType
-    
-    def __lt__(self, other):
-        """Events are ordered by time."""
-        return self.time < other.time
+from .des_engine import DESEngine, Event, EventType
 
 
-class DESEngine:
+class DESEngineWithCosts(DESEngine):
     """
-    Discrete Event Simulation engine.
+    Enhanced DES engine with cost tracking integration.
     
-    The simulation maintains an event queue and processes events
-    in chronological order. This is more efficient for sparse events.
+    Extends DES engine to support cost metadata enhancement
+    while maintaining all clinical features.
     """
     
     def __init__(
@@ -55,39 +37,23 @@ class DESEngine:
         visit_metadata_enhancer: Optional[Callable] = None
     ):
         """
-        Initialize DES engine.
+        Initialize DES engine with cost tracking support.
         
         Args:
             disease_model: Disease state transition model
             protocol: Treatment protocol
             n_patients: Number of patients to simulate
             seed: Random seed for reproducibility
-            visit_metadata_enhancer: Optional function to enhance visit metadata
+            visit_metadata_enhancer: Function to enhance visit metadata for costs
         """
-        self.disease_model = disease_model
-        self.protocol = protocol
-        self.n_patients = n_patients
+        super().__init__(disease_model, protocol, n_patients, seed)
+        
+        # Store the metadata enhancer
         self.visit_metadata_enhancer = visit_metadata_enhancer
-        
-        if seed is not None:
-            random.seed(seed)
-            
-        # Initialize patients
-        self.patients: Dict[str, Patient] = {}
-        self.event_queue: List[Event] = []
-        
-    def _sample_baseline_vision(self) -> int:
-        """
-        Sample baseline vision from realistic distribution.
-        
-        Returns vision in ETDRS letters (0-100).
-        """
-        vision = int(random.gauss(70, 10))
-        return max(20, min(90, vision))
-        
+    
     def run(self, duration_years: float, start_date: Optional[datetime] = None) -> SimulationResults:
         """
-        Run the simulation.
+        Run the simulation with cost tracking.
         
         Args:
             duration_years: Simulation duration in years
@@ -122,13 +88,14 @@ class DESEngine:
             event = heapq.heappop(self.event_queue)
             
             if event.event_type == EventType.ENROLLMENT:
-                # Create patient with optional metadata enhancer
+                # Create patient
                 baseline_vision = self._sample_baseline_vision()
-                patient = Patient(
-                    event.patient_id, 
-                    baseline_vision,
-                    visit_metadata_enhancer=self.visit_metadata_enhancer
-                )
+                patient = Patient(event.patient_id, baseline_vision)
+                
+                # Add metadata enhancer to patient if available
+                if self.visit_metadata_enhancer:
+                    patient.visit_metadata_enhancer = self.visit_metadata_enhancer
+                    
                 self.patients[event.patient_id] = patient
                 
                 # Schedule first visit
@@ -162,12 +129,19 @@ class DESEngine:
                 )
                 new_vision = max(0, min(100, patient.current_vision + vision_change))
                 
-                # Record visit
-                patient.record_visit(
-                    date=event.time,
-                    disease_state=new_state,
-                    treatment_given=should_treat,
-                    vision=new_vision
+                # Prepare visit data for enhancement
+                visit_data = {
+                    'date': event.time,
+                    'disease_state': new_state,
+                    'treatment_given': should_treat,
+                    'vision': new_vision,
+                    'visit_number': len(patient.visit_history) + 1,
+                    'protocol_name': self.protocol.name if hasattr(self.protocol, 'name') else 'Unknown'
+                }
+                
+                # Record visit with enhanced metadata
+                self._record_enhanced_visit(
+                    patient, visit_data, event.time, new_state, should_treat, new_vision
                 )
                 
                 if should_treat:
@@ -200,49 +174,55 @@ class DESEngine:
             final_vision_std=self._calculate_std(final_visions),
             discontinuation_rate=discontinued / len(self.patients) if self.patients else 0
         )
-        
-    def _calculate_vision_change(
-        self, 
-        old_state: 'DiseaseState',
-        new_state: 'DiseaseState',
-        treated: bool
-    ) -> int:
+    
+    def _record_enhanced_visit(
+        self,
+        patient: Patient,
+        visit_data: Dict[str, Any],
+        date: datetime,
+        disease_state: 'DiseaseState',
+        treatment_given: bool,
+        vision: int
+    ) -> None:
         """
-        Simple vision change model (same as ABS for consistency).
-        """
-        from simulation_v2.core.disease_model import DiseaseState
+        Record visit with metadata enhancement support.
         
-        if new_state == DiseaseState.STABLE:
-            return random.randint(0, 2)
-        elif new_state == DiseaseState.ACTIVE:
-            if treated:
-                return random.randint(-1, 1)
-            else:
-                return random.randint(-3, -1)
-        elif new_state == DiseaseState.HIGHLY_ACTIVE:
-            if treated:
-                return random.randint(-2, 0)
-            else:
-                return random.randint(-5, -2)
-        else:  # NAIVE
-            return 0
+        Args:
+            patient: Patient object
+            visit_data: Visit data for enhancement
+            date: Visit date
+            disease_state: Current disease state
+            treatment_given: Whether treatment was given
+            vision: Current vision
+        """
+        # Create base visit record
+        visit_record = {
+            'date': date,
+            'disease_state': disease_state,
+            'treatment_given': treatment_given,
+            'vision': vision
+        }
+        
+        # Apply metadata enhancement if available
+        if self.visit_metadata_enhancer:
+            # Create enhanced record
+            enhanced_record = self.visit_metadata_enhancer(visit_record.copy(), visit_data, patient)
             
-    def _should_discontinue(self, patient: Patient, current_date: datetime) -> bool:
-        """
-        Simple discontinuation logic (same as ABS).
-        """
-        if patient.current_vision < 35:
-            return random.random() < 0.1
-        elif patient.injection_count > 20:
-            return random.random() < 0.02
-        elif len(patient.visit_history) > 36:
-            return random.random() < 0.01
-        return False
-        
-    def _calculate_std(self, values: List[float]) -> float:
-        """Calculate standard deviation."""
-        if len(values) < 2:
-            return 0.0
-        mean = sum(values) / len(values)
-        variance = sum((x - mean) ** 2 for x in values) / (len(values) - 1)
-        return variance ** 0.5
+            # Update patient's visit history with enhanced record
+            patient.visit_history.append(enhanced_record)
+            
+            # Update patient state
+            patient.current_state = disease_state
+            patient.current_vision = vision
+            
+            # Update first visit date if needed
+            if patient.first_visit_date is None:
+                patient.first_visit_date = date
+            
+            # Update injection tracking
+            if treatment_given:
+                patient.injection_count += 1
+                patient._last_injection_date = date
+        else:
+            # Fall back to standard recording
+            patient.record_visit(date, disease_state, treatment_given, vision)

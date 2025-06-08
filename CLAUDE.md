@@ -3,6 +3,13 @@ At the start of each session, use the memory server to retrieve relevant project
 ## 📋 Active Implementation Instructions
 **IMPORTANT**: Check `instructions.md` in the project root for the current implementation plan and follow it exactly.
 
+### Current Active Implementation: Economic Analysis Features
+- **Primary Guide**: `instructions.md` - Economic Analysis Implementation Plan
+- **TDD Approach**: `TDD_ECONOMIC_PLAN.md` - Test specifications
+- **Design Decisions**: `ECONOMIC_ANALYSIS_PLANNING.md` - Architecture choices
+- **Status**: Starting Phase 1 - Core Cost Infrastructure
+- **Next Steps**: Write failing tests for CostConfig class, then implement
+
 Automatically store the following in the memory server:
 1. Key project context (requirements, architecture decisions)
 2. Important code snippets with descriptive tags
