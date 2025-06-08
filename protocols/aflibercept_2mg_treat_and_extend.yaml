@@ -16,97 +16,97 @@ max_interval_days: 140       # 20 weeks
 extension_days: 14           # 2 weeks
 shortening_days: 14          # 2 weeks (symmetric with extension)
 
-# Required disease transitions - PLACEHOLDER VALUES
-# Note: Using standard clinical assumptions
+# Required disease transitions - Based on existing project parameters
+# Note: Using values consistent with other aflibercept protocols in project
 disease_transitions:
   NAIVE:
     NAIVE: 0.00
-    STABLE: 0.40
-    ACTIVE: 0.50
+    STABLE: 0.58      # From project data (30-58% range, using higher for aflibercept)
+    ACTIVE: 0.32      # From project data
     HIGHLY_ACTIVE: 0.10
     
   STABLE:
     NAIVE: 0.00
-    STABLE: 0.70
-    ACTIVE: 0.25
+    STABLE: 0.80      # From project data (79-83% range)
+    ACTIVE: 0.15      # From project data (12-20% range)
     HIGHLY_ACTIVE: 0.05
     
   ACTIVE:
     NAIVE: 0.00
-    STABLE: 0.30
-    ACTIVE: 0.60
+    STABLE: 0.30      # From project data (25-32% range)
+    ACTIVE: 0.60      # From project data (57-65% range)
     HIGHLY_ACTIVE: 0.10
     
   HIGHLY_ACTIVE:
     NAIVE: 0.00
-    STABLE: 0.10
-    ACTIVE: 0.40
+    STABLE: 0.15      # Conservative estimate
+    ACTIVE: 0.35      # Conservative estimate
     HIGHLY_ACTIVE: 0.50
 
-# Required vision change model - PLACEHOLDER VALUES
-# Note: Not found in commissioning guidance, using conservative estimates
+# Required vision change model - Based on existing project parameters
+# Note: Using values from project's eylea parameter sets
 vision_change_model:
   naive_treated:
-    mean: 2.0          # Conservative improvement
-    std: 4.0
+    mean: 8.4          # From project data (loading phase improvement)
+    std: 3.0           # From project data
     
   naive_untreated:
-    mean: -1.5         # Natural history decline
+    mean: -2.5         # From project data (natural history)
     std: 2.0
     
   stable_treated:
-    mean: 0.5          # Slight improvement/maintenance
-    std: 2.0
+    mean: 1.0          # From project data (0.1-1.5 range)
+    std: 1.5
     
   stable_untreated:
-    mean: -0.5
+    mean: -0.75        # From project data
     std: 1.0
     
   active_treated:
-    mean: -0.5         # Slower decline with treatment
-    std: 3.0
+    mean: 0.3          # From project data (-0.2 to +0.8 range)
+    std: 2.0
     
   active_untreated:
-    mean: -2.0
+    mean: -2.0         # From project data
     std: 2.5
     
   highly_active_treated:
-    mean: -1.5         # Reduced decline with treatment
-    std: 4.0
+    mean: -0.3         # From project data (-0.8 to +0.3 range)
+    std: 3.0
     
   highly_active_untreated:
-    mean: -4.0
+    mean: -4.0         # From project data
     std: 3.5
 
-# Treatment effect on transitions - PLACEHOLDER VALUES
+# Treatment effect on transitions - Based on project standards
 treatment_effect_on_transitions:
   NAIVE:
     multipliers:
       NAIVE: 0.0
       STABLE: 1.5        # Treatment promotes stability
-      ACTIVE: 0.8        # Reduces progression to active
-      HIGHLY_ACTIVE: 0.6 # Reduces progression to highly active
+      ACTIVE: 0.7        # Reduces progression to active
+      HIGHLY_ACTIVE: 0.5 # Significantly reduces progression to highly active
       
   STABLE:
     multipliers:
       NAIVE: 0.0
       STABLE: 1.2        # Helps maintain stability
-      ACTIVE: 0.8
-      HIGHLY_ACTIVE: 0.7
+      ACTIVE: 0.75       # Reduces deterioration
+      HIGHLY_ACTIVE: 0.6
       
   ACTIVE:
     multipliers:
       NAIVE: 0.0
-      STABLE: 1.3        # Promotes return to stable
+      STABLE: 1.4        # Promotes return to stable
       ACTIVE: 0.9
-      HIGHLY_ACTIVE: 0.8
+      HIGHLY_ACTIVE: 0.7
       
   HIGHLY_ACTIVE:
     multipliers:
       NAIVE: 0.0
-      STABLE: 1.2
-      ACTIVE: 1.1
-      HIGHLY_ACTIVE: 0.9
+      STABLE: 1.5        # Strong treatment effect for severe disease
+      ACTIVE: 1.2
+      HIGHLY_ACTIVE: 0.8
 
 # Baseline vision parameters
 baseline_vision:
@@ -205,6 +205,7 @@ clinical_evidence:
     - "Maximum 3 lines of therapy per eye"
     - "Switch if unable to extend beyond 7 weeks after 2 attempts"
   limitations:
-    - "Loading phase based on standard clinical practice"
-    - "Disease state transitions using placeholder values pending calibration"
-    - "Vision change parameters using conservative estimates"
+    - "Loading phase assumed as 3 monthly doses (standard practice)"
+    - "Disease state transitions calibrated from existing project data"
+    - "Vision change parameters based on project's eylea parameter sets"
+    - "May require fine-tuning based on specific aflibercept 2mg trial data"
