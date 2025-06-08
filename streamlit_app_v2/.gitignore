@@ -14,3 +14,9 @@ test-results.json
 
 # macOS
 .DS_Store
+
+# Simulation results (too large for git)
+simulation_results/
+
+# Large data files  
+lh-vegf-1.txt
