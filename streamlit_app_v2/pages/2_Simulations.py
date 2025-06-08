@@ -75,6 +75,12 @@ with col1:
 with col2:
     st.title("Simulations")
     st.markdown("Run new simulations and manage existing ones.")
+with col3:
+    # Display ape logo - closed eyes if simulation is running
+    if st.session_state.get('simulation_running', False):
+        st.image("assets/closed_eyes_ape.svg", width=80)
+    else:
+        st.image("assets/ape_logo.svg", width=80)
 
 # Check if protocol is loaded first
 if not st.session_state.get('current_protocol'):
@@ -132,6 +138,12 @@ if st.session_state.get('show_manage', False):
 
 # Handle Run Simulation click
 if run_clicked:
+    # Set simulation running state to show closed eyes ape
+    st.session_state.simulation_running = True
+    st.rerun()
+
+# Check if we should be running a simulation (after rerun)
+if st.session_state.get('simulation_running', False):
     # Create progress indicators
     progress_bar = st.progress(0, text="Initializing simulation...")
     status_text = st.empty()
@@ -208,6 +220,9 @@ if run_clicked:
         
         progress_bar.progress(100, text="Simulation complete!")
         
+        # Clear simulation running state
+        st.session_state.simulation_running = False
+        
         # Simple success message
         st.success(f"Simulation completed in {runtime:.1f} seconds")
         
@@ -216,6 +231,8 @@ if run_clicked:
         
     except Exception as e:
         progress_bar.empty()
+        # Clear simulation running state on error
+        st.session_state.simulation_running = False
         st.error(f"Simulation failed: {str(e)}")
         st.exception(e)
 
