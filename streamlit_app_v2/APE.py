@@ -53,7 +53,7 @@ with col1:
     st.markdown("""
     ### Getting Started
     1. Navigate to **Protocol Manager** to view available protocols
-    2. Go to **Run Simulation** to execute a protocol
+    2. Go to **Simulations** to run or manage simulations
     3. View results in **Analysis** pages
     """)
 
@@ -82,15 +82,12 @@ with col1:
         st.switch_page("pages/1_Protocol_Manager.py")
 
 with col2:
-    # Disable Run Simulation if no protocol is loaded
-    simulation_disabled = st.session_state.current_protocol is None
+    # Simulations button is always enabled (can manage existing ones)
     if navigation_button(
         "Simulations",
         key="nav_simulation",
-        help_text="Execute simulations with selected protocols",
-        full_width=True,
-        disabled=simulation_disabled,
-        button_type="ghost" if simulation_disabled else "secondary"
+        help_text="Run new simulations or manage existing ones",
+        full_width=True
     ):
         st.switch_page("pages/2_Simulations.py")
 

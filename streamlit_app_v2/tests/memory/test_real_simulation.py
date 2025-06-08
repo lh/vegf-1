@@ -40,7 +40,7 @@ class TestRealSimulation:
             show_progress=False
         )
         
-        # Should use Parquet storage
+        # Should use Parquet storage (all simulations now use Parquet)
         assert results.metadata.storage_type == "parquet"
         
         # Verify we can access data

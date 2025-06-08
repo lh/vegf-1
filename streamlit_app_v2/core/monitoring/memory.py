@@ -124,24 +124,21 @@ class MemoryMonitor:
         info = self.get_memory_info()
         current_mb = info['used_mb']
         
-        # Estimate additional memory needed during simulation
-        # Note: Parquet storage keeps memory low, but simulation itself needs memory
-        visits_per_patient = duration_years * 12  # ~1 visit per month
-        # Rough estimate: 1KB per patient + 200 bytes per visit during processing
-        processing_mb = (n_patients * (1024 + visits_per_patient * 200)) / (1024 * 1024)
-        processing_mb *= 1.5  # Safety factor
-        
-        total_expected_mb = current_mb + processing_mb
+        # Estimate additional memory needed
+        from ..results.factory import ResultsFactory
+        estimate = ResultsFactory.estimate_memory_usage(n_patients, duration_years)
+        total_expected_mb = current_mb + estimate['estimated_memory_mb']
         
         if total_expected_mb > self.CRITICAL_THRESHOLD_MB:
             suggestion = (
                 f"⚠️ **Memory Constraint**\n\n"
                 f"Current usage: {current_mb:.0f}MB\n"
-                f"Processing needs: ~{processing_mb:.0f}MB\n"
+                f"Estimated need: +{estimate['estimated_memory_mb']:.0f}MB\n"
                 f"Total: {total_expected_mb:.0f}MB (exceeds {self.CRITICAL_THRESHOLD_MB}MB limit)\n\n"
                 f"**Suggestions:**\n"
                 f"• Reduce to {int(n_patients * 0.7):,} patients\n"
-                f"• Or reduce to {max(1, int(duration_years * 0.7)):.1f} years"
+                f"• Or reduce to {max(1, int(duration_years * 0.7)):.1f} years\n"
+                f"• Data will be efficiently stored using Parquet format"
             )
             return (False, suggestion)
             

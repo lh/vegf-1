@@ -380,3 +380,5 @@ with tab5:
         )
     else:
         st.info("No audit trail available for this session.")
+    
+    # Export functionality removed - now in Simulations page

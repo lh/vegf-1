@@ -48,55 +48,73 @@ class ResultsFactory:
         Returns:
             ParquetResults instance
         """
-        # Generate unique simulation ID
-        sim_id = f"sim_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}"
+        # Generate unique simulation ID with duration encoding
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        
+        # Encode duration as YY-FF format
+        years = int(duration_years)
+        fraction = int((duration_years - years) * 100)
+        duration_code = f"{years:02d}-{fraction:02d}"
+        
+        # Generate memorable name using haikunator
+        try:
+            from haikunator import Haikunator
+            haikunator = Haikunator()
+            # Use seed for reproducibility if needed
+            memorable_name = haikunator.haikunate(token_length=0, delimiter='-')
+        except ImportError:
+            # Fallback to hex if haikunator not installed
+            memorable_name = uuid.uuid4().hex[:8]
+        
+        # Combine elements: timestamp + duration + name
+        sim_id = f"sim_{timestamp}_{duration_code}_{memorable_name}"
         
         # Create metadata
         metadata = SimulationMetadata(
             sim_id=sim_id,
+            timestamp=datetime.now(),
             protocol_name=protocol_name,
             protocol_version=protocol_version,
             engine_type=engine_type,
             n_patients=n_patients,
             duration_years=duration_years,
             seed=seed,
-            timestamp=datetime.now(),
             runtime_seconds=runtime_seconds,
-            storage_type='parquet'  # Always Parquet
+            storage_type="parquet"
         )
         
-        print(f"📁 Saving simulation to Parquet: {n_patients:,} patients × {duration_years} years")
-        
-        # Create Parquet results with progress
+        # Determine save path
         save_path = cls.DEFAULT_RESULTS_DIR / sim_id
         
-        def progress_callback(pct: float, msg: str):
-            print(f"  [{pct:3.0f}%] {msg}")
-            
-        return ParquetResults.create_from_raw_results(
-            raw_results,
-            metadata,
-            save_path,
-            progress_callback
+        # Always create Parquet results
+        results = ParquetResults.create_from_raw_results(
+            raw_results=raw_results,
+            metadata=metadata,
+            save_path=save_path
         )
-            
+        
+        return results
+    
     @classmethod
-    def load_results(cls, path: Path) -> SimulationResults:
+    def load_results(cls, results_path: Path) -> SimulationResults:
         """
-        Load results from disk.
+        Load existing results from disk.
         
         Args:
-            path: Path to saved results directory
+            results_path: Path to results directory
             
         Returns:
-            ParquetResults instance
+            SimulationResults instance
         """
-        path = Path(path)
-        return ParquetResults.load(path)
-            
-            
+        # Always load as Parquet
+        return ParquetResults.load(results_path)
+    
     @classmethod
-    def estimate_memory_usage(cls, n_patients: int, duration_years: float) -> Dict[str, float]:
+    def estimate_memory_usage(
+        cls,
+        n_patients: int,
+        duration_years: float
+    ) -> Dict[str, Any]:
         """
         Estimate memory usage for a simulation.
         
@@ -105,25 +123,27 @@ class ResultsFactory:
             duration_years: Duration in years
             
         Returns:
-            Dictionary with memory estimates in MB
+            Dictionary with memory estimates
         """
-        # Assumptions:
-        # - ~8-10 visits per patient per year
-        # - ~200 bytes per visit
-        # - ~1KB overhead per patient
+        # Estimate visits per patient (monthly visits)
+        visits_per_patient = duration_years * 12
+        total_visits = n_patients * visits_per_patient
         
-        visits_per_patient = duration_years * 9  # Average
-        bytes_per_patient = 1024 + (visits_per_patient * 200)
-        total_bytes = n_patients * bytes_per_patient
+        # Memory estimates (rough)
+        bytes_per_patient = 1024  # 1KB per patient record
+        bytes_per_visit = 256     # 256 bytes per visit
         
-        # Add overhead for data structures
-        overhead_factor = 1.5
-        total_mb = (total_bytes * overhead_factor) / (1024 * 1024)
+        estimated_memory_mb = (
+            (n_patients * bytes_per_patient + 
+             total_visits * bytes_per_visit) / (1024 * 1024)
+        )
         
-        patient_years = n_patients * duration_years
+        # Disk estimates for Parquet (compressed)
+        estimated_disk_mb = estimated_memory_mb * 0.2  # ~20% of memory size
+        
         return {
-            'estimated_mb': total_mb,
-            'patient_years': patient_years,
-            'recommended_storage': 'parquet',  # Always recommend Parquet
-            'warning': total_mb > 300
+            'patient_years': n_patients * duration_years,
+            'estimated_memory_mb': round(estimated_memory_mb, 1),
+            'estimated_disk_mb': round(estimated_disk_mb, 1),
+            'storage_type': 'parquet'
         }
