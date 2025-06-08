@@ -98,6 +98,9 @@ def set_active_simulation(sim_id: str) -> bool:
     # Set active ID
     st.session_state.active_simulation_id = sim_id
     
+    # Also set current_sim_id for consistency with load_simulation_results
+    st.session_state.current_sim_id = sim_id
+    
     # Also update legacy session state for compatibility
     st.session_state.simulation_results = registry[sim_id]
     
@@ -130,6 +133,7 @@ def clear_simulation_registry():
     """Clear all simulations from the registry."""
     st.session_state.simulation_registry = {}
     st.session_state.active_simulation_id = None
+    st.session_state.current_sim_id = None
     st.session_state.simulation_results = None
     st.session_state.audit_trail = None
 

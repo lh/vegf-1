@@ -200,6 +200,7 @@ def clear_simulation_state():
     keys_to_clear = [
         'simulation_results',
         'current_sim_id',
+        'active_simulation_id',
         'imported_simulation'
     ]
     
