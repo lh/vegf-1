@@ -1,0 +1,166 @@
+# Eylea 8mg NHS Cost Parameters
+# Based on UK NHS cost data from compass_artifact (2024-2025)
+
+# Drug costs (NHS procurement with patient access schemes)
+# Updated January 2025 with actual pricing information
+drug_costs:
+  aflibercept_8mg:
+    unit_cost: 339   # GBP - NHS actual price (aggressive discount)
+    list_price: 998  # GBP - NHS drug tariff price
+    procurement_discount: 0.66  # 66% discount (34% of list)
+    note: "Strategic pricing - CHEAPER than 2mg to drive adoption"
+    
+  aflibercept_2mg:
+    unit_cost: 457   # GBP - NHS actual price  
+    list_price: 816  # GBP - NHS drug tariff price
+    procurement_discount: 0.44  # 44% discount (56% of list)
+    
+  # Comparators and biosimilars
+  aflibercept_biosimilar:
+    unit_cost: 229   # GBP - estimated 50% of current 2mg price
+    list_price: 400  # GBP - estimated list (TBD)
+    procurement_discount: 0.43  # Estimated
+    note: "Expected market entry imminent"
+    
+  ranibizumab_biosimilar:
+    unit_cost: 275   # GBP - midpoint of £200-350 range
+    
+  bevacizumab_compounded:
+    unit_cost: 28    # GBP - off-label compounded
+    
+  bevacizumab_licensed:
+    unit_cost: 425   # GBP - Lytenava estimated NHS cost
+
+# NHS visit costs (per compass_artifact)
+visit_costs:
+  injection_visit:
+    oct_monitoring: 126      # GBP - NHS OCT cost
+    injection_procedure: 54  # GBP - procedure cost
+    consumables_setup: 250   # GBP - sterile procedure setup
+    total_excluding_drug: 497  # GBP - compass calculation (drug + £497)
+    
+  monitoring_visit:
+    oct_scan: 126           # GBP - monitoring without injection
+    
+  complex_procedure:
+    hrg_bz23z: 504          # GBP - Category 1 vitreous retinal procedure
+    hrg_bz22z: 1013         # GBP - Standard complexity
+    hrg_bz21z: 1439         # GBP - Intermediate complexity
+
+# NHS staff costs (including 28-30% on-costs, 2024-2025 rates)
+staff_costs:
+  consultant_ophthalmologist:
+    hourly_rate: 82         # GBP - midpoint of £70-93 range
+    typical_injection_time: 0.5  # hours
+    
+  band_6_nurse:
+    hourly_rate: 26         # GBP - typical for AMD clinics
+    typical_injection_time: 1.0  # hours
+    
+  band_3_admin:
+    hourly_rate: 17         # GBP - administrative support
+    
+# Equipment costs (NHS depreciation)
+equipment_costs:
+  oct_machine:
+    annual_depreciation: 8000  # GBP - £6-10k range, using midpoint
+    cost_per_scan: 15         # GBP - allocated per scan based on usage
+    
+# Facility costs (NHS estates)
+facility_costs:
+  injection_room:
+    hourly_rate: 125       # GBP - clean room suitable for injections
+    per_procedure: 62      # GBP - 0.5 hour allocation
+    
+  clinic_room:
+    hourly_rate: 65        # GBP - basic ophthalmology clinic room
+
+# Patient costs (NHS perspective)
+patient_costs:
+  travel_reimbursement:
+    mileage_rate_min: 0.15  # GBP per mile - varies by ICB
+    mileage_rate_max: 0.30  # GBP per mile
+    average_distance: 15    # miles - typical for specialist eye services
+    
+  parking:
+    charge_min: 4          # GBP
+    charge_max: 15         # GBP
+    average_charge: 8      # GBP
+    
+  # Benefits available (not costs, but important for context)
+  pip_enhanced_weekly: 184.30  # GBP - Personal Independence Payment
+  attendance_allowance_higher: 108.55  # GBP - weekly
+
+# Safety and complications costs
+safety_costs:
+  ioi_management:
+    mild_case: 200         # GBP - topical steroids, NHS follow-up
+    moderate_case: 500     # GBP - systemic treatment, monitoring
+    severe_case: 1500      # GBP - intensive NHS care
+    
+  enhanced_monitoring:
+    post_injection_visit: 126  # GBP - additional OCT scan
+    weekly_follow_up: 126      # GBP - during IOI management
+
+# Annual treatment cost calculations (NHS) - UPDATED PRICING
+annual_costs:
+  # Eylea 8mg q12 schedule
+  eylea_8mg_q12:
+    loading_phase: 3       # injections
+    maintenance: 3.1       # additional injections (6.1 total - 3 loading)
+    total_injections: 6.1
+    drug_cost: 2068        # GBP (6.1 × £339) - NOW CHEAPER!
+    procedure_costs: 3032  # GBP (6.1 × £497)
+    annual_total: 5100     # GBP
+    
+  # Eylea 2mg q8 schedule  
+  eylea_2mg_q8:
+    total_injections: 6.9  # from clinical data
+    drug_cost: 3153        # GBP (6.9 × £457)
+    procedure_costs: 3429  # GBP (6.9 × £497)
+    annual_total: 6582     # GBP
+    
+  # Biosimilar q8 schedule
+  eylea_biosimilar_q8:
+    total_injections: 6.9
+    drug_cost: 1580        # GBP (6.9 × £229)
+    procedure_costs: 3429  # GBP (6.9 × £497)
+    annual_total: 5009     # GBP
+    
+  # Cost difference - 8mg NOW SAVES MONEY!
+  annual_difference: -1482  # GBP - 8mg SAVES £1,482 vs 2mg per year
+  vs_biosimilar: 91        # GBP - 8mg costs only £91 more than biosimilar
+
+# Extended interval benefits (NHS resource savings)
+interval_benefits:
+  reduced_visits_q12:
+    fewer_injections: 0.8  # vs q8 schedule
+    annual_savings: 895    # GBP - drug + procedure costs saved
+    
+  reduced_visits_q16:
+    fewer_injections: 1.7  # vs q8 schedule  
+    annual_savings: 1890   # GBP - additional savings with q16
+    
+# Real-world safety costs (based on 3.7% IOI rate)
+real_world_costs:
+  ioi_cost_per_injection: 18.5  # GBP (3.7% × £500 management cost)
+  annual_ioi_cost_8mg: 113      # GBP (6.1 injections × £18.5)
+  annual_ioi_cost_2mg: 128      # GBP (6.9 injections × £18.5)
+
+# Economic analysis parameters (UK NHS)
+economic_parameters:
+  discount_rate: 0.035     # NICE reference case
+  time_horizon_years: 2    # Standard for AMD studies
+  currency: "GBP"
+  price_year: 2024
+  
+  # NICE cost-effectiveness threshold
+  willingness_to_pay_per_qaly: 30000  # GBP - NICE threshold
+  
+# Budget impact (indicative NHS numbers) - UPDATED WITH NEW PRICING
+budget_impact:
+  eligible_patients_uk: 65000    # Estimated wet AMD patients
+  current_eylea_users: 35000     # Estimated current usage
+  potential_8mg_switchers: 28000 # 80% of current users
+  annual_budget_savings: 41496000   # GBP - £1,482 × 28k patients SAVED
+  note: "8mg adoption would SAVE NHS £41.5 million annually"

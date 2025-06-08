@@ -10,7 +10,7 @@ In DES, the simulation advances by processing events in chronological order:
 import heapq
 import random
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Callable
 from dataclasses import dataclass
 from enum import Enum
 
@@ -51,7 +51,8 @@ class DESEngine:
         disease_model: DiseaseModel,
         protocol: Protocol,
         n_patients: int,
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
+        visit_metadata_enhancer: Optional[Callable] = None
     ):
         """
         Initialize DES engine.
@@ -61,10 +62,12 @@ class DESEngine:
             protocol: Treatment protocol
             n_patients: Number of patients to simulate
             seed: Random seed for reproducibility
+            visit_metadata_enhancer: Optional function to enhance visit metadata
         """
         self.disease_model = disease_model
         self.protocol = protocol
         self.n_patients = n_patients
+        self.visit_metadata_enhancer = visit_metadata_enhancer
         
         if seed is not None:
             random.seed(seed)
@@ -119,9 +122,13 @@ class DESEngine:
             event = heapq.heappop(self.event_queue)
             
             if event.event_type == EventType.ENROLLMENT:
-                # Create patient
+                # Create patient with optional metadata enhancer
                 baseline_vision = self._sample_baseline_vision()
-                patient = Patient(event.patient_id, baseline_vision)
+                patient = Patient(
+                    event.patient_id, 
+                    baseline_vision,
+                    visit_metadata_enhancer=self.visit_metadata_enhancer
+                )
                 self.patients[event.patient_id] = patient
                 
                 # Schedule first visit

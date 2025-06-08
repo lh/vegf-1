@@ -524,6 +524,10 @@ class PatientState:
                 # Record the retreatment reason
                 visit_record['retreatment_reason'] = last_discontinuation_type
         
+        # Apply optional metadata enhancement hook
+        if hasattr(self, 'visit_metadata_enhancer') and self.visit_metadata_enhancer:
+            visit_record = self.visit_metadata_enhancer(visit_record, visit_data, self)
+        
         self.state['visit_history'].append(visit_record)
     
     def update_phase(self, new_phase: str):

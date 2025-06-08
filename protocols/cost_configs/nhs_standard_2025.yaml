@@ -1,0 +1,61 @@
+# NHS Standard Costs 2025
+metadata:
+  name: "NHS Standard Costs 2025"
+  currency: "GBP"
+  effective_date: "2025-01-01"
+  version: "1.0"
+
+# Drug costs per administration
+drug_costs:
+  eylea_2mg: 800
+  eylea_8mg: 800  # Placeholder - same as 2mg for now
+  avastin: 50     # Off-label
+  lucentis: 600
+  faricimab: 900  # Vabysmo
+
+# Component costs
+visit_components:
+  # Clinical activities
+  injection: 150
+  oct_scan: 75
+  visual_acuity_test: 25
+  pressure_check: 10
+  
+  # Review types
+  virtual_review: 50
+  face_to_face_review: 120
+  nurse_review: 40
+  
+  # Additional components
+  adverse_event_assessment: 200
+  fluorescein_angiography: 150
+
+# Visit type definitions (compositions)
+visit_types:
+  injection_virtual:
+    components: [injection, oct_scan, pressure_check, virtual_review]
+    total_override: null  # Use sum of components
+    
+  injection_loading:
+    components: [injection, visual_acuity_test]
+    total_override: null
+    
+  injection_face_to_face:
+    components: [injection, oct_scan, visual_acuity_test, pressure_check, face_to_face_review]
+    total_override: null
+    
+  monitoring_virtual:
+    components: [oct_scan, visual_acuity_test, virtual_review]
+    total_override: null
+    
+  monitoring_face_to_face:
+    components: [oct_scan, visual_acuity_test, pressure_check, face_to_face_review]
+    total_override: null
+
+# Special event costs
+special_events:
+  initial_assessment: 250
+  discontinuation_admin: 50
+  retreatment_assessment: 200
+  adverse_event_mild: 500
+  adverse_event_severe: 2000

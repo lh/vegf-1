@@ -1,0 +1,210 @@
+# Eylea 2mg Treat-and-Treat Protocol
+# V2-compliant fixed interval dosing protocol
+# 
+# Note: Clinical parameters require calibration to match trial data
+# Disease transitions and vision outcomes to be determined by simulation
+
+# Required metadata
+name: "Eylea 2mg Treat-and-Treat V2"
+version: "2.0.0"
+created_date: "2025-01-06"
+author: "Clinical Economics Integration Team"
+description: "Fixed-interval aflibercept 2mg protocol with defined dosing schedule"
+
+# Required protocol parameters (all in days for V2)
+protocol_type: "fixed_interval"
+min_interval_days: 56      # 8 weeks (maintenance phase)
+max_interval_days: 63      # 9 weeks (allowing 7-day window)
+extension_days: 0          # No extensions in fixed protocol
+shortening_days: 0         # No shortenings in fixed protocol
+
+# Required disease transitions - TO BE CALIBRATED
+# Placeholder values - need calibration to trial data
+disease_transitions:
+  NAIVE:
+    NAIVE: 0.00
+    STABLE: 0.25
+    ACTIVE: 0.25
+    HIGHLY_ACTIVE: 0.50   # Placeholder - needs calibration
+    
+  STABLE:
+    NAIVE: 0.00
+    STABLE: 0.25
+    ACTIVE: 0.25
+    HIGHLY_ACTIVE: 0.50   # Placeholder - needs calibration
+    
+  ACTIVE:
+    NAIVE: 0.00
+    STABLE: 0.25
+    ACTIVE: 0.25
+    HIGHLY_ACTIVE: 0.50   # Placeholder - needs calibration
+    
+  HIGHLY_ACTIVE:
+    NAIVE: 0.00
+    STABLE: 0.25
+    ACTIVE: 0.25
+    HIGHLY_ACTIVE: 0.50   # Placeholder - needs calibration
+
+# Required vision change model - TO BE CALIBRATED
+# Placeholder values - need calibration to trial data
+vision_change_model:
+  naive_treated:
+    mean: 0.0         # Placeholder - needs calibration
+    std: 1.0          # Placeholder - needs calibration
+    
+  naive_untreated:
+    mean: -1.5        # Natural history (may have evidence)
+    std: 2.0
+    
+  stable_treated:
+    mean: 0.0         # Placeholder - needs calibration
+    std: 1.0          # Placeholder - needs calibration
+    
+  stable_untreated:
+    mean: -0.5
+    std: 1.0
+    
+  active_treated:
+    mean: 0.0         # Placeholder - needs calibration
+    std: 1.0          # Placeholder - needs calibration
+    
+  active_untreated:
+    mean: -2.0
+    std: 2.5
+    
+  highly_active_treated:
+    mean: 0.0         # Placeholder - needs calibration
+    std: 1.0          # Placeholder - needs calibration
+    
+  highly_active_untreated:
+    mean: -4.0
+    std: 3.5
+
+# Required treatment effect on transitions - TO BE CALIBRATED
+treatment_effect_on_transitions:
+  NAIVE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 1.0      # Placeholder - needs calibration
+      ACTIVE: 1.0      # Placeholder - needs calibration
+      HIGHLY_ACTIVE: 1.0  # Placeholder - needs calibration
+      
+  STABLE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 1.0      # Placeholder - needs calibration
+      ACTIVE: 1.0      # Placeholder - needs calibration
+      HIGHLY_ACTIVE: 1.0  # Placeholder - needs calibration
+      
+  ACTIVE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 1.0      # Placeholder - needs calibration
+      ACTIVE: 1.0      # Placeholder - needs calibration
+      HIGHLY_ACTIVE: 1.0  # Placeholder - needs calibration
+      
+  HIGHLY_ACTIVE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 1.0      # Placeholder - needs calibration
+      ACTIVE: 1.0      # Placeholder - needs calibration
+      HIGHLY_ACTIVE: 1.0  # Placeholder - needs calibration
+
+# Required baseline vision parameters
+baseline_vision:
+  mean: 55           # ETDRS letters - typical trial entry
+  std: 15
+  min: 25
+  max: 85
+
+# Required discontinuation rules
+discontinuation_rules:
+  # Annual review discontinuation
+  stable_at_annual_review:
+    criteria:
+      months_on_treatment: 12
+      vision_stable: true
+      patient_choice: true
+    probability: 0.10    # To be validated
+    reason: "stable_disease"
+    
+  # Non-compliance
+  non_compliance:
+    criteria:
+      missed_consecutive_visits: 2
+      months_since_last_visit: 4
+    probability: 0.95
+    reason: "lost_to_follow_up"
+    
+  # Treatment failure (assessed at annual review)
+  treatment_failure:
+    criteria:
+      vision_loss_from_baseline: 30
+      assessed_at: "annual_review"
+    probability: 0.80
+    reason: "inadequate_response"
+    
+  # Safety
+  adverse_event:
+    criteria:
+      severe_adverse_event: true
+    probability: 0.90
+    reason: "adverse_event"
+
+# Protocol-specific parameters
+treat_and_treat_parameters:
+  # Loading phase specifics
+  loading_phase:
+    number_of_doses: 3
+    dose_1_to_2_days: [28, 35]    # 4-5 week window
+    dose_2_to_3_days: [28, 35]    # 4-5 week window
+    
+  # Maintenance phase
+  maintenance_phase:
+    interval_days: [56, 63]        # 8-9 week window
+    starts_after_dose: 3
+    
+  # Monitoring visits
+  monitoring_schedule:
+    clinical_assessment:
+      timing: "between_dose_3_and_4"
+      window_days: 14
+      components: ["oct", "iop", "va", "clinical_exam"]
+      
+    annual_review:
+      timing: "yearly"
+      window_days: 14              # Within 2 weeks
+      components: ["oct", "iop", "va", "clinical_exam", "treatment_review"]
+
+# Economic integration
+economic_parameters:
+  # Visit types specific to treat-and-treat
+  visit_types:
+    injection_only:
+      components: ["drug_administration", "brief_check"]
+      staff_time_minutes: 30
+      
+    clinical_assessment:
+      components: ["oct_scan", "iop_check", "visual_acuity", "clinical_exam"]
+      staff_time_minutes: 45
+      
+    annual_review:
+      components: ["oct_scan", "iop_check", "visual_acuity", "clinical_exam", "consultation"]
+      staff_time_minutes: 60
+      
+  # Fixed dosing schedule
+  annual_visits:
+    year_1:
+      injections: 6.5              # 3 loading + 3.5 maintenance (calculated)
+      monitoring: 2                # Clinical assessment + annual
+      total: 8.5
+    year_2_plus:
+      injections: 6                # Fixed q8-9 weeks (calculated)
+      monitoring: 1                # Annual review only
+      total: 7
+
+# Clinical evidence basis - TO BE ADDED
+clinical_evidence:
+  # Reference trials to be identified
+  # Expected outcomes to be determined by simulation
+  # No assumptions about effectiveness made

@@ -1,0 +1,94 @@
+# Eylea 8mg Standard Cost Parameters
+# Economic parameters for high-dose aflibercept
+
+# Drug costs - NOTE: OUTDATED - See nhs_costs.yaml for actual pricing
+# 8mg is actually CHEAPER than 2mg due to strategic discounting
+drug_costs:
+  aflibercept_8mg:
+    unit_cost: 2400  # INCORRECT - actual NHS price is £339
+    administration_cost: 150
+    preparation_cost: 25
+    note: "UPDATE NEEDED - Use nhs_costs.yaml for correct pricing"
+    
+  # Comparator for economic analysis
+  aflibercept_2mg:
+    unit_cost: 2000
+    administration_cost: 150
+    preparation_cost: 25
+
+# Visit costs
+visit_costs:
+  injection_visit: 400
+  monitoring_visit: 200
+  enhanced_monitoring: 250  # Additional monitoring for IOI surveillance
+  
+# Procedure costs
+procedure_costs:
+  injection_procedure: 300
+  oct_imaging: 150
+  visual_acuity_test: 50
+  ophthalmoscopy: 100
+
+# Safety-related costs
+safety_costs:
+  ioi_management:
+    mild_case: 500    # Topical steroids, follow-up
+    moderate_case: 1200  # Systemic steroids, intensive monitoring
+    severe_case: 3000   # Hospitalization, intensive treatment
+    
+  enhanced_monitoring:
+    post_injection_visit: 200  # Within 4 days post-injection
+    weekly_follow_up: 150     # During IOI management
+    
+# Resource utilization
+resource_costs:
+  physician_time:
+    injection_visit: 30  # minutes
+    monitoring_visit: 15
+    ioi_management: 45
+    
+  nursing_time:
+    preparation: 15  # minutes
+    injection: 10
+    post_care: 10
+    
+# Indirect costs
+indirect_costs:
+  patient_time_cost: 25  # per hour
+  caregiver_cost: 20     # per hour when needed
+  travel_cost: 15        # average per visit
+  
+# Extended interval benefits (cost reductions)
+interval_benefits:
+  reduced_visits_q12:
+    annual_savings: 1600  # vs q8 dosing (4 fewer visits)
+  reduced_visits_q16:
+    annual_savings: 2400  # vs q8 dosing (6 fewer visits)
+    
+# Quality of life adjustments (for QALY calculations)
+qol_weights:
+  baseline_utility: 0.75
+  vision_improvement_per_letter: 0.004
+  injection_disutility: -0.01  # temporary
+  ioi_disutility: -0.1        # during episode
+
+# Healthcare system costs
+system_costs:
+  capacity_utilization: 0.85  # clinic efficiency
+  overhead_multiplier: 1.3    # facility overhead
+  
+# Economic analysis parameters
+economic_parameters:
+  discount_rate: 0.03      # 3% annual
+  time_horizon_years: 2    # Standard for retinal studies
+  currency: "USD"
+  price_year: 2024
+  
+  # Cost-effectiveness thresholds
+  willingness_to_pay_per_qaly: 50000
+  
+# Sensitivity analysis ranges
+sensitivity_ranges:
+  drug_cost_variation: [0.8, 1.5]    # ±20% to +50%
+  ioi_rate_variation: [0.01, 0.05]   # Trial rate to higher real-world
+  interval_success_variation: [0.6, 0.9]  # Maintenance rate uncertainty
