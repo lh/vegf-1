@@ -16,13 +16,13 @@ max_interval_days: 140       # 20 weeks
 extension_days: 14           # 2 weeks
 shortening_days: 14          # 2 weeks (symmetric with extension)
 
-# Required disease transitions - Based on existing project parameters
-# Note: Using values consistent with other aflibercept protocols in project
+# Required disease transitions - Based on VIEW 1/2 and combined literature data
+# Note: Using values from VIEW studies and ALTAIR/VIEW/Mylight combined analysis
 disease_transitions:
   NAIVE:
     NAIVE: 0.00
-    STABLE: 0.58      # From project data (30-58% range, using higher for aflibercept)
-    ACTIVE: 0.32      # From project data
+    STABLE: 0.67      # VIEW 1/2: 63-72% dry retina at week 52
+    ACTIVE: 0.23      # VIEW 1/2: 20-25% controlled but not resolved
     HIGHLY_ACTIVE: 0.10
     
   STABLE:
@@ -43,12 +43,12 @@ disease_transitions:
     ACTIVE: 0.35      # Conservative estimate
     HIGHLY_ACTIVE: 0.50
 
-# Required vision change model - Based on existing project parameters
-# Note: Using values from project's eylea parameter sets
+# Required vision change model - Based on VIEW 1/2 trials and project parameters
+# Note: Using actual aflibercept 2mg data from VIEW studies
 vision_change_model:
   naive_treated:
-    mean: 8.4          # From project data (loading phase improvement)
-    std: 3.0           # From project data
+    mean: 8.4          # From VIEW 1/2 combined (52 weeks)
+    std: 14.7          # From VIEW 1/2 combined
     
   naive_untreated:
     mean: -2.5         # From project data (natural history)
@@ -199,13 +199,17 @@ treat_and_extend_parameters:
 
 # Clinical evidence basis
 clinical_evidence:
-  source: "Based on best available knowledge and current clinical practice"
+  source: "Based on VIEW 1/2 pivotal trials and current clinical practice"
+  key_data:
+    - "VIEW 1/2: Mean +8.4 letters at 52 weeks (SD 14.7)"
+    - "VIEW 1/2: 67.7% achieved dry retina at week 52"
+    - "VIEW 1/2: 95.3% maintained vision, 31% gained ≥15 letters"
+    - "Combined analysis (ALTAIR/VIEW/Mylight): Consistent outcomes"
   key_principles:
     - "First choice: Aflibercept 2mg (switch to biosimilar when available)"
     - "Maximum 3 lines of therapy per eye"
     - "Switch if unable to extend beyond 7 weeks after 2 attempts"
   limitations:
-    - "Loading phase assumed as 3 monthly doses (standard practice)"
-    - "Disease state transitions calibrated from existing project data"
-    - "Vision change parameters based on project's eylea parameter sets"
-    - "May require fine-tuning based on specific aflibercept 2mg trial data"
+    - "Loading phase confirmed as 3 monthly doses from VIEW trials"
+    - "Some transition probabilities adapted from treat-and-extend data"
+    - "VIEW used fixed dosing; T&E parameters inferred"
