@@ -1,0 +1,90 @@
+{
+  "patient_id": "P0000",
+  "baseline_vision": 68,
+  "visits": [
+    {
+      "date": "2024-01-09T00:00:00",
+      "disease_state": "STABLE",
+      "treatment_given": true,
+      "vision": 68,
+      "metadata": {
+        "phase": "loading",
+        "components_performed": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "visit_subtype": "loading_regular_visit",
+        "drug": "eylea_2mg",
+        "disease_state": "stable",
+        "interval_days": 28
+      }
+    },
+    {
+      "date": "2024-02-06T00:00:00",
+      "disease_state": "ACTIVE",
+      "treatment_given": false,
+      "vision": 65,
+      "metadata": {
+        "phase": "loading",
+        "components_performed": [
+          "vision_test",
+          "oct_scan"
+        ],
+        "visit_subtype": "loading_regular_visit",
+        "disease_state": "active",
+        "interval_days": 0
+      }
+    },
+    {
+      "date": "2024-03-19T00:00:00",
+      "disease_state": "STABLE",
+      "treatment_given": true,
+      "vision": 65,
+      "metadata": {
+        "phase": "loading",
+        "components_performed": [
+          "vision_test",
+          "oct_scan",
+          "injection"
+        ],
+        "visit_subtype": "loading_regular_visit",
+        "drug": "eylea_2mg",
+        "disease_state": "stable",
+        "interval_days": 28
+      }
+    },
+    {
+      "date": "2024-04-16T00:00:00",
+      "disease_state": "STABLE",
+      "treatment_given": false,
+      "vision": 67,
+      "metadata": {
+        "phase": "maintenance",
+        "components_performed": [
+          "vision_test",
+          "oct_scan"
+        ],
+        "visit_subtype": "maintenance_regular_visit",
+        "disease_state": "stable",
+        "interval_days": 0
+      }
+    },
+    {
+      "date": "2024-05-28T00:00:00",
+      "disease_state": "STABLE",
+      "treatment_given": false,
+      "vision": 68,
+      "metadata": {
+        "phase": "maintenance",
+        "components_performed": [
+          "vision_test",
+          "oct_scan"
+        ],
+        "visit_subtype": "maintenance_regular_visit",
+        "disease_state": "stable",
+        "interval_days": 28
+      }
+    }
+  ]
+}

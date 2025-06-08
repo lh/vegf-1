@@ -1,0 +1,224 @@
+# Eylea 2mg Treat-and-Treat Protocol
+# V2-compliant fixed interval dosing protocol
+
+# Required metadata
+name: "Eylea 2mg Treat-and-Treat"
+version: "1.0.0"
+created_date: "2025-01-06"
+author: "Clinical Economics Integration Team"
+description: "Fixed-interval aflibercept 2mg protocol with loading phase at 4-5 week intervals followed by fixed 8-9 week maintenance dosing"
+
+# Required protocol parameters (all in days for V2)
+protocol_type: "fixed_interval"  # Not treat_and_extend
+min_interval_days: 56      # 8 weeks (maintenance phase)
+max_interval_days: 63      # 9 weeks (allowing 7-day window)
+extension_days: 0          # No extensions in fixed protocol
+shortening_days: 0         # No shortenings in fixed protocol
+
+# Required disease transitions - same biological model regardless of protocol
+disease_transitions:
+  NAIVE:
+    NAIVE: 0.00
+    STABLE: 0.35      # Slightly lower than T&E due to fixed dosing
+    ACTIVE: 0.55      # Higher chance of remaining active
+    HIGHLY_ACTIVE: 0.10
+    
+  STABLE:
+    NAIVE: 0.00
+    STABLE: 0.70      # Lower than T&E (no optimization)
+    ACTIVE: 0.28      # Higher reactivation with fixed intervals
+    HIGHLY_ACTIVE: 0.02
+    
+  ACTIVE:
+    NAIVE: 0.00
+    STABLE: 0.20      # Less improvement with fixed dosing
+    ACTIVE: 0.70      # More likely to remain active
+    HIGHLY_ACTIVE: 0.10
+    
+  HIGHLY_ACTIVE:
+    NAIVE: 0.00
+    STABLE: 0.05      # Rare improvement
+    ACTIVE: 0.30      # Some improvement possible
+    HIGHLY_ACTIVE: 0.65  # Often remains highly active
+
+# Required vision change model - adjusted for fixed dosing
+vision_change_model:
+  naive_treated:
+    mean: 2.0         # Slightly less than optimized protocols
+    std: 4.5          # More variability
+    
+  naive_untreated:
+    mean: -1.5        # Natural history
+    std: 2.0
+    
+  stable_treated:
+    mean: 0.0         # Maintenance only
+    std: 1.8          # More variability
+    
+  stable_untreated:
+    mean: -0.5
+    std: 1.0
+    
+  active_treated:
+    mean: -0.3        # Slight losses (undertreatment)
+    std: 2.2
+    
+  active_untreated:
+    mean: -2.0
+    std: 2.5
+    
+  highly_active_treated:
+    mean: -1.0        # Worse than optimized protocols
+    std: 3.2
+    
+  highly_active_untreated:
+    mean: -4.0
+    std: 3.5
+
+# Required treatment effect on transitions
+treatment_effect_on_transitions:
+  NAIVE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 1.3      # Less effective than flexible protocols
+      ACTIVE: 0.9
+      HIGHLY_ACTIVE: 0.8
+      
+  STABLE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 1.1      # Modest benefit
+      ACTIVE: 0.9
+      HIGHLY_ACTIVE: 0.7
+      
+  ACTIVE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 1.5      # Treatment helps but less than optimal
+      ACTIVE: 0.95
+      HIGHLY_ACTIVE: 0.8
+      
+  HIGHLY_ACTIVE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 2.0      # Some benefit
+      ACTIVE: 1.3
+      HIGHLY_ACTIVE: 0.85
+
+# Required baseline vision parameters
+baseline_vision:
+  mean: 55           # ETDRS letters
+  std: 15
+  min: 25
+  max: 85
+
+# Required discontinuation rules - simplified for fixed protocol
+discontinuation_rules:
+  # Annual review discontinuation
+  stable_at_annual_review:
+    criteria:
+      months_on_treatment: 12
+      vision_stable: true
+      patient_choice: true
+    probability: 0.10    # 10% discontinue at annual review if stable
+    reason: "stable_disease"
+    
+  # Non-compliance
+  non_compliance:
+    criteria:
+      missed_consecutive_visits: 2  # Lower threshold
+      months_since_last_visit: 4    # Tighter window
+    probability: 0.95
+    reason: "lost_to_follow_up"
+    
+  # Treatment failure (assessed at annual review)
+  treatment_failure:
+    criteria:
+      vision_loss_from_baseline: 30
+      assessed_at: "annual_review"
+    probability: 0.80
+    reason: "inadequate_response"
+    
+  # Safety
+  adverse_event:
+    criteria:
+      severe_adverse_event: true
+    probability: 0.90
+    reason: "adverse_event"
+
+# Protocol-specific parameters
+treat_and_treat_parameters:
+  # Loading phase specifics
+  loading_phase:
+    number_of_doses: 3
+    dose_1_to_2_days: [28, 35]    # 4-5 week window
+    dose_2_to_3_days: [28, 35]    # 4-5 week window
+    
+  # Maintenance phase
+  maintenance_phase:
+    interval_days: [56, 63]        # 8-9 week window
+    starts_after_dose: 3
+    
+  # Monitoring visits
+  monitoring_schedule:
+    clinical_assessment:
+      timing: "between_dose_3_and_4"
+      window_days: 14              # Flexible scheduling
+      components: ["oct", "iop", "va", "clinical_exam"]
+      
+    annual_review:
+      timing: "yearly"
+      window_days: 14              # Within 2 weeks
+      components: ["oct", "iop", "va", "clinical_exam", "treatment_review"]
+
+# Economic integration
+economic_parameters:
+  # Visit types specific to treat-and-treat
+  visit_types:
+    injection_only:
+      components: ["drug_administration", "brief_check"]
+      staff_time_minutes: 30       # Quicker than T&E
+      
+    clinical_assessment:
+      components: ["oct_scan", "iop_check", "visual_acuity", "clinical_exam"]
+      staff_time_minutes: 45       # No injection
+      
+    annual_review:
+      components: ["oct_scan", "iop_check", "visual_acuity", "clinical_exam", "consultation"]
+      staff_time_minutes: 60       # Comprehensive review
+      
+  # Fixed dosing benefits
+  scheduling_benefits:
+    predictable_schedule: true
+    batch_booking_possible: true
+    reduced_admin_time: 0.75       # 25% less admin vs T&E
+    
+  # Annual utilization
+  annual_visits:
+    year_1:
+      injections: 6.5              # 3 loading + 3.5 maintenance
+      monitoring: 2                # Clinical assessment + annual
+      total: 8.5
+    year_2_plus:
+      injections: 6                # Fixed q8-9 weeks
+      monitoring: 1                # Annual review only
+      total: 7
+
+# Clinical evidence basis
+clinical_evidence:
+  source: "Fixed dosing studies"
+  comparable_to: "CATT fixed arm, VIEW fixed dosing"
+  expected_outcomes:
+    vision_gain_year1: 5.5         # Letters (less than T&E)
+    vision_maintenance_year2: -0.5 # Slight decline
+    
+  advantages:
+    - "Predictable scheduling"
+    - "Reduced monitoring burden"
+    - "Lower total visit count"
+    - "Simplified administration"
+    
+  limitations:
+    - "No personalization"
+    - "Potential under/overtreatment"
+    - "Less responsive to disease"

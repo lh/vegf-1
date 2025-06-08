@@ -1,0 +1,97 @@
+# Eylea 8mg (Aflibercept 8mg) Treat and Extend Protocol
+# Based on PHOTON and PULSAR clinical trial data
+
+name: "Eylea 8mg Treat and Extend"
+description: "High-dose aflibercept with extended dosing intervals"
+
+# Drug formulation parameters
+drug:
+  name: "aflibercept_8mg"
+  concentration: 114.3  # mg/mL
+  volume: 0.07  # mL
+  total_dose: 8.0  # mg
+  molar_dose_factor: 4  # 4x higher than 2mg
+
+# Treatment protocol phases
+phases:
+  loading:
+    description: "3 monthly loading doses"
+    duration_weeks: 12
+    interval_weeks: 4
+    visit_schedule: [0, 4, 8, 12]  # Assessment at week 12
+    
+  maintenance:
+    description: "Extended interval maintenance"
+    initial_interval_weeks: 12
+    min_interval_weeks: 8
+    max_interval_weeks: 24
+    interval_adjustment_weeks: 4
+
+# Dose modification criteria (stricter than 2mg)
+dose_modification:
+  assessment_visits: [16, 20, 24, 28, 32, 36, 40, 44, 48]
+  
+  criteria:
+    visual_threshold: 5  # letters BCVA loss from week 12
+    anatomic_threshold: 25  # μm CRT increase from week 12
+    require_both: true  # Both visual AND anatomic (vs either for 2mg)
+    
+  shortening_rules:
+    # Interval shortening probabilities based on clinical data
+    q16_to_q12: 0.23  # 23% require shortening from q16
+    q12_to_q8: 0.21   # 21% require shortening from q12
+    
+# Treatment intervals and maintenance rates
+intervals:
+  q12_weeks:
+    maintenance_rate: 0.79  # 79% maintain q12 through year 1
+    year2_maintenance: 0.78  # 78% maintain through year 2
+    
+  q16_weeks:
+    maintenance_rate: 0.77  # 77% maintain q16 through year 1
+    
+  extension_eligibility: 0.71  # 71% eligible for interval extension
+
+# Safety parameters
+safety:
+  ioi_rate_trial: 0.01      # 1% IOI rate in clinical trials
+  ioi_rate_real_world: 0.037 # 3.7% IOI rate in real-world data
+  ocular_ae_rate: 0.32      # General ocular adverse events
+  
+  monitoring:
+    post_injection_days: 4   # Enhanced monitoring within 4 days
+    ioi_resolution_rate: 1.0 # All IOI cases resolve with treatment
+
+# Efficacy parameters (PULSAR nAMD data)
+efficacy:
+  bcva_change_week48:
+    q12:
+      mean: 6.7
+      sd: 12.6
+    q16:
+      mean: 6.2
+      sd: 11.7
+      
+  injection_count_year1:
+    q12: 6.1
+    q16: 5.2
+    
+  fluid_resolution_week16: 0.63  # 63% achieve no fluid
+
+# Population parameters (PULSAR)
+population:
+  mean_age: 74.5
+  age_sd: 8.4
+  male_proportion: 0.455
+  baseline_crt_mean: 369.3
+  baseline_crt_sd: 130.0
+
+# Simulation parameters
+simulation:
+  time_horizon_weeks: 96  # 2 years
+  assessment_frequency: 4  # Every 4 weeks
+  primary_endpoints:
+    - "BCVA change from baseline"
+    - "Central retinal thickness"
+    - "Injection count"
+    - "Treatment intervals achieved"

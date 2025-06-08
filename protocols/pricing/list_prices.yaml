@@ -1,0 +1,45 @@
+# NHS Drug Tariff List Prices
+# These are the official published prices before any discounts
+# Source: NHS Drug Tariff / BNF
+# Last updated: January 2025
+
+aflibercept:
+  eylea_2mg:
+    list_price: 816    # GBP per vial
+    bnf_code: "xxxxx"  # To be added
+    pack_size: "1 vial"
+    
+  eylea_8mg:
+    list_price: 998    # GBP per vial
+    bnf_code: "xxxxx"  # To be added
+    pack_size: "1 vial"
+    note: "Higher concentration, larger volume (0.07ml vs 0.05ml)"
+
+ranibizumab:
+  lucentis:
+    list_price: 742    # GBP per vial (reference)
+    
+  biosimilars:
+    byooviz:
+      list_price: 613   # GBP (estimate)
+    ongavia:
+      list_price: 613   # GBP (estimate)
+
+bevacizumab:
+  avastin_compounded:
+    list_price: 50     # GBP (compounding cost)
+    note: "Off-label use, price varies by compounding pharmacy"
+    
+  lytenava:
+    list_price: 470    # GBP per vial
+    note: "Licensed ophthalmic formulation"
+
+faricimab:
+  vabysmo:
+    list_price: 1445   # GBP per vial
+    note: "Dual pathway inhibitor"
+
+# Future products
+aflibercept_biosimilar:
+  estimated_list_price: 400  # GBP (estimate)
+  note: "Not yet launched - estimate based on typical biosimilar pricing"

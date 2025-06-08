@@ -6,7 +6,7 @@ Part of the FOV (Four Option Version) internal model.
 """
 
 from datetime import datetime
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Callable
 from .disease_model import DiseaseState
 
 
@@ -21,13 +21,15 @@ class Patient:
     - Discontinuation and retreatment
     """
     
-    def __init__(self, patient_id: str, baseline_vision: int = 70):
+    def __init__(self, patient_id: str, baseline_vision: int = 70,
+                 visit_metadata_enhancer: Optional[Callable] = None):
         """
         Initialize a new patient.
         
         Args:
             patient_id: Unique identifier for the patient
             baseline_vision: Starting visual acuity in ETDRS letters (0-100, default: 70)
+            visit_metadata_enhancer: Optional function to enhance visit metadata
         """
         if not 0 <= baseline_vision <= 100:
             raise ValueError(f"Baseline vision must be between 0 and 100 ETDRS letters, got {baseline_vision}")
@@ -59,6 +61,9 @@ class Patient:
         # Retreatment tracking
         self.retreatment_count = 0
         self.retreatment_dates: List[datetime] = []
+        
+        # Visit metadata enhancement for cost tracking
+        self.visit_metadata_enhancer = visit_metadata_enhancer
         
     def record_visit(
         self, 
@@ -94,6 +99,11 @@ class Patient:
             'treatment_given': treatment_given,
             'vision': vision
         }
+        
+        # Apply metadata enhancement if configured
+        if self.visit_metadata_enhancer:
+            visit = self.visit_metadata_enhancer(visit, self)
+        
         self.visit_history.append(visit)
         
         # Update current state

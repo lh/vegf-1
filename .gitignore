@@ -19,11 +19,20 @@ var/
 .installed.cfg
 *.egg
 
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+
 # Data files
 input_data/*
 *.csv
 *.sql
 *.parquet
+
+# Generated HTML files from markdown
+*.html
+*_files/
 
 # Exceptions for summaries and graphs
 !*/graphs/*.png
