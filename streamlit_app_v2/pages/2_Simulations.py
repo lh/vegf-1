@@ -275,13 +275,15 @@ with col1:
     )
 
 with col2:
-    # Use current simulation parameters if loaded, otherwise check for preset from buttons
-    if ('simulation_results' in st.session_state and 
-        st.session_state.simulation_results is not None and 
-        'parameters' in st.session_state.simulation_results):
-        patients_value = st.session_state.simulation_results['parameters']['n_patients']
-    elif 'preset_patients' in st.session_state:
+    # Check for preset from buttons FIRST, then fall back to current simulation
+    if 'preset_patients' in st.session_state:
         patients_value = st.session_state.preset_patients
+        # Clear the preset after using it
+        del st.session_state.preset_patients
+    elif ('simulation_results' in st.session_state and 
+          st.session_state.simulation_results is not None and 
+          'parameters' in st.session_state.simulation_results):
+        patients_value = st.session_state.simulation_results['parameters']['n_patients']
     else:
         patients_value = 100
     
@@ -294,13 +296,15 @@ with col2:
     )
 
 with col3:
-    # Use current simulation parameters if loaded, otherwise check for preset from buttons
-    if ('simulation_results' in st.session_state and 
-        st.session_state.simulation_results is not None and 
-        'parameters' in st.session_state.simulation_results):
-        duration_value = st.session_state.simulation_results['parameters']['duration_years']
-    elif 'preset_duration' in st.session_state:
+    # Check for preset from buttons FIRST, then fall back to current simulation
+    if 'preset_duration' in st.session_state:
         duration_value = st.session_state.preset_duration
+        # Clear the preset after using it
+        del st.session_state.preset_duration
+    elif ('simulation_results' in st.session_state and 
+          st.session_state.simulation_results is not None and 
+          'parameters' in st.session_state.simulation_results):
+        duration_value = st.session_state.simulation_results['parameters']['duration_years']
     else:
         duration_value = 2.0
     

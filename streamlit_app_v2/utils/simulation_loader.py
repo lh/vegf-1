@@ -119,6 +119,9 @@ def load_simulation_results(sim_id: str) -> bool:
         # Also ensure current_sim_id is set
         st.session_state.current_sim_id = sim_id
         
+        # IMPORTANT: Also set active_simulation_id so get_active_simulation() works
+        st.session_state.active_simulation_id = sim_id
+        
         logger.info(f"Successfully loaded simulation {sim_id}")
         logger.debug(f"Loaded {parameters['n_patients']} patients, "
                     f"{parameters['duration_years']} years, "
@@ -201,7 +204,8 @@ def clear_simulation_state():
         'simulation_results',
         'current_sim_id',
         'active_simulation_id',
-        'imported_simulation'
+        'imported_simulation',
+        'audit_trail'  # Also clear audit trail
     ]
     
     for key in keys_to_clear:
