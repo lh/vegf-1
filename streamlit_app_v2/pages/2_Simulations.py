@@ -83,7 +83,7 @@ with col3:
 
 # Check if protocol is loaded first
 if not st.session_state.get('current_protocol'):
-    st.header("Run New Simulation")
+    st.header("New")
     st.info("Select a protocol first to run a simulation.")
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -93,7 +93,7 @@ if not st.session_state.get('current_protocol'):
     st.stop()
 
 # Section 3: Run New Simulation
-st.header("Run New Simulation")
+st.header("New")
 
 # Display current protocol (subtle)
 protocol_info = st.session_state.current_protocol

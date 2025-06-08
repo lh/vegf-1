@@ -256,7 +256,7 @@ def render_control_buttons(has_results: bool) -> Tuple[bool, bool, bool, bool]:
 
 def render_recent_simulations():
     """Render the recent simulations section"""
-    st.header("Recent Simulations")
+    st.header("Recent")
 
     results_dir = ResultsFactory.DEFAULT_RESULTS_DIR
     if results_dir.exists():
