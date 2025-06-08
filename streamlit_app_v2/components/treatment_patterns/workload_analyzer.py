@@ -19,13 +19,20 @@ def calculate_clinical_workload_attribution(visits_df: pd.DataFrame) -> Dict:
     - Bubble chart (detailed relationship analysis)
     
     Args:
-        visits_df: DataFrame with patient visit data including interval_days
+        visits_df: DataFrame with patient visit data including time_days
         
     Returns:
         Dict containing processed data for workload analysis visualizations
     """
     # Get all unique patients
     all_patients = visits_df['patient_id'].unique()
+    
+    # Calculate intervals between visits if not already present
+    if 'interval_days' not in visits_df.columns:
+        visits_df = visits_df.copy()  # Don't modify original
+        visits_df = visits_df.sort_values(['patient_id', 'time_days'])
+        visits_df['prev_time_days'] = visits_df.groupby('patient_id')['time_days'].shift(1)
+        visits_df['interval_days'] = visits_df['time_days'] - visits_df['prev_time_days']
     
     # Filter to only visits with valid intervals (exclude first visits)
     valid_intervals = visits_df[visits_df['interval_days'].notna()]
