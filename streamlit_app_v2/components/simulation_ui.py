@@ -231,7 +231,8 @@ def render_recent_simulations():
                             'patients': metadata.get('n_patients', 0),
                             'duration': metadata.get('duration_years', 0),
                             'protocol': metadata.get('protocol_name', 'Unknown'),
-                            'is_imported': sim_dir.name.startswith('imported_')
+                            'is_imported': sim_dir.name.startswith('imported_'),
+                            'memorable_name': metadata.get('memorable_name', '')
                         }
                         simulations.append(sim_info)
                 except:
@@ -266,9 +267,13 @@ def render_simulation_card(sim: Dict[str, Any]):
         card_style += " background-color: #f0f7ff;"
     
     with st.container():
+        # Display memorable name if available
+        memorable_display = f'<p style="margin: 0; font-size: 0.95rem; color: #0F62FE; font-style: italic;">{sim["memorable_name"]}</p>' if sim.get("memorable_name") else ""
+        
         st.markdown(f"""
         <div style="padding: 1rem; {card_style} border-radius: 8px; margin-bottom: 1rem;">
             <h5 style="margin: 0 0 0.5rem 0;">{sim['protocol']}</h5>
+            {memorable_display}
             <p style="margin: 0; font-size: 0.9rem; color: #666;">
                 {sim['patients']:,} patients • {sim['duration']} years
             </p>

@@ -110,8 +110,17 @@ def render_manage_section():
         # Check if simulation exists
         results_path = ResultsFactory.DEFAULT_RESULTS_DIR / sim_id
         if results_path.exists():
-            # Show info about current simulation
-            st.markdown(f"<small style='color: #666;'>Current: {sim_id[:20]}...</small>", unsafe_allow_html=True)
+            # Show info about current simulation with memorable name if available
+            display_text = sim_id[:20] + "..."
+            # Try to get memorable name from session state
+            if 'simulation_results' in st.session_state and st.session_state.simulation_results:
+                results = st.session_state.simulation_results.get('results')
+                if results and hasattr(results, 'metadata') and hasattr(results.metadata, 'memorable_name'):
+                    memorable_name = results.metadata.memorable_name
+                    if memorable_name:
+                        display_text = memorable_name
+            
+            st.markdown(f"<small style='color: #666;'>Current: {display_text}</small>", unsafe_allow_html=True)
             
             # Carbon-styled download button
             package_data = create_export_package(sim_id)

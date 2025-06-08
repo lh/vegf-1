@@ -235,7 +235,8 @@ class ParquetResults(SimulationResults):
             seed=metadata_dict['seed'],
             timestamp=datetime.fromisoformat(metadata_dict['timestamp']),
             runtime_seconds=metadata_dict['runtime_seconds'],
-            storage_type=metadata_dict['storage_type']
+            storage_type=metadata_dict['storage_type'],
+            memorable_name=metadata_dict.get('memorable_name', '')  # Handle older simulations
         )
         
         return cls(metadata, path)

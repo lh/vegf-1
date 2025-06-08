@@ -71,8 +71,11 @@ results = results_data['results']
 protocol = results_data['protocol']
 params = results_data['parameters']
 
-# Results header (subtle)
-st.caption(f"**{protocol['name']}** • {params['n_patients']} patients • {params['duration_years']} years")
+# Results header (subtle) with memorable name if available
+memorable_name = ""
+if hasattr(results.metadata, 'memorable_name') and results.metadata.memorable_name:
+    memorable_name = f" • {results.metadata.memorable_name}"
+st.caption(f"**{protocol['name']}**{memorable_name} • {params['n_patients']} patients • {params['duration_years']} years")
 
 # Get summary statistics once and cache
 @st.cache_data

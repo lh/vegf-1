@@ -20,6 +20,9 @@ class ResultsFactory:
     # Storage paths
     DEFAULT_RESULTS_DIR = Path("simulation_results")
     
+    # Track used memorable names within session to ensure uniqueness
+    _used_memorable_names = set()
+    
     @classmethod
     def create_results(
         cls,
@@ -56,12 +59,23 @@ class ResultsFactory:
         fraction = int((duration_years - years) * 100)
         duration_code = f"{years:02d}-{fraction:02d}"
         
-        # Generate memorable name using haikunator
+        # Generate memorable name using haikunator with session uniqueness
         try:
             from haikunator import Haikunator
             haikunator = Haikunator()
-            # Use seed for reproducibility if needed
-            memorable_name = haikunator.haikunate(token_length=0, delimiter='-')
+            
+            # Generate unique name within session
+            max_attempts = 10
+            for _ in range(max_attempts):
+                memorable_name = haikunator.haikunate(token_length=0, delimiter='-')
+                if memorable_name not in cls._used_memorable_names:
+                    cls._used_memorable_names.add(memorable_name)
+                    break
+            else:
+                # If we can't find unique name, add a token
+                memorable_name = haikunator.haikunate(token_length=2, delimiter='-')
+                cls._used_memorable_names.add(memorable_name)
+                
         except ImportError:
             # Fallback to hex if haikunator not installed
             memorable_name = uuid.uuid4().hex[:8]
@@ -80,7 +94,8 @@ class ResultsFactory:
             duration_years=duration_years,
             seed=seed,
             runtime_seconds=runtime_seconds,
-            storage_type="parquet"
+            storage_type="parquet",
+            memorable_name=memorable_name
         )
         
         # Determine save path
