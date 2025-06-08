@@ -508,7 +508,7 @@ try:
         if ape_button("Next: Run Simulation", key="main_sim_btn",
                      icon="play", full_width=True,
                      is_primary_action=True):
-            st.switch_page("pages/2_Run_Simulation.py")
+            st.switch_page("pages/2_Simulations.py")
     
     # Protocol parameters tabs
     tab1, tab2, tab3, tab4, tab5 = st.tabs([

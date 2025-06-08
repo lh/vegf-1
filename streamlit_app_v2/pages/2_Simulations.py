@@ -13,9 +13,14 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
 from core.simulation_adapter import MemoryAwareSimulationRunner
 from core.monitoring.memory import MemoryMonitor
+from utils.state_helpers import (
+    add_simulation_to_registry, save_protocol_spec,
+    set_active_simulation, list_simulation_summaries,
+    get_active_simulation
+)
 
 st.set_page_config(
-    page_title="Run Simulation", 
+    page_title="Simulations", 
     page_icon="🦍", 
     layout="wide",
     initial_sidebar_state="expanded"  # Show sidebar for memory monitoring
@@ -39,7 +44,7 @@ with col1:
     if top_navigation_home_button():
         st.switch_page("APE.py")
 with col2:
-    st.title("Run Simulation")
+    st.title("Simulations")
     st.markdown("Execute simulations using V2 engine with complete parameter tracking.")
 
 # Check if protocol is loaded
@@ -55,6 +60,34 @@ if not st.session_state.get('current_protocol'):
 # Display current protocol (subtle)
 protocol_info = st.session_state.current_protocol
 st.caption(f"Protocol: **{protocol_info['name']}** v{protocol_info['version']}")
+
+# Show saved simulations selector if any exist
+saved_simulations = list_simulation_summaries()
+if saved_simulations:
+    st.markdown("---")
+    st.subheader("Saved Simulations")
+    
+    # Create a table-like display
+    cols = st.columns([3, 2, 2, 2, 2])
+    cols[0].markdown("**Protocol**")
+    cols[1].markdown("**Patients**")
+    cols[2].markdown("**Duration**")
+    cols[3].markdown("**Engine**")
+    cols[4].markdown("**Actions**")
+    
+    for sim in saved_simulations[:5]:  # Show max 5
+        cols = st.columns([3, 2, 2, 2, 2])
+        cols[0].text(sim['protocol_name'])
+        cols[1].text(f"{sim['n_patients']:,}")
+        cols[2].text(f"{sim['duration_years']} years")
+        cols[3].text(sim['engine'].upper())
+        
+        # View button
+        if cols[4].button("View", key=f"view_{sim['sim_id']}", use_container_width=True):
+            set_active_simulation(sim['sim_id'])
+            st.switch_page("pages/3_Analysis_Overview.py")
+    
+    st.markdown("---")
 
 # Simulation parameters
 st.header("Simulation Parameters")
@@ -221,8 +254,8 @@ if run_clicked:
         
         progress_bar.progress(90, text="Processing results...")
         
-        # Store memory-aware results in session state
-        st.session_state.simulation_results = {
+        # Build simulation data
+        simulation_data = {
             'results': results,  # This is now a SimulationResults object
             'protocol': protocol_info,
             'parameters': {
@@ -234,8 +267,19 @@ if run_clicked:
             'runtime': runtime,
             'timestamp': datetime.now().isoformat(),
             'storage_type': results.metadata.storage_type,
-            'memory_usage_mb': results.get_memory_usage_mb()
+            'memory_usage_mb': results.get_memory_usage_mb(),
+            'audit_trail': runner.audit_log  # Add audit trail to simulation data
         }
+        
+        # Save protocol YAML content
+        save_protocol_spec(simulation_data, Path(protocol_info['path']))
+        
+        # Add to registry with simulation ID
+        sim_id = results.metadata.sim_id
+        add_simulation_to_registry(sim_id, simulation_data)
+        
+        # Set as active simulation
+        set_active_simulation(sim_id)
         
         progress_bar.progress(100, text="Simulation complete!")
         

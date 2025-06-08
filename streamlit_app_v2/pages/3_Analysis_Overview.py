@@ -37,6 +37,7 @@ st.set_page_config(
 # Add parent for utils import
 sys.path.append(str(Path(__file__).parent.parent))
 from utils.carbon_button_helpers import top_navigation_home_button, ape_button
+from utils.state_helpers import get_active_simulation
 from visualizations.streamgraph_simple import create_simple_streamgraph
 from components.treatment_patterns.enhanced_tab import render_enhanced_treatment_patterns_tab
 
@@ -55,17 +56,17 @@ current_mode = init_visualization_mode()
 # Add export settings to sidebar
 render_export_settings("sidebar")
 
-# Check if results are available
-if not st.session_state.get('simulation_results'):
+# Check if results are available using new state helper
+results_data = get_active_simulation()
+if not results_data:
     # Just show centered navigation button
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if ape_button("Run a Simulation", key="nav_run_sim", 
                      icon="play", full_width=True, is_primary_action=True):
-            st.switch_page("pages/2_Run_Simulation.py")
+            st.switch_page("pages/2_Simulations.py")
     st.stop()
 
-results_data = st.session_state.simulation_results
 results = results_data['results']
 protocol = results_data['protocol']
 params = results_data['parameters']
@@ -344,8 +345,9 @@ with tab5:
     st.header("Audit Trail")
     st.markdown("Complete parameter tracking and simulation events.")
     
-    if st.session_state.get('audit_trail'):
-        audit_log = st.session_state.audit_trail
+    # Get audit trail from active simulation data
+    audit_log = results_data.get('audit_trail')
+    if audit_log:
         
         # Display audit events
         for i, event in enumerate(audit_log):

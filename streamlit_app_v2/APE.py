@@ -85,14 +85,14 @@ with col2:
     # Disable Run Simulation if no protocol is loaded
     simulation_disabled = st.session_state.current_protocol is None
     if navigation_button(
-        "Run Simulation",
+        "Simulations",
         key="nav_simulation",
         help_text="Execute simulations with selected protocols",
         full_width=True,
         disabled=simulation_disabled,
         button_type="ghost" if simulation_disabled else "secondary"
     ):
-        st.switch_page("pages/2_Run_Simulation.py")
+        st.switch_page("pages/2_Simulations.py")
 
 with col3:
     # Disable Analysis if no simulation results are available

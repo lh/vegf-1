@@ -64,7 +64,7 @@ class TestStreamlitUI:
         page.locator("button:has-text('Run Simulation')").click()
         
         # Wait for navigation
-        page.wait_for_url("**/Run_Simulation")
+        page.wait_for_url("**/Simulations")
         
         # Should see warning if no protocol loaded
         expect(page.locator("text=No protocol loaded")).to_be_visible()
@@ -197,7 +197,7 @@ version: 1.0.0
     def test_error_states(self, page):
         """Test error state handling."""
         # Try to run simulation without protocol
-        page.goto("http://localhost:8509/Run_Simulation")
+        page.goto("http://localhost:8509/Simulations")
         page.wait_for_load_state("networkidle")
         
         # Should show warning
