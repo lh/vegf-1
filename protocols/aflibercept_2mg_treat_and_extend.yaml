@@ -1,0 +1,210 @@
+# Aflibercept 2mg Treat-and-Extend Protocol
+# Based on best available knowledge June 2025
+# Extraction date: 2025-06-08
+
+# Required metadata
+name: "Aflibercept 2mg Treat-and-Extend"
+version: "1.0.0"
+created_date: "2025-06-08"
+author: "Clinical Economics Integration Team"
+description: "Aflibercept 2mg treat-and-extend protocol based on current best practice"
+
+# Core protocol parameters
+protocol_type: "treat_and_extend"
+min_interval_days: 49        # 7 weeks
+max_interval_days: 140       # 20 weeks
+extension_days: 14           # 2 weeks
+shortening_days: 14          # 2 weeks (symmetric with extension)
+
+# Required disease transitions - PLACEHOLDER VALUES
+# Note: Using standard clinical assumptions
+disease_transitions:
+  NAIVE:
+    NAIVE: 0.00
+    STABLE: 0.40
+    ACTIVE: 0.50
+    HIGHLY_ACTIVE: 0.10
+    
+  STABLE:
+    NAIVE: 0.00
+    STABLE: 0.70
+    ACTIVE: 0.25
+    HIGHLY_ACTIVE: 0.05
+    
+  ACTIVE:
+    NAIVE: 0.00
+    STABLE: 0.30
+    ACTIVE: 0.60
+    HIGHLY_ACTIVE: 0.10
+    
+  HIGHLY_ACTIVE:
+    NAIVE: 0.00
+    STABLE: 0.10
+    ACTIVE: 0.40
+    HIGHLY_ACTIVE: 0.50
+
+# Required vision change model - PLACEHOLDER VALUES
+# Note: Not found in commissioning guidance, using conservative estimates
+vision_change_model:
+  naive_treated:
+    mean: 2.0          # Conservative improvement
+    std: 4.0
+    
+  naive_untreated:
+    mean: -1.5         # Natural history decline
+    std: 2.0
+    
+  stable_treated:
+    mean: 0.5          # Slight improvement/maintenance
+    std: 2.0
+    
+  stable_untreated:
+    mean: -0.5
+    std: 1.0
+    
+  active_treated:
+    mean: -0.5         # Slower decline with treatment
+    std: 3.0
+    
+  active_untreated:
+    mean: -2.0
+    std: 2.5
+    
+  highly_active_treated:
+    mean: -1.5         # Reduced decline with treatment
+    std: 4.0
+    
+  highly_active_untreated:
+    mean: -4.0
+    std: 3.5
+
+# Treatment effect on transitions - PLACEHOLDER VALUES
+treatment_effect_on_transitions:
+  NAIVE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 1.5        # Treatment promotes stability
+      ACTIVE: 0.8        # Reduces progression to active
+      HIGHLY_ACTIVE: 0.6 # Reduces progression to highly active
+      
+  STABLE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 1.2        # Helps maintain stability
+      ACTIVE: 0.8
+      HIGHLY_ACTIVE: 0.7
+      
+  ACTIVE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 1.3        # Promotes return to stable
+      ACTIVE: 0.9
+      HIGHLY_ACTIVE: 0.8
+      
+  HIGHLY_ACTIVE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 1.2
+      ACTIVE: 1.1
+      HIGHLY_ACTIVE: 0.9
+
+# Baseline vision parameters
+baseline_vision:
+  mean: 55             # Typical trial entry criteria
+  std: 15
+  min: 25              # Minimum for treatment (guidance threshold)
+  max: 85
+
+# Discontinuation rules - Based on current best practice
+discontinuation_rules:
+  # Stable disease at extended interval
+  stable_extended_interval:
+    criteria:
+      consecutive_stable_visits: 3
+      minimum_interval_weeks: 7     # Cannot extend beyond this
+    probability: 0.10
+    reason: "stable_disease"
+    
+  # Poor response - primary criterion
+  poor_response_25_letters:
+    criteria:
+      va_less_than: 25              # < 25 letters absolute
+      consecutive_visits: 2         # On 2 consecutive visits
+      attributable_to_amd: true
+    probability: 0.95
+    reason: "poor_response"
+    
+  # Critical vision loss
+  critical_vision_15_letters:
+    criteria:
+      va_less_than: 15              # < 15 letters absolute
+      consecutive_visits: 2
+    probability: 0.99
+    reason: "severe_vision_loss"
+    
+  # Unable to extend intervals
+  frequent_injections:
+    criteria:
+      max_achieved_interval_weeks: 7  # Cannot extend beyond 7 weeks
+      attempts: 2                     # After 2 failed extension attempts
+      months_on_treatment: 12
+    probability: 0.50                # May switch or stop
+    reason: "treatment_burden"
+    
+  # Non-compliance
+  non_compliance:
+    criteria:
+      missed_consecutive_visits: 2
+      months_since_last_visit: 4
+    probability: 0.95
+    reason: "lost_to_follow_up"
+    
+  # Adverse events
+  adverse_event:
+    criteria:
+      severe_adverse_event: true
+    probability: 0.90
+    reason: "adverse_event"
+
+# Protocol-specific parameters
+treat_and_extend_parameters:
+  # Loading phase - Based on standard practice
+  loading_phase:
+    number_of_doses: 3
+    interval_days: 28               # Monthly
+    
+  # Extension/reduction rules
+  extension_rules:
+    stable_criteria:
+      no_disease_activity: true     # OCT dry
+      va_stable_or_improved: true
+    extend_by_days: 14              # 2 weeks
+    max_extension_days: 28          # Up to 4 weeks per guidance
+    
+  reduction_rules:
+    active_criteria:
+      disease_activity: true        # OCT shows fluid
+      va_deterioration: true        # Loss of letters
+    reduce_by_days: 14              # 2 weeks
+    min_interval_days: 28           # Not less than monthly
+    
+  # Treatment switching criteria
+  switch_criteria:
+    suboptimal_after_loading: true
+    frequent_injections_threshold_weeks: 8
+    failed_extension_attempts: 2
+    
+  # Maximum lines of therapy
+  max_lines_of_therapy: 3
+
+# Clinical evidence basis
+clinical_evidence:
+  source: "Based on best available knowledge and current clinical practice"
+  key_principles:
+    - "First choice: Aflibercept 2mg (switch to biosimilar when available)"
+    - "Maximum 3 lines of therapy per eye"
+    - "Switch if unable to extend beyond 7 weeks after 2 attempts"
+  limitations:
+    - "Loading phase based on standard clinical practice"
+    - "Disease state transitions using placeholder values pending calibration"
+    - "Vision change parameters using conservative estimates"
