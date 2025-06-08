@@ -117,7 +117,7 @@ run_clicked, view_analysis_clicked, protocol_clicked, manage_clicked = render_co
 
 # Handle button clicks
 if view_analysis_clicked and has_results:
-    st.switch_page("pages/3_Analysis_Overview.py")
+    st.switch_page("pages/3_Analysis.py")
 
 if protocol_clicked:
     st.switch_page("pages/1_Protocol_Manager.py")

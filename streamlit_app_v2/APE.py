@@ -95,14 +95,14 @@ with col3:
     # Disable Analysis if no simulation results are available
     analysis_disabled = st.session_state.simulation_results is None
     if navigation_button(
-        "Analysis Overview",
+        "Analysis",
         key="nav_analysis",
         help_text="Visualize and compare simulation results",
         full_width=True,
         disabled=analysis_disabled,
         button_type="ghost" if analysis_disabled else "secondary"
     ):
-        st.switch_page("pages/3_Analysis_Overview.py")
+        st.switch_page("pages/3_Analysis.py")
 
 # Quick status line (optional - much more subtle)
 if st.session_state.current_protocol or st.session_state.simulation_results:
