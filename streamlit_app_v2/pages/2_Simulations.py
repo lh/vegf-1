@@ -37,9 +37,9 @@ from utils.carbon_button_helpers import (
 )
 from utils.simulation_loader import load_simulation_results
 
-# Import export/import components
-from components.export import render_export_section
-from components.import_component import render_import_section
+# Import simulation package manager
+from utils.simulation_package import SimulationPackageManager, SecurityError, PackageValidationError
+from core.storage.registry import SimulationRegistry
 
 # Show memory usage in sidebar
 monitor = MemoryMonitor()
@@ -75,133 +75,7 @@ with col2:
     st.title("Simulations")
     st.markdown("Run new simulations and manage existing ones.")
 
-# Recent Simulations List
-st.header("Recent Simulations")
-
-# Get list of simulations from results directory
-results_dir = ResultsFactory.DEFAULT_RESULTS_DIR
-has_any_simulations = False
-simulations = []
-
-if results_dir.exists():
-    sim_dirs = sorted([d for d in results_dir.iterdir() if d.is_dir()], 
-                     key=lambda x: x.name, reverse=True)[:10]  # Show last 10
-    has_any_simulations = len(sim_dirs) > 0
-    
-    if sim_dirs:
-        # Create a list of simulations with metadata
-        simulations = []
-        for sim_dir in sim_dirs:
-            try:
-                # Load metadata
-                metadata_path = sim_dir / "metadata.json"
-                if metadata_path.exists():
-                    with open(metadata_path) as f:
-                        metadata = json.load(f)
-                    
-                    # Extract key info
-                    sim_info = {
-                        'id': sim_dir.name,
-                        'timestamp': metadata.get('created_date', 'Unknown'),
-                        'patients': metadata.get('n_patients', 0),
-                        'duration': metadata.get('duration_years', 0),
-                        'protocol': metadata.get('protocol_name', 'Unknown'),
-                        'is_imported': sim_dir.name.startswith('imported_')
-                    }
-                    simulations.append(sim_info)
-            except:
-                continue
-        
-        if simulations:
-            # Display as cards
-            for i in range(0, len(simulations), 3):
-                cols = st.columns(3)
-                for j, col in enumerate(cols):
-                    if i + j < len(simulations):
-                        sim = simulations[i + j]
-                        with col:
-                            # Card styling
-                            is_selected = st.session_state.get('current_sim_id') == sim['id']
-                            is_imported = sim['is_imported'] or sim['id'] in st.session_state.get('imported_simulations', set())
-                            
-                            # Create card with conditional styling
-                            card_style = "border: 2px solid #0F62FE;" if is_selected else "border: 1px solid #ddd;"
-                            if is_imported:
-                                card_style += " background-color: #f0f7ff;"
-                            
-                            with st.container():
-                                st.markdown(f"""
-                                <div style="padding: 1rem; {card_style} border-radius: 8px; margin-bottom: 1rem;">
-                                    <h5 style="margin: 0 0 0.5rem 0;">{sim['protocol']}</h5>
-                                    <p style="margin: 0; font-size: 0.9rem; color: #666;">
-                                        {sim['patients']:,} patients • {sim['duration']} years
-                                    </p>
-                                    <p style="margin: 0; font-size: 0.8rem; color: #999;">
-                                        {sim['timestamp'][:19]}
-                                    </p>
-                                    {f'<span style="background: #0F62FE; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">IMPORTED</span>' if is_imported else ''}
-                                </div>
-                                """, unsafe_allow_html=True)
-                                
-                                if ape_button(
-                                    "Select" if not is_selected else "Selected ✓",
-                                    key=f"select_{sim['id']}",
-                                    full_width=True,
-                                    is_primary_action=not is_selected
-                                ):
-                                    # Use the unified loader to set both current_sim_id AND load results
-                                    if load_simulation_results(sim['id']):
-                                        st.rerun()
-                                    else:
-                                        st.error(f"Failed to load simulation {sim['id']}")
-        else:
-            st.info("No recent simulations found. Run a simulation below to get started.")
-    else:
-        st.info("No recent simulations found. Run a simulation below to get started.")
-else:
-    st.info("No simulations directory found. Run your first simulation below!")
-
-# Manage section with export/import
-# Show manage button if ANY simulations exist OR if we have a current_sim_id
-show_manage = has_any_simulations or st.session_state.get('current_sim_id')
-
-if show_manage:
-    st.markdown("---")
-    
-    # Manage button with floppy disk icon
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if 'show_manage' not in st.session_state:
-            st.session_state.show_manage = False
-            
-        if ape_button(
-            "💾 Manage" if not st.session_state.show_manage else "💾 Manage ✓",
-            key="manage_simulations",
-            full_width=True,
-            icon="save"  # This would be the Carbon save icon
-        ):
-            st.session_state.show_manage = not st.session_state.show_manage
-            st.rerun()
-    
-    # Show manage section if toggled
-    if st.session_state.show_manage:
-        with st.container():
-            st.markdown("### 📦 Simulation Management")
-            
-            tab1, tab2 = st.tabs(["📤 Export", "📥 Import"])
-            
-            with tab1:
-                # Export current simulation
-                render_export_section()
-            
-            with tab2:
-                # Import simulation package
-                render_import_section()
-
-# Divider
-st.markdown("---")
-
-# Check if protocol is loaded
+# Check if protocol is loaded first
 if not st.session_state.get('current_protocol'):
     st.header("Run New Simulation")
     st.info("Select a protocol first to run a simulation.")
@@ -212,7 +86,7 @@ if not st.session_state.get('current_protocol'):
             st.switch_page("pages/1_Protocol_Manager.py")
     st.stop()
 
-# Run New Simulation section
+# Section 3: Run New Simulation
 st.header("Run New Simulation")
 
 # Display current protocol (subtle)
@@ -354,31 +228,84 @@ total_visits = int(n_patients * duration_years * visits_per_year)
 
 st.caption(f"Estimated runtime: {runtime_text} • Total visits: ~{total_visits:,}")
 
-# Action buttons in single line
+# Section 4: Action buttons (Control Panel)
 st.markdown("---")
 
-col1, col2, col3 = st.columns([2, 1, 1])
+col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
 
 with col1:
-    # Run Simulation button
-    run_clicked = ape_button("▶️ Run Simulation", key="run_sim_main", 
-                            full_width=True, is_primary_action=True)
+    # Run Simulation button with play icon
+    run_clicked = ape_button("Run Simulation", key="run_sim_main", 
+                            full_width=True, is_primary_action=True, icon="play")
 
 with col2:
     # View Analysis - always show but disable if no results  
     has_results = st.session_state.get('current_sim_id') is not None
-    if ape_button("📊 View Analysis", key="view_analysis_action", 
+    if ape_button("View Analysis", key="view_analysis_action", 
                  full_width=True, 
-                 disabled=not has_results):
+                 disabled=not has_results,
+                 icon="chart"):
         if has_results:
             st.switch_page("pages/3_Analysis_Overview.py")
 
 with col3:
     # Change Protocol
-    if ape_button("📋 Protocol", key="change_protocol", 
-                 full_width=True):
+    if ape_button("Protocol", key="change_protocol", 
+                 full_width=True,
+                 icon="document"):
         st.switch_page("pages/1_Protocol_Manager.py")
 
+with col4:
+    # Manage button
+    has_any_simulations = False
+    if ResultsFactory.DEFAULT_RESULTS_DIR.exists():
+        sim_dirs = list(ResultsFactory.DEFAULT_RESULTS_DIR.iterdir())
+        has_any_simulations = any(d.is_dir() for d in sim_dirs)
+    
+    show_manage = has_any_simulations or st.session_state.get('current_sim_id')
+    
+    if show_manage:
+        if ape_button("Manage", key="manage_btn", 
+                     full_width=True,
+                     icon="save"):
+            st.session_state.show_manage = not st.session_state.get('show_manage', False)
+
+# Show manage panel if toggled
+if st.session_state.get('show_manage', False):
+    with st.container():
+        # Upload section first
+        uploaded_file = st.file_uploader(
+            "",
+            type=['zip'],
+            label_visibility="collapsed",
+            help="Upload a simulation package (.zip)"
+        )
+        
+        if uploaded_file is not None:
+            handle_import(uploaded_file)
+        
+        # Download section - only show if simulation is selected
+        if st.session_state.get('current_sim_id'):
+            sim_id = st.session_state.get('current_sim_id')
+            # Check if simulation exists
+            results_path = ResultsFactory.DEFAULT_RESULTS_DIR / sim_id
+            if results_path.exists():
+                # Show info about current simulation
+                st.markdown(f"<small style='color: #666;'>Current simulation: {sim_id[:20]}...</small>", unsafe_allow_html=True)
+                
+                # Carbon-styled download button
+                package_data = create_export_package(sim_id)
+                if package_data:
+                    st.download_button(
+                        label="Download",
+                        data=package_data,
+                        file_name=f"APE_{sim_id}.zip",
+                        mime="application/zip",
+                        use_container_width=True,
+                        help="Download simulation as portable package"
+                    )
+
+# Handle Run Simulation click
 if run_clicked:
     # Create progress indicators
     progress_bar = st.progress(0, text="Initializing simulation...")
@@ -460,12 +387,163 @@ if run_clicked:
         progress_bar.progress(100, text="Simulation complete!")
         
         # Simple success message
-        st.success(f"✅ Simulation completed in {runtime:.1f} seconds")
+        st.success(f"Simulation completed in {runtime:.1f} seconds")
         
         # Reload to show in recent simulations
         st.rerun()
         
     except Exception as e:
         progress_bar.empty()
-        st.error(f"❌ Simulation failed: {str(e)}")
+        st.error(f"Simulation failed: {str(e)}")
         st.exception(e)
+
+
+@st.cache_data
+def create_export_package(sim_id: str) -> bytes:
+    """Create export package for a simulation"""
+    try:
+        # Load simulation results
+        results_path = ResultsFactory.DEFAULT_RESULTS_DIR / sim_id
+        results = ResultsFactory.load_results(results_path)
+        
+        # Create package
+        manager = SimulationPackageManager()
+        package_data = manager.create_package(results)
+        
+        return package_data
+    except Exception as e:
+        st.error(f"Failed to create package: {str(e)}")
+        return b""
+
+
+def handle_import(uploaded_file):
+    """Handle simulation package import"""
+    try:
+        with st.spinner("Importing simulation..."):
+            # Read package data
+            package_data = uploaded_file.read()
+            
+            # Import the package
+            manager = SimulationPackageManager()
+            imported_results = manager.import_package(package_data)
+            
+            # Get the sim_id from imported results
+            sim_id = imported_results.metadata.sim_id
+            
+            # Register with simulation registry
+            registry = SimulationRegistry(ResultsFactory.DEFAULT_RESULTS_DIR)
+            
+            # Calculate size
+            import os
+            sim_path = ResultsFactory.DEFAULT_RESULTS_DIR / sim_id
+            size_mb = 0
+            if sim_path.exists():
+                for file in sim_path.rglob('*'):
+                    if file.is_file():
+                        size_mb += file.stat().st_size / (1024 * 1024)
+            
+            # Convert metadata to dict
+            metadata_dict = imported_results.metadata.to_dict()
+            registry.register_simulation(sim_id, metadata_dict, size_mb)
+            
+            # Load the imported simulation
+            if load_simulation_results(sim_id):
+                # Mark as imported
+                if 'imported_simulations' not in st.session_state:
+                    st.session_state.imported_simulations = set()
+                st.session_state.imported_simulations.add(sim_id)
+                
+                st.success("Simulation imported successfully!")
+                st.rerun()
+            else:
+                st.error("Failed to load imported simulation")
+                
+    except SecurityError as e:
+        st.error(f"Security Error: {str(e)}")
+    except PackageValidationError as e:
+        st.error(f"Package Error: {str(e)}")
+    except Exception as e:
+        st.error(f"Import failed: {str(e)}")
+
+
+# Section 1: Recent Simulations List
+st.markdown("---")
+st.header("Recent Simulations")
+
+results_dir = ResultsFactory.DEFAULT_RESULTS_DIR
+if results_dir.exists():
+    sim_dirs = sorted([d for d in results_dir.iterdir() if d.is_dir()], 
+                     key=lambda x: x.name, reverse=True)[:10]  # Show last 10
+    
+    if sim_dirs:
+        # Create a list of simulations with metadata
+        simulations = []
+        for sim_dir in sim_dirs:
+            try:
+                # Load metadata
+                metadata_path = sim_dir / "metadata.json"
+                if metadata_path.exists():
+                    with open(metadata_path) as f:
+                        metadata = json.load(f)
+                    
+                    # Extract key info
+                    sim_info = {
+                        'id': sim_dir.name,
+                        'timestamp': metadata.get('created_date', 'Unknown'),
+                        'patients': metadata.get('n_patients', 0),
+                        'duration': metadata.get('duration_years', 0),
+                        'protocol': metadata.get('protocol_name', 'Unknown'),
+                        'is_imported': sim_dir.name.startswith('imported_')
+                    }
+                    simulations.append(sim_info)
+            except:
+                continue
+        
+        if simulations:
+            # Display as cards
+            for i in range(0, len(simulations), 3):
+                cols = st.columns(3)
+                for j, col in enumerate(cols):
+                    if i + j < len(simulations):
+                        sim = simulations[i + j]
+                        with col:
+                            # Card styling
+                            is_selected = st.session_state.get('current_sim_id') == sim['id']
+                            is_imported = sim['is_imported'] or sim['id'] in st.session_state.get('imported_simulations', set())
+                            
+                            # Create card with conditional styling
+                            card_style = "border: 2px solid #0F62FE;" if is_selected else "border: 1px solid #ddd;"
+                            if is_imported:
+                                card_style += " background-color: #f0f7ff;"
+                            
+                            with st.container():
+                                st.markdown(f"""
+                                <div style="padding: 1rem; {card_style} border-radius: 8px; margin-bottom: 1rem;">
+                                    <h5 style="margin: 0 0 0.5rem 0;">{sim['protocol']}</h5>
+                                    <p style="margin: 0; font-size: 0.9rem; color: #666;">
+                                        {sim['patients']:,} patients • {sim['duration']} years
+                                    </p>
+                                    <p style="margin: 0; font-size: 0.8rem; color: #999;">
+                                        {sim['timestamp'][:19]}
+                                    </p>
+                                    {f'<span style="background: #0F62FE; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">IMPORTED</span>' if is_imported else ''}
+                                </div>
+                                """, unsafe_allow_html=True)
+                                
+                                if ape_button(
+                                    "Select" if not is_selected else "Selected ✓",
+                                    key=f"select_{sim['id']}",
+                                    full_width=True,
+                                    is_primary_action=not is_selected
+                                ):
+                                    # Use the unified loader to set both current_sim_id AND load results
+                                    if load_simulation_results(sim['id']):
+                                        st.rerun()
+                                    else:
+                                        st.error(f"Failed to load simulation {sim['id']}")
+        else:
+            st.info("No recent simulations found. Run a simulation above to get started.")
+    else:
+        st.info("No recent simulations found. Run a simulation above to get started.")
+else:
+    st.info("No simulations directory found. Run your first simulation above!")
