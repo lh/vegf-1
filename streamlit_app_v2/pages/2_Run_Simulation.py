@@ -237,8 +237,6 @@ if run_clicked:
             'memory_usage_mb': results.get_memory_usage_mb()
         }
         
-        st.session_state.audit_trail = runner.audit_log
-        
         progress_bar.progress(100, text="Simulation complete!")
         
         # Simple success message
