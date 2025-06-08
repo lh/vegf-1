@@ -227,7 +227,7 @@ def render_recent_simulations():
                         # Extract key info
                         sim_info = {
                             'id': sim_dir.name,
-                            'timestamp': metadata.get('created_date', 'Unknown'),
+                            'timestamp': metadata.get('timestamp', 'Unknown'),
                             'patients': metadata.get('n_patients', 0),
                             'duration': metadata.get('duration_years', 0),
                             'protocol': metadata.get('protocol_name', 'Unknown'),
