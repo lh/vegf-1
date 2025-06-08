@@ -41,6 +41,75 @@ from utils.simulation_loader import load_simulation_results
 from utils.simulation_package import SimulationPackageManager, SecurityError, PackageValidationError
 from core.storage.registry import SimulationRegistry
 
+
+@st.cache_data
+def create_export_package(sim_id: str) -> bytes:
+    """Create export package for a simulation"""
+    try:
+        # Load simulation results
+        results_path = ResultsFactory.DEFAULT_RESULTS_DIR / sim_id
+        results = ResultsFactory.load_results(results_path)
+        
+        # Create package
+        manager = SimulationPackageManager()
+        package_data = manager.create_package(results)
+        
+        return package_data
+    except Exception as e:
+        st.error(f"Failed to create package: {str(e)}")
+        return b""
+
+
+def handle_import(uploaded_file):
+    """Handle simulation package import"""
+    try:
+        with st.spinner("Importing simulation..."):
+            # Read package data
+            package_data = uploaded_file.read()
+            
+            # Import the package
+            manager = SimulationPackageManager()
+            imported_results = manager.import_package(package_data)
+            
+            # Get the sim_id from imported results
+            sim_id = imported_results.metadata.sim_id
+            
+            # Register with simulation registry
+            registry = SimulationRegistry(ResultsFactory.DEFAULT_RESULTS_DIR)
+            
+            # Calculate size
+            import os
+            sim_path = ResultsFactory.DEFAULT_RESULTS_DIR / sim_id
+            size_mb = 0
+            if sim_path.exists():
+                for file in sim_path.rglob('*'):
+                    if file.is_file():
+                        size_mb += file.stat().st_size / (1024 * 1024)
+            
+            # Convert metadata to dict
+            metadata_dict = imported_results.metadata.to_dict()
+            registry.register_simulation(sim_id, metadata_dict, size_mb)
+            
+            # Load the imported simulation
+            if load_simulation_results(sim_id):
+                # Mark as imported
+                if 'imported_simulations' not in st.session_state:
+                    st.session_state.imported_simulations = set()
+                st.session_state.imported_simulations.add(sim_id)
+                
+                st.success("Simulation imported successfully!")
+                st.rerun()
+            else:
+                st.error("Failed to load imported simulation")
+                
+    except SecurityError as e:
+        st.error(f"Security Error: {str(e)}")
+    except PackageValidationError as e:
+        st.error(f"Package Error: {str(e)}")
+    except Exception as e:
+        st.error(f"Import failed: {str(e)}")
+
+
 # Show memory usage in sidebar
 monitor = MemoryMonitor()
 monitor.display_in_sidebar()
@@ -396,75 +465,6 @@ if run_clicked:
         progress_bar.empty()
         st.error(f"Simulation failed: {str(e)}")
         st.exception(e)
-
-
-@st.cache_data
-def create_export_package(sim_id: str) -> bytes:
-    """Create export package for a simulation"""
-    try:
-        # Load simulation results
-        results_path = ResultsFactory.DEFAULT_RESULTS_DIR / sim_id
-        results = ResultsFactory.load_results(results_path)
-        
-        # Create package
-        manager = SimulationPackageManager()
-        package_data = manager.create_package(results)
-        
-        return package_data
-    except Exception as e:
-        st.error(f"Failed to create package: {str(e)}")
-        return b""
-
-
-def handle_import(uploaded_file):
-    """Handle simulation package import"""
-    try:
-        with st.spinner("Importing simulation..."):
-            # Read package data
-            package_data = uploaded_file.read()
-            
-            # Import the package
-            manager = SimulationPackageManager()
-            imported_results = manager.import_package(package_data)
-            
-            # Get the sim_id from imported results
-            sim_id = imported_results.metadata.sim_id
-            
-            # Register with simulation registry
-            registry = SimulationRegistry(ResultsFactory.DEFAULT_RESULTS_DIR)
-            
-            # Calculate size
-            import os
-            sim_path = ResultsFactory.DEFAULT_RESULTS_DIR / sim_id
-            size_mb = 0
-            if sim_path.exists():
-                for file in sim_path.rglob('*'):
-                    if file.is_file():
-                        size_mb += file.stat().st_size / (1024 * 1024)
-            
-            # Convert metadata to dict
-            metadata_dict = imported_results.metadata.to_dict()
-            registry.register_simulation(sim_id, metadata_dict, size_mb)
-            
-            # Load the imported simulation
-            if load_simulation_results(sim_id):
-                # Mark as imported
-                if 'imported_simulations' not in st.session_state:
-                    st.session_state.imported_simulations = set()
-                st.session_state.imported_simulations.add(sim_id)
-                
-                st.success("Simulation imported successfully!")
-                st.rerun()
-            else:
-                st.error("Failed to load imported simulation")
-                
-    except SecurityError as e:
-        st.error(f"Security Error: {str(e)}")
-    except PackageValidationError as e:
-        st.error(f"Package Error: {str(e)}")
-    except Exception as e:
-        st.error(f"Import failed: {str(e)}")
-
 
 # Section 1: Recent Simulations List
 st.markdown("---")
