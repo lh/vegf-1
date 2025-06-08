@@ -34,8 +34,8 @@ def format_timestamp(timestamp_str: str) -> str:
     
     try:
         if HAS_PENDULUM:
-            # Parse the timestamp and make it timezone-aware
-            dt = pendulum.parse(timestamp_str)
+            # Parse the timestamp - treat naive timestamps as local time
+            dt = pendulum.parse(timestamp_str, tz='local')
             now = pendulum.now()
             
             # Use pendulum's human-friendly formatting

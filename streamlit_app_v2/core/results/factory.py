@@ -13,6 +13,12 @@ from typing import Any, Optional, Dict
 from .base import SimulationResults, SimulationMetadata
 from .parquet import ParquetResults
 
+try:
+    import pendulum
+    HAS_PENDULUM = True
+except ImportError:
+    HAS_PENDULUM = False
+
 
 class ResultsFactory:
     """Factory for creating SimulationResults instances."""
@@ -52,7 +58,13 @@ class ResultsFactory:
             ParquetResults instance
         """
         # Generate unique simulation ID with duration encoding
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        # Use pendulum for timezone-aware timestamps
+        if HAS_PENDULUM:
+            now = pendulum.now()
+            timestamp = now.strftime('%Y%m%d_%H%M%S')
+        else:
+            now = datetime.now()
+            timestamp = now.strftime('%Y%m%d_%H%M%S')
         
         # Encode duration as YY-FF format
         years = int(duration_years)
@@ -86,7 +98,7 @@ class ResultsFactory:
         # Create metadata
         metadata = SimulationMetadata(
             sim_id=sim_id,
-            timestamp=datetime.now(),
+            timestamp=now,
             protocol_name=protocol_name,
             protocol_version=protocol_version,
             engine_type=engine_type,
