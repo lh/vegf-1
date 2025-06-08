@@ -341,7 +341,9 @@ with col4:
 
 # Show manage panel if toggled
 if st.session_state.get('show_manage', False):
-    with st.container():
+    # Make the manage section 1/4 width by using columns
+    manage_cols = st.columns([3, 1])  # 3:1 ratio gives us the rightmost quarter
+    with manage_cols[1]:
         # Upload section first
         uploaded_file = st.file_uploader(
             "",
@@ -360,7 +362,7 @@ if st.session_state.get('show_manage', False):
             results_path = ResultsFactory.DEFAULT_RESULTS_DIR / sim_id
             if results_path.exists():
                 # Show info about current simulation
-                st.markdown(f"<small style='color: #666;'>Current simulation: {sim_id[:20]}...</small>", unsafe_allow_html=True)
+                st.markdown(f"<small style='color: #666;'>Current: {sim_id[:20]}...</small>", unsafe_allow_html=True)
                 
                 # Carbon-styled download button
                 package_data = create_export_package(sim_id)

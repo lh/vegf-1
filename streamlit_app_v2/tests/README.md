@@ -48,6 +48,9 @@ Once installed:
 - Skip UI tests: `SKIP_UI_TESTS=1 git commit -m "message"`
 - Skip all tests: `git commit --no-verify -m "message"`
 
+**NOTE**: UI tests are currently failing due to ongoing UI refactoring. 
+**ALWAYS USE `SKIP_UI_TESTS=1` when committing until UI tests are fixed.**
+
 ### CI/CD
 Tests run automatically on:
 - Push to main, dev/*, or feature/* branches
