@@ -1,13 +1,11 @@
-"""Results management system with memory-aware storage."""
+"""Results management system with Parquet-based storage."""
 
 from .base import SimulationResults
-from .memory import InMemoryResults
 from .parquet import ParquetResults
 from .factory import ResultsFactory
 
 __all__ = [
     'SimulationResults',
-    'InMemoryResults',
     'ParquetResults',
     'ResultsFactory'
 ]

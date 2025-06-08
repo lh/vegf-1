@@ -33,65 +33,16 @@ def calculate_patient_states_enhanced(
     """
     Calculate enhanced patient states over time using available data.
     
-    Works with both InMemoryResults and ParquetResults and creates
-    a richer visualization from limited discontinuation types.
+    Works with ParquetResults and creates a richer visualization 
+    from limited discontinuation types.
     """
-    # Check if this is ParquetResults or InMemoryResults
-    if hasattr(_results, 'data_path'):
-        # ParquetResults - load from files
-        patients_df = pd.read_parquet(_results.data_path / 'patients.parquet')
-        visits_df = pd.read_parquet(_results.data_path / 'visits.parquet')
-    else:
-        # InMemoryResults - extract from raw_results
-        # First, find the earliest visit date to use as reference
-        start_date = None
-        for patient_id, patient in _results.raw_results.patient_histories.items():
-            visits = getattr(patient, 'visit_history', [])
-            if visits and isinstance(visits[0], dict) and 'date' in visits[0]:
-                visit_date = visits[0]['date']
-                if start_date is None or visit_date < start_date:
-                    start_date = visit_date
+    # All results are now ParquetResults
+    if not hasattr(_results, 'data_path'):
+        raise ValueError("Expected ParquetResults with data_path attribute")
         
-        # Get patient data with discontinuation times converted to days
-        patients_data = []
-        for patient_id, patient in _results.raw_results.patient_histories.items():
-            disc_date = getattr(patient, 'discontinuation_date', None)
-            disc_time_days = None
-            if disc_date and start_date:
-                # Convert datetime to days from start
-                time_delta = disc_date - start_date
-                disc_time_days = int(time_delta.total_seconds() / (24 * 3600))
-            
-            # Get discontinuation type
-            disc_type = getattr(patient, 'discontinuation_type', None)
-            
-            patients_data.append({
-                'patient_id': patient_id,
-                'discontinued': getattr(patient, 'is_discontinued', False),
-                'discontinuation_time': disc_time_days,
-                'discontinuation_type': disc_type
-            })
-        patients_df = pd.DataFrame(patients_data)
-        
-        # Get visit data
-        visits_data = []
-        for patient_id, patient in _results.raw_results.patient_histories.items():
-            visits = getattr(patient, 'visit_history', [])
-            for i, visit in enumerate(visits):
-                if not isinstance(visit, dict) or 'date' not in visit:
-                    raise ValueError(f"Visit {i} for patient {patient_id} missing required 'date' field")
-                if not start_date:
-                    raise ValueError("No start date found - cannot calculate time deltas")
-                    
-                # Calculate days from start date
-                visit_date = visit['date']
-                time_delta = visit_date - start_date
-                time_days = int(time_delta.total_seconds() / (24 * 3600))
-                visits_data.append({
-                    'patient_id': patient_id,
-                    'time_days': time_days
-                })
-        visits_df = pd.DataFrame(visits_data)
+    # ParquetResults - load from files
+    patients_df = pd.read_parquet(_results.data_path / 'patients.parquet')
+    visits_df = pd.read_parquet(_results.data_path / 'visits.parquet')
     
     # Get max time in days
     if len(visits_df) == 0:

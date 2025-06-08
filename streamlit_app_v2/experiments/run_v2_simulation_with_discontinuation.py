@@ -79,8 +79,7 @@ def run_simulation_with_discontinuation():
         n_patients=1000,
         duration_years=5.0,
         seed=42,
-        runtime_seconds=0.0,
-        force_parquet=True
+        runtime_seconds=0.0
     )
     
     print(f"\nSimulation complete!")

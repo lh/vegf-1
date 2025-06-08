@@ -441,6 +441,10 @@ class TestRealDataIntegrity:
         largest_sim = max(large_sims, key=lambda x: self._get_patient_count(x))
         
         try:
+            # Check if the simulation has an audit log (required for packaging)
+            if not (largest_sim / "audit_log.json").exists():
+                pytest.skip("Selected simulation has no audit log - skipping compression test")
+            
             original_results = ResultsFactory.load_results(largest_sim)
             
             # Calculate actual data size from files on disk

@@ -1,5 +1,5 @@
 """
-Test the new memory-aware results architecture.
+Test Parquet-based results architecture.
 """
 
 import pytest
@@ -13,179 +13,164 @@ sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
 from core.results import SimulationResults, ParquetResults, ResultsFactory
 from core.results.base import SimulationMetadata
-from simulation_v2.engines.abs_engine import SimulationResults as V2Results
 from datetime import datetime
 
 
-class MockDiseaseState:
-    """Mock disease state."""
-    def __init__(self, value):
-        self.value = value
-
-
-class MockVisit:
-    """Mock visit."""
-    def __init__(self, time_years, vision, injected, next_interval_days):
-        self.time_years = time_years
-        self.vision = vision
-        self.injected = injected
-        self.next_interval_days = next_interval_days
-
-
-class MockPatient:
-    """Mock patient for testing."""
-    def __init__(self, patient_id: str):
-        self.patient_id = patient_id
-        self.disease_state = MockDiseaseState('stable')
-        self.vision = 70.0
-        self.injection_count = 10
-        self.discontinued = False
-        self.visits = [
-            MockVisit(
-                time_years=i/12,
-                vision=70 - i,
-                injected=True,
-                next_interval_days=42
-            )
-            for i in range(12)
-        ]
-
-
-def create_mock_v2_results(n_patients: int = 10):
-    """Create mock V2 results for testing."""
-    patient_histories = {
-        f"patient_{i}": MockPatient(f"patient_{i}")
-        for i in range(n_patients)
-    }
+def create_mock_v2_results(n_patients=100):
+    """Create mock V2 simulation results for testing."""
+    # Create patient histories
+    patient_histories = {}
     
-    return V2Results(
-        total_injections=n_patients * 10,
-        patient_histories=patient_histories,
-        final_vision_mean=65.0,
-        final_vision_std=5.0,
-        discontinuation_rate=0.1
-    )
+    for i in range(n_patients):
+        patient_id = f"P{i:04d}"
+        
+        # Create visits (monthly for 1 year)
+        visits = []
+        for month in range(12):
+            visits.append({
+                'time': month * 30,  # days
+                'injected': True,
+                'vision': 70 - month * 0.5  # Gradual decline
+            })
+        
+        # Create a mock patient object instead of dict
+        class MockPatient:
+            def __init__(self, pid, visits_list):
+                self.patient_id = pid
+                self.visits = visits_list
+                self.baseline_vision = 70
+                self.final_vision = 64
+                self.current_vision = 64
+                
+        patient_histories[patient_id] = MockPatient(patient_id, visits)
+    
+    # Create mock V2Results object
+    class MockV2Results:
+        def __init__(self, histories):
+            self.patient_histories = histories
+            self.total_injections = sum(len(p.visits) for p in histories.values())
+            self.final_vision_mean = 64
+            self.final_vision_std = 5
+            self.discontinuation_rate = 0.1
+            
+    return MockV2Results(patient_histories)
 
 
 class TestResultsArchitecture:
-    """Test the memory-aware results architecture."""
+    """Test the Parquet-only results architecture."""
     
-    # Removed test_in_memory_results since we're using Parquet-only storage now
-        
-    def test_results_factory_small_simulation(self):
-        """Test factory creates ParquetResults for small simulations."""
-        raw_results = create_mock_v2_results(100)
-        
+    def test_parquet_results_always_used(self):
+        """Test that all simulations use Parquet storage."""
+        # Create results
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Override default directory
             ResultsFactory.DEFAULT_RESULTS_DIR = Path(tmpdir)
             
             results = ResultsFactory.create_results(
-                raw_results=raw_results,
-                protocol_name="Test",
+                raw_results=create_mock_v2_results(100),
+                protocol_name="Test Protocol",
                 protocol_version="1.0",
                 engine_type="abs",
                 n_patients=100,
                 duration_years=1.0,
                 seed=42,
-                runtime_seconds=1.0,
-                force_parquet=False
+                runtime_seconds=1.23
             )
             
-            # Should be ParquetResults even for small simulation
+            # Should always be ParquetResults
             assert isinstance(results, ParquetResults)
-            assert results.metadata.storage_type == "parquet"
-        
-    def test_results_factory_large_simulation(self):
-        """Test factory creates ParquetResults for large simulations."""
-        raw_results = create_mock_v2_results(1000)
-        
-        with tempfile.TemporaryDirectory() as tmpdir:
-            # Override default directory
-            ResultsFactory.DEFAULT_RESULTS_DIR = Path(tmpdir)
+            assert results.metadata.storage_type == 'parquet'
             
-            results = ResultsFactory.create_results(
-                raw_results=raw_results,
-                protocol_name="Test",
-                protocol_version="1.0",
-                engine_type="abs",
-                n_patients=5000,
-                duration_years=5.0,  # 25,000 patient-years
-                seed=42,
-                runtime_seconds=10.0,
-                force_parquet=False
-            )
+            # Check files were created
+            assert results.data_path.exists()
+            assert (results.data_path / 'patients.parquet').exists()
+            assert (results.data_path / 'visits.parquet').exists()
             
-            # Should be ParquetResults for large simulation
-            assert isinstance(results, ParquetResults)
-            assert results.metadata.storage_type == "parquet"
-            
-    def test_force_parquet(self):
-        """Test forcing Parquet storage."""
-        raw_results = create_mock_v2_results(10)
-        
+    def test_parquet_efficient_memory(self):
+        """Test that Parquet uses minimal memory."""
         with tempfile.TemporaryDirectory() as tmpdir:
             ResultsFactory.DEFAULT_RESULTS_DIR = Path(tmpdir)
             
+            # Create large simulation
             results = ResultsFactory.create_results(
-                raw_results=raw_results,
-                protocol_name="Test",
-                protocol_version="1.0",
-                engine_type="abs",
-                n_patients=10,
-                duration_years=1.0,
-                seed=42,
-                runtime_seconds=1.0,
-                force_parquet=True  # Force Parquet
-            )
-            
-            # Should be ParquetResults even for small simulation
-            assert isinstance(results, ParquetResults)
-            
-    def test_memory_estimates(self):
-        """Test memory usage estimation."""
-        estimates = ResultsFactory.estimate_memory_usage(1000, 5.0)
-        
-        assert 'estimated_memory_mb' in estimates
-        assert 'estimated_disk_mb' in estimates
-        assert 'patient_years' in estimates
-        assert 'storage_type' in estimates
-        assert estimates['patient_years'] == 5000
-        assert estimates['storage_type'] == 'parquet'
-        
-        # Check warning flag for large simulations
-        large_estimates = ResultsFactory.estimate_memory_usage(10000, 5.0)
-        assert large_estimates['storage_type'] == 'parquet'
-        assert 'warning' in large_estimates
-        
-    def test_save_and_load(self):
-        """Test saving and loading results."""
-        raw_results = create_mock_v2_results(10)
-        
-        with tempfile.TemporaryDirectory() as tmpdir:
-            # Override default directory
-            ResultsFactory.DEFAULT_RESULTS_DIR = Path(tmpdir)
-            
-            # Create results (will be saved automatically)
-            results = ResultsFactory.create_results(
-                raw_results=raw_results,
+                raw_results=create_mock_v2_results(1000),
                 protocol_name="Test Protocol",
                 protocol_version="1.0",
                 engine_type="abs",
-                n_patients=10,
+                n_patients=1000,
                 duration_years=1.0,
                 seed=42,
-                runtime_seconds=1.5
+                runtime_seconds=5.0
             )
             
-            # Get the sim_id for loading
-            sim_id = results.metadata.sim_id
-            save_path = Path(tmpdir) / sim_id
+            # Memory usage should be minimal
+            memory_mb = results.get_memory_usage_mb()
+            assert memory_mb < 5.0  # Should be ~1-2MB
             
-            # Load
-            loaded = ResultsFactory.load_results(save_path)
+    def test_results_interface_consistency(self):
+        """Test that all results follow the same interface."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ResultsFactory.DEFAULT_RESULTS_DIR = Path(tmpdir)
             
-            # Verify
-            assert isinstance(loaded, ParquetResults)
-            assert loaded.get_patient_count() == 10
+            results = ResultsFactory.create_results(
+                raw_results=create_mock_v2_results(50),
+                protocol_name="Test Protocol",
+                protocol_version="1.0",
+                engine_type="des",
+                n_patients=50,
+                duration_years=2.0,
+                seed=123,
+                runtime_seconds=2.5
+            )
+            
+            # Test all required methods exist and work
+            assert results.get_patient_count() == 50
+            assert results.get_total_injections() > 0
+            
+            mean_vision, std_vision = results.get_final_vision_stats()
+            assert 0 <= mean_vision <= 100
+            assert std_vision >= 0
+            
+            # Test iteration
+            patient_count = 0
+            for batch in results.iterate_patients(batch_size=10):
+                patient_count += len(batch)
+                if patient_count >= 20:  # Just test first 20
+                    break
+                    
+            assert patient_count >= 20
+            
+            # Test summary statistics
+            stats = results.get_summary_statistics()
+            assert stats['patient_count'] == 50
+            assert 'mean_final_vision' in stats
+            
+    def test_load_saved_results(self):
+        """Test loading previously saved results."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ResultsFactory.DEFAULT_RESULTS_DIR = Path(tmpdir)
+            
+            # Create and save results
+            original = ResultsFactory.create_results(
+                raw_results=create_mock_v2_results(30),
+                protocol_name="Test Protocol",
+                protocol_version="1.0",
+                engine_type="abs",
+                n_patients=30,
+                duration_years=1.5,
+                seed=999,
+                runtime_seconds=0.5
+            )
+            
+            sim_id = original.metadata.sim_id
+            
+            # Load from disk
+            loaded = ResultsFactory.load_results(Path(tmpdir) / sim_id)
+            
+            # Verify metadata matches
             assert loaded.metadata.sim_id == sim_id
+            assert loaded.metadata.n_patients == 30
+            assert loaded.metadata.duration_years == 1.5
+            
+            # Verify data matches
+            assert loaded.get_patient_count() == original.get_patient_count()
+            assert loaded.get_total_injections() == original.get_total_injections()

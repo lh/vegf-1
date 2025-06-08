@@ -14,7 +14,7 @@ sys.path.append(str(Path(__file__).parent.parent.parent))
 sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
-from core.simulation_adapter import MemoryAwareSimulationRunner
+from core.simulation_runner import SimulationRunner
 import shutil
 
 
@@ -36,7 +36,7 @@ def create_test_simulation(output_dir: Path = None, n_patients: int = 10, durati
     spec = ProtocolSpecification.from_yaml(protocol_path)
     
     # Create runner
-    runner = MemoryAwareSimulationRunner(spec)
+    runner = SimulationRunner(spec)
     
     # If output_dir is specified, temporarily change the results directory
     original_results_dir = None
@@ -52,8 +52,7 @@ def create_test_simulation(output_dir: Path = None, n_patients: int = 10, durati
             engine_type="abs",
             n_patients=n_patients,
             duration_years=duration_years,
-            seed=12345,
-            force_parquet=True  # Always use parquet
+            seed=12345
         )
         
         print(f"Created simulation: {results.metadata.sim_id}")

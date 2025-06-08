@@ -1,8 +1,8 @@
 """
 Factory for creating SimulationResults instances.
 
-All simulations are stored in Parquet format for consistency,
-reliability, and simplicity.
+All simulations are stored in Parquet format for efficient disk-based storage
+and easy persistence.
 """
 
 import uuid
@@ -30,14 +30,10 @@ class ResultsFactory:
         n_patients: int,
         duration_years: float,
         seed: int,
-        runtime_seconds: float,
-        force_parquet: bool = False  # DEPRECATED - kept for backward compatibility
+        runtime_seconds: float
     ) -> SimulationResults:
         """
-        Create SimulationResults instance using Parquet storage.
-        
-        Note: As of the Parquet-only refactor, all simulations are stored
-        in Parquet format regardless of size for consistency and simplicity.
+        Create SimulationResults instance with Parquet storage.
         
         Args:
             raw_results: Raw results from simulation engine
@@ -48,7 +44,6 @@ class ResultsFactory:
             duration_years: Duration of simulation in years
             seed: Random seed used
             runtime_seconds: Time taken to run simulation
-            force_parquet: DEPRECATED - all simulations now use Parquet
             
         Returns:
             ParquetResults instance
@@ -71,114 +66,55 @@ class ResultsFactory:
             # Fallback to hex if haikunator not installed
             memorable_name = uuid.uuid4().hex[:8]
         
+        # Combine elements: timestamp + duration + name
         sim_id = f"sim_{timestamp}_{duration_code}_{memorable_name}"
-        
-        # Always use Parquet storage for consistency
-        storage_type = 'parquet'
         
         # Create metadata
         metadata = SimulationMetadata(
             sim_id=sim_id,
+            timestamp=datetime.now(),
             protocol_name=protocol_name,
             protocol_version=protocol_version,
             engine_type=engine_type,
             n_patients=n_patients,
             duration_years=duration_years,
             seed=seed,
-            timestamp=datetime.now(),
             runtime_seconds=runtime_seconds,
-            storage_type=storage_type
+            storage_type="parquet"
         )
         
-        # Always create Parquet results
-        print(f"📁 Saving simulation ({n_patients:,} patients × {duration_years} years) to disk...")
-        
-        # Create Parquet results with progress
+        # Determine save path
         save_path = cls.DEFAULT_RESULTS_DIR / sim_id
         
-        def progress_callback(pct: float, msg: str):
-            print(f"  [{pct:3.0f}%] {msg}")
-            
-        return ParquetResults.create_from_raw_results(
-            raw_results,
-            metadata,
-            save_path,
-            progress_callback
+        # Always create Parquet results
+        results = ParquetResults.create_from_raw_results(
+            raw_results=raw_results,
+            metadata=metadata,
+            save_path=save_path
         )
-            
-    @classmethod
-    def load_results(cls, path: Path) -> SimulationResults:
-        """
-        Load results from disk.
         
-        All results are expected to be in Parquet format.
-        
-        Args:
-            path: Path to saved results directory
-            
-        Returns:
-            ParquetResults instance
-        """
-        path = Path(path)
-        
-        # Check metadata exists
-        metadata_path = path / 'metadata.json'
-        if not metadata_path.exists():
-            raise FileNotFoundError(f"No metadata found at {metadata_path}")
-            
-        # Load as ParquetResults
-        return ParquetResults.load(path)
-            
-    @classmethod
-    def convert_to_parquet(
-        cls,
-        results: SimulationResults,
-        output_path: Optional[Path] = None
-    ) -> ParquetResults:
-        """
-        Convert any results to Parquet format.
-        
-        Note: As of the Parquet-only refactor, all results should already
-        be in Parquet format. This method is kept for compatibility.
-        
-        Args:
-            results: Results to convert
-            output_path: Where to save (defaults to sim_id directory)
-            
-        Returns:
-            ParquetResults instance
-        """
-        if isinstance(results, ParquetResults):
-            return results
-        else:
-            raise ValueError(f"Cannot convert {type(results)} to Parquet - all results should already be ParquetResults")
-            
-    @classmethod
-    def save_imported_results(cls, results: SimulationResults) -> str:
-        """
-        Save imported simulation results.
-        
-        Note: As of the Parquet-only refactor, all results should already
-        be ParquetResults which are auto-saved during creation.
-        
-        Args:
-            results: Imported SimulationResults instance
-            
-        Returns:
-            New simulation ID
-        """
-        # The imported results should already have a new sim_id
-        sim_id = results.metadata.sim_id
-        
-        if isinstance(results, ParquetResults):
-            # ParquetResults are already saved during creation
-            return sim_id
-        else:
-            # All results should be ParquetResults now
-            raise ValueError(f"Expected ParquetResults, got {type(results)}")
+        return results
     
     @classmethod
-    def estimate_memory_usage(cls, n_patients: int, duration_years: float) -> Dict[str, float]:
+    def load_results(cls, results_path: Path) -> SimulationResults:
+        """
+        Load existing results from disk.
+        
+        Args:
+            results_path: Path to results directory
+            
+        Returns:
+            SimulationResults instance
+        """
+        # Always load as Parquet
+        return ParquetResults.load(results_path)
+    
+    @classmethod
+    def estimate_memory_usage(
+        cls,
+        n_patients: int,
+        duration_years: float
+    ) -> Dict[str, Any]:
         """
         Estimate memory usage for a simulation.
         
@@ -187,30 +123,27 @@ class ResultsFactory:
             duration_years: Duration in years
             
         Returns:
-            Dictionary with memory estimates in MB
+            Dictionary with memory estimates
         """
-        # Assumptions:
-        # - ~8-10 visits per patient per year
-        # - ~200 bytes per visit
-        # - ~1KB overhead per patient
+        # Estimate visits per patient (monthly visits)
+        visits_per_patient = duration_years * 12
+        total_visits = n_patients * visits_per_patient
         
-        visits_per_patient = duration_years * 9  # Average
-        bytes_per_patient = 1024 + (visits_per_patient * 200)
-        total_bytes = n_patients * bytes_per_patient
+        # Memory estimates (rough)
+        bytes_per_patient = 1024  # 1KB per patient record
+        bytes_per_visit = 256     # 256 bytes per visit
         
-        # Add overhead for data structures
-        overhead_factor = 1.5
-        total_mb = (total_bytes * overhead_factor) / (1024 * 1024)
+        estimated_memory_mb = (
+            (n_patients * bytes_per_patient + 
+             total_visits * bytes_per_visit) / (1024 * 1024)
+        )
         
-        patient_years = n_patients * duration_years
-        
-        # Estimate Parquet disk usage (compressed)
-        disk_mb = total_mb / 7  # Typical Parquet compression ratio
+        # Disk estimates for Parquet (compressed)
+        estimated_disk_mb = estimated_memory_mb * 0.2  # ~20% of memory size
         
         return {
-            'estimated_memory_mb': total_mb,
-            'estimated_disk_mb': disk_mb,
-            'patient_years': patient_years,
-            'storage_type': 'parquet',  # Always Parquet now
-            'warning': total_mb > 300
+            'patient_years': n_patients * duration_years,
+            'estimated_memory_mb': round(estimated_memory_mb, 1),
+            'estimated_disk_mb': round(estimated_disk_mb, 1),
+            'storage_type': 'parquet'
         }

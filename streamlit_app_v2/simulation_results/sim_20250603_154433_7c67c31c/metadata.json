@@ -1,0 +1,12 @@
+{
+  "sim_id": "sim_20250603_154433_7c67c31c",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 10000,
+  "duration_years": 10.0,
+  "seed": 42,
+  "timestamp": "2025-06-03T15:44:33.928250",
+  "runtime_seconds": 3.534198760986328,
+  "storage_type": "parquet"
+}
