@@ -1,16 +1,16 @@
-# Aflibercept 2mg Treat-and-Extend Protocol
-# Based on meta-analysis of pivotal and real-world studies June 2025
+# Aflibercept 2mg Treat-and-Extend Protocol - SASH Real-World Model
+# Based on meta-analysis INCLUDING local practice patterns
 # Extraction date: 2025-06-08
-# Sources: VIEW 1/2, ALTAIR, FRB! registry, HAGA, Maruko, Aslanis
+# Sources: VIEW 1/2, ALTAIR, FRB! registry, SASH COVID-era data with clinical discontinuation patterns
 
 # Required metadata
-name: "Aflibercept 2mg Treat-and-Extend"
+name: "Aflibercept 2mg Treat-and-Extend SASH"
 version: "1.0.0"
 created_date: "2025-06-08"
 author: "Clinical Economics Integration Team"
-description: "Aflibercept 2mg treat-and-extend protocol synthesizing RCT and real-world evidence"
+description: "Aflibercept 2mg T&E protocol including SASH-specific real-world discontinuation patterns"
 
-# Core protocol parameters
+# Core protocol parameters (same as standard)
 protocol_type: "treat_and_extend"
 min_interval_days: 56        # 8 weeks (ALTAIR minimum)
 max_interval_days: 112       # 16 weeks (ALTAIR maximum)
@@ -18,7 +18,7 @@ extension_days: 14           # 2 weeks (ALTAIR protocol)
 shortening_days: 14          # 2 weeks (symmetric with extension)
 
 # Required disease transitions - Meta-analysis of ALTAIR T&E and VIEW fixed dosing
-# Note: Combining ALTAIR treat-and-extend transitions with VIEW outcomes
+# Note: Same as standard protocol
 disease_transitions:
   NAIVE:
     NAIVE: 0.00
@@ -45,7 +45,7 @@ disease_transitions:
     HIGHLY_ACTIVE: 0.57  # ALTAIR: 50-65% remain highly active
 
 # Required vision change model - Based on VIEW 1/2 trials and project parameters
-# Note: Using actual aflibercept 2mg data from VIEW studies
+# Note: Same as standard protocol
 vision_change_model:
   naive_treated:
     mean: 8.4          # From VIEW 1/2 combined (52 weeks)
@@ -79,8 +79,8 @@ vision_change_model:
     mean: -4.0         # From project data
     std: 3.5
 
-# Vision loss during unplanned gaps (Evidence-based from COVID-era analysis)
-# Applied when treatment gaps exceed normal protocol intervals
+# Vision loss during unplanned gaps (SASH COVID-era evidence)
+# Applied when treatment gaps exceed normal intervals
 gap_vision_loss_model:
   short_gap_90_180_days:
     monthly_rate: -0.47      # letters/month
@@ -134,23 +134,22 @@ baseline_vision:
   min: 25              # Minimum for treatment (guidance threshold)
   max: 85
 
-# Discontinuation rules - Based on current best practice
-# Note: This standard protocol does NOT include inappropriate clinical discontinuations
-# For real-world modeling with clinical errors, use aflibercept_2mg_treat_and_extend_sash.yaml
+# Discontinuation rules - SASH-specific patterns including inappropriate stops
 discontinuation_rules:
+  # === APPROPRIATE DISCONTINUATIONS (Standard) ===
   # Stable disease at extended interval
   stable_extended_interval:
     criteria:
       consecutive_stable_visits: 3
-      minimum_interval_weeks: 7     # Cannot extend beyond this
+      minimum_interval_weeks: 7
     probability: 0.10
     reason: "stable_disease"
     
   # Poor response - primary criterion
   poor_response_25_letters:
     criteria:
-      va_less_than: 25              # < 25 letters absolute
-      consecutive_visits: 2         # On 2 consecutive visits
+      va_less_than: 25
+      consecutive_visits: 2
       attributable_to_amd: true
     probability: 0.95
     reason: "poor_response"
@@ -158,7 +157,7 @@ discontinuation_rules:
   # Critical vision loss
   critical_vision_15_letters:
     criteria:
-      va_less_than: 15              # < 15 letters absolute
+      va_less_than: 15
       consecutive_visits: 2
     probability: 0.99
     reason: "severe_vision_loss"
@@ -166,10 +165,10 @@ discontinuation_rules:
   # Unable to extend intervals
   frequent_injections:
     criteria:
-      max_achieved_interval_weeks: 7  # Cannot extend beyond 7 weeks
-      attempts: 2                     # After 2 failed extension attempts
+      max_achieved_interval_weeks: 7
+      attempts: 2
       months_on_treatment: 12
-    probability: 0.50                # May switch or stop
+    probability: 0.50
     reason: "treatment_burden"
     
   # Non-compliance
@@ -186,6 +185,62 @@ discontinuation_rules:
       severe_adverse_event: true
     probability: 0.90
     reason: "adverse_event"
+    
+  # === INAPPROPRIATE CLINICAL DISCONTINUATIONS (SASH-specific) ===
+  # Based on analysis of 282 cases showing clinical misunderstanding
+  clinical_error_excellent_va:
+    criteria:
+      va_greater_than: 70           # Excellent vision
+      months_on_treatment: 6        # After initial success
+    probability: 0.004              # 0.4% (89/21727 intervals)
+    reason: "inappropriate_stop_good_vision"
+    expected_va_loss: -12.6
+    restart_probability: 0.95
+    mean_days_to_restart: 92
+    
+  clinical_error_one_year_complete:
+    criteria:
+      months_on_treatment: 11-13    # Around 1 year
+      va_greater_than: 50           # Reasonable vision
+    probability: 0.002              # 0.2% (40/21727)
+    reason: "inappropriate_stop_course_complete"
+    expected_va_loss: -14.2         # Worst outcomes
+    restart_probability: 0.95
+    mean_days_to_restart: 92
+    
+  clinical_error_good_enough:
+    criteria:
+      va_between: [50, 70]          # Good but not excellent
+      months_on_treatment: 3-10     # Early in treatment
+    probability: 0.0024             # 0.24% (52/21727)
+    reason: "inappropriate_stop_good_enough"
+    expected_va_loss: -7.3
+    restart_probability: 0.95
+    mean_days_to_restart: 92
+    
+  clinical_error_plateau:
+    criteria:
+      va_between: [35, 50]          # Moderate vision
+      stable_va_months: 3           # Perceived plateau
+    probability: 0.002              # 0.2% (44/21727)
+    reason: "inappropriate_stop_plateau"
+    expected_va_loss: -6.8
+    restart_probability: 0.95
+    mean_days_to_restart: 92
+
+# Unplanned gap scenarios (COVID-like disruptions)
+unplanned_gap_scenarios:
+  external_short_gap:
+    duration_days: [90, 180]
+    probability: 0.094              # 9.4% in COVID era
+    va_impact: -5.9                 # letters net
+    recovery_potential: 0.505
+    
+  external_long_gap:
+    duration_days: [180, 365]
+    probability: 0.025              # 2.5% in COVID era
+    va_impact: -8.1                 # letters net
+    recovery_potential: 0.554
 
 # Protocol-specific parameters
 treat_and_extend_parameters:
@@ -218,57 +273,32 @@ treat_and_extend_parameters:
   # Maximum lines of therapy
   max_lines_of_therapy: 3
 
-# Unplanned gap scenarios (External disruptions like COVID)
-# Based on real-world evidence but excluding clinical decision errors
-unplanned_gap_scenarios:
-  external_short_gap:
-    duration_days: [90, 180]
-    probability: 0.094              # 9.4% in COVID era
-    va_impact: -5.9                 # letters net
-    recovery_potential: 0.505
-    
-  external_long_gap:
-    duration_days: [180, 365]
-    probability: 0.025              # 2.5% in COVID era
-    va_impact: -8.1                 # letters net
-    recovery_potential: 0.554
-
 # Clinical evidence basis
 clinical_evidence:
-  source: "Meta-analysis of RCT and real-world studies (n>5,000 eyes)"
+  source: "Meta-analysis of RCT, real-world studies, and SASH practice data"
   key_data:
     - "VIEW 1/2: Mean +8.4 letters at 52 weeks (SD 14.7) - RCT"
     - "ALTAIR: 41-46% maintain 16-week intervals at 96 weeks - RCT"
     - "FRB! registry: +4.2 letters at 24 months - Real-world"
-    - "Aslanis: 52.9% recurrence at 12 months post-discontinuation"
+    - "SASH COVID-era: 13.5% treatment disruption rate"
+    - "SASH clinical errors: 1.3% inappropriate discontinuation rate"
   injection_burden:
     - "ALTAIR RCT: 10.4 injections over 2 years"
     - "FRB! real-world: 14.9 injections over 2 years"
-    - "Maruko: 13.0 injections over 2 years (max 12-week intervals)"
-    - "HAGA: 7.5 injections year 1 (76% optimal responders)"
-  extension_patterns:
-    - "ALTAIR: 59% achieve extension after loading, max 16 weeks"
-    - "Maruko: 60.8% at 12-week intervals by 2 years (conservative protocol)"
-    - "FRB!: Maximum ~10 weeks achieved in real-world practice"
-    - "HAGA: 76% achieve 7 injections/year with 12-week maximum"
-  population_insights:
-    - "Japanese studies (ALTAIR, HAGA, Maruko): Higher PCV prevalence (36-76%)"
-    - "FRB! international: Real-world discontinuation 28-33% at 2 years"
-    - "Visual gains vary: +4.2 (real-world) to +13-16 (HAGA small study)"
-  key_principles:
-    - "First choice: Aflibercept 2mg (switch to biosimilar when available)"
-    - "Maximum 3 lines of therapy per eye"
-    - "Switch if unable to extend beyond 8 weeks after 2 attempts"
-    - "Real-world outcomes typically lower than RCT results"
-  gap_consequence_evidence:
-    - "COVID-era analysis: 11.9% experienced treatment gaps"
-    - "Mean VA loss during gaps: 0.47-0.81 letters/month"
-    - "Recovery rates: 50-55% show partial recovery"
-    - "Net impact: -5.9 to -8.1 letters depending on gap duration"
+    - "SASH with disruptions: Expected 15-17 injections over 2 years"
+  discontinuation_patterns:
+    - "Appropriate medical discontinuations: ~5-10%"
+    - "Lost to follow-up: ~3-5%"
+    - "Clinical decision errors: 1.3% (SASH-specific)"
+    - "External disruptions (COVID-like): 11.9%"
+  key_insights:
+    - "Clinical misunderstanding causes worse outcomes than COVID gaps"
+    - "Excellent vision patients at highest risk of inappropriate stop"
+    - "95% restart rate but with significant vision loss"
+    - "Mean 92-day delay before restart"
   data_synthesis:
     - "Transitions from ALTAIR T&E study (n=247)"
     - "Vision outcomes from VIEW 1/2 (n=1,217)"
     - "Real-world patterns from FRB! registry (n=3,313)"
-    - "Conservative protocols from Japanese studies (n=185)"
-    - "Recurrence model from Aslanis (n=102)"
-    - "Gap consequences from COVID-era analysis (n=21,727 intervals)"
+    - "SASH COVID-era gap analysis (n=21,727 intervals)"
+    - "SASH inappropriate discontinuation analysis (n=282 cases)"
