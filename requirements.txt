@@ -36,8 +36,8 @@ jsonschema>=4.0.0
 requests>=2.28.0
 humanize>=4.0.0
 
-# UI Components (if available)
-# streamlit-carbon-button>=0.1.0  # Uncomment if using carbon buttons
+# UI Components
+streamlit-carbon-button>=0.1.0
 
 # Advanced datetime handling
 pendulum>=3.0.0
