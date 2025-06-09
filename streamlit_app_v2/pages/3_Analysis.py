@@ -39,6 +39,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 from utils.carbon_button_helpers import top_navigation_home_button, ape_button
 from utils.state_helpers import get_active_simulation
 from visualizations.streamgraph_simple import create_simple_streamgraph
+from visualizations.streamgraph_plotly import create_comprehensive_streamgraph, extract_patient_states_comprehensive
 from components.treatment_patterns.enhanced_tab import render_enhanced_treatment_patterns_tab
 
 # Top navigation
@@ -411,65 +412,120 @@ with tab3:
     st.caption(f"*Showing {n_sample} of {stats['patient_count']:,} total patients")
 
 with tab4:
-    st.header("Patient States Over Time")
-    st.markdown("Track patient state transitions throughout the simulation.")
+    st.header("Patient Treatment Flow")
+    st.markdown("Comprehensive view of patient cohort flow through different treatment states over time.")
     
-    # Add controls for streamgraph
-    col1, col2 = st.columns(2)
+    # Add visualization type selector
+    viz_type = st.radio(
+        "Visualization Type",
+        ["Comprehensive Flow (Plotly)", "Simple States (Matplotlib)"],
+        horizontal=True,
+        help="Choose between detailed treatment flow or simple active/discontinued view"
+    )
     
-    with col1:
-        normalize = st.checkbox(
-            "Show as Percentage",
-            value=False,
-            help="Display as percentage of total patients"
-        )
-    
-    with col2:
-        time_resolution = st.selectbox(
-            "Time Resolution",
-            ["month", "week"],
-            help="Group data by month or week"
-        )
-    
-    # Create the streamgraph
-    with st.spinner("Generating streamgraph visualization..."):
-        # Cache based on simulation ID to avoid hashing the results object
-        @st.cache_data
-        def get_streamgraph_figure(sim_id: str, time_res: str, norm: bool):
-            return create_simple_streamgraph(results, time_res, norm)
+    if viz_type == "Comprehensive Flow (Plotly)":
+        # Use the new comprehensive streamgraph
+        col1, col2 = st.columns([3, 1])
         
-        fig = get_streamgraph_figure(results.metadata.sim_id, time_resolution, normalize)
-    
-    # Display the figure
-    st.plotly_chart(fig, use_container_width=True)
-    
-    # Show state statistics
-    st.subheader("Discontinuation Statistics")
-    
-    # Get discontinuation stats from results
-    disc_stats = stats.get('discontinuation_stats', {})
-    
-    if disc_stats:
-        # Create columns for discontinuation breakdown
-        total_disc = sum(disc_stats.values())
+        with col2:
+            time_resolution = st.radio(
+                "Time Resolution",
+                ["month", "week"],
+                key="plotly_time_res"
+            )
         
+        # Create the comprehensive visualization
+        with st.spinner("Analyzing patient treatment journeys..."):
+            # Cache based on simulation ID
+            @st.cache_data
+            def get_comprehensive_streamgraph(sim_id: str, time_res: str):
+                return create_comprehensive_streamgraph(results, time_res)
+            
+            fig = get_comprehensive_streamgraph(results.metadata.sim_id, time_resolution)
+        
+        # Display the Plotly figure
+        with col1:
+            # Apply export config
+            from utils.export_config import get_export_config
+            config = get_export_config(filename="patient_treatment_flow")
+            st.plotly_chart(fig, use_container_width=True, config=config)
+        
+        # Show detailed statistics
+        with st.expander("Detailed Statistics"):
+            states_df, summary_stats = extract_patient_states_comprehensive(results, time_resolution)
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Total Patients", summary_stats['total_patients'])
+            with col2:
+                st.metric("Total Discontinuations", summary_stats['total_discontinuations'])
+            with col3:
+                st.metric("Total Retreatments", summary_stats['total_retreatments'])
+            
+            if summary_stats['discontinuation_by_type']:
+                st.write("**Discontinuation Breakdown:**")
+                for disc_type, count in summary_stats['discontinuation_by_type'].items():
+                    pct = (count / summary_stats['total_patients']) * 100
+                    st.write(f"- {disc_type}: {count} ({pct:.1f}%)")
+    
+    else:
+        # Simple visualization (existing code)
+        # Add controls for streamgraph
         col1, col2 = st.columns(2)
         
         with col1:
-            st.metric("Total Discontinuations", StyleConstants.format_count(total_disc))
-            st.metric("Discontinuation Rate", f"{(total_disc / stats['patient_count'] * 100):.1f}%")
+            normalize = st.checkbox(
+                "Show as Percentage",
+                value=False,
+                help="Display as percentage of total patients"
+            )
         
         with col2:
-            # Show breakdown by type
-            st.markdown("**Discontinuation Reasons:**")
-            for reason, count in disc_stats.items():
-                percentage = (count / total_disc * 100) if total_disc > 0 else 0
-                st.write(f"- {reason.replace('_', ' ').title()}: {count} ({percentage:.1f}%)")
-    else:
-        st.info("No discontinuation data available for this simulation.")
-    
-    # Add note about patient conservation
-    st.caption("*Patient counts are conserved throughout the simulation - total always equals initial population.")
+            time_resolution = st.selectbox(
+                "Time Resolution",
+                ["month", "week"],
+                help="Group data by month or week"
+            )
+        
+        # Create the streamgraph
+        with st.spinner("Generating streamgraph visualization..."):
+            # Cache based on simulation ID to avoid hashing the results object
+            @st.cache_data
+            def get_streamgraph_figure(sim_id: str, time_res: str, norm: bool):
+                return create_simple_streamgraph(results, time_res, norm)
+            
+            fig = get_streamgraph_figure(results.metadata.sim_id, time_resolution, normalize)
+        
+        # Display the figure (matplotlib figure)
+        st.pyplot(fig, use_container_width=True)
+        
+        # Show state statistics
+        st.subheader("Discontinuation Statistics")
+        
+        # Get discontinuation stats from results
+        disc_stats = stats.get('discontinuation_stats', {})
+        
+        if disc_stats:
+            # Create columns for discontinuation breakdown
+            total_disc = sum(disc_stats.values())
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.metric("Total Discontinuations", StyleConstants.format_count(total_disc))
+                st.metric("Discontinuation Rate", f"{(total_disc / stats['patient_count'] * 100):.1f}%")
+            
+            with col2:
+                # Show breakdown by type
+                st.markdown("**Discontinuation Reasons:**")
+                for reason, count in disc_stats.items():
+                    percentage = (count / total_disc * 100) if total_disc > 0 else 0
+                    st.write(f"- {reason.replace('_', ' ').title()}: {count} ({percentage:.1f}%)")
+        else:
+            st.info("No discontinuation data available for this simulation.")
+        
+        # Add note about patient conservation
+        st.caption("*Patient counts are conserved throughout the simulation - total always equals initial population.")
 
 with tab5:
     # Treatment Intervals tab (from subtab2 of Treatment Patterns)
