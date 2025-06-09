@@ -177,7 +177,7 @@ def _calculate_workload_summary_stats(intensity_categories: pd.DataFrame,
             'visit_count': row['visit_count'],
             'visit_percentage': visit_pct,
             'visits_per_patient': row['visit_count'] / row['patient_count'] if row['patient_count'] > 0 else 0,
-            'workload_efficiency': visit_pct / patient_pct if patient_pct > 0 else 0  # Visits per % of patients
+            'workload_intensity': visit_pct / patient_pct if patient_pct > 0 else 0  # Visits per % of patients - higher = more intensive
         }
     
     return summary_stats
@@ -253,7 +253,7 @@ def format_workload_insight(summary_stats: Dict, top_category: str = None) -> st
     # Find the category with highest workload efficiency (visits per % of patients)
     if top_category is None:
         top_category = max(summary_stats.keys(), 
-                          key=lambda k: summary_stats[k]['workload_efficiency'])
+                          key=lambda k: summary_stats[k]['workload_intensity'])
     
     if top_category not in summary_stats:
         return "Insufficient data for workload analysis."

@@ -329,7 +329,7 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                                 'Patients': f"{stats['patient_count']} ({stats['patient_percentage']:.1f}%)",
                                 'Visits': f"{stats['visit_count']} ({stats['visit_percentage']:.1f}%)",
                                 'Visits/Patient': f"{stats['visits_per_patient']:.1f}",
-                                'Workload Efficiency': f"{stats['workload_efficiency']:.1f}x"
+                                'Workload Efficiency': f"{stats['workload_intensity']:.1f}x"
                             })
                         
                         summary_df = pd.DataFrame(summary_data)
@@ -545,7 +545,7 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                                 'Patients': f"{stats['patient_count']} ({stats['patient_percentage']:.1f}%)",
                                 'Visits': f"{stats['visit_count']} ({stats['visit_percentage']:.1f}%)",
                                 'Visits/Patient': f"{stats['visits_per_patient']:.1f}",
-                                'Workload Efficiency': f"{stats['workload_efficiency']:.1f}x"
+                                'Workload Efficiency': f"{stats['workload_intensity']:.1f}x"
                             })
                         
                         summary_df = pd.DataFrame(summary_data)

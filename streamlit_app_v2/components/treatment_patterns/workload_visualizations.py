@@ -17,6 +17,28 @@ from typing import Dict, Any, List, Tuple
 
 from utils.style_constants import StyleConstants
 
+# Tufte-style constants for clean visualization
+TUFTE_FONT_SIZES = {
+    'title': 16,          # Reduced from typical titles
+    'subtitle': 14,
+    'label': 14,          # Minimum for readability
+    'tick': 12,           # Minimum for readability
+    'annotation': 11,
+}
+
+TUFTE_LINE_WEIGHTS = {
+    'data': 2.5,          # Thick enough for clarity
+    'axis': 1.0,
+    'grid': 0.5,
+    'annotation': 1.0,
+}
+
+TUFTE_COLORS = {
+    'neutral': '#264653',      # Dark blue-gray
+    'grid': '#E0E0E0',         # Light gray
+    'annotation': '#666666',   # Medium gray
+}
+
 
 def create_dual_bar_chart(workload_data: Dict[str, Any], tufte_mode: bool = True) -> go.Figure:
     """
@@ -44,7 +66,7 @@ def create_dual_bar_chart(workload_data: Dict[str, Any], tufte_mode: bool = True
     # Sort categories by workload efficiency (highest first)
     sorted_stats = sorted(
         workload_data['summary_stats'].items(),
-        key=lambda x: x[1]['workload_efficiency'],
+        key=lambda x: x[1]['workload_intensity'],
         reverse=True
     )
     
@@ -74,7 +96,7 @@ def create_dual_bar_chart(workload_data: Dict[str, Any], tufte_mode: bool = True
             y=patient_percentages,
             marker_color=[f"rgba{_hex_to_rgba(c, 0.6)}" for c in colors],
             marker_line=dict(width=0 if tufte_mode else 1),
-            text=[f"{p:.1f}%" for p in patient_percentages],
+            text=[f"{p:.1f}%" if p < 1 else f"{p:.0f}%" for p in patient_percentages],  # 2 sig figs
             textposition="outside",
             textfont=dict(size=10),
             hovertemplate="<b>%{x}</b><br>" +
@@ -92,7 +114,7 @@ def create_dual_bar_chart(workload_data: Dict[str, Any], tufte_mode: bool = True
             y=visit_percentages,
             marker_color=colors,
             marker_line=dict(width=0 if tufte_mode else 1),
-            text=[f"{v:.1f}%" for v in visit_percentages],
+            text=[f"{v:.1f}%" if v < 1 else f"{v:.0f}%" for v in visit_percentages],  # 2 sig figs
             textposition="outside",
             textfont=dict(size=10),
             hovertemplate="<b>%{x}</b><br>" +
@@ -105,44 +127,57 @@ def create_dual_bar_chart(workload_data: Dict[str, Any], tufte_mode: bool = True
     # Update layout for clean appearance
     if tufte_mode:
         fig.update_layout(
-            title="Clinical Workload Attribution: Patient Distribution vs Visit Volume",
-            title_font_size=16,
-            title_x=0.02,
+            title="",  # Remove title for cleaner Tufte style
             xaxis_title="Treatment Intensity Category",
             yaxis_title="Percentage",
             barmode='group',  # This ensures bars are grouped side by side
             showlegend=True,
             legend=dict(
                 orientation="h",
-                yanchor="bottom",
-                y=1.02,
+                yanchor="top",
+                y=0.99,
                 xanchor="right",
-                x=1
+                x=0.99,
+                font=dict(size=TUFTE_FONT_SIZES['tick']),
+                bgcolor="rgba(255,255,255,0.8)",
+                bordercolor=TUFTE_COLORS['grid'],
+                borderwidth=1
             ),
             plot_bgcolor='white',
             paper_bgcolor='white',
-            font=dict(family='Arial', size=12),
-            margin=dict(l=60, r=40, t=80, b=60),
+            font=dict(family='Arial', size=TUFTE_FONT_SIZES['tick']),
+            margin=dict(l=60, r=40, t=40, b=80),  # Reduced top margin without title
             height=500
         )
         
-        # Clean axes
+        # Clean axes following Tufte principles
         fig.update_xaxes(
             showline=True,
-            linewidth=1,
-            linecolor='black',
-            showgrid=False,
-            tickangle=45
+            linewidth=TUFTE_LINE_WEIGHTS['axis'],
+            linecolor=TUFTE_COLORS['neutral'],
+            showgrid=False,  # No vertical grid
+            tickangle=0,  # Horizontal labels
+            tickfont=dict(size=TUFTE_FONT_SIZES['tick']),
+            title_font=dict(size=TUFTE_FONT_SIZES['label']),
+            ticks='outside',
+            ticklen=5,
+            tickwidth=TUFTE_LINE_WEIGHTS['axis'],
+            tickcolor=TUFTE_COLORS['neutral']
         )
         
         fig.update_yaxes(
             showline=True,
-            linewidth=1,
-            linecolor='black',
-            showgrid=True,
-            gridwidth=0.5,
-            gridcolor='lightgray',
-            range=[0, max(max(patient_percentages), max(visit_percentages)) * 1.1]
+            linewidth=TUFTE_LINE_WEIGHTS['axis'],
+            linecolor=TUFTE_COLORS['neutral'],
+            showgrid=False,  # No grid lines since we have data labels
+            zeroline=False,  # Remove zero line
+            tickfont=dict(size=TUFTE_FONT_SIZES['tick']),
+            title_font=dict(size=TUFTE_FONT_SIZES['label']),
+            ticks='outside',
+            ticklen=5,
+            tickwidth=TUFTE_LINE_WEIGHTS['axis'],
+            tickcolor=TUFTE_COLORS['neutral'],
+            range=[0, max(max(patient_percentages), max(visit_percentages)) * 1.15]  # More space for labels
         )
     else:
         # Presentation mode with more visual elements
@@ -180,7 +215,7 @@ def create_impact_pyramid(workload_data: Dict[str, Any], tufte_mode: bool = True
     # Prepare data - sort by workload efficiency
     sorted_stats = sorted(
         workload_data['summary_stats'].items(),
-        key=lambda x: x[1]['workload_efficiency'],
+        key=lambda x: x[1]['workload_intensity'],
         reverse=True
     )
     
@@ -251,16 +286,20 @@ def create_impact_pyramid(workload_data: Dict[str, Any], tufte_mode: bool = True
     # Update layout
     if tufte_mode:
         fig.update_layout(
-            title="Clinical Impact Pyramid: From Patients to Workload",
-            title_font_size=16,
-            title_x=0.02,
+            title="",  # Remove title for cleaner Tufte style
             showlegend=False,
-            font=dict(family='Arial', size=12),
+            font=dict(family='Arial', size=TUFTE_FONT_SIZES['tick']),
             plot_bgcolor='white',
             paper_bgcolor='white',
-            margin=dict(l=40, r=40, t=80, b=40),
+            margin=dict(l=40, r=40, t=60, b=40),  # Reduced top margin
             height=600
         )
+        
+        # Update subplot titles with Tufte styling
+        for annotation in fig['layout']['annotations']:
+            if 'text' in annotation and annotation['text'] in ["Patient Distribution", "Visit Generation"]:
+                annotation['font']['size'] = TUFTE_FONT_SIZES['subtitle']
+                annotation['font']['color'] = TUFTE_COLORS['neutral']
     else:
         fig.update_layout(
             title="Clinical Impact Analysis",
@@ -306,7 +345,7 @@ def create_bubble_chart(workload_data: Dict[str, Any], tufte_mode: bool = True) 
     for category, stats in workload_data['summary_stats'].items():
         patient_pcts.append(stats['patient_percentage'])
         visit_pcts.append(stats['visit_percentage'])
-        efficiencies.append(stats['workload_efficiency'])
+        efficiencies.append(stats['workload_intensity'])
         categories.append(category)
         
         color = category_definitions.get(category, {}).get('color', '#cccccc')
@@ -318,14 +357,14 @@ def create_bubble_chart(workload_data: Dict[str, Any], tufte_mode: bool = True) 
             f"Patients: {stats['patient_count']} ({stats['patient_percentage']:.1f}%)<br>"
             f"Visits: {stats['visit_count']} ({stats['visit_percentage']:.1f}%)<br>"
             f"Visits/Patient: {stats['visits_per_patient']:.1f}<br>"
-            f"Workload Efficiency: {stats['workload_efficiency']:.1f}x"
+            f"Workload Efficiency: {stats['workload_intensity']:.1f}x"
         )
         hover_texts.append(hover_text)
     
     # Create scatter plot
     fig = go.Figure()
     
-    # Add diagonal reference line (equal patient and visit percentages)
+    # Add diagonal reference line (equal patient and visit percentages) - more visible
     max_val = max(max(patient_pcts), max(visit_pcts))
     fig.add_trace(
         go.Scatter(
@@ -333,13 +372,13 @@ def create_bubble_chart(workload_data: Dict[str, Any], tufte_mode: bool = True) 
             y=[0, max_val],
             mode='lines',
             line=dict(
-                dash='dash',
-                color='gray',
-                width=1
+                dash='solid',  # Solid line for better visibility
+                color=TUFTE_COLORS['neutral'],  # Darker color
+                width=TUFTE_LINE_WEIGHTS['data']  # Thicker line
             ),
             name='Equal Distribution',
             hoverinfo='skip',
-            showlegend=not tufte_mode
+            showlegend=False
         )
     )
     
@@ -356,8 +395,8 @@ def create_bubble_chart(workload_data: Dict[str, Any], tufte_mode: bool = True) 
                 opacity=0.8
             ),
             text=categories,
-            textposition="middle center",
-            textfont=dict(size=10, color='white'),
+            textposition="top center",  # Labels above bubbles
+            textfont=dict(size=TUFTE_FONT_SIZES['tick'], color=TUFTE_COLORS['neutral']),  # Black text
             hovertemplate="%{customdata}<extra></extra>",
             customdata=hover_texts,
             name='Treatment Categories'
@@ -367,36 +406,49 @@ def create_bubble_chart(workload_data: Dict[str, Any], tufte_mode: bool = True) 
     # Update layout
     if tufte_mode:
         fig.update_layout(
-            title="Clinical Workload Efficiency Analysis",
-            title_font_size=16,
-            title_x=0.02,
+            title="",  # Remove title for cleaner Tufte style
             xaxis_title="Patient Percentage (%)",
             yaxis_title="Visit Percentage (%)",
             showlegend=False,
             plot_bgcolor='white',
             paper_bgcolor='white',
-            font=dict(family='Arial', size=12),
-            margin=dict(l=60, r=40, t=80, b=60),
-            height=500
+            font=dict(family='Arial', size=TUFTE_FONT_SIZES['tick']),
+            margin=dict(l=60, r=40, t=40, b=60),  # Reduced top margin
+            height=500,
+            width=600  # Fixed width for half-page display
         )
         
-        # Clean axes
+        # Clean axes following Tufte principles
         fig.update_xaxes(
             showline=True,
-            linewidth=1,
-            linecolor='black',
+            linewidth=TUFTE_LINE_WEIGHTS['axis'],
+            linecolor=TUFTE_COLORS['neutral'],
             showgrid=True,
-            gridwidth=0.5,
-            gridcolor='lightgray'
+            gridwidth=TUFTE_LINE_WEIGHTS['grid'] * 0.3,  # Much lighter grid
+            gridcolor='rgba(224, 224, 224, 0.3)',  # Very subtle
+            zeroline=False,
+            tickfont=dict(size=TUFTE_FONT_SIZES['tick']),
+            title_font=dict(size=TUFTE_FONT_SIZES['label']),
+            ticks='outside',
+            ticklen=5,
+            tickwidth=TUFTE_LINE_WEIGHTS['axis'],
+            tickcolor=TUFTE_COLORS['neutral']
         )
         
         fig.update_yaxes(
             showline=True,
-            linewidth=1,
-            linecolor='black',
+            linewidth=TUFTE_LINE_WEIGHTS['axis'],
+            linecolor=TUFTE_COLORS['neutral'],
             showgrid=True,
-            gridwidth=0.5,
-            gridcolor='lightgray'
+            gridwidth=TUFTE_LINE_WEIGHTS['grid'] * 0.3,  # Much lighter grid
+            gridcolor='rgba(224, 224, 224, 0.3)',  # Very subtle
+            zeroline=False,
+            tickfont=dict(size=TUFTE_FONT_SIZES['tick']),
+            title_font=dict(size=TUFTE_FONT_SIZES['label']),
+            ticks='outside',
+            ticklen=5,
+            tickwidth=TUFTE_LINE_WEIGHTS['axis'],
+            tickcolor=TUFTE_COLORS['neutral']
         )
     else:
         fig.update_layout(
@@ -408,18 +460,19 @@ def create_bubble_chart(workload_data: Dict[str, Any], tufte_mode: bool = True) 
             height=500
         )
     
-    # Add annotation explaining the chart
+    # Add annotation explaining the chart - Tufte style
     fig.add_annotation(
         x=0.02,
         y=0.98,
         xref="paper",
         yref="paper",
-        text="Bubble size = Workload efficiency<br>Above diagonal = Higher visit generation",
+        text="Bubble size indicates workload efficiency<br>Points above diagonal show higher visit generation",
         showarrow=False,
-        font=dict(size=10),
-        bgcolor="rgba(255,255,255,0.8)",
-        bordercolor="gray",
-        borderwidth=1
+        font=dict(size=TUFTE_FONT_SIZES['annotation'], color=TUFTE_COLORS['annotation']),
+        bgcolor="rgba(255,255,255,0.9)",
+        bordercolor=TUFTE_COLORS['grid'],
+        borderwidth=TUFTE_LINE_WEIGHTS['annotation'],
+        borderpad=4
     )
     
     return fig
@@ -479,7 +532,7 @@ def get_workload_insight_summary(workload_data: Dict[str, Any]) -> str:
     # Find top contributors
     sorted_stats = sorted(
         workload_data['summary_stats'].items(),
-        key=lambda x: x[1]['workload_efficiency'],
+        key=lambda x: x[1]['workload_intensity'],
         reverse=True
     )
     
@@ -496,18 +549,18 @@ def get_workload_insight_summary(workload_data: Dict[str, Any]) -> str:
         insights.append(
             f"**Highest Impact:** {top_stats['patient_percentage']:.1f}% of patients "
             f"({top_category.lower()}) generate {top_stats['visit_percentage']:.1f}% of visits "
-            f"({top_stats['workload_efficiency']:.1f}x efficiency)"
+            f"({top_stats['workload_intensity']:.1f}x efficiency)"
         )
     
     # Most balanced category (closest to 1.0x efficiency)
     balanced_category = min(
         sorted_stats,
-        key=lambda x: abs(x[1]['workload_efficiency'] - 1.0)
+        key=lambda x: abs(x[1]['workload_intensity'] - 1.0)
     )
     if balanced_category:
         cat_name, cat_stats = balanced_category
         insights.append(
-            f"**Most Balanced:** {cat_name.lower()} patients have {cat_stats['workload_efficiency']:.1f}x efficiency "
+            f"**Most Balanced:** {cat_name.lower()} patients have {cat_stats['workload_intensity']:.1f}x efficiency "
             f"({cat_stats['patient_percentage']:.1f}% patients → {cat_stats['visit_percentage']:.1f}% visits)"
         )
     
