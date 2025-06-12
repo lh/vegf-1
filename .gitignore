@@ -92,6 +92,17 @@ logs/
 streamlit_app_v2/*.log
 streamlit_app_v2/tests/*.log
 
+# LaTeX build artifacts
+Paper/medical-computing-paper/*.aux
+Paper/medical-computing-paper/*.bbl
+Paper/medical-computing-paper/*.blg
+Paper/medical-computing-paper/*.log
+Paper/medical-computing-paper/*.out
+Paper/medical-computing-paper/*.pdf
+Paper/medical-computing-paper/*.synctex.gz
+Paper/medical-computing-paper/*.fdb_latexmk
+Paper/medical-computing-paper/*.fls
+
 # Node.js dependencies
 node_modules/
 **/node_modules/
