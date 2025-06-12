@@ -1,0 +1,13 @@
+{
+  "sim_id": "imported_sim_20250608_151436_05-00_super-darkness",
+  "transition_count": 19460,
+  "visit_count": 55352,
+  "states": [
+    "Extended (12+ weeks)",
+    "Initial Treatment",
+    "Intensive (Monthly)",
+    "Maximum Extension (16 weeks)",
+    "Regular (6-8 weeks)"
+  ],
+  "median_interval": 28.0
+}
