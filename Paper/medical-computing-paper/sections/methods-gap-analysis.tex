@@ -1,0 +1,99 @@
+\section{Methods: COVID-Era Gap Analysis}
+
+\subsection{Data Source and Study Period}
+
+We analyzed a comprehensive dataset of aflibercept 2mg injections from the St George's and St Helier's (SASH) ophthalmology service covering the period 2015-2023. This timeframe encompassed both pre-pandemic practice patterns and the COVID-19 disruption period, allowing comparison of routine and disrupted care.
+
+\subsection{Injection Interval Analysis}
+
+\subsubsection{Data Structure}
+The dataset comprised 21,727 inter-injection intervals from patients receiving aflibercept 2mg for neovascular AMD. Each interval record included:
+\begin{itemize}
+    \item Previous injection date and visual acuity
+    \item Current injection date and visual acuity
+    \item Calculated interval duration (days)
+    \item Patient and eye identifiers
+\end{itemize}
+
+\subsubsection{Gap Categorization}
+Intervals were categorized based on duration to reflect clinical significance:
+\begin{itemize}
+    \item \textbf{Regular treatment}: $\leq$90 days (reflecting monthly to 3-monthly planned intervals)
+    \item \textbf{Short gaps}: 91-180 days (3-6 months, potentially recoverable)
+    \item \textbf{Long gaps}: 181-365 days (6-12 months, significant disruption)
+    \item \textbf{Effective discontinuation}: >365 days
+\end{itemize}
+
+\subsection{Visual Acuity Impact Assessment}
+
+For each interval, we calculated:
+\begin{equation}
+\text{VA change} = \text{VA}_{\text{current}} - \text{VA}_{\text{previous}}
+\end{equation}
+
+Monthly vision loss rates during gaps were estimated as:
+\begin{equation}
+\text{Monthly VA loss} = \frac{\text{VA change}}{\text{Interval days}} \times 30
+\end{equation}
+
+\subsection{Recovery Pattern Analysis}
+
+For patients experiencing gaps, we tracked subsequent visits to assess recovery:
+\begin{enumerate}
+    \item Identified all gaps >90 days
+    \item Tracked visual acuity at the visit following the gap
+    \item Compared to pre-gap baseline
+    \item Calculated recovery rate and magnitude
+\end{enumerate}
+
+\subsection{Clinical Decision Analysis}
+
+To differentiate between external disruptions and clinical decisions, we applied specific criteria for "premature discontinuation":
+\begin{itemize}
+    \item Visual acuity >20 letters at discontinuation
+    \item Interval increase from $\leq$60 days to $\geq$180 days
+    \item Exclusion of discontinuations at approximately one year (330-390 days from treatment initiation)
+\end{itemize}
+
+\subsection{Statistical Methods}
+
+\subsubsection{Descriptive Statistics}
+We calculated means, medians, and standard deviations for:
+\begin{itemize}
+    \item Interval durations by category
+    \item Visual acuity changes
+    \item Time to treatment restart
+\end{itemize}
+
+\subsubsection{Risk Quantification}
+We computed the probability of significant vision loss (5, 10, and 15 letter thresholds) as a function of gap duration using logistic regression.
+
+\subsubsection{Time-Dependent Analysis}
+Vision loss rates were analyzed in time bins to identify non-linear patterns:
+\begin{itemize}
+    \item 0-3 months
+    \item 3-6 months  
+    \item 6-12 months
+    \item 1-2 years
+    \item >2 years
+\end{itemize}
+
+\subsection{Clinical Reasoning Categorization}
+
+For identified premature discontinuations, we developed a classification system based on:
+\begin{itemize}
+    \item Visual acuity at discontinuation
+    \item Time since treatment initiation
+    \item Subsequent clinical course
+\end{itemize}
+
+Categories were validated through:
+\begin{enumerate}
+    \item Review of aggregated patterns
+    \item Clinical plausibility assessment
+    \item Outcome consistency within categories
+\end{enumerate}
+
+\subsection{Ethical Considerations}
+
+This analysis used fully anonymized retrospective data with no patient identifiers. The study aimed to improve care quality through identification of modifiable practice patterns.

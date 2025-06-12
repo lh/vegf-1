@@ -1,0 +1,304 @@
+# Aflibercept 2mg Treat-and-Extend Protocol - SASH Real-World Model
+# Based on meta-analysis INCLUDING local practice patterns
+# Extraction date: 2025-06-08
+# Sources: VIEW 1/2, ALTAIR, FRB! registry, SASH COVID-era data with clinical discontinuation patterns
+
+# Required metadata
+name: "Aflibercept 2mg Treat-and-Extend SASH"
+version: "1.0.0"
+created_date: "2025-06-08"
+author: "Clinical Economics Integration Team"
+description: "Aflibercept 2mg T&E protocol including SASH-specific real-world discontinuation patterns"
+
+# Core protocol parameters (same as standard)
+protocol_type: "treat_and_extend"
+min_interval_days: 56        # 8 weeks (ALTAIR minimum)
+max_interval_days: 112       # 16 weeks (ALTAIR maximum)
+extension_days: 14           # 2 weeks (ALTAIR protocol)
+shortening_days: 14          # 2 weeks (symmetric with extension)
+
+# Required disease transitions - Meta-analysis of ALTAIR T&E and VIEW fixed dosing
+# Note: Same as standard protocol
+disease_transitions:
+  NAIVE:
+    NAIVE: 0.00
+    STABLE: 0.59      # ALTAIR: 55-60% achieve extension after loading
+    ACTIVE: 0.33      # ALTAIR: 30-35% maintain 8-week interval
+    HIGHLY_ACTIVE: 0.08
+    
+  STABLE:
+    NAIVE: 0.00
+    STABLE: 0.83      # ALTAIR: 80-85% maintain extended intervals
+    ACTIVE: 0.12      # ALTAIR: 10-15% revert to shorter intervals
+    HIGHLY_ACTIVE: 0.05
+    
+  ACTIVE:
+    NAIVE: 0.00
+    STABLE: 0.33      # ALTAIR: 30-35% achieve extension
+    ACTIVE: 0.57      # ALTAIR: 55-60% maintain current interval
+    HIGHLY_ACTIVE: 0.10
+    
+  HIGHLY_ACTIVE:
+    NAIVE: 0.00
+    STABLE: 0.08      # ALTAIR: 5-10% direct improvement (rare)
+    ACTIVE: 0.35      # ALTAIR: 30-40% stabilize to active
+    HIGHLY_ACTIVE: 0.57  # ALTAIR: 50-65% remain highly active
+
+# Required vision change model - Based on VIEW 1/2 trials and project parameters
+# Note: Same as standard protocol
+vision_change_model:
+  naive_treated:
+    mean: 8.4          # From VIEW 1/2 combined (52 weeks)
+    std: 14.7          # From VIEW 1/2 combined
+    
+  naive_untreated:
+    mean: -2.5         # From project data (natural history)
+    std: 2.0
+    
+  stable_treated:
+    mean: 1.0          # From project data (0.1-1.5 range)
+    std: 1.5
+    
+  stable_untreated:
+    mean: -0.75        # From project data
+    std: 1.0
+    
+  active_treated:
+    mean: 0.3          # From project data (-0.2 to +0.8 range)
+    std: 2.0
+    
+  active_untreated:
+    mean: -2.0         # From project data
+    std: 2.5
+    
+  highly_active_treated:
+    mean: -0.3         # From project data (-0.8 to +0.3 range)
+    std: 3.0
+    
+  highly_active_untreated:
+    mean: -4.0         # From project data
+    std: 3.5
+
+# Vision loss during unplanned gaps (SASH COVID-era evidence)
+# Applied when treatment gaps exceed normal intervals
+gap_vision_loss_model:
+  short_gap_90_180_days:
+    monthly_rate: -0.47      # letters/month
+    total_impact: -5.9       # net impact including partial recovery
+    recovery_probability: 0.505
+    
+  long_gap_180_365_days:
+    monthly_rate: -0.81      # letters/month  
+    total_impact: -8.1       # net impact including partial recovery
+    recovery_probability: 0.554
+    
+  discontinuation_365_plus_days:
+    monthly_rate: -0.51      # letters/month (plateaus)
+    total_impact: -11.8      # limited recovery
+    recovery_probability: 0.20
+
+# Treatment effect on transitions - Based on project standards
+treatment_effect_on_transitions:
+  NAIVE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 1.5        # Treatment promotes stability
+      ACTIVE: 0.7        # Reduces progression to active
+      HIGHLY_ACTIVE: 0.5 # Significantly reduces progression to highly active
+      
+  STABLE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 1.2        # Helps maintain stability
+      ACTIVE: 0.75       # Reduces deterioration
+      HIGHLY_ACTIVE: 0.6
+      
+  ACTIVE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 1.4        # Promotes return to stable
+      ACTIVE: 0.9
+      HIGHLY_ACTIVE: 0.7
+      
+  HIGHLY_ACTIVE:
+    multipliers:
+      NAIVE: 0.0
+      STABLE: 1.5        # Strong treatment effect for severe disease
+      ACTIVE: 1.2
+      HIGHLY_ACTIVE: 0.8
+
+# Baseline vision parameters
+baseline_vision:
+  mean: 55             # Typical trial entry criteria
+  std: 15
+  min: 25              # Minimum for treatment (guidance threshold)
+  max: 85
+
+# Discontinuation rules - SASH-specific patterns including inappropriate stops
+discontinuation_rules:
+  # === APPROPRIATE DISCONTINUATIONS (Standard) ===
+  # Stable disease at extended interval
+  stable_extended_interval:
+    criteria:
+      consecutive_stable_visits: 3
+      minimum_interval_weeks: 7
+    probability: 0.10
+    reason: "stable_disease"
+    
+  # Poor response - primary criterion
+  poor_response_25_letters:
+    criteria:
+      va_less_than: 25
+      consecutive_visits: 2
+      attributable_to_amd: true
+    probability: 0.95
+    reason: "poor_response"
+    
+  # Critical vision loss
+  critical_vision_15_letters:
+    criteria:
+      va_less_than: 15
+      consecutive_visits: 2
+    probability: 0.99
+    reason: "severe_vision_loss"
+    
+  # Unable to extend intervals
+  frequent_injections:
+    criteria:
+      max_achieved_interval_weeks: 7
+      attempts: 2
+      months_on_treatment: 12
+    probability: 0.50
+    reason: "treatment_burden"
+    
+  # Non-compliance
+  non_compliance:
+    criteria:
+      missed_consecutive_visits: 2
+      months_since_last_visit: 4
+    probability: 0.95
+    reason: "lost_to_follow_up"
+    
+  # Adverse events
+  adverse_event:
+    criteria:
+      severe_adverse_event: true
+    probability: 0.90
+    reason: "adverse_event"
+    
+  # === INAPPROPRIATE CLINICAL DISCONTINUATIONS (SASH-specific) ===
+  # Based on analysis of 282 cases showing clinical misunderstanding
+  clinical_error_excellent_va:
+    criteria:
+      va_greater_than: 70           # Excellent vision
+      months_on_treatment: 6        # After initial success
+    probability: 0.004              # 0.4% (89/21727 intervals)
+    reason: "inappropriate_stop_good_vision"
+    expected_va_loss: -12.6
+    restart_probability: 0.95
+    mean_days_to_restart: 92
+    
+  clinical_error_one_year_complete:
+    criteria:
+      months_on_treatment: 11-13    # Around 1 year
+      va_greater_than: 50           # Reasonable vision
+    probability: 0.002              # 0.2% (40/21727)
+    reason: "inappropriate_stop_course_complete"
+    expected_va_loss: -14.2         # Worst outcomes
+    restart_probability: 0.95
+    mean_days_to_restart: 92
+    
+  clinical_error_good_enough:
+    criteria:
+      va_between: [50, 70]          # Good but not excellent
+      months_on_treatment: 3-10     # Early in treatment
+    probability: 0.0024             # 0.24% (52/21727)
+    reason: "inappropriate_stop_good_enough"
+    expected_va_loss: -7.3
+    restart_probability: 0.95
+    mean_days_to_restart: 92
+    
+  clinical_error_plateau:
+    criteria:
+      va_between: [35, 50]          # Moderate vision
+      stable_va_months: 3           # Perceived plateau
+    probability: 0.002              # 0.2% (44/21727)
+    reason: "inappropriate_stop_plateau"
+    expected_va_loss: -6.8
+    restart_probability: 0.95
+    mean_days_to_restart: 92
+
+# Unplanned gap scenarios (COVID-like disruptions)
+unplanned_gap_scenarios:
+  external_short_gap:
+    duration_days: [90, 180]
+    probability: 0.094              # 9.4% in COVID era
+    va_impact: -5.9                 # letters net
+    recovery_potential: 0.505
+    
+  external_long_gap:
+    duration_days: [180, 365]
+    probability: 0.025              # 2.5% in COVID era
+    va_impact: -8.1                 # letters net
+    recovery_potential: 0.554
+
+# Protocol-specific parameters
+treat_and_extend_parameters:
+  # Loading phase - Based on standard practice
+  loading_phase:
+    number_of_doses: 3
+    interval_days: 28               # Monthly
+    
+  # Extension/reduction rules
+  extension_rules:
+    stable_criteria:
+      no_disease_activity: true     # OCT dry
+      va_stable_or_improved: true
+    extend_by_days: 14              # 2 weeks
+    max_extension_days: 28          # Up to 4 weeks per guidance
+    
+  reduction_rules:
+    active_criteria:
+      disease_activity: true        # OCT shows fluid
+      va_deterioration: true        # Loss of letters
+    reduce_by_days: 14              # 2 weeks
+    min_interval_days: 28           # Not less than monthly
+    
+  # Treatment switching criteria
+  switch_criteria:
+    suboptimal_after_loading: true
+    frequent_injections_threshold_weeks: 8
+    failed_extension_attempts: 2
+    
+  # Maximum lines of therapy
+  max_lines_of_therapy: 3
+
+# Clinical evidence basis
+clinical_evidence:
+  source: "Meta-analysis of RCT, real-world studies, and SASH practice data"
+  key_data:
+    - "VIEW 1/2: Mean +8.4 letters at 52 weeks (SD 14.7) - RCT"
+    - "ALTAIR: 41-46% maintain 16-week intervals at 96 weeks - RCT"
+    - "FRB! registry: +4.2 letters at 24 months - Real-world"
+    - "SASH COVID-era: 13.5% treatment disruption rate"
+    - "SASH clinical errors: 1.3% inappropriate discontinuation rate"
+  injection_burden:
+    - "ALTAIR RCT: 10.4 injections over 2 years"
+    - "FRB! real-world: 14.9 injections over 2 years"
+    - "SASH with disruptions: Expected 15-17 injections over 2 years"
+  discontinuation_patterns:
+    - "Appropriate medical discontinuations: ~5-10%"
+    - "Lost to follow-up: ~3-5%"
+    - "Clinical decision errors: 1.3% (SASH-specific)"
+    - "External disruptions (COVID-like): 11.9%"
+  key_insights:
+    - "Clinical misunderstanding causes worse outcomes than COVID gaps"
+    - "Excellent vision patients at highest risk of inappropriate stop"
+    - "95% restart rate but with significant vision loss"
+    - "Mean 92-day delay before restart"
+  data_synthesis:
+    - "Transitions from ALTAIR T&E study (n=247)"
+    - "Vision outcomes from VIEW 1/2 (n=1,217)"
+    - "Real-world patterns from FRB! registry (n=3,313)"
+    - "SASH COVID-era gap analysis (n=21,727 intervals)"
+    - "SASH inappropriate discontinuation analysis (n=282 cases)"

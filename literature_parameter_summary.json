@@ -1,0 +1,27 @@
+{
+  "vision_outcomes": {
+    "mean_gain_range": [],
+    "mean_loss_range": [],
+    "typical_std_dev": []
+  },
+  "transition_probabilities": {
+    "stable_rate_range": [],
+    "progression_rate_range": {
+      "min": 17.0,
+      "max": 17.0,
+      "mean": 17.0,
+      "values": [
+        17.0
+      ]
+    },
+    "improvement_rate_range": []
+  },
+  "treatment_protocol": {
+    "loading_doses_consensus": [],
+    "maintenance_interval_range": []
+  },
+  "discontinuation": {
+    "vision_threshold_consensus": [],
+    "typical_rates": []
+  }
+}

@@ -1,0 +1,158 @@
+# Aflibercept 2mg NHS Costs 2025
+# Based on best available knowledge June 2025
+# Extraction date: 2025-06-08
+
+metadata:
+  name: "Aflibercept 2mg NHS Costs 2025"
+  currency: "GBP"
+  effective_date: "2025-01-01"
+  version: "1.0"
+  source: "Based on current NHS pricing structures and tariffs"
+
+# Drug costs with NHS pricing structure
+drug_costs:
+  aflibercept_2mg:
+    unit_cost: 457          # Net price after NHS discount
+    list_price: 816         # Published list price
+    procurement_discount: 0.44  # 44% discount rate
+    note: "Based on current market pricing"
+    
+  # Biosimilar projection for future use
+  aflibercept_2mg_biosimilar:
+    unit_cost: 228          # Projected net price
+    list_price: 400         # Estimated list price
+    procurement_discount: 0.43  # Expected discount
+    note: "Projected pricing - ~50% of originator net price"
+
+# Component costs (NHS tariffs)
+visit_components:
+  # Clinical procedures
+  injection: 150            # Intravitreal injection procedure
+  oct_scan: 75             # Optical coherence tomography
+  visual_acuity_test: 25   # ETDRS visual acuity assessment
+  pressure_check: 10       # Intraocular pressure check
+  
+  # Consultation types
+  virtual_review: 50       # Remote/virtual consultation
+  face_to_face_review: 120 # In-person consultant review
+  nurse_review: 40         # Nurse-led review
+  
+  # Additional procedures
+  clinical_exam: 30        # Basic clinical examination
+  fluorescein_angiography: 150  # If required
+  adverse_event_assessment: 200  # Managing complications
+  
+  # Administrative
+  brief_check: 15          # Quick safety check
+  consultation: 60         # Extended consultation
+
+# Visit type definitions (combinations)
+visit_types:
+  # Loading phase visits
+  injection_loading:
+    components: [injection, visual_acuity_test, brief_check]
+    total_override: null    # Sum of components = 190
+    note: "Streamlined loading phase visit"
+    
+  # Standard injection visits
+  injection_virtual:
+    components: [injection, oct_scan, pressure_check, virtual_review]
+    total_override: null    # Sum = 285
+    note: "Standard maintenance injection with virtual review"
+    
+  injection_face_to_face:
+    components: [injection, oct_scan, visual_acuity_test, pressure_check, face_to_face_review]
+    total_override: null    # Sum = 380
+    note: "Full assessment with injection"
+    
+  # Monitoring visits (no injection)
+  monitoring_virtual:
+    components: [oct_scan, visual_acuity_test, virtual_review]
+    total_override: null    # Sum = 150
+    note: "Assess and extend visit without injection"
+    
+  monitoring_face_to_face:
+    components: [oct_scan, visual_acuity_test, pressure_check, face_to_face_review]
+    total_override: null    # Sum = 230
+    note: "Full monitoring without injection"
+    
+  # Special visits
+  initial_assessment:
+    components: [oct_scan, visual_acuity_test, fluorescein_angiography, face_to_face_review, consultation]
+    total_override: 380     # Bundled rate
+    note: "Comprehensive initial assessment"
+    
+  annual_review:
+    components: [oct_scan, visual_acuity_test, clinical_exam, face_to_face_review, consultation]
+    total_override: null    # Sum = 290
+    note: "Annual treatment review"
+
+# Special events
+special_events:
+  initial_assessment: 380    # New patient workup
+  discontinuation_admin: 50  # Administrative discontinuation
+  retreatment_assessment: 200  # Assessment for retreatment
+  adverse_event_mild: 500    # Managing mild complications
+  adverse_event_severe: 2000 # Managing severe complications
+  
+  # Switching events
+  treatment_switch_assessment: 150  # Evaluating need to switch
+  treatment_switch_reload: 100      # Additional cost if reloading required
+
+# Detailed visit cost breakdowns
+visit_costs:
+  # Standard treat-and-extend pathway
+  injection_visit_standard:
+    drug_cost: 457
+    procedure_cost: 285       # injection_virtual components
+    total_cost: 742
+    
+  # Loading phase (simplified)
+  injection_visit_loading:
+    drug_cost: 457
+    procedure_cost: 190       # injection_loading components
+    total_cost: 647
+    
+  # Monitoring only (no drug)
+  monitoring_visit_standard:
+    drug_cost: 0
+    procedure_cost: 150       # monitoring_virtual components
+    total_cost: 150
+
+# Annual cost projections
+annual_costs:
+  # Treat-and-extend with typical intervals
+  aflibercept_2mg_typical:
+    year_1:
+      loading_injections: 3
+      maintenance_injections: 3.9   # Variable based on extensions
+      total_injections: 6.9
+      drug_cost: 3153              # 6.9 × £457
+      procedure_costs: 1970        # Mix of visit types
+      annual_total: 5123
+      
+    year_2_plus:
+      injections: 5.2              # Typical with extensions
+      drug_cost: 2376              # 5.2 × £457
+      procedure_costs: 1480
+      annual_total: 3856
+      
+  # Fixed interval comparison (q8 weeks)
+  aflibercept_2mg_fixed_q8:
+    injections_per_year: 6.5
+    drug_cost: 2971                # 6.5 × £457
+    procedure_costs: 1850
+    annual_total: 4821
+
+# Cost-effectiveness thresholds
+cost_effectiveness:
+  nice_threshold_per_qaly: 30000
+  typical_utility_gain: 0.1        # Per year with treatment
+  implied_max_annual_cost: 3000    # For cost-effectiveness
+  
+# Notes on cost drivers
+cost_notes:
+  major_cost_driver: "Drug cost represents ~60-65% of total"
+  biosimilar_impact: "Could reduce total costs by 30-35%"
+  interval_extension: "Each 2-week extension saves ~£95 per patient"
+  virtual_clinics: "Save £70 per visit vs face-to-face"

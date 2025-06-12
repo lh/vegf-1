@@ -1,0 +1,97 @@
+{
+  "guidelines-for-the-treatment-of-wet-amd-with-anti-vegf-agents.pdf": {
+    "vision_outcomes": {
+      "mean_gains": [],
+      "mean_losses": [],
+      "standard_deviations": [],
+      "confidence_intervals": []
+    },
+    "transition_data": {
+      "stable_rates": [],
+      "progression_rates": [],
+      "improvement_rates": [],
+      "recurrence_rates": []
+    },
+    "interval_data": {
+      "loading_doses": [],
+      "maintenance_intervals": [
+        [
+          12,
+          16
+        ]
+      ],
+      "extension_criteria": [],
+      "maximum_intervals": []
+    },
+    "discontinuation_data": {
+      "vision_thresholds": [],
+      "no_improvement_periods": [],
+      "discontinuation_rates": []
+    }
+  },
+  "AMD-Commissioning-Guidance-Evidence-Base-2024.pdf": {
+    "vision_outcomes": {
+      "mean_gains": [],
+      "mean_losses": [],
+      "standard_deviations": [],
+      "confidence_intervals": [
+        [
+          1.58,
+          2.31
+        ],
+        [
+          1.46,
+          2.02
+        ],
+        [
+          1.01,
+          1.47
+        ]
+      ]
+    },
+    "transition_data": {
+      "stable_rates": [],
+      "progression_rates": [],
+      "improvement_rates": [],
+      "recurrence_rates": []
+    },
+    "interval_data": {
+      "loading_doses": [],
+      "maintenance_intervals": [],
+      "extension_criteria": [],
+      "maximum_intervals": []
+    },
+    "discontinuation_data": {
+      "vision_thresholds": [],
+      "no_improvement_periods": [],
+      "discontinuation_rates": []
+    }
+  },
+  "agerelated-macular-degeneration-pdf-1837691334853.pdf": {
+    "vision_outcomes": {
+      "mean_gains": [],
+      "mean_losses": [],
+      "standard_deviations": [],
+      "confidence_intervals": []
+    },
+    "transition_data": {
+      "stable_rates": [],
+      "progression_rates": [
+        17.0
+      ],
+      "improvement_rates": [],
+      "recurrence_rates": []
+    },
+    "interval_data": {
+      "loading_doses": [],
+      "maintenance_intervals": [],
+      "extension_criteria": [],
+      "maximum_intervals": []
+    },
+    "discontinuation_data": {
+      "vision_thresholds": [],
+      "no_improvement_periods": [],
+      "discontinuation_rates": []
+    }
+  }
+}

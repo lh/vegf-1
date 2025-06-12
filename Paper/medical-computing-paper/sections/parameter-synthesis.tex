@@ -1,0 +1,139 @@
+\section{Parameter Synthesis from Multiple Evidence Sources}
+
+\subsection{Overview}
+
+The development of simulation parameters for aflibercept 2mg in age-related macular degeneration (AMD) required synthesis of evidence from multiple sources including randomized controlled trials (RCTs), real-world registries, and local clinical practice data. This approach highlighted differences between clinical trial efficacy and real-world effectiveness.
+
+\subsection{Evidence Hierarchy and Data Sources}
+
+Our parameter extraction followed a structured hierarchy of evidence:
+
+\begin{enumerate}
+    \item \textbf{Pivotal RCTs} (n=1,464): VIEW 1 and VIEW 2 trials provided foundational efficacy data
+    \item \textbf{Treat-and-extend RCTs} (n=288): ALTAIR and smaller studies (HAGA, Maruko) defined extension protocols
+    \item \textbf{Real-world registries} (n=3,313): Fight Retinal Blindness! (FRB!) registry quantified the efficacy-effectiveness gap
+    \item \textbf{Discontinuation studies} (n=102): Aslanis et al. characterized recurrence patterns
+    \item \textbf{Local practice data} (n=21,727 intervals): SASH aflibercept cohort revealed treatment disruption patterns
+\end{enumerate}
+
+\subsection{Visual Acuity Outcomes: RCT versus Real-World}
+
+The synthesis showed reduced effectiveness in real-world settings:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\hline
+\textbf{Study Type} & \textbf{2-Year VA Gain} & \textbf{Injection Count} \\
+\hline
+VIEW 1/2 (RCT) & +7.6 letters & 11.2 \\
+ALTAIR (RCT) & +6.1--7.6 letters & 10.4 \\
+FRB! (Real-world) & +4.2 letters & 14.9 \\
+\hline
+\end{tabular}
+\caption{Efficacy-effectiveness gap in aflibercept treatment}
+\end{table}
+
+This represents a real-world effectiveness of approximately 55-70\% of RCT efficacy.
+
+\subsection{Disease State Transition Modeling}
+
+We synthesized transition probabilities from ALTAIR's treat-and-extend data, defining four disease states:
+
+\begin{itemize}
+    \item \textbf{NAIVE}: Pre-treatment state
+    \item \textbf{STABLE}: Achieving interval extension (59\% post-loading)
+    \item \textbf{ACTIVE}: Maintaining current interval (33\% post-loading)
+    \item \textbf{HIGHLY\_ACTIVE}: Requiring interval reduction (8\% post-loading)
+\end{itemize}
+
+Notably, 80-85\% of patients who achieve STABLE state maintain it per decision interval.
+
+\subsection{Treatment Protocol Variations}
+
+Analysis of multiple treat-and-extend protocols showed flexibility in implementation:
+
+\begin{itemize}
+    \item \textbf{Maximum interval}: 16 weeks (ALTAIR) vs 12 weeks (Maruko/HAGA)
+    \item \textbf{Extension increment}: 2 weeks (ALTAIR) vs 4 weeks (Maruko)
+    \item \textbf{Outcome similarity}: Despite protocol differences, 2-year outcomes were comparable
+\end{itemize}
+
+This suggests that the specific protocol details may be less critical than consistent application and monitoring.
+
+\subsection{Gap Consequence Quantification}
+
+Analysis of 21,727 injection intervals during the COVID-19 era quantified treatment gap consequences:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lccc}
+\hline
+\textbf{Gap Duration} & \textbf{Prevalence} & \textbf{VA Loss Rate} & \textbf{Net Impact} \\
+\hline
+3-6 months & 9.4\% & 0.47 letters/month & -5.9 letters \\
+6-12 months & 2.5\% & 0.81 letters/month & -8.1 letters \\
+>12 months & 1.6\% & 0.51 letters/month & -11.8 letters \\
+\hline
+\end{tabular}
+\caption{Vision loss during treatment gaps}
+\end{table}
+
+Vision loss rate peaked at 6-12 months then plateaued, possibly reflecting selection effects in patients tolerating longer gaps.
+
+\subsection{Recovery Patterns Post-Gap}
+
+Analysis revealed partial recovery potential after treatment resumption:
+
+\begin{itemize}
+    \item 50.5\% of patients showed recovery after 3-6 month gaps
+    \item 55.4\% showed recovery after 6-12 month gaps
+    \item Mean recovery was 1-2 letters, leaving net deficits of 6-8 letters
+\end{itemize}
+
+This contrasts with Aslanis et al.'s findings of full recovery after planned discontinuation with monitoring.
+
+\subsection{Population-Specific Considerations}
+
+Meta-analysis showed population differences:
+
+\begin{itemize}
+    \item \textbf{Polypoidal choroidal vasculopathy (PCV)}: 36-76\% in Japanese studies vs ~10\% Western
+    \item \textbf{Treatment response}: Higher gains in PCV-predominant cohorts (HAGA: +13-16 letters)
+    \item \textbf{Extension achievement}: Cultural and system factors affected maximum intervals achieved
+\end{itemize}
+
+\subsection{Integrated Parameter Model}
+
+The final parameter synthesis incorporated:
+
+\begin{enumerate}
+    \item \textbf{Base efficacy}: VIEW trial outcomes
+    \item \textbf{Transition dynamics}: ALTAIR treat-and-extend patterns
+    \item \textbf{Real-world adjustment}: 0.6-0.7 effectiveness factor from FRB!
+    \item \textbf{Gap consequences}: Time-dependent vision loss from COVID-era analysis
+    \item \textbf{Recovery patterns}: Partial recovery modeling from local data
+\end{enumerate}
+
+\subsection{Validation Approach}
+
+Parameters were validated through:
+
+\begin{itemize}
+    \item Cross-checking injection frequencies across studies
+    \item Comparing predicted vs observed vision outcomes
+    \item Sensitivity analysis on key parameters
+    \item Clinical expert review for face validity
+\end{itemize}
+
+\subsection{Implications for Simulation}
+
+\begin{enumerate}
+    \item \textbf{Real-world adjustment is essential}: RCT parameters alone overestimate outcomes by 30-45\%
+    \item \textbf{Gap consequences are severe but predictable}: Vision loss follows consistent patterns
+    \item \textbf{Protocol flexibility exists}: Similar outcomes achievable with different extension schemes
+    \item \textbf{Population matters}: Parameters may need adjustment for specific demographics
+    \item \textbf{Recovery is limited}: Treatment gaps cause partially irreversible damage
+\end{enumerate}
+
+This parameter synthesis provides a foundation for AMD treatment simulation that accounts for differences between clinical trial and real-world outcomes.
