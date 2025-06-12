@@ -2,100 +2,121 @@
 
 **IMPORTANT**: This is the active implementation plan. Always refer to this document when working on the current feature.
 
-## 🚀 Current Phase: Treatment State Streamgraph
+## 🚀 Current Phase: Staggered Enrollment Implementation
 
 ### Overview
-We are implementing a streamgraph visualization showing patient flow through treatment states over time. This includes pre-calculating treatment pattern data when simulations load for better performance across all treatment visualizations.
+The V2 simulation engines currently implement unrealistic instant recruitment where all patients exist from day 0. This needs to be replaced with proper staggered enrollment as was implemented in V1. The rectangular streamgraph shape revealed this issue - all patients are created at simulation start with only initial visits staggered across the first month.
 
-**Current Task**: Implement treatment state streamgraph with pre-calculation  
-**Timeline**: 4-5 days  
-**Approach**: Phased implementation with backward compatibility
+**Current Task**: Implement staggered patient enrollment with Poisson process  
+**Timeline**: 7-10 days  
+**Approach**: Replace instant recruitment entirely (no real-world use case)
 
 ### 📍 Key Documents
-- **Implementation Plan**: [STREAMGRAPH_IMPLEMENTATION_PLAN_V2.md](STREAMGRAPH_IMPLEMENTATION_PLAN_V2.md) - Complete consolidated guide
-- **Original Concept**: [STREAMGRAPH_PLAN.md](STREAMGRAPH_PLAN.md) - Initial requirements
-- **Pattern Analyzer**: `components/treatment_patterns/pattern_analyzer.py` - Existing treatment state logic
-- **Visualization Modes**: `utils/visualization_modes.py` - Semantic color system
+- **V1 Implementation Reference**: `/simulation/staggered_abs.py` - Working staggered enrollment
+- **Issue Discovery**: Streamgraph showed constant patient totals instead of wedge shape
+- **Root Cause**: `simulation_v2/engines/abs_engine.py` lines 119-124, `des_engine.py` lines 108-116
 
-### Current Status
-- ✅ Plan created and reviewed
-- ✅ Pre-calculation strategy decided (Option 2)
-- ✅ Backward compatibility approach defined
-- 🔄 Ready to start Phase 0: Verify Existing Functionality
+### Key Principle
+**All patients must have an enrollment date** - this is when they enter the simulation, not just when they have their first visit. The simulation represents a continuous real-world scenario where patients arrive throughout the entire simulation period.
+
+### Recruitment Modes to Implement
+
+Two mutually exclusive modes (user chooses one):
+
+1. **Fixed Total Mode**
+   - User specifies: Total number of patients
+   - System calculates: Arrival rate spread evenly across entire simulation duration
+   - Example: 1000 patients over 2 years = ~9.6 patients/week
+   - Display: "Expected rate: X patients/week"
+
+2. **Constant Rate Mode**  
+   - User specifies: Patients per week (or month)
+   - System calculates: Expected total based on simulation duration
+   - Example: 10 patients/week for 2 years = ~1040 patients (varies due to Poisson)
+   - Display: "Expected total: ~X patients"
 
 ### Implementation Phases
 
-#### Phase 0: Verify Existing Functionality (Day 0)
-- [ ] Run baseline test of Sankey diagram
-- [ ] Create verification script
-- [ ] Document current behavior
-- [ ] Set up feature branch
+#### Phase 1: Core Engine Changes (2-3 days)
+- [ ] Study V1 `StaggeredABS` implementation
+- [ ] Add enrollment_date to Patient class
+- [ ] Replace instant patient creation in ABS engine
+- [ ] Replace instant patient creation in DES engine
+- [ ] Implement Poisson arrival process
+- [ ] Test simulations still run (even if visualizations break)
 
-#### Phase 1: Data Infrastructure (Day 1)
-- [ ] Implement pre-calculation in `get_active_simulation()`
-- [ ] Create backward-compatible caching
-- [ ] Test Sankey still works
-- [ ] Create data_manager module
+#### Phase 2: Data Pipeline (1-2 days)
+- [ ] Update Parquet writer to include enrollment_date
+- [ ] Add enrollment_time_days field (days from simulation start)
+- [ ] Ensure visit times are relative to enrollment
+- [ ] Test data integrity with small simulations
+- [ ] Verify late enrollees are handled correctly
 
-#### Phase 2: Time Series Generation (Day 2)
-- [ ] Build time_series_generator
-- [ ] Implement patient state tracking
-- [ ] Validate against Sankey data
-- [ ] Test data conservation
+#### Phase 3: Fix Streamgraph (1 day)
+- [ ] Update time_series_generator.py to respect enrollment dates
+- [ ] Add check: `if enrollment_time <= time_point`
+- [ ] Verify streamgraph shows wedge shape (growing patient count)
+- [ ] Test with both calendar and patient time views
 
-#### Phase 3: Visualization (Day 3)
-- [ ] Create streamgraph component
-- [ ] Apply semantic colors
-- [ ] Add interactivity
-- [ ] Test with various data sizes
+#### Phase 4: UI Integration (1-2 days)
+- [ ] Add recruitment mode radio buttons to Simulations page
+- [ ] Add conditional inputs (total vs rate)
+- [ ] Calculate and display derived value
+- [ ] Wire parameters to simulation engines
+- [ ] Add help text explaining the modes
 
-#### Phase 4: Integration & Testing (Day 4)
-- [ ] Replace existing streamgraph
-- [ ] Performance optimization
-- [ ] Full regression testing
-- [ ] Documentation update
+#### Phase 5: Analysis Enhancement (2-3 days)
+- [ ] Add enrollment statistics section to Analysis Overview
+- [ ] Create enrollment distribution histogram
+- [ ] Show actual vs expected enrollment rate
+- [ ] Add cohort analysis (monthly enrollment groups)
+- [ ] Ensure all visualizations handle varying sample sizes
 
 ## 🧪 Testing Protocol
 
-### Before ANY changes:
-1. Ask user to run simulation (e.g., 1000 patients, 2 years)
-2. Check Patient Journey Visualisation tab
-3. Screenshot working Sankey
-4. Note load times
+### Unit Tests:
+1. Test Poisson arrival generation
+2. Test enrollment date tracking
+3. Verify conservation of patient counts
+4. Test late enrollee handling
 
-### After EACH phase:
-1. Run fresh simulation
-2. Verify Sankey works identically
-3. Check for performance changes
-4. Look for console errors
+### Visual Validation:
+1. Streamgraph shows continuous growth (no plateau)
+2. Patient Explorer shows different enrollment dates
+3. Analysis statistics match expected distributions
+4. All existing visualizations continue working
 
 ### Red Flags:
-- Different data in Sankey
-- Longer load times
-- Missing states or colors
-- Console errors
-- Empty visualizations
+- Constant patient totals (rectangular streamgraph)
+- All patients starting at day 0
+- Missing enrollment dates in data
+- Performance degradation
 
 ## 📏 Implementation Rules
 
-1. **Backward Compatibility** - Sankey must work identically throughout
-2. **Real Data Only** - No synthetic curves or smoothing
-3. **Test Continuously** - Verify after each change
-4. **Performance Matters** - Pre-calc should be <3s for 10k patients
-5. **Semantic Colors** - Use existing color system
+1. **Replace, Don't Add** - Remove instant recruitment entirely
+2. **Real-World Behavior** - Continuous enrollment throughout simulation
+3. **No Special Cases** - Late enrollees just have fewer visits
+4. **Backward Compatibility** - Old simulations show warning banner
+5. **Performance** - May actually improve by spreading patient creation
 
 ## 🔧 Key Code Locations
 
 ### Files to Modify:
-- `utils/state_helpers.py` - Add pre-calculation
-- `pages/3_Analysis_Overview.py` - Update tab4 for new streamgraph
-- `components/treatment_patterns/` - Add new modules
+- `simulation_v2/engines/abs_engine.py` - Core enrollment logic
+- `simulation_v2/engines/des_engine.py` - Core enrollment logic
+- `simulation_v2/core/patient.py` - Add enrollment_date field
+- `core/storage/writer.py` - Include enrollment in Parquet
+- `components/treatment_patterns/time_series_generator.py` - Fix patient counting
+- `pages/2_Simulations.py` - Add recruitment mode UI
+- `pages/3_Analysis.py` - Add enrollment statistics
 
-### Files to Create:
-- `components/treatment_patterns/data_manager.py`
-- `components/treatment_patterns/time_series_generator.py`
-- `visualizations/streamgraph_treatment_states.py`
-- `verify_sankey_works.py` (test script)
+### Code to Reuse from V1:
+```python
+# From V1 patient_generator.py
+inter_arrival_times = np.random.exponential(1.0 / self.rate_per_day, size=estimated_patients)
+arrival_times = np.cumsum(inter_arrival_times)
+```
 
 ## ✅ Previous Phases Complete
 
@@ -104,20 +125,22 @@ We are implementing a streamgraph visualization showing patient flow through tre
 - ✅ Security hardened
 - ✅ UI integrated
 
-### Phase 2: State Management (Deferred)
-- Identified issues with simulation switching
-- Planned fixes in STATE_REFACTORING_PLAN.md
-- To be addressed after streamgraph
+### Phase 2: Treatment State Streamgraph
+- ✅ Pre-calculation infrastructure implemented
+- ✅ Plotly streamgraph visualization created
+- ✅ Integrated into Analysis page
+- ✅ Discovered recruitment issue (reason for current phase)
 
 ## 📊 Success Metrics
 
-### Streamgraph Implementation:
-- [ ] Patient counts conserved at all time points
-- [ ] States match Sankey diagram exactly
-- [ ] Pre-calculation <3 seconds
-- [ ] Smooth interaction with 10k patients
-- [ ] All existing visualizations still work
+### Staggered Enrollment Implementation:
+- [ ] Streamgraph shows wedge shape (continuous growth)
+- [ ] Enrollment follows Poisson distribution
+- [ ] UI clearly shows mutual exclusivity of modes
+- [ ] All visualizations handle varying cohort sizes
+- [ ] Performance maintained or improved
+- [ ] Backward compatibility for old simulations
 
 ---
 
-**Remember**: The Sankey diagram is critical functionality. Test thoroughly at each step to ensure we don't break it while implementing the streamgraph.
+**Remember**: This fixes the "original sin" discovered during streamgraph implementation. The rectangular shape revealed that all patients start at day 0, which is unrealistic for clinical simulations.
