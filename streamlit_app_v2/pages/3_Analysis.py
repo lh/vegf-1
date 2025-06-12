@@ -38,7 +38,6 @@ st.set_page_config(
 sys.path.append(str(Path(__file__).parent.parent))
 from utils.carbon_button_helpers import top_navigation_home_button, ape_button
 from utils.state_helpers import get_active_simulation
-from visualizations.streamgraph_simple import create_simple_streamgraph
 from components.treatment_patterns.enhanced_tab import render_enhanced_treatment_patterns_tab
 
 # Top navigation
@@ -102,12 +101,13 @@ stats = get_cached_stats(results.metadata.sim_id)
 is_large_dataset = stats['patient_count'] > 1000
 
 # Create tabs for different analyses - Patient Journey first as it's the most visual
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
     "Patient Journey Visualisation", 
     "Vision Outcomes", 
     "Patient Trajectories", 
     "Patient States",
     "Treatment Intervals",
+    "Clinical Workload Analysis",
     "Pattern Details",
     "Treatment Summary",
     "Audit Trail"
@@ -129,11 +129,24 @@ with tab1:
     
     @st.cache_data
     def get_cached_treatment_patterns(sim_id, include_terminals=False):
-        """Extract and cache treatment patterns."""
+        """Get treatment patterns with backward compatibility."""
+        # First check if data was pre-calculated
+        cache_key = f"treatment_patterns_{sim_id}"
+        
+        if cache_key in st.session_state:
+            data = st.session_state[cache_key]
+            # Handle enhanced terminals if requested and available
+            if include_terminals and 'transitions_df_with_terminals' in data:
+                return data['transitions_df_with_terminals'], data['visits_df_with_terminals']
+            else:
+                return data['transitions_df'], data['visits_df']
+        
+        # Fall back to on-demand calculation (current behavior)
         if include_terminals and enhanced_available:
             transitions_df, visits_df = extract_treatment_patterns_with_terminals(results)
         else:
             transitions_df, visits_df = extract_treatment_patterns_vectorized(results)
+        
         return transitions_df, visits_df
     
     # Mobile device warning
@@ -410,62 +423,62 @@ with tab3:
     st.caption(f"*Showing {n_sample} of {stats['patient_count']:,} total patients")
 
 with tab4:
-    st.header("Patient States Over Time")
-    st.markdown("Track patient state transitions throughout the simulation.")
+    st.header("Patient Treatment Flow")
+    st.markdown("Comprehensive view of patient cohort flow through different treatment states over time.")
     
-    # Add controls for streamgraph
-    col1, col2 = st.columns(2)
+    # Use the new comprehensive streamgraph
+    col1, col2 = st.columns([3, 1])
     
-    with col1:
+    with col2:
+        time_resolution = st.radio(
+            "Time Resolution",
+            ["month", "week"],
+            key="time_res"
+        )
+        
         normalize = st.checkbox(
             "Show as Percentage",
             value=False,
             help="Display as percentage of total patients"
         )
     
-    with col2:
-        time_resolution = st.selectbox(
-            "Time Resolution",
-            ["month", "week"],
-            help="Group data by month or week"
-        )
-    
-    # Create the streamgraph
-    with st.spinner("Generating streamgraph visualization..."):
-        # Cache based on simulation ID to avoid hashing the results object
+    # Create the comprehensive visualization
+    with st.spinner("Analyzing patient treatment journeys..."):
+        # Import the new comprehensive streamgraph
+        from visualizations.streamgraph_treatment_states import create_treatment_state_streamgraph
+        
+        # Cache based on simulation ID
         @st.cache_data
-        def get_streamgraph_figure(sim_id: str, time_res: str, norm: bool):
-            return create_simple_streamgraph(results, time_res, norm)
+        def get_comprehensive_streamgraph(sim_id: str, time_res: str, norm: bool):
+            return create_treatment_state_streamgraph(results, time_res, normalize=norm)
         
-        fig = get_streamgraph_figure(results.metadata.sim_id, time_resolution, normalize)
+        fig = get_comprehensive_streamgraph(results.metadata.sim_id, time_resolution, normalize)
     
-    # Display the figure
-    st.plotly_chart(fig, use_container_width=True)
+    # Display the Plotly figure
+    with col1:
+        # Apply export config
+        from utils.export_config import get_export_config
+        config = get_export_config(filename="patient_treatment_flow")
+        st.plotly_chart(fig, use_container_width=True, config=config)
     
-    # Show state statistics
-    st.subheader("Discontinuation Statistics")
-    
-    # Get discontinuation stats from results
-    disc_stats = stats.get('discontinuation_stats', {})
-    
-    if disc_stats:
-        # Create columns for discontinuation breakdown
-        total_disc = sum(disc_stats.values())
+    # Show detailed statistics
+    with st.expander("Detailed Statistics"):
+        from visualizations.streamgraph_comprehensive import calculate_patient_cohort_flow
+        states_df, summary_stats = calculate_patient_cohort_flow(results, time_resolution)
         
-        col1, col2 = st.columns(2)
-        
+        col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Total Discontinuations", StyleConstants.format_count(total_disc))
-            st.metric("Discontinuation Rate", f"{(total_disc / stats['patient_count'] * 100):.1f}%")
-        
+            st.metric("Total Patients", summary_stats['total_patients'])
         with col2:
-            # Show breakdown by type
-            st.markdown("**Discontinuation Reasons:**")
-            for reason, count in disc_stats.items():
-                percentage = (count / total_disc * 100) if total_disc > 0 else 0
-                st.write(f"- {reason.replace('_', ' ').title()}: {count} ({percentage:.1f}%)")
-    else:
-        st.info("No discontinuation data available for this simulation.")
+            st.metric("Total Discontinuations", summary_stats['total_discontinuations'])
+        with col3:
+            st.metric("Total Retreatments", summary_stats['total_retreatments'])
+        
+        if summary_stats.get('discontinuation_breakdown'):
+            st.write("**Discontinuation Breakdown:**")
+            for disc_type, count in summary_stats['discontinuation_breakdown'].items():
+                pct = (count / summary_stats['total_patients']) * 100
+                st.write(f"- {disc_type}: {count} ({pct:.1f}%)")
     
     # Add note about patient conservation
     st.caption("*Patient counts are conserved throughout the simulation - total always equals initial population.")
@@ -489,6 +502,7 @@ with tab5:
     col1, col2 = st.columns(2)
     
     with col1:
+        st.subheader("Distribution of Treatment Intervals")
         if len(transitions_df) > 0:
             interval_fig = create_interval_distribution_chart(transitions_df)
             # Apply export config
@@ -499,6 +513,7 @@ with tab5:
             st.info("No interval data available yet - patterns will appear as the simulation progresses")
     
     with col2:
+        st.subheader("Patient Gap Analysis")
         if len(visits_df) > 0:
             gap_fig = create_gap_analysis_chart_tufte(visits_df)
             # Apply export config
@@ -534,6 +549,227 @@ with tab5:
             st.metric("Total Visits Analyzed", f"{StyleConstants.format_count(total_visits)}")
 
 with tab6:
+    # Clinical Workload Analysis (new tab)
+    st.header("Clinical Workload Attribution Analysis")
+    
+    st.markdown("""
+    This analysis shows how different patient treatment intensity patterns contribute to clinical workload.
+    Understanding this helps optimise resource allocation and identify high-impact patient segments.
+    """)
+    
+    # Import workload analysis functions
+    try:
+        from components.treatment_patterns.workload_analyzer import calculate_clinical_workload_attribution, format_workload_insight
+        from components.treatment_patterns.workload_visualizations import (
+            create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
+        )
+        workload_available = True
+    except ImportError:
+        workload_available = False
+        st.error("Workload analysis components not available")
+    
+    if workload_available:
+        # Get visits data for workload analysis
+        if 'visits_df' not in locals():
+            with st.spinner("Loading visit data..."):
+                # Try to get visits from results
+                if hasattr(results, 'get_visits_df'):
+                    visits_df = results.get_visits_df()
+                else:
+                    st.error("Visit data not available in simulation results")
+                    visits_df = pd.DataFrame()
+        
+        if not visits_df.empty:
+            # Run workload analysis
+            with st.spinner("Analysing clinical workload attribution..."):
+                workload_data = calculate_clinical_workload_attribution(visits_df)
+            
+            if workload_data['summary_stats']:
+                # Show key insight at the top
+                st.success(f"**Key Insight:** {format_workload_insight(workload_data['summary_stats'])}")
+                
+                # Visualization selection using Carbon buttons
+                st.markdown("#### Choose Visualisation Approach")
+                
+                # Import Carbon button helpers
+                from utils.carbon_button_helpers import ape_button
+                
+                # Initialize session state for visualization selection if not exists
+                if 'workload_viz_type' not in st.session_state:
+                    st.session_state.workload_viz_type = 'bar'
+                
+                # Create button columns
+                col1, col2, col3, col4 = st.columns([1, 1, 1, 3])
+                
+                with col1:
+                    if ape_button(
+                        label="Bar",
+                        key="workload_bar_btn",
+                        button_type="primary" if st.session_state.workload_viz_type == 'bar' else "secondary",
+                        full_width=True
+                    ):
+                        st.session_state.workload_viz_type = 'bar'
+                        st.rerun()
+                
+                with col2:
+                    if ape_button(
+                        label="Pyramid",
+                        key="workload_pyramid_btn",
+                        button_type="primary" if st.session_state.workload_viz_type == 'pyramid' else "secondary",
+                        full_width=True
+                    ):
+                        st.session_state.workload_viz_type = 'pyramid'
+                        st.rerun()
+                
+                with col3:
+                    if ape_button(
+                        label="Bubble",
+                        key="workload_bubble_btn",
+                        button_type="primary" if st.session_state.workload_viz_type == 'bubble' else "secondary",
+                        full_width=True
+                    ):
+                        st.session_state.workload_viz_type = 'bubble'
+                        st.rerun()
+                
+                # Get selected option
+                viz_option = st.session_state.workload_viz_type
+                
+                # Pre-create all visualizations (cached)
+                from utils.export_config import get_export_config
+                tufte_mode = True  # Use clean styling
+                
+                # Cache key includes both sim_id and workload data hash
+                import hashlib
+                import json
+                
+                # Create a hash of the workload data for cache key
+                workload_hash = hashlib.md5(
+                    json.dumps(
+                        {k: len(v) if isinstance(v, (list, dict, pd.DataFrame)) else v 
+                         for k, v in workload_data.items()}, 
+                        sort_keys=True
+                    ).encode()
+                ).hexdigest()[:8]
+                
+                @st.cache_data(show_spinner="Creating all visualizations...")
+                def get_all_workload_visualizations(_workload_data, _tufte_mode, cache_key):
+                    """Create all workload visualizations once and cache them."""
+                    figs = {}
+                    figs['bar'] = create_dual_bar_chart(_workload_data, _tufte_mode)
+                    figs['pyramid'] = create_impact_pyramid(_workload_data, _tufte_mode)
+                    figs['bubble'] = create_bubble_chart(_workload_data, _tufte_mode)
+                    return figs
+                
+                # Get all figures (cached after first creation)
+                all_figs = get_all_workload_visualizations(workload_data, tufte_mode, workload_hash)
+                
+                # Display selected visualization
+                if viz_option == 'bar':
+                    st.subheader("Clinical Workload Attribution: Patient Distribution vs Visit Volume")
+                    config = get_export_config(filename="clinical_workload_dual_bars")
+                    st.plotly_chart(all_figs['bar'], use_container_width=True, config=config)
+                    
+                    st.markdown("""
+                    **Understanding the Dual Bar Chart:**
+                    - Light bars show percentage of patients in each category
+                    - Dark bars show percentage of visits generated by each category
+                    - Categories where dark bars exceed light bars have high workload intensity
+                    """)
+                
+                elif viz_option == 'pyramid':
+                    st.subheader("Clinical Impact Pyramid: From Patients to Workload")
+                    config = get_export_config(filename="clinical_workload_pyramid")
+                    st.plotly_chart(all_figs['pyramid'], use_container_width=True, config=config)
+                    
+                    st.markdown("""
+                    **Understanding the Impact Pyramid:**
+                    - Left funnel shows patient distribution across categories
+                    - Right funnel shows visit volume generated by each category
+                    - Compare funnel shapes to see workload concentration effects
+                    """)
+                
+                elif viz_option == 'bubble':
+                    st.subheader("Workload Impact")
+                    
+                    # Create columns for chart and explanation
+                    col1, col2 = st.columns([3, 2])  # 60/40 split
+                    
+                    with col1:
+                        config = get_export_config(filename="clinical_workload_bubble")
+                        st.plotly_chart(all_figs['bubble'], use_container_width=False, config=config)  # Fixed width
+                    
+                    with col2:
+                        st.markdown("### Reading the Chart")
+                        st.markdown("""
+                        **Axes:**
+                        - **X**: % of patients in category
+                        - **Y**: % of visits generated
+                        
+                        **Visual elements:**
+                        - **Bubble size**: Workload intensity (visits per patient)
+                        - **Diagonal line**: Proportional workload (1:1 ratio)
+                        
+                        **Interpretation:**
+                        - Points **above** the line: High-intensity patients requiring disproportionate clinical time
+                        - Points **below** the line: Lower-intensity patients requiring fewer visits
+                        - **Larger bubbles** = Higher workload intensity (more visits per patient)
+                        """)
+                        
+                        # Add category legend if useful
+                        with st.expander("Category colours"):
+                            for category, definition in workload_data['category_definitions'].items():
+                                if category in workload_data['summary_stats']:
+                                    color = definition['color']
+                                    st.markdown(
+                                        f"<div style='display: flex; align-items: center;'>"
+                                        f"<div style='width: 20px; height: 20px; background-color: {color}; "
+                                        f"border-radius: 50%; margin-right: 10px;'></div>"
+                                        f"<span>{category}</span></div>",
+                                        unsafe_allow_html=True
+                                    )
+                
+                # Show detailed summary insights
+                st.markdown("---")
+                st.markdown("#### Detailed Analysis")
+                
+                # Create summary insight
+                insight_summary = get_workload_insight_summary(workload_data)
+                st.markdown(insight_summary)
+                
+                # Show category breakdown in an expandable section
+                with st.expander("View Detailed Category Breakdown"):
+                    # Create a summary table
+                    summary_data = []
+                    for category, stats in workload_data['summary_stats'].items():
+                        summary_data.append({
+                            'Category': category,
+                            'Patients': f"{stats['patient_count']} ({stats['patient_percentage']:.1f}%)",
+                            'Visits': f"{stats['visit_count']} ({stats['visit_percentage']:.1f}%)",
+                            'Visits/Patient': f"{stats['visits_per_patient']:.1f}",
+                            'Workload Intensity': f"{stats['workload_intensity']:.1f}x"
+                        })
+                    
+                    summary_df = pd.DataFrame(summary_data)
+                    summary_df = summary_df.sort_values('Workload Intensity', 
+                                                      key=lambda x: x.str.replace('x', '').astype(float), 
+                                                      ascending=False)
+                    
+                    st.dataframe(summary_df, hide_index=True, use_container_width=True)
+                    
+                    # Category definitions reference
+                    st.markdown("**Category Definitions:**")
+                    definitions = workload_data['category_definitions']
+                    for category, definition in definitions.items():
+                        if category in workload_data['summary_stats']:
+                            st.markdown(f"- **{category}**: {definition['description']}")
+            
+            else:
+                st.info("No workload analysis available - insufficient visit data with intervals")
+        
+        else:
+            st.info("No visit data available for workload analysis")
+
+with tab7:
     # Pattern Details tab (from subtab3 of Treatment Patterns)
     st.header("Pattern Details")
     
@@ -610,7 +846,7 @@ with tab6:
         Check back after running a longer simulation or with more patients.
         """)
 
-with tab7:
+with tab8:
     # Treatment Summary tab (from subtab4 of Treatment Patterns)
     st.header("Treatment Summary")
     
@@ -670,7 +906,7 @@ with tab7:
     else:
         st.info("No treatment intervals found - data will appear as patients have follow-up visits.")
 
-with tab8:
+with tab9:
     st.header("Audit Trail")
     st.markdown("Complete parameter tracking and simulation events.")
     

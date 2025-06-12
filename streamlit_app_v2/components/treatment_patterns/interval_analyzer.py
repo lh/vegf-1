@@ -4,6 +4,25 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
+# Tufte-style constants
+TUFTE_FONT_SIZES = {
+    'title': 16,
+    'label': 14,
+    'tick': 12,
+    'annotation': 11,
+}
+
+TUFTE_LINE_WEIGHTS = {
+    'axis': 1.0,
+    'grid': 0.5,
+    'annotation': 1.0,
+}
+
+TUFTE_COLORS = {
+    'neutral': '#264653',
+    'grid': '#E0E0E0',
+}
+
 
 def create_interval_distribution_chart(transitions_df):
     """Create distribution of treatment intervals."""
@@ -29,11 +48,42 @@ def create_interval_distribution_chart(transitions_df):
     ))
     
     fig.update_layout(
-        title="Distribution of Treatment Intervals",
-        xaxis_title="Interval Category",
-        yaxis_title="Number of Visits",
+        title="",  # Remove title for Tufte style
+        xaxis=dict(
+            title="Interval Category",
+            titlefont=dict(size=TUFTE_FONT_SIZES['label']),
+            tickfont=dict(size=TUFTE_FONT_SIZES['tick']),
+            showline=True,
+            linewidth=TUFTE_LINE_WEIGHTS['axis'],
+            linecolor=TUFTE_COLORS['neutral'],
+            showgrid=False,
+            ticks='outside',
+            ticklen=5,
+            tickwidth=TUFTE_LINE_WEIGHTS['axis'],
+            tickcolor=TUFTE_COLORS['neutral']
+        ),
+        yaxis=dict(
+            title="Number of Visits",
+            titlefont=dict(size=TUFTE_FONT_SIZES['label']),
+            tickfont=dict(size=TUFTE_FONT_SIZES['tick']),
+            showline=True,
+            linewidth=TUFTE_LINE_WEIGHTS['axis'],
+            linecolor=TUFTE_COLORS['neutral'],
+            showgrid=True,
+            gridwidth=TUFTE_LINE_WEIGHTS['grid'],
+            gridcolor=TUFTE_COLORS['grid'],
+            zeroline=False,
+            ticks='outside',
+            ticklen=5,
+            tickwidth=TUFTE_LINE_WEIGHTS['axis'],
+            tickcolor=TUFTE_COLORS['neutral']
+        ),
         height=400,
-        showlegend=False
+        showlegend=False,
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        font=dict(size=TUFTE_FONT_SIZES['tick']),
+        margin=dict(t=40, b=60, l=60, r=40)
     )
     
     return fig
@@ -113,16 +163,24 @@ def create_gap_analysis_chart_tufte(visits_df):
     
     # Tufte-style clean layout
     fig.update_layout(
-        title="Patient Gap Analysis",
+        title="",  # Empty title to avoid "undefined" display
         xaxis=dict(
             title="Number of Patients",
+            titlefont=dict(size=TUFTE_FONT_SIZES['label']),
+            tickfont=dict(size=TUFTE_FONT_SIZES['tick']),
             showgrid=False,
             zeroline=False,
-            showline=False,
-            ticks='',
+            showline=True,  # Show bottom line
+            linewidth=TUFTE_LINE_WEIGHTS['axis'],
+            linecolor=TUFTE_COLORS['neutral'],
+            ticks='outside',
+            ticklen=5,
+            tickwidth=TUFTE_LINE_WEIGHTS['axis'],
+            tickcolor=TUFTE_COLORS['neutral']
         ),
         yaxis=dict(
             title=None,
+            tickfont=dict(size=TUFTE_FONT_SIZES['tick']),
             showgrid=False,
             zeroline=False,
             showline=False,
@@ -131,16 +189,18 @@ def create_gap_analysis_chart_tufte(visits_df):
         height=300,
         margin=dict(l=150, r=100, t=20, b=40),
         plot_bgcolor='white',
-        paper_bgcolor='white'
+        paper_bgcolor='white',
+        font=dict(size=TUFTE_FONT_SIZES['tick'])
     )
     
-    # Add subtle reference lines at 25%, 50%, 75%
+    # Add subtle reference lines at 25%, 50%, 75% - Tufte style
     for pct in [0.25, 0.5, 0.75]:
         fig.add_vline(
             x=len(patient_gaps) * pct,
             line_dash="dot",
-            line_color="lightgray",
-            opacity=0.5
+            line_color=TUFTE_COLORS['grid'],
+            line_width=TUFTE_LINE_WEIGHTS['annotation'],
+            opacity=0.3  # More subtle
         )
     
     return fig

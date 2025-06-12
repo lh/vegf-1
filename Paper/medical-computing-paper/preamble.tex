@@ -1,7 +1,8 @@
+% Font settings for LuaLaTeX
+% Note: inputenc and fontenc are not needed with LuaLaTeX
+\usepackage{fontspec}
+\usepackage{unicode-math}
 
-% Encoding and font settings
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{microtype}
 
@@ -10,8 +11,8 @@
 
 % Math packages
 \usepackage{amsmath}
-\usepackage{amsfonts}
-\usepackage{amssymb}
+% Note: amsfonts and amssymb are not needed with unicode-math
+% as unicode-math provides all math symbols
 
 % Graphics and figures
 \usepackage{graphicx}
