@@ -131,11 +131,24 @@ with tab1:
     
     @st.cache_data
     def get_cached_treatment_patterns(sim_id, include_terminals=False):
-        """Extract and cache treatment patterns."""
+        """Get treatment patterns with backward compatibility."""
+        # First check if data was pre-calculated
+        cache_key = f"treatment_patterns_{sim_id}"
+        
+        if cache_key in st.session_state:
+            data = st.session_state[cache_key]
+            # Handle enhanced terminals if requested and available
+            if include_terminals and 'transitions_df_with_terminals' in data:
+                return data['transitions_df_with_terminals'], data['visits_df_with_terminals']
+            else:
+                return data['transitions_df'], data['visits_df']
+        
+        # Fall back to on-demand calculation (current behavior)
         if include_terminals and enhanced_available:
             transitions_df, visits_df = extract_treatment_patterns_with_terminals(results)
         else:
             transitions_df, visits_df = extract_treatment_patterns_vectorized(results)
+        
         return transitions_df, visits_df
     
     # Mobile device warning
@@ -436,10 +449,13 @@ with tab4:
         
         # Create the comprehensive visualization
         with st.spinner("Analyzing patient treatment journeys..."):
+            # Import the new comprehensive streamgraph
+            from visualizations.streamgraph_comprehensive import create_cohort_flow_streamgraph
+            
             # Cache based on simulation ID
             @st.cache_data
             def get_comprehensive_streamgraph(sim_id: str, time_res: str):
-                return create_comprehensive_streamgraph(results, time_res)
+                return create_cohort_flow_streamgraph(results, time_res)
             
             fig = get_comprehensive_streamgraph(results.metadata.sim_id, time_resolution)
         
@@ -452,7 +468,8 @@ with tab4:
         
         # Show detailed statistics
         with st.expander("Detailed Statistics"):
-            states_df, summary_stats = extract_patient_states_comprehensive(results, time_resolution)
+            from visualizations.streamgraph_comprehensive import calculate_patient_cohort_flow
+            states_df, summary_stats = calculate_patient_cohort_flow(results, time_resolution)
             
             col1, col2, col3 = st.columns(3)
             with col1:
@@ -462,9 +479,9 @@ with tab4:
             with col3:
                 st.metric("Total Retreatments", summary_stats['total_retreatments'])
             
-            if summary_stats['discontinuation_by_type']:
+            if summary_stats.get('discontinuation_breakdown'):
                 st.write("**Discontinuation Breakdown:**")
-                for disc_type, count in summary_stats['discontinuation_by_type'].items():
+                for disc_type, count in summary_stats['discontinuation_breakdown'].items():
                     pct = (count / summary_stats['total_patients']) * 100
                     st.write(f"- {disc_type}: {count} ({pct:.1f}%)")
     

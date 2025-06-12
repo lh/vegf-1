@@ -61,23 +61,86 @@ def add_simulation_to_registry(sim_id: str, simulation_data: Dict[str, Any]) -> 
 
 def get_active_simulation() -> Optional[Dict[str, Any]]:
     """
-    Get the currently active simulation.
+    Get the currently active simulation and pre-calculate treatment patterns.
     
     Returns:
         Active simulation data or None if no active simulation
     """
     # First check if there's an active_simulation_id
+    results_data = None
+    
     if 'active_simulation_id' in st.session_state:
         sim_id = st.session_state.active_simulation_id
         registry = get_simulation_registry()
         if sim_id in registry:
-            return registry[sim_id]
+            results_data = registry[sim_id]
     
     # Fallback to legacy simulation_results for backward compatibility
-    if 'simulation_results' in st.session_state:
-        return st.session_state.simulation_results
+    if results_data is None and 'simulation_results' in st.session_state:
+        results_data = st.session_state.simulation_results
     
-    return None
+    if results_data:
+        # Only do pre-calculation if results object exists
+        if 'results' in results_data and hasattr(results_data['results'], 'metadata'):
+            from components.treatment_patterns.performance_config import should_precalculate
+            
+            sim_id = results_data['results'].metadata.sim_id
+            cache_key = f"treatment_patterns_{sim_id}"
+            
+            # Only pre-calculate if not already cached and within limits
+            if cache_key not in st.session_state and should_precalculate(results_data['results']):
+                try:
+                    # Check if results has required method
+                    if not hasattr(results_data['results'], 'get_visits_df'):
+                        # Silently skip - not all simulations have visit data
+                        return results_data
+                    
+                    # Time the pre-calculation
+                    import time
+                    start_time = time.time()
+                    
+                    with st.spinner("Preparing treatment pattern analysis..."):
+                        from components.treatment_patterns import extract_treatment_patterns_vectorized
+                        transitions_df, visits_df = extract_treatment_patterns_vectorized(results_data['results'])
+                        
+                        # Validate data before caching
+                        if len(visits_df) == 0:
+                            # No visit data - skip caching
+                            return results_data
+                        
+                        # Check if enhanced version should also be cached
+                        enhanced_data = {}
+                        try:
+                            from components.treatment_patterns.pattern_analyzer_enhanced import extract_treatment_patterns_with_terminals
+                            transitions_enhanced, visits_enhanced = extract_treatment_patterns_with_terminals(results_data['results'])
+                            enhanced_data = {
+                                'transitions_df_with_terminals': transitions_enhanced,
+                                'visits_df_with_terminals': visits_enhanced
+                            }
+                        except ImportError:
+                            pass
+                        
+                        # Cache the data
+                        st.session_state[cache_key] = {
+                            'transitions_df': transitions_df,
+                            'visits_df': visits_df,
+                            'calculated_at': time.time(),
+                            **enhanced_data
+                        }
+                        
+                    elapsed = time.time() - start_time
+                    if elapsed > 1.0:
+                        st.caption(f"Pattern analysis took {elapsed:.1f}s")
+                        
+                except Exception as e:
+                    # Log error but don't crash - allow lazy loading to work
+                    import logging
+                    logging.warning(f"Could not pre-calculate treatment patterns: {str(e)}")
+                    # Clear any partial cache
+                    if cache_key in st.session_state:
+                        del st.session_state[cache_key]
+    
+    return results_data
 
 
 def set_active_simulation(sim_id: str) -> bool:
