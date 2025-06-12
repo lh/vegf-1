@@ -1,31 +1,28 @@
 # VEGF-1 Repository Refactoring Plan
 
 ## Overview
-This document outlines a comprehensive refactoring plan to modernize the repository structure, consolidate multiple Streamlit apps, and follow Python best practices. The refactoring will be executed on a new branch without affecting the current main branch.
+This document outlines a focused refactoring plan to extract the active application (streamlit_app_v2/APE.py) to the root level and archive historical implementations. This creates a clean, deployment-ready structure while preserving historical code for reference.
 
 ## Current State Analysis
 
-### Repository Structure Issues
-1. **Multiple Streamlit app directories**: `streamlit_app`, `streamlit_app_v2`, `streamlit_app_parquet`
-2. **Scattered simulation code**: `simulation/`, `simulation_v2/`
-3. **APE.py buried in subdirectory**: Currently at `streamlit_app_v2/APE.py`
-4. **Duplicated utilities**: Each streamlit app has its own utils directory
-5. **Non-standard project layout**: Makes deployment and imports complex
-6. **Multiple visualization implementations**: 17+ different streamgraph_*.py files in streamlit_app_parquet
-7. **Scattered test files**: Test files mixed with application code
-8. **R integration files**: R scripts scattered across multiple directories
+### Repository Structure
+1. **Active Application**: Only `streamlit_app_v2/APE.py` and its dependencies
+2. **Historical Artifacts**: `streamlit_app/` and `streamlit_app_parquet/` (useful for archaeological reference)
+3. **APE.py Location**: Currently at `streamlit_app_v2/APE.py` (needs to move to root)
+4. **Simulation Engine**: `simulation_v2/` is the active version, `simulation/` is historical
+5. **Mixed Active/Historical Code**: Active code intermingled with experimental versions
 
-### Key Assets to Preserve
-- APE.py (main Streamlit application from streamlit_app_v2)
-- simulation_v2 (latest simulation engine with DES capabilities)
-- protocols (treatment protocol definitions)
-- visualization utilities (especially the central color system)
-- Test suites (including Playwright integration tests)
-- Documentation (including meta/ insights)
-- Submodules for copyright-sensitive data (keep at root level)
-- R integration capabilities
-- Carbon accounting features
-- Validation tools
+### Key Assets from streamlit_app_v2 to Preserve
+- APE.py (main Streamlit application)
+- pages/* (all Streamlit pages)
+- components/* (UI components) 
+- utils/* (visualization utilities, style constants)
+- visualizations/* (including streamgraph_treatment_states.py)
+- core/* (simulation engine)
+- protocols/v2/* (YAML protocol definitions)
+- simulation_results/* (saved results naming convention)
+- tests/* (active test suite)
+- scripts/* (development scripts)
 
 ## Target Structure
 
@@ -36,332 +33,306 @@ vegf-1/
 ├── requirements-dev.txt            # Development dependencies
 ├── README.md                       # Main project documentation
 ├── .gitignore                      # Already updated with LaTeX artifacts
-├── CLAUDE.md                       # Development instructions
+├── CLAUDE.md                       # Development instructions (merge both versions)
 ├── pyproject.toml                  # Modern Python project config
 │
-├── ape/                           # Core application modules
+├── pages/                          # Streamlit pages (from streamlit_app_v2/pages/)
 │   ├── __init__.py
-│   ├── pages/                     # Streamlit pages
-│   │   ├── __init__.py
-│   │   ├── simulation.py          # Run Simulation page
-│   │   ├── analysis.py            # Calendar-Time Analysis page
-│   │   ├── patient_explorer.py   # Patient Explorer page
-│   │   ├── economics.py          # Economic Analysis page
-│   │   └── saved_simulations.py  # Manage saved results
-│   ├── components/                # Reusable UI components
-│   │   ├── __init__.py
-│   │   ├── sidebar.py
-│   │   ├── data_display.py
-│   │   └── file_browser.py       # Simulation file browser
-│   ├── utils/                     # Application utilities
-│   │   ├── __init__.py
-│   │   ├── session_state.py
-│   │   ├── file_management.py
-│   │   └── data_loader.py        # Consolidated data loading
-│   └── r_integration/             # R integration modules
-│       ├── __init__.py
-│       ├── r_bridge.py
-│       └── scripts/               # R scripts
+│   ├── 1_Protocol_Manager.py      # Protocol configuration
+│   ├── 2_Run_Simulation.py        # Run simulations
+│   ├── 3_Analysis.py              # Calendar-Time Analysis
+│   └── 4_Patient_Explorer.py      # Individual patient view
 │
-├── simulation/                     # Consolidated simulation engine
+├── components/                     # UI components (from streamlit_app_v2/components/)
 │   ├── __init__.py
-│   ├── core/                      # From simulation_v2/core
-│   │   ├── __init__.py
-│   │   ├── engine.py              # Main DES engine
-│   │   ├── patient.py            # Patient model
-│   │   ├── state_machine.py      # State transitions
-│   │   └── events.py             # Event handling
-│   ├── economics/                 # Economic modeling
-│   │   ├── __init__.py
-│   │   ├── cost_model.py         # Cost calculations
-│   │   ├── carbon_model.py       # Carbon accounting
-│   │   └── pricing.py            # Drug pricing data
-│   ├── protocols/                 # Treatment protocols
-│   │   ├── __init__.py
-│   │   ├── base.py               # Protocol interfaces
-│   │   ├── definitions/          # Protocol JSON files
-│   │   └── validation.py         # Protocol validation
-│   └── analysis/                  # Analysis tools
-│       ├── __init__.py
-│       ├── calendar_time.py      # Calendar-time transformation
-│       ├── patient_level.py      # Patient-level analysis
-│       └── discontinuation.py    # Discontinuation tracking
+│   ├── treatment_patterns/        # Treatment pattern analysis
+│   ├── economics/                 # Economic analysis components
+│   └── ui_elements/               # Common UI elements
 │
-├── visualization/                  # Visualization modules
+├── core/                          # Simulation engine (from streamlit_app_v2/core/)
 │   ├── __init__.py
-│   ├── color_system.py            # Central color system (SINGLE SOURCE)
-│   ├── charts/
-│   │   ├── __init__.py
-│   │   ├── acuity.py             # Visual acuity charts
-│   │   ├── streamgraph.py        # CONSOLIDATED streamgraph
-│   │   ├── economics.py          # Economic visualizations
-│   │   ├── enrollment.py         # Enrollment timeline
-│   │   └── base.py               # Base chart classes
-│   └── templates/                 # Tufte-style templates
-│       ├── __init__.py
-│       └── styles.py              # Consistent styling
+│   ├── abs_simulation.py          # Agent-based simulation
+│   ├── des_simulation.py          # Discrete event simulation
+│   ├── patient.py                 # Patient model
+│   └── protocol.py                # Protocol handling
 │
-├── data/                          # Static data files
-│   ├── protocols/                 # Protocol JSON definitions
-│   ├── parameters/                # Parameter sets
-│   └── reference/                 # Reference data (NOT synthetic)
-│
-├── output/                        # Generated outputs (gitignored)
-│   ├── simulations/              # Simulation results
-│   ├── visualizations/           # Generated charts
-│   ├── reports/                  # Analysis reports
-│   └── debug/                    # Debug outputs
-│
-├── tests/                         # All tests consolidated
+├── utils/                         # Utilities (from streamlit_app_v2/utils/)
 │   ├── __init__.py
-│   ├── unit/                     # Unit tests
-│   ├── integration/              # Integration tests
-│   ├── playwright/               # Browser automation tests
-│   │   ├── test_app.py
-│   │   └── debug_scripts/        # Playwright debug tools
-│   ├── fixtures/                 # Test fixtures
-│   └── validation/               # Scientific validation tests
+│   ├── chart_builder.py           # ChartBuilder pattern
+│   ├── style_constants.py         # StyleConstants
+│   ├── session_state.py           # Session management
+│   └── visualization_modes.py     # Tufte/Presentation modes
 │
-├── meta/                          # Project insights (preserved)
+├── visualizations/                # Visualization modules (from streamlit_app_v2/visualizations/)
+│   ├── __init__.py
+│   ├── streamgraph_treatment_states.py  # Active Plotly streamgraph
+│   ├── streamgraph_comprehensive.py     # Comprehensive analysis
+│   └── economic_charts.py              # Economic visualizations
+│
+├── protocols/                     # Protocol definitions
+│   └── v2/                       # YAML protocols (from streamlit_app_v2/protocols/v2/)
+│       ├── aflibercept_pro.yaml
+│       ├── aflibercept_te.yaml
+│       └── ...
+│
+├── simulation_results/            # Saved simulations (preserve naming convention)
+│   └── YYYYMMDD-HHMMSS-sim-Xp-Yy.parquet
+│
+├── tests/                         # Active tests (from streamlit_app_v2/tests/)
+│   ├── __init__.py
+│   ├── unit/
+│   ├── integration/
+│   └── ui/                       # Playwright tests
+│
+├── scripts/                       # Development scripts (from streamlit_app_v2/scripts/)
+│   ├── run_tests.py
+│   ├── dev_setup.sh
+│   └── run_baseline_tests.sh
+│
+├── validation/                    # Scientific validation (keep at root)
+│   ├── verify_fixed_discontinuation.py
+│   ├── verify_streamlit_integration.py
+│   └── ...
+│
+├── visualization/                 # Shared visualization (already at root)
+│   └── color_system.py           # Central color system
+│
+├── meta/                         # Project insights (preserved)
 │   ├── visualization_templates.md
 │   ├── streamgraph_synthetic_data_postmortem.md
-│   └── debug/                    # Debug documentation
+│   └── ...
 │
-├── docs/                          # Documentation
-│   ├── api/                      # API documentation
-│   ├── user_guide/               # User documentation
-│   ├── development/              # Developer documentation
-│   └── scientific/               # Scientific methodology
+├── output/                       # Generated outputs (gitignored)
+│   ├── simulations/
+│   ├── visualizations/
+│   └── debug/
 │
-├── scripts/                       # Utility scripts
-│   ├── migrate_simulations.py    # Migrate existing results
-│   ├── update_imports.py         # Automated import updates
-│   ├── validate_protocols.py     # Protocol validation
-│   ├── consolidate_streamgraphs.py # Merge streamgraph variants
-│   └── pre_commit_checks.py      # Pre-commit validation
+├── docs/                         # Documentation
+│   ├── api/
+│   ├── user_guide/
+│   └── development/
 │
-├── tools/                         # Development tools
-│   ├── playwright/                # Playwright configs
-│   └── linting/                  # Linting configs
+├── archive/                      # Historical code (for archaeological reference)
+│   ├── streamlit_app/           # Old Streamlit app
+│   ├── streamlit_app_parquet/   # Parquet experiments
+│   ├── simulation/              # Old simulation engine
+│   └── README.md               # Explain archive contents
 │
-├── validation/                    # Scientific validation (preserved)
-│   └── verify_*.py               # Validation scripts
+├── Paper/                       # Academic paper (unchanged)
+├── designer/                    # Design tools (unchanged)
+├── mcp/                        # MCP servers (unchanged)
 │
-├── notebooks/                     # Jupyter notebooks
-│   └── examples/                 # Example analyses
-│
-├── archive/                       # Legacy code (temporary)
-│   ├── streamlit_app/            # Old app version
-│   ├── streamlit_app_parquet/    # Parquet version
-│   └── simulation_v1/            # Old simulation engine
-│
-├── Paper/                        # Academic paper (unchanged)
-│   └── medical-computing-paper/
-│
-├── designer/                      # Design tools (preserved)
-├── mcp/                          # MCP servers (preserved)
-│
-# Submodules remain at root level (unchanged location)
-├── aflibercept_2mg_data/         # Git submodule
-├── eylea_high_dose_data/         # Git submodule
-└── vegf_literature_data/         # Git submodule
+# Submodules remain at root level
+├── aflibercept_2mg_data/       # Git submodule
+├── eylea_high_dose_data/       # Git submodule
+└── vegf_literature_data/       # Git submodule
 ```
 
 ## Refactoring Steps
 
-### Phase 0: Pre-refactoring Analysis and Preparation
-1. **Dependency Analysis**:
+### Phase 0: Pre-refactoring Analysis
+1. **Analyze streamlit_app_v2 structure**:
    ```bash
-   # Generate import dependency graph
-   python scripts/analyze_imports.py > import_dependencies.txt
+   # Map all imports in the active app
+   grep -r "^from\|^import" streamlit_app_v2/ --include="*.py" > v2_imports.txt
    
-   # Identify circular dependencies
-   python scripts/find_circular_imports.py
+   # Check for any dependencies on other apps
+   grep -r "streamlit_app\." streamlit_app_v2/ --include="*.py"
+   grep -r "streamlit_app_parquet\." streamlit_app_v2/ --include="*.py"
    ```
 
-2. **Create Migration Tools**:
-   ```python
-   # scripts/update_imports.py - Automated import updater
-   # scripts/validate_migration.py - Verify file moves
-   # scripts/test_runner.py - Run tests after each phase
-   ```
-
-3. **Backup Current State**:
+2. **Create backup tag**:
    ```bash
    git tag pre-refactor-backup
    ```
 
-### Phase 1: Create New Branch and Directory Structure
+### Phase 1: Create New Branch and Structure
 ```bash
 git checkout -b feature/repository-refactor
 
-# Create new structure
-mkdir -p ape/{pages,components,utils,r_integration/scripts}
-mkdir -p simulation/{core,economics,protocols/definitions,analysis}
-mkdir -p visualization/{charts,templates}
-mkdir -p data/{protocols,parameters,reference}
-mkdir -p output/{simulations,visualizations,reports,debug}
-mkdir -p tests/{unit,integration,playwright/debug_scripts,fixtures,validation}
-mkdir -p docs/{api,user_guide,development,scientific}
-mkdir -p scripts tools/{playwright,linting}
-mkdir -p notebooks/examples
-mkdir -p archive/{streamlit_app,streamlit_app_parquet,simulation_v1}
+# Create archive directory
+mkdir -p archive
 
-# Create __init__.py files
-find ape simulation visualization tests -type d -exec touch {}/__init__.py \;
+# Create output directories (for gitignore)
+mkdir -p output/{simulations,visualizations,debug}
+
+# Documentation structure
+mkdir -p docs/{user_guide,development,api}
 ```
 
-### Phase 2: Move Core Files (Using git mv for history preservation)
+### Phase 2: Extract Active Application (streamlit_app_v2)
 1. **Move APE.py to root**:
    ```bash
    git mv streamlit_app_v2/APE.py ./
    ```
 
-2. **Consolidate simulation code**:
+2. **Move application directories to root**:
    ```bash
-   # Core simulation engine
-   git mv simulation_v2/core/* simulation/core/
-   git mv simulation_v2/economics/* simulation/economics/
-   git mv simulation_v2/protocols/* simulation/protocols/
+   # Move all active directories
+   git mv streamlit_app_v2/pages ./
+   git mv streamlit_app_v2/components ./
+   git mv streamlit_app_v2/core ./
+   git mv streamlit_app_v2/utils ./
+   git mv streamlit_app_v2/visualizations ./
+   git mv streamlit_app_v2/protocols ./
+   git mv streamlit_app_v2/tests ./
+   git mv streamlit_app_v2/scripts ./
    
-   # Analysis tools
-   git mv streamlit_app_parquet/calendar_time_analysis.py simulation/analysis/calendar_time.py
-   git mv streamlit_app_parquet/patient_explorer.py simulation/analysis/patient_level.py
+   # Move simulation results directory
+   git mv streamlit_app_v2/simulation_results ./
    ```
 
-3. **Consolidate visualization code**:
+3. **Merge CLAUDE.md files**:
    ```bash
-   # Move central color system (already in correct place)
-   # Consolidate streamgraph implementations
-   python scripts/consolidate_streamgraphs.py
-   
-   # Move chart components
-   git mv streamlit_app_v2/visualizations/acuity_charts.py visualization/charts/acuity.py
+   # Combine root and app-specific CLAUDE.md
+   cat streamlit_app_v2/CLAUDE.md >> CLAUDE.md
+   echo "\n# === Merged from streamlit_app_v2 ===\n" >> CLAUDE.md
    ```
 
-4. **Move Streamlit pages**:
+4. **Move other v2-specific files**:
    ```bash
-   git mv streamlit_app_v2/pages/* ape/pages/
+   # Move any v2-specific configs
+   git mv streamlit_app_v2/.streamlit ./ 2>/dev/null || true
+   git mv streamlit_app_v2/requirements.txt ./requirements-v2.txt
    ```
 
-5. **Consolidate utilities**:
-   ```bash
-   # Merge utils from all three apps
-   python scripts/merge_utils.py
-   ```
+### Phase 3: Archive Historical Code
+```bash
+# Archive old apps
+git mv streamlit_app archive/
+git mv streamlit_app_parquet archive/
+git mv simulation archive/
+git mv streamlit_app_v2 archive/  # Archive the now-empty directory
 
-6. **Move R integration**:
-   ```bash
-   git mv streamlit_app*/r_scripts/* ape/r_integration/scripts/
-   git mv streamlit_app_parquet/r_integration.py ape/r_integration/r_bridge.py
-   ```
+# Create archive README
+cat > archive/README.md << 'EOF'
+# Historical Code Archive
 
-7. **Move tests**:
-   ```bash
-   git mv tests/unit/* tests/unit/
-   git mv tests/integration/* tests/integration/
-   git mv streamlit_app*/test_*.py tests/integration/
-   git mv streamlit_app*/playwright_*.js tests/playwright/debug_scripts/
-   ```
+This directory contains historical implementations preserved for archaeological reference.
 
-8. **Archive old directories**:
-   ```bash
-   git mv streamlit_app archive/
-   git mv streamlit_app_parquet archive/
-   git mv simulation archive/simulation_v1
-   ```
+## Contents
 
-### Phase 3: Update Imports
+- `streamlit_app/` - Original Streamlit application
+- `streamlit_app_parquet/` - Experimental Parquet-based implementation with 17+ streamgraph variants
+- `simulation/` - Original simulation engine (replaced by simulation_v2)
+- `streamlit_app_v2/` - Empty directory structure after extraction to root
 
-#### Example Import Changes:
+## Note
+
+The active application has been extracted to the root directory. These archives are maintained for:
+- Historical reference
+- Understanding evolution of the codebase
+- Retrieving specific implementations if needed
+
+For the active application, see APE.py in the root directory.
+EOF
+
+git add archive/README.md
+```
+
+### Phase 4: Update Imports
+
+Since we're moving directories to root level, most imports will actually become simpler:
+
 ```python
-# Old import in APE.py:
+# Current imports in streamlit_app_v2 files:
 from pages.simulation import simulation_page
 from utils.session_state import init_session_state
+from core.abs_simulation import ABSSimulation
+from visualizations.streamgraph_treatment_states import create_treatment_state_streamgraph
 
-# New import:
-from ape.pages.simulation import simulation_page
-from ape.utils.session_state import init_session_state
-
-# Old import for simulation:
-from simulation_v2.core.engine import SimulationEngine
-
-# New import:
-from simulation.core.engine import SimulationEngine
+# After refactoring (no change needed!):
+from pages.simulation import simulation_page
+from utils.session_state import init_session_state
+from core.abs_simulation import ABSSimulation
+from visualizations.streamgraph_treatment_states import create_treatment_state_streamgraph
 ```
 
-### Phase 4: Consolidate Duplicate Code
+**Key insight**: Since we're moving streamlit_app_v2 contents to root, internal imports don't need to change!
 
-#### Identify and merge:
-1. **Utils modules** from all three streamlit apps
-2. **Visualization components** - standardize on best implementations
-3. **Data loading functions** - create single data module
-4. **Test utilities** - consolidate test fixtures
+### Phase 5: Handle External Dependencies
 
-### Phase 5: Update Configuration Files
+1. **Check for dependencies on archived code**:
+   ```bash
+   # Find any imports from old apps
+   grep -r "from streamlit_app\." . --include="*.py" --exclude-dir=archive
+   grep -r "import streamlit_app\." . --include="*.py" --exclude-dir=archive
+   ```
 
-1. **requirements.txt**: Already consolidated on main
-2. **Update paths in**:
-   - `.gitignore` (if needed)
-   - `CLAUDE.md`
-   - GitHub Actions workflows
-   - Documentation
+2. **Update visualization imports**:
+   ```python
+   # The central color system import stays the same:
+   from visualization.color_system import COLORS
+   ```
 
-### Phase 6: Create Migration Scripts
+3. **Update any simulation_v2 references**:
+   ```bash
+   # Since simulation_v2 is now just 'core' at root
+   # No changes needed - core is already at the right level
+   ```
 
-```python
-# scripts/migrate_simulations.py
-"""
-Script to migrate existing simulation results to new structure
-"""
+### Phase 6: Validation and Testing
 
-# scripts/update_imports.py
-"""
-Script to automatically update import statements
-"""
-```
+1. **Test the refactored structure**:
+   ```bash
+   # Run the app from root
+   streamlit run APE.py
+   
+   # Run test suite
+   python scripts/run_tests.py --all
+   ```
+
+2. **Verify imports**:
+   ```python
+   # scripts/verify_imports.py
+   import ast
+   import os
+   
+   def verify_no_missing_imports(directory):
+       """Check all Python files for import errors"""
+       for root, dirs, files in os.walk(directory):
+           if 'archive' in root:
+               continue
+           for file in files:
+               if file.endswith('.py'):
+                   # Try to parse the file
+                   filepath = os.path.join(root, file)
+                   try:
+                       with open(filepath, 'r') as f:
+                           ast.parse(f.read())
+                   except SyntaxError as e:
+                       print(f"Syntax error in {filepath}: {e}")
+   ```
 
 ## Import Path Mapping
 
-| Old Path | New Path |
-|----------|----------|
-| `streamlit_app_v2/APE.py` | `APE.py` |
-| `streamlit_app_v2/pages/*` | `ape/pages/*` |
-| `streamlit_app_v2/utils/*` | `ape/utils/*` |
-| `streamlit_app_v2/components/*` | `ape/components/*` |
-| `simulation_v2/core/*` | `simulation/core/*` |
-| `simulation_v2/economics/*` | `simulation/economics/*` |
-| `simulation_v2/protocols/*` | `simulation/protocols/*` |
-| `protocols/*` | `simulation/protocols/definitions/*` |
-| `visualization/color_system.py` | `visualization/color_system.py` (unchanged) |
-| `streamlit_app_parquet/streamgraph_*.py` | `visualization/charts/streamgraph.py` |
-| `streamlit_app*/r_scripts/*` | `ape/r_integration/scripts/*` |
-| `validation/*.py` | `validation/*.py` (unchanged) |
+| Old Path | New Path | Notes |
+|----------|----------|-------|
+| `streamlit_app_v2/APE.py` | `APE.py` | Main app at root |
+| `streamlit_app_v2/pages/*` | `pages/*` | No import changes needed |
+| `streamlit_app_v2/utils/*` | `utils/*` | No import changes needed |
+| `streamlit_app_v2/components/*` | `components/*` | No import changes needed |
+| `streamlit_app_v2/core/*` | `core/*` | No import changes needed |
+| `streamlit_app_v2/visualizations/*` | `visualizations/*` | No import changes needed |
+| `streamlit_app_v2/protocols/v2/*` | `protocols/v2/*` | No import changes needed |
+| `visualization/color_system.py` | `visualization/color_system.py` | Already at root |
+| `validation/*.py` | `validation/*.py` | Already at root |
 
-## Automated Import Update Strategy
+**Key Insight**: Since we're lifting streamlit_app_v2 to root, most imports remain unchanged!
+
+## Simplified Import Strategy
+
+Since we're moving entire directory structure from `streamlit_app_v2/` to root:
+
+1. **No import changes needed within the app** - All relative imports stay the same
+2. **Only external references need updates** - References from validation scripts, etc.
+3. **Archive imports should fail** - This is good, ensures clean separation
 
 ```python
-# scripts/update_imports.py example
-IMPORT_MAPPINGS = {
-    'from pages.': 'from ape.pages.',
-    'from utils.': 'from ape.utils.',
-    'from simulation_v2.': 'from simulation.',
-    'import simulation_v2': 'import simulation',
-    'from streamgraph_': 'from visualization.charts.streamgraph',
-}
-
-def update_file_imports(filepath):
-    with open(filepath, 'r') as f:
-        content = f.read()
-    
-    for old_pattern, new_pattern in IMPORT_MAPPINGS.items():
-        content = content.replace(old_pattern, new_pattern)
-    
-    # Handle relative imports
-    content = update_relative_imports(filepath, content)
-    
-    with open(filepath, 'w') as f:
-        f.write(content)
+# Example: No changes needed in these imports
+from pages.1_Protocol_Manager import protocol_manager_page  # Works before and after
+from utils.chart_builder import ChartBuilder  # Works before and after
+from core.des_simulation import DESSimulation  # Works before and after
 ```
 
 ## Benefits of Refactoring
@@ -374,31 +345,22 @@ def update_file_imports(filepath):
 6. **Improved CI/CD**: Standard structure for GitHub Actions
 7. **Better documentation**: Clear module organization
 
-## Streamgraph Consolidation Strategy
+## Key Simplifications
 
-The repository contains 17+ different streamgraph implementations. We need to:
+### No Streamgraph Consolidation Needed!
 
-1. **Analyze all variants**:
-   ```bash
-   # List all streamgraph files
-   ls streamlit_app_parquet/streamgraph_*.py
-   ```
+Since only `streamlit_app_v2` is active:
+- **Active streamgraph**: `visualizations/streamgraph_treatment_states.py` (Plotly-based)
+- **No consolidation required**: The 17+ variants in streamlit_app_parquet are historical
+- **Archive contains experiments**: Useful for archaeological reference only
 
-2. **Identify the best implementation**:
-   - `streamgraph_patient_states_fixed.py` - Latest with fixes
-   - `streamgraph_strict_conservation.py` - Ensures data conservation
-   - Must preserve patient count conservation principles
+### Minimal Code Changes
 
-3. **Merge into single module**:
-   ```python
-   # visualization/charts/streamgraph.py
-   class StreamgraphChart:
-       """Consolidated streamgraph implementation
-       - Strict data conservation
-       - No synthetic data generation
-       - Validated against real patient counts
-       """
-   ```
+The refactoring is much simpler than originally planned:
+1. **Lift and shift**: Move streamlit_app_v2 contents to root
+2. **Archive historical code**: Move old apps to archive/
+3. **No import updates needed**: Internal app imports remain the same
+4. **No merge conflicts**: Only one active implementation
 
 ## Scientific Validation During Refactoring
 
@@ -471,10 +433,27 @@ The repository contains 17+ different streamgraph implementations. We need to:
 
 ## Execution Timeline
 
-1. **Week 1**: Directory structure and core file movements
-2. **Week 2**: Import updates and code consolidation
-3. **Week 3**: Testing and documentation updates
-4. **Week 4**: Final validation and merge preparation
+### Simplified Timeline (1-2 weeks total)
+
+1. **Day 1-2**: 
+   - Create branch and backup
+   - Move streamlit_app_v2 contents to root
+   - Archive historical code
+
+2. **Day 3-4**:
+   - Test application from root
+   - Update external references (validation scripts)
+   - Merge CLAUDE.md files
+
+3. **Day 5-7**:
+   - Full test suite validation
+   - Update documentation
+   - Create deployment branch
+
+4. **Week 2**:
+   - Beta testing period
+   - Fix any issues
+   - Merge to main
 
 ## Configuration Management
 
@@ -548,45 +527,25 @@ CMD ["streamlit", "run", "APE.py"]
 
 ## Success Criteria
 
-### Functional Requirements:
-- [ ] APE.py runs from root directory without errors
-- [ ] All existing features work identically
-- [ ] Simulation results are byte-for-byte identical
-- [ ] All visualizations render correctly
-- [ ] R integration continues to function
-- [ ] Saved simulations can be loaded
+### Simplified Criteria
 
-### Code Quality:
-- [ ] All tests pass (unit, integration, validation)
-- [ ] No circular imports
-- [ ] Clean import hierarchy (no ../.. imports)
-- [ ] No duplicate code remains
-- [ ] Type hints preserved/added where missing
-- [ ] Linting passes (black, ruff)
+#### Must Have:
+- [ ] `streamlit run APE.py` works from root directory
+- [ ] All simulation features work identically
+- [ ] Test suite passes: `python scripts/run_tests.py --all`
+- [ ] Validation scripts work with new structure
+- [ ] Historical code properly archived
 
-### Scientific Integrity:
-- [ ] Patient count conservation validated
-- [ ] No synthetic data generation code
-- [ ] Simulation reproducibility confirmed
-- [ ] Validation scripts all pass
-- [ ] Debug outputs match pre-refactor
+#### Should Have:
+- [ ] CLAUDE.md merged and updated
+- [ ] Clean directory structure at root
+- [ ] No references to archived code from active code
+- [ ] Documentation reflects new structure
 
-### Documentation:
-- [ ] README.md updated with new structure
-- [ ] CLAUDE.md updated with new paths
-- [ ] API documentation generated
-- [ ] Import mapping documented
-- [ ] Deployment guide updated
-
-### Performance:
-- [ ] Simulation performance unchanged
-- [ ] App startup time not degraded
-- [ ] Memory usage consistent
-
-### Deployment:
-- [ ] CI/CD workflows function correctly
-- [ ] Docker build succeeds
-- [ ] Deployment simplified to single command
+#### Nice to Have:
+- [ ] Docker configuration updated
+- [ ] CI/CD simplified
+- [ ] Deployment branch created
 
 ## Critical Do's and Don'ts
 
@@ -621,15 +580,22 @@ CMD ["streamlit", "run", "APE.py"]
 3. **Testing phase**: Call for beta testers
 4. **Post-refactor**: Migration guide for users
 
+## Summary of Changes
+
+This refactoring plan has been significantly simplified based on the understanding that:
+
+1. **Only streamlit_app_v2 is active** - Other apps are historical artifacts
+2. **No complex consolidation needed** - Just lift and shift v2 to root
+3. **Minimal import changes** - Internal app imports stay the same
+4. **Clear separation** - Active code at root, historical in archive/
+
+The refactoring becomes a straightforward extraction rather than a complex merge.
+
 ## Next Steps
 
-1. Review and approve this plan
-2. Create pre-refactor backup tag
-3. Set up migration scripts
-4. Create feature branch
-5. Begin Phase 0 (analysis and tooling)
-6. Execute phases with validation checkpoints
-7. Beta testing period
-8. Stakeholder review
-9. Merge to main
-10. Monitor for issues
+1. Review this simplified plan
+2. Create feature branch: `git checkout -b feature/repository-refactor`
+3. Execute Phase 1-6 (should take 1-2 weeks)
+4. Test thoroughly
+5. Create deployment branch for production use
+6. Merge to main after validation
