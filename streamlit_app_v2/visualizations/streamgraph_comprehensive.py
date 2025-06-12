@@ -52,8 +52,7 @@ def calculate_patient_cohort_flow(results, time_resolution: str = 'month') -> Tu
         Tuple of (states_df, summary_stats)
     """
     # Get treatment pattern data
-    data_manager = TreatmentPatternDataManager()
-    visits_df = data_manager.get_visits_df(results)
+    transitions_df, visits_df = get_treatment_pattern_data(results)
     
     if visits_df is None or visits_df.empty:
         return pd.DataFrame(), {}
@@ -63,7 +62,7 @@ def calculate_patient_cohort_flow(results, time_resolution: str = 'month') -> Tu
     time_series_data = generate_patient_state_time_series(
         visits_df, 
         time_resolution=time_resolution,
-        sim_end_time=sim_end_time
+        end_time=sim_end_time
     )
     
     # Convert to DataFrame
