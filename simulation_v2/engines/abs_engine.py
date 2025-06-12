@@ -8,8 +8,9 @@ In ABS, each patient is an autonomous agent that:
 """
 
 import random
+import numpy as np
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Callable
+from typing import Dict, List, Optional, Callable, Tuple
 from dataclasses import dataclass
 
 from simulation_v2.core.patient import Patient
@@ -52,7 +53,8 @@ class ABSEngine:
         self,
         disease_model: DiseaseModel,
         protocol: Protocol,
-        n_patients: int,
+        n_patients: int = None,
+        patient_arrival_rate: Optional[float] = None,
         seed: Optional[int] = None,
         visit_metadata_enhancer: Optional[Callable] = None
     ):
@@ -62,30 +64,34 @@ class ABSEngine:
         Args:
             disease_model: Disease state transition model
             protocol: Treatment protocol
-            n_patients: Number of patients to simulate
+            n_patients: Total number of patients (for Fixed Total Mode)
+            patient_arrival_rate: Patients per week (for Constant Rate Mode)
             seed: Random seed for reproducibility
             visit_metadata_enhancer: Optional function to enhance visit metadata
+            
+        Note: Either n_patients or patient_arrival_rate must be specified, not both.
         """
         self.disease_model = disease_model
         self.protocol = protocol
-        self.n_patients = n_patients
         self.visit_metadata_enhancer = visit_metadata_enhancer
         
+        # Validate recruitment mode
+        if (n_patients is None) == (patient_arrival_rate is None):
+            raise ValueError("Must specify either n_patients (Fixed Total Mode) or patient_arrival_rate (Constant Rate Mode), not both")
+            
+        self.n_patients = n_patients
+        self.patient_arrival_rate = patient_arrival_rate
+        self.is_fixed_total_mode = n_patients is not None
+        
+        # Set random seeds
         if seed is not None:
             random.seed(seed)
+            np.random.seed(seed)
             
-        # Initialize patients
+        # Initialize empty patient dictionary - patients will be created on arrival
         self.patients: Dict[str, Patient] = {}
-        for i in range(n_patients):
-            patient_id = f"P{i:04d}"
-            # Sample baseline vision from realistic distribution
-            baseline_vision = self._sample_baseline_vision()
-            # Create patient with optional metadata enhancer
-            self.patients[patient_id] = Patient(
-                patient_id, 
-                baseline_vision,
-                visit_metadata_enhancer=self.visit_metadata_enhancer
-            )
+        self.patient_arrival_schedule: List[Tuple[datetime, str]] = []
+        self.enrollment_dates: Dict[str, datetime] = {}
             
     def _sample_baseline_vision(self) -> int:
         """
@@ -98,6 +104,59 @@ class ABSEngine:
         # Bounded between 20 and 90 for realistic range
         vision = int(random.gauss(70, 10))
         return max(20, min(90, vision))
+        
+    def _generate_arrival_schedule(self, start_date: datetime, end_date: datetime) -> List[Tuple[datetime, str]]:
+        """
+        Generate patient arrival times using Poisson process.
+        
+        Args:
+            start_date: Simulation start date
+            end_date: Simulation end date
+            
+        Returns:
+            List of (arrival_datetime, patient_id) tuples
+        """
+        duration_days = (end_date - start_date).days
+        
+        # Handle edge case of zero patients
+        if self.is_fixed_total_mode and self.n_patients == 0:
+            return []
+            
+        if self.is_fixed_total_mode:
+            # Fixed Total Mode: distribute n_patients across duration
+            # Calculate arrival rate to achieve target total
+            # Add small buffer to ensure we generate enough arrivals
+            arrival_rate_per_day = (self.n_patients * 1.1) / duration_days
+            expected_patients = int(self.n_patients * 1.2)  # 20% buffer
+        else:
+            # Constant Rate Mode: use specified weekly rate
+            arrival_rate_per_day = self.patient_arrival_rate / 7.0
+            expected_patients = int(arrival_rate_per_day * duration_days * 1.2)  # 20% buffer
+            
+        # Generate inter-arrival times using exponential distribution
+        # This creates a Poisson process
+        mean_interarrival_days = 1.0 / arrival_rate_per_day
+        interarrival_times = np.random.exponential(mean_interarrival_days, size=expected_patients)
+        
+        # Convert to arrival times
+        arrivals = []
+        current_time = start_date
+        patient_num = 0
+        
+        for interval in interarrival_times:
+            current_time += timedelta(days=interval)
+            if current_time >= end_date:
+                break
+                
+            patient_id = f"P{patient_num:04d}"
+            arrivals.append((current_time, patient_id))
+            patient_num += 1
+            
+            # For Fixed Total Mode, stop when we reach target
+            if self.is_fixed_total_mode and patient_num >= self.n_patients:
+                break
+                
+        return arrivals
         
     def run(self, duration_years: float, start_date: Optional[datetime] = None) -> SimulationResults:
         """
@@ -115,18 +174,39 @@ class ABSEngine:
             
         end_date = start_date + timedelta(days=int(duration_years * 365.25))
         
-        # Schedule initial visits for all patients
+        # Generate patient arrival schedule
+        self.patient_arrival_schedule = self._generate_arrival_schedule(start_date, end_date)
+        
+        # Schedule visits for existing and arriving patients
         visit_schedule: Dict[str, datetime] = {}
-        for patient_id in self.patients:
-            # Stagger initial visits across first month
-            days_offset = random.randint(0, 28)
-            visit_schedule[patient_id] = start_date + timedelta(days=days_offset)
             
         # Run simulation
         current_date = start_date
         total_injections = 0
+        arrival_index = 0  # Track position in arrival schedule
         
         while current_date <= end_date:
+            # Process new patient arrivals for today
+            while (arrival_index < len(self.patient_arrival_schedule) and 
+                   self.patient_arrival_schedule[arrival_index][0].date() <= current_date.date()):
+                arrival_date, patient_id = self.patient_arrival_schedule[arrival_index]
+                
+                # Create new patient
+                baseline_vision = self._sample_baseline_vision()
+                patient = Patient(
+                    patient_id,
+                    baseline_vision,
+                    visit_metadata_enhancer=self.visit_metadata_enhancer,
+                    enrollment_date=arrival_date
+                )
+                self.patients[patient_id] = patient
+                self.enrollment_dates[patient_id] = arrival_date
+                
+                # Schedule initial visit on arrival day
+                visit_schedule[patient_id] = arrival_date
+                
+                arrival_index += 1
+            
             # Process patients scheduled for today
             patients_today = [
                 pid for pid, visit_date in visit_schedule.items()
@@ -182,16 +262,17 @@ class ABSEngine:
         # Calculate final statistics
         final_visions = [p.current_vision for p in self.patients.values()]
         discontinued = sum(1 for p in self.patients.values() if p.is_discontinued)
+        actual_patient_count = len(self.patients)
         
         # Handle edge case of zero patients
-        if self.n_patients == 0:
+        if actual_patient_count == 0:
             final_vision_mean = 0.0
             final_vision_std = 0.0
             discontinuation_rate = 0.0
         else:
             final_vision_mean = sum(final_visions) / len(final_visions)
             final_vision_std = self._calculate_std(final_visions)
-            discontinuation_rate = discontinued / self.n_patients
+            discontinuation_rate = discontinued / actual_patient_count
         
         return SimulationResults(
             total_injections=total_injections,

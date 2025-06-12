@@ -37,13 +37,13 @@ Two mutually exclusive modes (user chooses one):
 
 ### Implementation Phases
 
-#### Phase 1: Core Engine Changes (2-3 days)
-- [ ] Study V1 `StaggeredABS` implementation
-- [ ] Add enrollment_date to Patient class
-- [ ] Replace instant patient creation in ABS engine
-- [ ] Replace instant patient creation in DES engine
-- [ ] Implement Poisson arrival process
-- [ ] Test simulations still run (even if visualizations break)
+#### Phase 1: Core Engine Changes (2-3 days) ✅ COMPLETE
+- [x] Study V1 `StaggeredABS` implementation
+- [x] Add enrollment_date to Patient class
+- [x] Replace instant patient creation in ABS engine
+- [x] Replace instant patient creation in DES engine
+- [x] Implement Poisson arrival process
+- [x] Test simulations still run (even if visualizations break)
 
 #### Phase 2: Data Pipeline (1-2 days)
 - [ ] Update Parquet writer to include enrollment_date

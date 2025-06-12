@@ -161,23 +161,15 @@ class ABSEngineWithSpecs(ABSEngine):
         """Initialize with protocol spec for parameters."""
         self.protocol_spec = protocol_spec
         
-        # Set random seed before parent init
-        if seed is not None:
-            random.seed(seed)
+        # Call parent init with n_patients (Fixed Total Mode)
+        super().__init__(
+            disease_model=disease_model,
+            protocol=protocol,
+            n_patients=n_patients,
+            seed=seed
+        )
             
-        # Initialize parent without creating patients yet
-        self.disease_model = disease_model
-        self.protocol = protocol
-        self.n_patients = n_patients
-        
-        # Create patients using spec parameters
-        self.patients: Dict[str, Patient] = {}
-        for i in range(n_patients):
-            patient_id = f"P{i:04d}"
-            baseline_vision = self._sample_baseline_vision_from_spec()
-            self.patients[patient_id] = Patient(patient_id, baseline_vision)
-            
-    def _sample_baseline_vision_from_spec(self) -> int:
+    def _sample_baseline_vision(self) -> int:
         """Sample baseline vision from protocol specification."""
         vision = int(random.gauss(
             self.protocol_spec.baseline_vision_mean,
@@ -248,8 +240,13 @@ class DESEngineWithSpecs(DESEngine):
         """Initialize with protocol spec for parameters."""
         self.protocol_spec = protocol_spec
         
-        # Initialize parent
-        super().__init__(disease_model, protocol, n_patients, seed)
+        # Initialize parent with n_patients (Fixed Total Mode)
+        super().__init__(
+            disease_model=disease_model,
+            protocol=protocol,
+            n_patients=n_patients,
+            seed=seed
+        )
         
     def _sample_baseline_vision(self) -> int:
         """Sample baseline vision from protocol specification."""

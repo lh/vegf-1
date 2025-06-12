@@ -22,7 +22,8 @@ class Patient:
     """
     
     def __init__(self, patient_id: str, baseline_vision: int = 70,
-                 visit_metadata_enhancer: Optional[Callable] = None):
+                 visit_metadata_enhancer: Optional[Callable] = None,
+                 enrollment_date: Optional[datetime] = None):
         """
         Initialize a new patient.
         
@@ -30,6 +31,7 @@ class Patient:
             patient_id: Unique identifier for the patient
             baseline_vision: Starting visual acuity in ETDRS letters (0-100, default: 70)
             visit_metadata_enhancer: Optional function to enhance visit metadata
+            enrollment_date: Date when patient enters the simulation
         """
         if not 0 <= baseline_vision <= 100:
             raise ValueError(f"Baseline vision must be between 0 and 100 ETDRS letters, got {baseline_vision}")
@@ -38,6 +40,7 @@ class Patient:
         self.baseline_vision = baseline_vision
         self.current_vision = baseline_vision
         self.current_state = DiseaseState.NAIVE
+        self.enrollment_date = enrollment_date
         
         # Visit and treatment tracking
         self.visit_history: List[Dict[str, Any]] = []
