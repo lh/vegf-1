@@ -115,17 +115,6 @@ def render_export_settings(location: str = "sidebar") -> None:
             )
             if scale != current_scale:
                 st.session_state.export_scale = scale
-        
-        
-        
-        # Quick copy button for config
-        if container.checkbox("Show config code", value=False):
-            container.code(f"""
-# Add to any Plotly chart:
-from ape.utils.export_config import get_export_config
-config = get_export_config(filename="my_chart")
-st.plotly_chart(fig, config=config)
-            """, language="python")
 
 
 def apply_export_config(fig, filename: str = "chart", **kwargs) -> Dict[str, Any]:
