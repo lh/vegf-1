@@ -18,7 +18,7 @@ plotly>=5.17.0  # For interactive visualizations including Sankey diagrams
 pyyaml>=6.0
 
 # UI Components
-# Note: streamlit-carbon-button is a local module, not a PyPI package
+streamlit-carbon-button>=0.1.0  # Carbon design buttons for Streamlit
 
 # Utilities
 haikunator>=2.1.0  # For memorable simulation names
