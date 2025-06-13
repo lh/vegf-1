@@ -1,0 +1,88 @@
+{
+  "analysis_date": "2025-06-13T14:13:58.457239",
+  "data_summary": {
+    "total_patients": 1775,
+    "total_records": 23962,
+    "date_range": {
+      "start": "2013-11-07 00:00:00",
+      "end": "2025-02-17 00:00:00"
+    },
+    "total_deaths": 4078.0
+  },
+  "mortality_by_period": {
+    "pre_covid": {
+      "patients": 590,
+      "deaths": 67,
+      "mortality_rate": 11.35593220338983,
+      "start": "2018-01-01",
+      "end": "2020-02-29"
+    },
+    "covid_early": {
+      "patients": 417,
+      "deaths": 11,
+      "mortality_rate": 2.6378896882494005,
+      "start": "2020-03-01",
+      "end": "2020-08-31"
+    },
+    "covid_peak": {
+      "patients": 542,
+      "deaths": 28,
+      "mortality_rate": 5.166051660516605,
+      "start": "2020-09-01",
+      "end": "2021-02-28"
+    },
+    "covid_late": {
+      "patients": 699,
+      "deaths": 48,
+      "mortality_rate": 6.866952789699571,
+      "start": "2021-03-01",
+      "end": "2021-12-31"
+    },
+    "post_covid": {
+      "patients": 1062,
+      "deaths": 113,
+      "mortality_rate": 10.64030131826742,
+      "start": "2022-01-01",
+      "end": "2023-12-31"
+    }
+  },
+  "mortality_by_treatment_gap": {
+    "Normal (<90d)": {
+      "total_patients": 392,
+      "deaths": 81.0,
+      "mortality_rate": 20.7
+    },
+    "Short gap (90-180d)": {
+      "total_patients": 178,
+      "deaths": 45.0,
+      "mortality_rate": 25.3
+    },
+    "Long gap (180-365d)": {
+      "total_patients": 133,
+      "deaths": 37.0,
+      "mortality_rate": 27.800000000000004
+    },
+    "Discontinued (>365d)": {
+      "total_patients": 81,
+      "deaths": 23.0,
+      "mortality_rate": 28.4
+    }
+  },
+  "excess_mortality": {
+    "covid_early": {
+      "rate": 2.6378896882494005,
+      "excess": -8.71804251514043,
+      "relative_increase": -76.77082214825155
+    },
+    "covid_peak": {
+      "rate": 5.166051660516605,
+      "excess": -6.189880542873225,
+      "relative_increase": -54.5079032879881
+    },
+    "covid_late": {
+      "rate": 6.866952789699571,
+      "excess": -4.488979413690259,
+      "relative_increase": -39.52981871757094
+    }
+  }
+}

@@ -15,11 +15,11 @@ Usage:
 python analyze_covid_mortality.py --data path/to/original_data.csv
 
 The input CSV should contain columns:
-- UUID: Patient identifier
+- Current Age: Patient's current age
 - Injection Date: Date of injection
-- Date of Death: Date of patient death (if applicable)
+- Age at Death: Age when patient died (if applicable)
 - Deceased: Binary indicator (0/1)
-- VA Letter Score at Injection: Visual acuity
+- VA Letter Score at Injection: Visual acuity (if available)
 """
 
 import pandas as pd
@@ -59,7 +59,18 @@ class CovidMortalityAnalyzer:
     def load_data(self):
         """Load and preprocess the patient data."""
         print(f"Loading data from {self.data_path}...")
-        self.data = pd.read_csv(self.data_path, parse_dates=['Injection Date', 'Date of Death'])
+        # First, check which columns are available
+        df_sample = pd.read_csv(self.data_path, nrows=5)
+        print(f"Available columns: {list(df_sample.columns)[:10]}...")
+        
+        # Parse dates - only parse columns that exist
+        date_cols = ['Injection Date']
+        if 'Date of Death' in df_sample.columns:
+            date_cols.append('Date of Death')
+        if 'Date of 1st Injection' in df_sample.columns:
+            date_cols.append('Date of 1st Injection')
+            
+        self.data = pd.read_csv(self.data_path, parse_dates=date_cols)
         
         # Add derived columns
         self.data['year'] = self.data['Injection Date'].dt.year
@@ -72,8 +83,14 @@ class CovidMortalityAnalyzer:
         print(f"Loaded {len(self.data)} records for {self.data['UUID'].nunique()} patients")
         
         # Check death data availability
-        deaths = self.data['Deceased'].sum() if 'Deceased' in self.data.columns else 0
-        print(f"Found {deaths} death records")
+        if 'Deceased' in self.data.columns:
+            deaths = self.data.groupby('UUID')['Deceased'].max().sum()
+            print(f"Found {deaths} deceased patients")
+            if 'Age at Death' in self.data.columns:
+                avg_age_at_death = self.data[self.data['Deceased'] == 1]['Age at Death'].mean()
+                print(f"Average age at death: {avg_age_at_death:.1f} years")
+        else:
+            print("No death data found in dataset")
         
     def calculate_mortality_rates(self) -> Dict:
         """Calculate mortality rates by period."""
@@ -90,12 +107,16 @@ class CovidMortalityAnalyzer:
                 (self.data['Injection Date'] <= end_date)
             ]['UUID'].unique()
             
-            # Deaths in this period
-            if 'Date of Death' in self.data.columns:
-                period_deaths = self.data[
-                    (self.data['Date of Death'] >= start_date) & 
-                    (self.data['Date of Death'] <= end_date)
-                ]['UUID'].nunique()
+            # Deaths in this period - we'll estimate based on last injection date
+            # Since we don't have Date of Death, we'll use patients who:
+            # 1. Are marked as deceased
+            # 2. Had their last injection in this period
+            deceased_patients = self.data[self.data['Deceased'] == 1]
+            if not deceased_patients.empty:
+                last_injections = deceased_patients.groupby('UUID')['Injection Date'].max()
+                period_deaths = sum(
+                    (last_injections >= start_date) & (last_injections <= end_date)
+                )
             else:
                 period_deaths = 0
             
@@ -136,7 +157,8 @@ class CovidMortalityAnalyzer:
                 
             # Check if patient died
             is_deceased = patient_data['Deceased'].iloc[-1] if 'Deceased' in patient_data.columns else 0
-            death_date = patient_data['Date of Death'].iloc[-1] if 'Date of Death' in patient_data.columns else None
+            # Estimate death date as last injection date for deceased patients
+            death_date = patient_data['Injection Date'].iloc[-1] if is_deceased else None
             
             gap_analysis.append({
                 'patient_id': patient_id,
@@ -170,9 +192,9 @@ class CovidMortalityAnalyzer:
         # Monthly mortality rates
         monthly_stats = []
         
-        for month in pd.date_range('2018-01', '2023-12', freq='M'):
-            month_start = month.to_timestamp()
-            month_end = (month + 1).to_timestamp() - pd.Timedelta(days=1)
+        for month in pd.date_range('2018-01', '2023-12', freq='ME'):
+            month_start = month
+            month_end = (month + pd.DateOffset(months=1)) - pd.Timedelta(days=1)
             
             # Active patients in month
             active_patients = self.data[
@@ -180,12 +202,13 @@ class CovidMortalityAnalyzer:
                 (self.data['Injection Date'] <= month_end)
             ]['UUID'].unique()
             
-            # Deaths in month
-            if 'Date of Death' in self.data.columns:
-                deaths = self.data[
-                    (self.data['Date of Death'] >= month_start) & 
-                    (self.data['Date of Death'] <= month_end)
-                ]['UUID'].nunique()
+            # Deaths in month - estimate based on last injection for deceased patients
+            deceased_patients = self.data[self.data['Deceased'] == 1]
+            if not deceased_patients.empty:
+                last_injections = deceased_patients.groupby('UUID')['Injection Date'].max()
+                deaths = sum(
+                    (last_injections >= month_start) & (last_injections <= month_end)
+                )
             else:
                 deaths = 0
                 

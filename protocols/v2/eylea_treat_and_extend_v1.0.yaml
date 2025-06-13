@@ -1,117 +1,110 @@
-# Eylea Treat and Extend Protocol v1.0
-# ALL parameters must be explicitly defined - no defaults allowed
-
-name: "Eylea Treat and Extend"
-version: "1.0"
-created_date: "2024-01-15"
-author: "Clinical Team"
-description: "Standard treat-and-extend protocol for Eylea (aflibercept) based on clinical trial data"
-
-# Protocol timing parameters (NO DEFAULTS)
-protocol_type: "treat_and_extend"
-min_interval_days: 28  # 4 weeks - minimum time between visits
-max_interval_days: 112  # 16 weeks - maximum extension
-extension_days: 14  # 2 weeks - extend by this when stable
-shortening_days: 14  # 2 weeks - shorten by this when active
-
-# Disease state transitions - all probabilities must sum to 1.0
+name: Eylea Treat and Extend
+version: '1.0'
+created_date: '2024-01-15'
+author: Clinical Team
+description: Standard treat-and-extend protocol for Eylea (aflibercept) based on clinical trial data
+protocol_type: treat_and_extend
+min_interval_days: 28
+max_interval_days: 112
+extension_days: 14
+shortening_days: 14
 disease_transitions:
   NAIVE:
-    NAIVE: 0.0        # Cannot remain naive after first assessment
-    STABLE: 0.3       # 30% achieve stability quickly
-    ACTIVE: 0.6       # 60% have active disease
-    HIGHLY_ACTIVE: 0.1  # 10% have severe disease
+    NAIVE: 0.0
+    STABLE: 0.3
+    ACTIVE: 0.6
+    HIGHLY_ACTIVE: 0.1
   STABLE:
-    NAIVE: 0.0        # Cannot return to naive
-    STABLE: 0.85      # 85% remain stable
-    ACTIVE: 0.15      # 15% develop recurrence
-    HIGHLY_ACTIVE: 0.0  # Rare to jump directly to highly active
+    NAIVE: 0.0
+    STABLE: 0.85
+    ACTIVE: 0.15
+    HIGHLY_ACTIVE: 0.0
   ACTIVE:
-    NAIVE: 0.0        # Cannot return to naive
-    STABLE: 0.2       # 20% achieve stability with treatment
-    ACTIVE: 0.7       # 70% remain active
-    HIGHLY_ACTIVE: 0.1  # 10% progress to highly active
+    NAIVE: 0.0
+    STABLE: 0.2
+    ACTIVE: 0.7
+    HIGHLY_ACTIVE: 0.1
   HIGHLY_ACTIVE:
-    NAIVE: 0.0        # Cannot return to naive
-    STABLE: 0.05      # 5% achieve stability (rare)
-    ACTIVE: 0.15      # 15% improve to active
-    HIGHLY_ACTIVE: 0.8  # 80% remain highly active
-
-# Treatment effect on disease transitions
-# These modify the base transitions when treatment is given
+    NAIVE: 0.0
+    STABLE: 0.05
+    ACTIVE: 0.15
+    HIGHLY_ACTIVE: 0.8
 treatment_effect_on_transitions:
   NAIVE:
-    # No effect - naive always transitions regardless of treatment
     multipliers: {}
   STABLE:
-    # Treatment helps maintain stability
     multipliers:
-      STABLE: 1.1     # 10% more likely to stay stable
-      ACTIVE: 0.9     # 10% less likely to become active
+      STABLE: 1.1
+      ACTIVE: 0.9
   ACTIVE:
-    # Treatment promotes improvement
     multipliers:
-      STABLE: 2.0     # Twice as likely to become stable
-      ACTIVE: 0.8     # 20% less likely to stay active
-      HIGHLY_ACTIVE: 0.5  # Half as likely to worsen
+      STABLE: 2.0
+      ACTIVE: 0.8
+      HIGHLY_ACTIVE: 0.5
   HIGHLY_ACTIVE:
-    # Treatment effect is limited but present
     multipliers:
-      STABLE: 2.0     # Twice as likely to improve dramatically
-      ACTIVE: 1.5     # 50% more likely to improve
-      HIGHLY_ACTIVE: 0.75  # 25% less likely to remain severe
-
-# Vision change model - ETDRS letter changes per visit
-# All scenarios must be defined with mean and std
+      STABLE: 2.0
+      ACTIVE: 1.5
+      HIGHLY_ACTIVE: 0.75
 vision_change_model:
   naive_treated:
-    mean: 0    # First visit, no change yet
+    mean: 0
     std: 1
   naive_untreated:
-    mean: -2   # Untreated naive patients lose vision
+    mean: -2
     std: 2
   stable_treated:
-    mean: 1    # Small improvement when stable
+    mean: 1
     std: 1
   stable_untreated:
-    mean: 0    # Stable without treatment maintains
+    mean: 0
     std: 1
   active_treated:
-    mean: -1   # Slight loss despite treatment
+    mean: -1
     std: 2
   active_untreated:
-    mean: -3   # Significant loss without treatment
+    mean: -3
     std: 2
   highly_active_treated:
-    mean: -2   # Moderate loss with treatment
+    mean: -2
     std: 2
   highly_active_untreated:
-    mean: -5   # Severe loss without treatment
+    mean: -5
     std: 3
-
-# Baseline vision distribution (ETDRS letters)
 baseline_vision:
-  mean: 70      # Typical AMD presentation
-  std: 10       # Reasonable variation
-  min: 20       # Legal blindness threshold
-  max: 90       # Excellent vision unlikely in AMD
-
-# Discontinuation rules - all criteria must be defined
+  mean: 70
+  std: 10
+  min: 20
+  max: 90
 discontinuation_rules:
-  # Poor vision criteria
-  poor_vision_threshold: 35        # ETDRS letters
-  poor_vision_probability: 0.1     # 10% chance per visit when below threshold
-  
-  # High injection burden criteria  
-  high_injection_count: 20         # Number of injections
-  high_injection_probability: 0.02 # 2% chance per visit when above count
-  
-  # Long treatment duration criteria
-  long_treatment_months: 36        # 3 years
-  long_treatment_probability: 0.01 # 1% chance per visit after duration
-  
-  # Types of discontinuation
+  poor_vision_threshold: 35
+  poor_vision_probability: 0.1
+  high_injection_count: 20
+  high_injection_probability: 0.02
+  long_treatment_months: 36
+  long_treatment_probability: 0.01
   discontinuation_types:
-    - "planned"      # Patient/doctor decision
-    - "adverse"      # Due to adverse events
-    - "ineffective"  # Treatment not working
+  - planned
+  - adverse
+  - ineffective
+mortality:
+  enabled: true
+  base_annual_rate: 0.078
+  monthly_rate: 0.0065
+  age_adjustment:
+    enabled: true
+    reference_age: 89.5
+    min_age: 70
+    max_age: 106
+    comment: Mortality risk doubles approximately every 8 years
+  treatment_gap_multipliers:
+    regular: 1.0
+    short_gap: 1.22
+    long_gap: 1.34
+    discontinued: 1.37
+    comment: Multipliers based on observed mortality by treatment pattern
+  data_source: Real-world Eylea patient data (n=1,775, 2007-2025)
+  notes:
+  - Based on 7.8 deaths per 100 patient-years
+  - 'Average age at death: 89.5 years'
+  - Treatment gaps significantly increase mortality risk

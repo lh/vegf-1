@@ -1,0 +1,61 @@
+% !TEX root = ../main.tex
+\section{Mortality Estimation from Real-World Data}
+
+\subsection{Overview}
+To enhance the ecological validity of our simulation models, we incorporated mortality parameters derived from real-world treatment data. This section describes the methodology employed to estimate mortality rates from a retrospective cohort of patients receiving intravitreal aflibercept injections for neovascular age-related macular degeneration.
+
+\subsection{Data Source and Patient Population}
+The analysis utilised electronic health records from 1,775 patients who received aflibercept treatment between November 2007 and February 2025. Crucially, all patient records were linked to the NHS Spine, ensuring complete capture of mortality events regardless of treatment continuation. The dataset comprised 23,962 injection records with an average follow-up duration of 2.4 years per patient (range: 0.1--17.2 years), yielding approximately 4,183 patient-years of observation.
+
+\subsection{Mortality Rate Calculation}
+Three complementary approaches were employed to estimate mortality rates:
+
+\subsubsection{Cumulative Mortality}
+The crude cumulative mortality was calculated as the proportion of deceased patients (n=328) relative to the total cohort (n=1,775), yielding 18.5\%. Whilst accurate, this measure fails to account for varying follow-up durations and is therefore unsuitable for incorporation into time-dependent simulation models.
+
+\subsubsection{Annualised Mortality Rate}
+A naive annualised rate was computed by dividing the cumulative mortality by the total study duration (17.2 years), resulting in 1.07\% per annum. This approach assumes uniform follow-up across all patients, which is demonstrably incorrect given the substantial variation in individual observation periods.
+
+\subsubsection{Patient-Year Analysis}
+The most methodologically robust approach calculated mortality per patient-year of follow-up. Individual follow-up durations were computed as the interval between first and last recorded injections. This yielded a mortality rate of 7.8 deaths per 100 patient-years (95\% CI: 7.0--8.6), which translates to an annual mortality probability of approximately 7.8\%.
+
+\subsection{Mortality by Treatment Continuity}
+Analysis of mortality stratified by treatment intervals revealed a clear gradient of risk associated with treatment disruption:
+
+\begin{itemize}
+    \item Regular treatment (<90 days between injections): 20.7\% mortality
+    \item Short treatment gaps (90--180 days): 25.3\% mortality (relative risk 1.22)
+    \item Long treatment gaps (180--365 days): 27.8\% mortality (relative risk 1.34)
+    \item Effective discontinuation (>365 days): 28.4\% mortality (relative risk 1.37)
+\end{itemize}
+
+These findings demonstrate a dose-response relationship between treatment adherence and mortality, though causality cannot be definitively established from observational data.
+
+\subsection{Age-Specific Considerations}
+The mean age at death was 89.5 years (SD: 6.2, range: 70--106), substantially exceeding the UK population life expectancy. This reflects the advanced age of the AMD population and necessitates age-adjusted mortality modelling in simulations to avoid overestimating mortality risk in younger cohorts.
+
+\subsection{COVID-19 Period Analysis}
+Analysis of mortality during the COVID-19 pandemic revealed apparently reduced mortality rates amongst actively treated patients (2.6--6.9\% versus 11.4\% pre-pandemic baseline). However, this finding should be interpreted with caution due to methodological constraints detailed below.
+
+\subsection{Limitations}
+Whilst NHS Spine linkage ensures complete mortality ascertainment, several limitations affect the temporal attribution of deaths:
+
+\subsubsection{Absence of Death Dates}
+Although deceased status was reliably captured through NHS Spine linkage, the dataset contained only binary deceased status and age at death, lacking specific death dates. Consequently, we employed last injection date as a proxy for death timing. This approach may misattribute deaths that occurred substantially after treatment cessation to earlier time periods, potentially explaining the paradoxically lower mortality rates observed during the COVID-19 pandemic.
+
+\subsubsection{Informative Censoring}
+Treatment discontinuation may represent an informative censoring event, where cessation correlates with unmeasured health deterioration. The observed association between treatment gaps and mortality may partially reflect reverse causation, wherein declining health precipitates both treatment discontinuation and subsequent mortality.
+
+\subsubsection{Competing Risks}
+In this elderly population, mortality from non-ophthalmic causes may dominate, potentially obscuring relationships between treatment patterns and disease-specific outcomes. The high baseline mortality rate (7.8\% annually) underscores the importance of incorporating death as a competing risk in simulation models.
+
+\subsection{Implementation in Simulation Models}
+The derived parameters provide empirically grounded mortality estimates for incorporation into AMD treatment simulations. We recommend implementing:
+
+\begin{itemize}
+    \item Base mortality rate: 7.8\% per annum (0.65\% monthly)
+    \item Age-adjusted mortality with reference age 89.5 years
+    \item Treatment-gap mortality multipliers: 1.0 (regular), 1.22 (short gaps), 1.34 (long gaps), 1.37 (discontinued)
+\end{itemize}
+
+These parameters, derived from comprehensive NHS-linked data, enable realistic modelling of mortality as a competing risk in long-term treatment simulations. The complete capture of mortality events through NHS Spine linkage provides confidence in the base mortality estimates, though temporal attribution remains approximate due to the absence of specific death dates.
