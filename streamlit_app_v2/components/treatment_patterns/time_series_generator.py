@@ -37,9 +37,27 @@ def generate_patient_state_time_series(
     if visits_df['patient_id'].nunique() == 1:
         st.warning("Streamgraph may not be meaningful with single patient")
     
-    # Convert to months for consistency
+    # Convert patient-relative time to calendar time
     visits_df = visits_df.copy()
-    visits_df['time_months'] = visits_df['time_days'] / 30.44
+    
+    # Convert enrollment times to months for consistency
+    if enrollment_df is not None and 'enrollment_time_days' in enrollment_df.columns:
+        enrollment_times = dict(zip(
+            enrollment_df['patient_id'],
+            enrollment_df['enrollment_time_days'] / 30.44
+        ))
+        
+        # Convert patient-relative visit times to calendar times (vectorized)
+        # Calendar time = enrollment time + patient time
+        visits_df['patient_time_months'] = visits_df['time_days'] / 30.44
+        visits_df['enrollment_time_months'] = visits_df['patient_id'].map(enrollment_times).fillna(0)
+        visits_df['calendar_time_months'] = visits_df['enrollment_time_months'] + visits_df['patient_time_months']
+        visits_df['time_months'] = visits_df['calendar_time_months']
+    else:
+        # If no enrollment data, assume all patients enrolled at time 0
+        # So patient time = calendar time
+        visits_df['time_months'] = visits_df['time_days'] / 30.44
+        enrollment_times = {}
     
     # Determine time range
     if end_time is None:
@@ -65,15 +83,8 @@ def generate_patient_state_time_series(
     all_patients = visits_df['patient_id'].unique()
     total_patients = len(all_patients)
     
-    # Get enrollment times if available
-    enrollment_times = {}
-    if enrollment_df is not None and 'enrollment_time_days' in enrollment_df.columns:
-        # Convert to months
-        enrollment_times = dict(zip(
-            enrollment_df['patient_id'],
-            enrollment_df['enrollment_time_days'] / 30.44
-        ))
-        
+    # Pre-compute enrolled counts for all time points (enrollment_times already computed above)
+    if enrollment_times:
         # Pre-compute enrolled counts for all time points at once (major optimization)
         enrollment_months = enrollment_df['enrollment_time_days'].values / 30.44
         enrollment_months_sorted = np.sort(enrollment_months)
@@ -152,12 +163,34 @@ def get_patient_states_at_time(visits_df: pd.DataFrame, time_point: float, sim_e
     # Calculate time since last visit
     time_since_last = time_point - last_visits['time_months']
     
-    # Vectorized state determination using np.where instead of apply
-    last_visits['current_state'] = np.where(
-        time_since_last > 6,
+    # Special handling for Initial Treatment state
+    # A patient is in "Initial Treatment" if:
+    # 1. They are enrolled but have not had their first visit yet, OR
+    # 2. They have had their first visit but it was marked as "Initial Treatment"
+    #    and not enough time has passed for a second visit
+    
+    # Check if each patient's most recent visit is their first visit
+    is_first_visit = last_visits['visit_num'] == 0
+    
+    # For patients whose most recent visit is their first visit,
+    # they could still be in "Initial Treatment" phase
+    # We'll keep them in Initial Treatment for a reasonable period (e.g., up to 2 months)
+    # after their first visit to represent the initial treatment period
+    
+    # Vectorized state determination
+    conditions = [
+        time_since_last > 6,  # No further visits after 6 months
+        is_first_visit & (time_since_last <= 2) & (last_visits['treatment_state'] == 'Initial Treatment'),  # Still in initial period
+        True  # Default case
+    ]
+    
+    choices = [
         'No Further Visits',
-        last_visits['treatment_state']
-    )
+        'Initial Treatment',  # Keep in Initial Treatment for up to 2 months after first visit
+        last_visits['treatment_state']  # Use the visit's treatment state
+    ]
+    
+    last_visits['current_state'] = np.select(conditions, choices)
     
     # Filter to only enrolled patients
     last_visits = last_visits[last_visits['patient_id'].isin(enrolled_patients)]

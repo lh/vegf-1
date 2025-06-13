@@ -23,6 +23,11 @@ class TestRealSimulation:
     @pytest.fixture
     def protocol_path(self):
         """Get path to test protocol."""
+        # Check v2 directory first, then fallback
+        v2_path = Path(__file__).parent.parent.parent / "protocols" / "v2" / "eylea.yaml"
+        if v2_path.exists():
+            return v2_path
+        # Fallback to old location
         return Path(__file__).parent.parent.parent / "protocols" / "eylea.yaml"
         
     def test_small_real_simulation(self, protocol_path):

@@ -73,7 +73,10 @@ else:
 
 # Test 5: Protocol spec handling
 st.header("Test 5: Protocol Spec Handling")
-protocol_path = Path("protocols/eylea.yaml")
+# Check v2 directory first, then fallback to old location
+protocol_path = Path("protocols/v2/eylea.yaml")
+if not protocol_path.exists():
+    protocol_path = Path("protocols/eylea.yaml")
 if protocol_path.exists():
     test_sim = {'protocol': {}}
     save_protocol_spec(test_sim, protocol_path)

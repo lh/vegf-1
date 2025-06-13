@@ -78,6 +78,10 @@ if not sim_path:
 
 results = ResultsFactory.load_results(sim_path)
 
+# Display simulation info
+metadata = results.metadata
+st.caption(f"**Simulation:** {metadata.protocol_name} • {metadata.n_patients} patients • {metadata.duration_years} years • {metadata.sim_id}")
+
 # Try to use enhanced version with terminals, fall back to basic if needed
 try:
     transitions_df, visits_df = extract_treatment_patterns_with_terminals(results)

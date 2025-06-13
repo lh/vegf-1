@@ -58,10 +58,15 @@ class TestExistingState:
         
     def test_protocol_info_structure(self):
         """Verify protocol info structure is preserved."""
+        # Check v2 directory first, then fallback to old location
+        protocol_path = Path('protocols/v2/eylea.yaml')
+        if not protocol_path.exists():
+            protocol_path = Path('protocols/eylea.yaml')
+        
         protocol_info = {
             'name': 'Eylea T&E',
             'version': '2.0.0',
-            'path': str(Path('protocols/eylea.yaml')),
+            'path': str(protocol_path),
             'description': 'Standard Eylea treat and extend protocol',
             'is_temporary': False
         }

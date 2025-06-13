@@ -64,11 +64,11 @@ This document provides a structured testing plan for manually verifying the Phas
 ### 5. Mode Switching Behavior
 - [x] Start in Fixed Total with custom values
 - [x] Switch to Constant Rate
-  - [ ] Verify duration is preserved BUT interface changes the position of the years column - should be the same. Put the units dropdown below the number of patient, not to the left of it. Also, the number of patients should default to roughly whatever it was when the Fixed total was being used.
-  - [ ] Verify reasonable defaults for rate BUT the number of patients should default to roughly whatever it was when the Fixed total was being used.
+  - [x] Verify duration is preserved
+  - [x] Verify reasonable defaults for rate
 - [x] Switch back to Fixed Total
   - [x] Verify duration is preserved
-  - [ ] Verify patient count returns to previous or default BUT again it should reflect whatever was calculated from the Constant Rate if available
+  - [x] Verify patient count returns to previous or default
 
 ### 6. Running Simulations
 - [x] In Fixed Total mode:
@@ -76,10 +76,10 @@ This document provides a structured testing plan for manually verifying the Phas
   - [x] Run simulation
   - [x] Verify simulation completes successfully
   - [x] Check saved parameters include recruitment_mode: "Fixed Total"
-- [ ] In Constant Rate mode: FAILING
+- [x] In Constant Rate mode:
   - [x] Set 10 patients/week, 1 year
   - [x] Run simulation
-  - [ ] Verify simulation completes successfully FAILING
+  - [x] Verify simulation completes successfully
   - [x] Check saved parameters include:
     - recruitment_mode: "Constant Rate"
     - recruitment_rate: 10
@@ -87,26 +87,26 @@ This document provides a structured testing plan for manually verifying the Phas
     - expected_total: ~521
 
 ### 7. Edge Cases & Error Handling
-- [ ] Try to set negative values (should be prevented)
-- [ ] Try to set zero patients (should show minimum)
-- [ ] Verify help tooltips appear on hover
-- [ ] Check layout on different screen sizes
-- [ ] Verify no console errors in browser
+- [x] Try to set negative values (should be prevented)
+- [x] Try to set zero patients (should show minimum)
+- [ ] Verify help tooltips appear on hover  - tooltips above the preset buttons only - is that correct?
+- [x] Check layout on different screen sizes
+- [x] Verify no console errors in browser - there is often on startup an error "2025-06-13 12:54:06.371 MediaFileHandler: Missing file 74eeb109de3008c033c3b9d64d774d683bf84842d8e315e0bfef76b7.png" but I don't think it is important. There are some javascript errorts in the console related tostreamlit I think - I can show you a screenshot if you want.
 
 ### 8. Visual/UX Checks
-- [ ] Info boxes are clearly visible and readable
-- [ ] Calculated values update smoothly without flicker
-- [ ] Radio button selection is clear
-- [ ] Input fields align properly
-- [ ] Help text is informative and grammatically correct
-- [ ] British English spelling is used throughout
+- [x] Info boxes are clearly visible and readable
+- [x] Calculated values update smoothly without flicker
+- [x] Radio button selection is clear
+- [x] Input fields align properly
+- [x] Help text is informative and grammatically correct
+- [x] British English spelling is used throughout
 
 ### 9. Integration with Analysis
 After running simulations in both modes:
-- [ ] Navigate to Analysis page
-- [ ] Verify streamgraph shows wedge shape (growing enrollment)
-- [ ] Check that patient counts grow over time
-- [ ] Verify final patient count matches expectations
+- [x] Navigate to Analysis page
+- [x] Verify streamgraph shows wedge shape (growing enrollment)
+- [x] Check that patient counts grow over time
+- [x] Verify final patient count matches expectations
 
 ## Known Issues to Watch For
 1. Layout issues with columns overlapping
@@ -117,18 +117,19 @@ After running simulations in both modes:
 
 ## Screenshots to Capture
 Please take screenshots of:
-1. Fixed Total mode with default values
-2. Constant Rate mode with both unit options
-3. The UI after clicking each preset button
+1. Fixed Total mode with default values![alt text](<Screenshot 2025-06-13 at 13.21.13.png>)
+
+2. Constant Rate mode with both unit options ![alt text](<Screenshot 2025-06-13 at 13.23.12.png>)
+3. The UI after clicking each preset button ![alt text](<Screenshot 2025-06-13 at 13.24.04.png>) ![alt text](<Screenshot 2025-06-13 at 13.23.54.png>) ![alt text](<Screenshot 2025-06-13 at 13.23.50.png>) ![alt text](<Screenshot 2025-06-13 at 13.23.43.png>) ![alt text](<Screenshot 2025-06-13 at 13.24.58.png>)
 4. Any layout issues or visual glitches
-5. The streamgraph showing proper wedge shape
+5. The streamgraph showing proper wedge shape ![alt text](<Screenshot 2025-06-13 at 13.25.40.png>)
 
 ## Feedback Needed
-- Is the distinction between modes clear?
-- Are the calculated values helpful?
-- Is the help text sufficient?
-- Any confusing aspects of the UI?
-- Suggestions for improvement?
+- Is the distinction between modes clear? Yes
+- Are the calculated values helpful? Yes
+- Is the help text sufficient? Yes
+- Any confusing aspects of the UI? No
+- Suggestions for improvement? It would be useful for all visualisations to have a very basic n patients  t duration somewhere on the page so we can easily se what is what.
 
 ---
 

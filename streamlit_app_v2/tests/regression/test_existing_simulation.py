@@ -23,9 +23,11 @@ class TestExistingSimulation:
     @pytest.fixture
     def default_protocol_path(self):
         """Get path to default protocol file."""
-        # Try multiple possible locations
+        # Try multiple possible locations, checking v2 directory first
         possible_paths = [
+            Path(__file__).parent.parent.parent / "protocols" / "v2" / "eylea.yaml",
             Path(__file__).parent.parent.parent / "protocols" / "eylea.yaml",
+            Path(__file__).parent.parent.parent.parent / "protocols" / "v2" / "eylea.yaml",
             Path(__file__).parent.parent.parent.parent / "protocols" / "eylea.yaml",
             Path(__file__).parent.parent.parent.parent / "simulation_v2" / "protocols" / "default.yaml",
         ]

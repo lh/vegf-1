@@ -1,0 +1,160 @@
+# NHS Aflibercept Treat and Extend Protocol v1.0
+# ALL parameters must be explicitly defined - no defaults allowed
+# Based on NHS wet AMD cost calculator data
+
+name: "NHS Aflibercept Treat and Extend"
+version: "1.0"
+created_date: "2025-01-13"
+author: "NHS Analysis Team"
+description: "NHS-based treat-and-extend protocol for aflibercept derived from wet AMD cost calculator"
+
+# Protocol timing parameters (NO DEFAULTS)
+protocol_type: "treat_and_extend"
+min_interval_days: 28  # 4 weeks - NHS minimum between injections
+max_interval_days: 112  # 16 weeks - NHS data shows max extension to Q16W
+extension_days: 28  # 4 weeks - NHS typically extends by 4-week increments
+shortening_days: 14  # 2 weeks - reduce interval on disease activity
+
+# NHS injection frequency by year (from wet AMD calculator)
+nhs_annual_injections:
+  year_1: 8.0  # Loading + monthly (3 loading + 5 additional)
+  year_2: 6.0  # Extending intervals
+  year_3: 5.0  # Further extension
+  year_4: 4.0  # Stable patients
+  year_5: 4.0  # Maintained frequency
+
+# Disease state transitions - based on NHS treatment patterns
+disease_transitions:
+  NAIVE:
+    NAIVE: 0.0        # Cannot remain naive after first assessment
+    STABLE: 0.25      # 25% achieve early stability (NHS optimistic)
+    ACTIVE: 0.65      # 65% have active disease requiring regular treatment
+    HIGHLY_ACTIVE: 0.1  # 10% have aggressive disease
+  STABLE:
+    NAIVE: 0.0        # Cannot return to naive
+    STABLE: 0.80      # 80% remain stable (NHS maintenance success)
+    ACTIVE: 0.18      # 18% develop recurrence
+    HIGHLY_ACTIVE: 0.02  # 2% rapid progression (rare)
+  ACTIVE:
+    NAIVE: 0.0        # Cannot return to naive
+    STABLE: 0.15      # 15% achieve stability with treatment
+    ACTIVE: 0.75      # 75% remain active (majority)
+    HIGHLY_ACTIVE: 0.1  # 10% progress despite treatment
+  HIGHLY_ACTIVE:
+    NAIVE: 0.0        # Cannot return to naive
+    STABLE: 0.03      # 3% dramatic improvement (very rare)
+    ACTIVE: 0.12      # 12% partial response
+    HIGHLY_ACTIVE: 0.85  # 85% remain highly active
+
+# Treatment effect on disease transitions
+# Modified to reflect NHS real-world effectiveness
+treatment_effect_on_transitions:
+  NAIVE:
+    # No effect - naive always transitions regardless of treatment
+    multipliers: {}
+  STABLE:
+    # Treatment helps maintain stability
+    multipliers:
+      STABLE: 1.15     # 15% more likely to stay stable with treatment
+      ACTIVE: 0.85     # 15% less likely to become active
+  ACTIVE:
+    # Treatment promotes improvement but less than trial data
+    multipliers:
+      STABLE: 1.5      # 50% more likely to become stable
+      ACTIVE: 0.85     # 15% less likely to stay active
+      HIGHLY_ACTIVE: 0.6  # 40% less likely to worsen
+  HIGHLY_ACTIVE:
+    # Limited treatment effect in severe disease
+    multipliers:
+      STABLE: 1.5      # 50% more likely to improve dramatically
+      ACTIVE: 1.3      # 30% more likely to improve
+      HIGHLY_ACTIVE: 0.85  # 15% less likely to remain severe
+
+# Vision change model - ETDRS letter changes per visit
+# Based on NHS real-world outcomes (more conservative than trials)
+vision_change_model:
+  naive_treated:
+    mean: 0    # First visit, no change yet
+    std: 1
+  naive_untreated:
+    mean: -3   # Untreated naive patients lose vision faster
+    std: 2
+  stable_treated:
+    mean: 0.5  # Small improvement when stable
+    std: 1
+  stable_untreated:
+    mean: -0.5 # Gradual decline without treatment
+    std: 1
+  active_treated:
+    mean: -1.5 # Moderate loss despite treatment
+    std: 2
+  active_untreated:
+    mean: -4   # Significant loss without treatment
+    std: 3
+  highly_active_treated:
+    mean: -3   # Substantial loss with treatment
+    std: 3
+  highly_active_untreated:
+    mean: -6   # Severe loss without treatment
+    std: 4
+
+# Baseline vision distribution (ETDRS letters)
+# NHS population tends to present later than trials
+baseline_vision:
+  mean: 65      # Lower than trial populations
+  std: 12       # More variation in NHS practice
+  min: 20       # Legal blindness threshold
+  max: 85       # Good vision rare at presentation
+
+# Discontinuation rules - based on NHS data (~15% annual)
+discontinuation_rules:
+  # Poor vision criteria
+  poor_vision_threshold: 35        # ETDRS letters
+  poor_vision_probability: 0.12    # 12% chance per visit when below threshold
+  
+  # High injection burden criteria  
+  high_injection_count: 24         # 2 years of monthly injections
+  high_injection_probability: 0.03 # 3% chance per visit when above count
+  
+  # Long treatment duration criteria
+  long_treatment_months: 36        # 3 years
+  long_treatment_probability: 0.02 # 2% chance per visit after duration
+  
+  # Annual discontinuation rate target: ~15% (NHS data)
+  # Types of discontinuation
+  discontinuation_types:
+    - "planned"      # Patient/doctor decision
+    - "adverse"      # Due to adverse events
+    - "ineffective"  # Treatment not working
+    - "access"       # NHS-specific: capacity/geographic issues
+
+# NHS-specific parameters
+nhs_parameters:
+  # Switching rates (from wet AMD calculator)
+  annual_switch_rate: 0.15  # 15% switch to other anti-VEGF annually
+  
+  # Capacity constraints
+  max_appointments_per_month: 100  # Typical NHS clinic capacity
+  average_wait_new_patient_days: 14  # Target for new patients
+  average_wait_follow_up_days: 7    # Target for follow-ups
+  
+  # Cost parameters (2025 NHS net prices)
+  aflibercept_2mg_cost: 457    # £ per injection after discount
+  aflibercept_8mg_cost: 339    # £ per injection after discount
+  administration_cost: 120      # £ per injection visit
+  oct_scan_cost: 80            # £ per OCT scan
+  consultation_cost: 150       # £ per consultant visit
+
+# Treatment schedule modifications for NHS
+nhs_treatment_schedule:
+  loading_phase:
+    number_of_injections: 3
+    interval_days: 28
+  
+  # Extension criteria more conservative than trials
+  extension_criteria:
+    stable_visits_required: 2    # Need 2 stable visits before extending
+    max_extension_per_step: 28   # Maximum 4-week extension at once
+  
+  # NHS tends to cap at Q12W rather than Q16W in practice
+  practical_max_interval_days: 84  # 12 weeks

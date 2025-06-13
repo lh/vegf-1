@@ -27,7 +27,10 @@ class TestStaggeredEnrollment:
     @pytest.fixture
     def protocol_path(self):
         """Get path to test protocol."""
-        protocol_path = Path(__file__).parent.parent.parent / "protocols" / "eylea.yaml"
+        # Check v2 directory first, then fallback to old location
+        protocol_path = Path(__file__).parent.parent.parent / "protocols" / "v2" / "eylea.yaml"
+        if not protocol_path.exists():
+            protocol_path = Path(__file__).parent.parent.parent / "protocols" / "eylea.yaml"
         if not protocol_path.exists():
             pytest.skip(f"Protocol not found at {protocol_path}")
         return protocol_path

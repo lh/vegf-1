@@ -22,9 +22,27 @@ def generate_patient_state_time_series_optimized(
     if len(visits_df) == 0:
         return pd.DataFrame(columns=['time_point', 'state', 'patient_count', 'percentage'])
     
-    # Convert to months for consistency
+    # Convert patient-relative time to calendar time
     visits_df = visits_df.copy()
-    visits_df['time_months'] = visits_df['time_days'] / 30.44
+    
+    # Convert enrollment times to months for consistency
+    enrollment_times = {}
+    if enrollment_df is not None and 'enrollment_time_days' in enrollment_df.columns:
+        enrollment_times = dict(zip(
+            enrollment_df['patient_id'],
+            enrollment_df['enrollment_time_days'] / 30.44
+        ))
+        
+        # Convert patient-relative visit times to calendar times (vectorized)
+        # Calendar time = enrollment time + patient time
+        visits_df['patient_time_months'] = visits_df['time_days'] / 30.44
+        visits_df['enrollment_time_months'] = visits_df['patient_id'].map(enrollment_times).fillna(0)
+        visits_df['calendar_time_months'] = visits_df['enrollment_time_months'] + visits_df['patient_time_months']
+        visits_df['time_months'] = visits_df['calendar_time_months']
+    else:
+        # If no enrollment data, assume all patients enrolled at time 0
+        # So patient time = calendar time
+        visits_df['time_months'] = visits_df['time_days'] / 30.44
     
     # Determine time range
     if end_time is None:
@@ -118,13 +136,13 @@ def compute_state_counts_vectorized(visits_df, time_points, enrollment_df, uniqu
     patient_to_idx = {pid: i for i, pid in enumerate(all_patients)}
     n_patients = len(all_patients)
     
-    # Create enrollment time array
+    # Create enrollment time array (already converted to months in the calling function)
     if enrollment_df is not None:
         enrollment_times = np.zeros(n_patients)
         for _, row in enrollment_df.iterrows():
             if row['patient_id'] in patient_to_idx:
                 idx = patient_to_idx[row['patient_id']]
-                enrollment_times[idx] = row.get('enrollment_months', 0)
+                enrollment_times[idx] = row['enrollment_time_days'] / 30.44
     else:
         enrollment_times = np.zeros(n_patients)  # All enrolled at time 0
     
@@ -173,8 +191,16 @@ def compute_state_counts_vectorized(visits_df, time_points, enrollment_df, uniqu
                 if time_since_last > 6:  # 6 months
                     patient_states[t_idx, patient_idx] = unique_states.index('No Further Visits')
                 else:
-                    # Use the state from the last visit
+                    # Use the state from the last visit, but handle Initial Treatment specially
                     state_name = visit_states[last_visit_idx]
+                    
+                    # If this is the first visit (visit index 0) and it's Initial Treatment,
+                    # keep them in Initial Treatment for up to 2 months
+                    if (last_visit_idx == 0 and 
+                        state_name == 'Initial Treatment' and 
+                        time_since_last <= 2):
+                        state_name = 'Initial Treatment'
+                    
                     if state_name in unique_states:
                         patient_states[t_idx, patient_idx] = unique_states.index(state_name)
     
@@ -217,13 +243,26 @@ def get_patient_states_at_time_vectorized(visits_df: pd.DataFrame, time_point: f
     idx = past_visits.groupby('patient_id')['time_months'].idxmax()
     last_visits = past_visits.loc[idx].copy()
     
-    # Vectorized state determination using np.where
+    # Vectorized state determination using np.where with Initial Treatment handling
     time_since_last = time_point - last_visits['time_months']
-    last_visits['current_state'] = np.where(
-        time_since_last > 6,
+    
+    # Check if each patient's most recent visit is their first visit
+    is_first_visit = last_visits['visit_num'] == 0
+    
+    # Vectorized state determination with Initial Treatment logic
+    conditions = [
+        time_since_last > 6,  # No further visits after 6 months
+        is_first_visit & (time_since_last <= 2) & (last_visits['treatment_state'] == 'Initial Treatment'),  # Still in initial period
+        True  # Default case
+    ]
+    
+    choices = [
         'No Further Visits',
-        last_visits['treatment_state']
-    )
+        'Initial Treatment',  # Keep in Initial Treatment for up to 2 months after first visit
+        last_visits['treatment_state']  # Use the visit's treatment state
+    ]
+    
+    last_visits['current_state'] = np.select(conditions, choices)
     
     # Filter to only enrolled patients
     last_visits = last_visits[last_visits['patient_id'].isin(enrolled_patients)]

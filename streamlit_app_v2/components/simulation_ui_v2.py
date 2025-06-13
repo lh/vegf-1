@@ -14,10 +14,15 @@ def render_recruitment_parameters() -> Dict[str, Any]:
     st.subheader("Recruitment Settings")
     
     # Radio buttons for recruitment mode
+    # Check session state for preset mode
+    default_mode_index = 0
+    if 'recruitment_mode' in st.session_state:
+        default_mode_index = 1 if st.session_state.recruitment_mode == "Constant Rate" else 0
+    
     recruitment_mode = st.radio(
         "Recruitment Mode",
         ["Fixed Total", "Constant Rate"],
-        index=0,
+        index=default_mode_index,
         horizontal=True,
         help="""
         **Fixed Total**: Specify the exact number of patients to recruit, distributed evenly over the simulation period.
@@ -37,8 +42,10 @@ def render_recruitment_parameters() -> Dict[str, Any]:
             # Calculate default based on Constant Rate if switching back
             if 'expected_total' in st.session_state and st.session_state.get('previous_mode') == 'Constant Rate':
                 default_patients = st.session_state.get('expected_total', 1000)
+            elif 'preset_patients' in st.session_state:
+                default_patients = st.session_state.preset_patients
             else:
-                default_patients = st.session_state.get('preset_patients', 1000)
+                default_patients = st.session_state.get('n_patients', 1000)
                 
             n_patients = st.number_input(
                 "Total Patients",
@@ -46,23 +53,29 @@ def render_recruitment_parameters() -> Dict[str, Any]:
                 max_value=50000,
                 value=default_patients,
                 step=10,
-                help="Total number of patients to recruit"
+                help="Total number of patients to recruit. They will be enrolled evenly throughout the simulation period."
             )
             recruitment_params['n_patients'] = n_patients
             # Store for mode switching
             st.session_state.n_patients = n_patients
             
         with col2:
+            # Get duration default value
+            duration_value = st.session_state.get('preset_duration', 
+                                                   st.session_state.get('duration_years', 2.0))
+            
             duration_years = st.number_input(
                 "Duration (Years)",
                 min_value=0.5,
                 max_value=20.0,
-                value=st.session_state.get('preset_duration', 2.0),
+                value=duration_value,
                 step=0.5,
                 format="%.1f",
                 help="Simulation duration in years"
             )
             recruitment_params['duration_years'] = duration_years
+            # Store for persistence
+            st.session_state.duration_years = duration_years
             
         with col3:
             # Calculate and display the rate
@@ -79,6 +92,10 @@ def render_recruitment_parameters() -> Dict[str, Any]:
             
     else:  # Constant Rate mode
         with col1:
+            # We need a container to properly control the layout
+            # Use a subheader-like label for consistency with Fixed Total
+            st.markdown("**Recruitment Rate**")
+            
             # For initial setup, we need to know the unit first to set proper limits
             # Check if there's a preset unit
             if 'rate_unit' in st.session_state:
@@ -102,10 +119,10 @@ def render_recruitment_parameters() -> Dict[str, Any]:
             if 'recruitment_rate' in st.session_state and st.session_state.get('rate_unit') == initial_rate_unit:
                 # Use preset value if it matches current unit
                 default_rate = st.session_state.recruitment_rate
-            elif 'n_patients' in st.session_state:
-                # Convert from total patients to rate
+            elif 'n_patients' in st.session_state and st.session_state.get('previous_mode') == 'Fixed Total':
+                # Convert from total patients to rate when switching from Fixed Total
                 n_patients = st.session_state.get('n_patients', 1000)
-                duration = st.session_state.get('preset_duration', 2.0)
+                duration = st.session_state.get('duration_years', st.session_state.get('preset_duration', 2.0))
                 if initial_rate_unit == "per week":
                     calculated_rate = n_patients / (duration * 52.14)
                     default_rate = max(0.1, round(calculated_rate, 1))
@@ -116,14 +133,15 @@ def render_recruitment_parameters() -> Dict[str, Any]:
                 # Use sensible defaults
                 default_rate = 20.0 if initial_rate_unit == "per week" else 80.0
                 
-            # Show the rate input first
+            # Show the rate input first - without label to avoid duplication
             recruitment_rate = st.number_input(
                 "Recruitment Rate",
                 min_value=min_rate,
                 max_value=max_rate,
                 value=default_rate,
                 step=step,
-                help=f"Number of patients to recruit {initial_rate_unit}"
+                help=f"Number of patients to recruit {initial_rate_unit}",
+                label_visibility="collapsed"
             )
             recruitment_params['recruitment_rate'] = recruitment_rate
             
@@ -132,22 +150,29 @@ def render_recruitment_parameters() -> Dict[str, Any]:
                 "Rate Unit",
                 ["per week", "per month"],
                 index=default_unit_index,
-                help="Choose whether to specify recruitment rate per week or per month"
+                help="Choose whether to specify recruitment rate per week or per month",
+                label_visibility="collapsed"
             )
             recruitment_params['rate_unit'] = rate_unit
             
         with col2:
             # Duration in middle column, consistent with Fixed Total mode
+            # Get duration default value
+            duration_value = st.session_state.get('preset_duration', 
+                                                   st.session_state.get('duration_years', 2.0))
+            
             duration_years = st.number_input(
                 "Duration (Years)",
                 min_value=0.5,
                 max_value=20.0,
-                value=st.session_state.get('preset_duration', 2.0),
+                value=duration_value,
                 step=0.5,
                 format="%.1f",
                 help="Simulation duration in years"
             )
             recruitment_params['duration_years'] = duration_years
+            # Store for persistence
+            st.session_state.duration_years = duration_years
             
         with col3:
             # Calculate expected total
@@ -174,6 +199,18 @@ def render_recruitment_parameters() -> Dict[str, Any]:
     
     # Track mode for intelligent switching
     st.session_state.previous_mode = recruitment_mode
+    
+    # Clear preset values after they've been used
+    if 'preset_patients' in st.session_state:
+        del st.session_state.preset_patients
+    if 'preset_duration' in st.session_state:
+        del st.session_state.preset_duration
+    if 'recruitment_mode' in st.session_state:
+        del st.session_state.recruitment_mode
+    if 'recruitment_rate' in st.session_state:
+        del st.session_state.recruitment_rate
+    if 'rate_unit' in st.session_state:
+        del st.session_state.rate_unit
     
     return recruitment_params
 
