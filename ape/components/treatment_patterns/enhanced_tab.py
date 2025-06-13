@@ -220,16 +220,24 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
         Understanding this helps optimise resource allocation and identify high-impact patient segments.
         """)
         
-        # Import workload analysis functions
+        # Import workload analysis functions - use optimized version
         try:
-            from ape.components.treatment_patterns.workload_analyzer import calculate_clinical_workload_attribution, format_workload_insight
+            from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
             from ape.components.treatment_patterns.workload_visualizations import (
                 create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
             )
             workload_available = True
         except ImportError:
-            workload_available = False
-            st.error("Workload analysis components not available")
+            # Fall back to original if optimized not available
+            try:
+                from ape.components.treatment_patterns.workload_analyzer import calculate_clinical_workload_attribution, format_workload_insight
+                from ape.components.treatment_patterns.workload_visualizations import (
+                    create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
+                )
+                workload_available = True
+            except ImportError:
+                workload_available = False
+                st.error("Workload analysis components not available")
         
         if workload_available:
             # Get visits data for workload analysis
@@ -436,16 +444,24 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
         Understanding this helps optimise resource allocation and identify high-impact patient segments.
         """)
         
-        # Import workload analysis functions
+        # Import workload analysis functions - use optimized version
         try:
-            from ape.components.treatment_patterns.workload_analyzer import calculate_clinical_workload_attribution, format_workload_insight
+            from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
             from ape.components.treatment_patterns.workload_visualizations import (
                 create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
             )
             workload_available = True
         except ImportError:
-            workload_available = False
-            st.error("❌ Workload analysis components not available")
+            # Fall back to original if optimized not available
+            try:
+                from ape.components.treatment_patterns.workload_analyzer import calculate_clinical_workload_attribution, format_workload_insight
+                from ape.components.treatment_patterns.workload_visualizations import (
+                    create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
+                )
+                workload_available = True
+            except ImportError:
+                workload_available = False
+                st.error("❌ Workload analysis components not available")
         
         if workload_available:
             # Get visits data for workload analysis
