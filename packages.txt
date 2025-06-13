@@ -1,0 +1,2 @@
+# packages.txt is used by Streamlit Cloud for apt-get dependencies
+# This file is intentionally empty but its presence may help with deployment
