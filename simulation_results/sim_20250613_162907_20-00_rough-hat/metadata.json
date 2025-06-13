@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250613_162907_20-00_rough-hat",
+  "protocol_name": "NHS Aflibercept Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 50000,
+  "duration_years": 20.0,
+  "seed": 42,
+  "timestamp": "2025-06-13T16:29:07.692073+01:00",
+  "runtime_seconds": 18.087696075439453,
+  "storage_type": "parquet",
+  "memorable_name": "rough-hat"
+}

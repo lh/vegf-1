@@ -48,6 +48,8 @@ input_data/*
 .DS_Store
 
 # Generated output
+output/
+!output/.gitkeep
 *.png
 individual_simulation_results.png
 mean_acuity_comparison.png
