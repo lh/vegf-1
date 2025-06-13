@@ -6,7 +6,7 @@ from simulation.patient_state import PatientState
 from simulation.clinical_model import ClinicalModel
 from simulation.abs import AgentBasedSimulation, Event
 from simulation.config import SimulationConfig
-from protocols.protocol_parser import ProtocolParser
+from ape.protocols.protocol_parser import ProtocolParser
 
 class ConfigWrapper:
     """Simple wrapper to provide clinical model parameters."""

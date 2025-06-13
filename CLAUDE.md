@@ -1,5 +1,11 @@
 At the start of each session, use the memory server to retrieve relevant project context and maintain continuity.
 
+## 📁 IMPORTANT: File Organization
+**ALWAYS consult WHERE_TO_PUT_THINGS.md before creating new files!**
+- Use `workspace/` for temporary development work
+- NEVER clutter the root directory with test files
+- See WHERE_TO_PUT_THINGS.md for the complete guide
+
 ## 📋 Active Implementation Instructions
 **IMPORTANT**: Check `instructions.md` in the project root for the current implementation plan and follow it exactly.
 

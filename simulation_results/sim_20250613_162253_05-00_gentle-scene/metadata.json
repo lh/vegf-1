@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250613_162253_05-00_gentle-scene",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 2000,
+  "duration_years": 5.0,
+  "seed": 42,
+  "timestamp": "2025-06-13T16:22:53.417694+01:00",
+  "runtime_seconds": 0.24612689018249512,
+  "storage_type": "parquet",
+  "memorable_name": "gentle-scene"
+}

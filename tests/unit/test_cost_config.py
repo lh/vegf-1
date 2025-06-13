@@ -57,7 +57,7 @@ class TestCostConfig:
         assert unknown_cost == 0.0
         
     def test_calculate_visit_cost_from_components(self, loaded_config):
-        """Test 1.3: Calculate visit costs from components"""
+        """Test 1.3: Calculate visit costs from ape.components"""
         # When I request cost for a visit type composed of components
         test_visit_cost = loaded_config.get_visit_cost('test_visit')
         

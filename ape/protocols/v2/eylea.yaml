@@ -1,0 +1,117 @@
+# Eylea Treat and Extend Protocol v1.0
+# ALL parameters must be explicitly defined - no defaults allowed
+
+name: "Eylea Treat and Extend"
+version: "1.0"
+created_date: "2024-01-15"
+author: "Clinical Team"
+description: "Standard treat-and-extend protocol for Eylea (aflibercept) based on clinical trial data"
+
+# Protocol timing parameters (NO DEFAULTS)
+protocol_type: "treat_and_extend"
+min_interval_days: 28  # 4 weeks - minimum time between visits
+max_interval_days: 112  # 16 weeks - maximum extension
+extension_days: 14  # 2 weeks - extend by this when stable
+shortening_days: 14  # 2 weeks - shorten by this when active
+
+# Disease state transitions - all probabilities must sum to 1.0
+disease_transitions:
+  NAIVE:
+    NAIVE: 0.0        # Cannot remain naive after first assessment
+    STABLE: 0.3       # 30% achieve stability quickly
+    ACTIVE: 0.6       # 60% have active disease
+    HIGHLY_ACTIVE: 0.1  # 10% have severe disease
+  STABLE:
+    NAIVE: 0.0        # Cannot return to naive
+    STABLE: 0.85      # 85% remain stable
+    ACTIVE: 0.15      # 15% develop recurrence
+    HIGHLY_ACTIVE: 0.0  # Rare to jump directly to highly active
+  ACTIVE:
+    NAIVE: 0.0        # Cannot return to naive
+    STABLE: 0.2       # 20% achieve stability with treatment
+    ACTIVE: 0.7       # 70% remain active
+    HIGHLY_ACTIVE: 0.1  # 10% progress to highly active
+  HIGHLY_ACTIVE:
+    NAIVE: 0.0        # Cannot return to naive
+    STABLE: 0.05      # 5% achieve stability (rare)
+    ACTIVE: 0.15      # 15% improve to active
+    HIGHLY_ACTIVE: 0.8  # 80% remain highly active
+
+# Treatment effect on disease transitions
+# These modify the base transitions when treatment is given
+treatment_effect_on_transitions:
+  NAIVE:
+    # No effect - naive always transitions regardless of treatment
+    multipliers: {}
+  STABLE:
+    # Treatment helps maintain stability
+    multipliers:
+      STABLE: 1.1     # 10% more likely to stay stable
+      ACTIVE: 0.9     # 10% less likely to become active
+  ACTIVE:
+    # Treatment promotes improvement
+    multipliers:
+      STABLE: 2.0     # Twice as likely to become stable
+      ACTIVE: 0.8     # 20% less likely to stay active
+      HIGHLY_ACTIVE: 0.5  # Half as likely to worsen
+  HIGHLY_ACTIVE:
+    # Treatment effect is limited but present
+    multipliers:
+      STABLE: 2.0     # Twice as likely to improve dramatically
+      ACTIVE: 1.5     # 50% more likely to improve
+      HIGHLY_ACTIVE: 0.75  # 25% less likely to remain severe
+
+# Vision change model - ETDRS letter changes per visit
+# All scenarios must be defined with mean and std
+vision_change_model:
+  naive_treated:
+    mean: 0    # First visit, no change yet
+    std: 1
+  naive_untreated:
+    mean: -2   # Untreated naive patients lose vision
+    std: 2
+  stable_treated:
+    mean: 1    # Small improvement when stable
+    std: 1
+  stable_untreated:
+    mean: 0    # Stable without treatment maintains
+    std: 1
+  active_treated:
+    mean: -1   # Slight loss despite treatment
+    std: 2
+  active_untreated:
+    mean: -3   # Significant loss without treatment
+    std: 2
+  highly_active_treated:
+    mean: -2   # Moderate loss with treatment
+    std: 2
+  highly_active_untreated:
+    mean: -5   # Severe loss without treatment
+    std: 3
+
+# Baseline vision distribution (ETDRS letters)
+baseline_vision:
+  mean: 70      # Typical AMD presentation
+  std: 10       # Reasonable variation
+  min: 20       # Legal blindness threshold
+  max: 90       # Excellent vision unlikely in AMD
+
+# Discontinuation rules - all criteria must be defined
+discontinuation_rules:
+  # Poor vision criteria
+  poor_vision_threshold: 35        # ETDRS letters
+  poor_vision_probability: 0.1     # 10% chance per visit when below threshold
+  
+  # High injection burden criteria  
+  high_injection_count: 20         # Number of injections
+  high_injection_probability: 0.02 # 2% chance per visit when above count
+  
+  # Long treatment duration criteria
+  long_treatment_months: 36        # 3 years
+  long_treatment_probability: 0.01 # 1% chance per visit after duration
+  
+  # Types of discontinuation
+  discontinuation_types:
+    - "planned"      # Patient/doctor decision
+    - "adverse"      # Due to adverse events
+    - "ineffective"  # Treatment not working
