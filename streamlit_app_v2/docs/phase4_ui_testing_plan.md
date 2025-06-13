@@ -11,76 +11,76 @@ This document provides a structured testing plan for manually verifying the Phas
 ## Test Cases
 
 ### 1. Initial State Verification
-- [ ] Verify "Fixed Total" is selected by default
-- [ ] Verify default values: 1000 patients, 2.0 years
-- [ ] Verify calculated rates are displayed in the info box
-- [ ] Verify the info box shows rates per month and per week
+- [x] Verify "Fixed Total" is selected by default
+- [x] Verify default values: 1000 patients, 2.0 years
+- [x] Verify calculated rates are displayed in the info box
+- [x] Verify the info box shows rates per month and per week
 
 ### 2. Fixed Total Mode Testing
-- [ ] Change patient count to 500
-  - [ ] Verify rates update automatically
-  - [ ] Verify calculation is correct (500 / 24 months ≈ 20.8 patients/month)
-- [ ] Change duration to 5 years
-  - [ ] Verify rates update automatically
-  - [ ] Verify calculation is correct (500 / 60 months ≈ 8.3 patients/month)
-- [ ] Test extreme values:
-  - [ ] Minimum (10 patients)
-  - [ ] Maximum (50,000 patients)
-  - [ ] Very short duration (0.5 years)
-  - [ ] Very long duration (20 years)
+- [x] Change patient count to 500
+  - [x] Verify rates update automatically
+  - [x] Verify calculation is correct (500 / 24 months ≈ 20.8 patients/month)
+- [x] Change duration to 5 years
+  - [x] Verify rates update automatically
+  - [x] Verify calculation is correct (500 / 60 months ≈ 8.3 patients/month)
+- [x] Test extreme values:
+  - [x] Minimum (10 patients)
+  - [x] Maximum (50,000 patients)
+  - [x] Very short duration (0.5 years)
+  - [x] Very long duration (20 years)
 
 ### 3. Constant Rate Mode Testing
-- [ ] Click "Constant Rate" radio button
-- [ ] Verify UI changes:
-  - [ ] "Total Patients" input disappears
-  - [ ] "Rate Unit" dropdown appears
-  - [ ] "Patients per week" input appears
-  - [ ] Info box shows "Expected total" instead of "Calculated rates"
-- [ ] Test with "per week" unit:
-  - [ ] Default should be 20 patients/week
-  - [ ] Verify expected total calculation (20 × 52.14 × 2 ≈ 2,085)
-  - [ ] Change rate to 50/week, verify total updates
-- [ ] Test with "per month" unit:
-  - [ ] Switch dropdown to "per month"
-  - [ ] Verify input changes to appropriate default (80/month)
-  - [ ] Verify expected total calculation
-  - [ ] Note mentions actual count will vary
+- [x] Click "Constant Rate" radio button
+- [x] Verify UI changes:
+  - [x] "Total Patients" input disappears
+  - [x] "Rate Unit" dropdown appears
+  - [x] "Patients per week" input appears
+  - [x] Info box shows "Expected total" instead of "Calculated rates"
+- [x] Test with "per week" unit:
+  - [x] Default should be 20 patients/week
+  - [x] Verify expected total calculation (20 × 52.14 × 2 ≈ 2,085)
+  - [x] Change rate to 50/week, verify total updates
+- [x] Test with "per month" unit:
+  - [x] Switch dropdown to "per month"
+  - [x] Verify input changes to appropriate default (80/month)
+  - [x] Verify expected total calculation
+  - [x] Note mentions actual count will vary
 
 ### 4. Preset Button Testing
-- [ ] Click "Small Trial" preset
-  - [ ] Verify switches to Fixed Total mode
-  - [ ] Verify sets 100 patients, 2 years
-- [ ] Click "Medium Trial" preset
-  - [ ] Verify switches to Fixed Total mode
-  - [ ] Verify sets 500 patients, 3 years
-- [ ] Click "Large Trial" preset
-  - [ ] Verify switches to Fixed Total mode
-  - [ ] Verify sets 2000 patients, 5 years
+- [x] Click "Small Trial" preset
+  - [x] Verify switches to Fixed Total mode
+  - [x] Verify sets 100 patients, 2 years
+- [x] Click "Medium Trial" preset
+  - [x] Verify switches to Fixed Total mode
+  - [x] Verify sets 500 patients, 3 years
+- [x] Click "Large Trial" preset
+  - [x] Verify switches to Fixed Total mode
+  - [x] Verify sets 2000 patients, 5 years
 - [ ] Click "Real-World" preset
   - [ ] Verify switches to Constant Rate mode
   - [ ] Verify sets 20 patients/week, 5 years
   - [ ] Verify shows expected total
 
 ### 5. Mode Switching Behavior
-- [ ] Start in Fixed Total with custom values
-- [ ] Switch to Constant Rate
-  - [ ] Verify duration is preserved
-  - [ ] Verify reasonable defaults for rate
-- [ ] Switch back to Fixed Total
-  - [ ] Verify duration is preserved
-  - [ ] Verify patient count returns to previous or default
+- [x] Start in Fixed Total with custom values
+- [x] Switch to Constant Rate
+  - [ ] Verify duration is preserved BUT interface changes the position of the years column - should be the same. Put the units dropdown below the number of patient, not to the left of it. Also, the number of patients should default to roughly whatever it was when the Fixed total was being used.
+  - [ ] Verify reasonable defaults for rate BUT the number of patients should default to roughly whatever it was when the Fixed total was being used.
+- [x] Switch back to Fixed Total
+  - [x] Verify duration is preserved
+  - [ ] Verify patient count returns to previous or default BUT again it should reflect whatever was calculated from the Constant Rate if available
 
 ### 6. Running Simulations
-- [ ] In Fixed Total mode:
-  - [ ] Set 100 patients, 1 year
-  - [ ] Run simulation
-  - [ ] Verify simulation completes successfully
-  - [ ] Check saved parameters include recruitment_mode: "Fixed Total"
-- [ ] In Constant Rate mode:
-  - [ ] Set 10 patients/week, 1 year
-  - [ ] Run simulation
-  - [ ] Verify simulation completes successfully
-  - [ ] Check saved parameters include:
+- [x] In Fixed Total mode:
+  - [x] Set 100 patients, 1 year
+  - [x] Run simulation
+  - [x] Verify simulation completes successfully
+  - [x] Check saved parameters include recruitment_mode: "Fixed Total"
+- [ ] In Constant Rate mode: FAILING
+  - [x] Set 10 patients/week, 1 year
+  - [x] Run simulation
+  - [ ] Verify simulation completes successfully FAILING
+  - [x] Check saved parameters include:
     - recruitment_mode: "Constant Rate"
     - recruitment_rate: 10
     - rate_unit: "per week"

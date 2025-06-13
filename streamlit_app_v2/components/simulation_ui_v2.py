@@ -34,15 +34,23 @@ def render_recruitment_parameters() -> Dict[str, Any]:
     
     if recruitment_mode == "Fixed Total":
         with col1:
+            # Calculate default based on Constant Rate if switching back
+            if 'expected_total' in st.session_state and st.session_state.get('previous_mode') == 'Constant Rate':
+                default_patients = st.session_state.get('expected_total', 1000)
+            else:
+                default_patients = st.session_state.get('preset_patients', 1000)
+                
             n_patients = st.number_input(
                 "Total Patients",
                 min_value=10,
                 max_value=50000,
-                value=st.session_state.get('preset_patients', 1000),
+                value=default_patients,
                 step=10,
                 help="Total number of patients to recruit"
             )
             recruitment_params['n_patients'] = n_patients
+            # Store for mode switching
+            st.session_state.n_patients = n_patients
             
         with col2:
             duration_years = st.number_input(
@@ -71,21 +79,47 @@ def render_recruitment_parameters() -> Dict[str, Any]:
             
     else:  # Constant Rate mode
         with col1:
+            # First show the rate unit selector
+            # Check if there's a preset unit
+            if 'rate_unit' in st.session_state:
+                default_index = 0 if st.session_state.rate_unit == "per week" else 1
+            else:
+                default_index = 0
+                
             rate_unit = st.selectbox(
                 "Rate Unit",
                 ["per week", "per month"],
-                index=0
+                index=default_index
             )
             recruitment_params['rate_unit'] = rate_unit
             
-        with col2:
+            # Check for preset values first
+            if 'recruitment_rate' in st.session_state and st.session_state.get('rate_unit') == rate_unit:
+                # Use preset value if it matches current unit
+                default_rate = st.session_state.recruitment_rate
+            elif 'n_patients' in st.session_state:
+                # Convert from total patients to rate
+                n_patients = st.session_state.get('n_patients', 1000)
+                duration = st.session_state.get('preset_duration', 2.0)
+                if rate_unit == "per week":
+                    calculated_rate = n_patients / (duration * 52.14)
+                    default_rate = max(0.1, round(calculated_rate, 1))
+                else:  # per month
+                    calculated_rate = n_patients / (duration * 12)
+                    default_rate = max(1.0, round(calculated_rate, 0))
+            else:
+                # Use sensible defaults
+                if rate_unit == "per week":
+                    default_rate = 20.0
+                else:  # per month
+                    default_rate = 80.0
+            
+            # Set limits based on unit
             if rate_unit == "per week":
-                default_rate = 20.0
                 min_rate = 0.1
                 max_rate = 1000.0
                 step = 0.1
             else:  # per month
-                default_rate = 80.0
                 min_rate = 1.0
                 max_rate = 5000.0
                 step = 1.0
@@ -100,7 +134,8 @@ def render_recruitment_parameters() -> Dict[str, Any]:
             )
             recruitment_params['recruitment_rate'] = recruitment_rate
             
-        with col3:  # Duration and calculations in third column
+        with col2:
+            # Duration in middle column, consistent with Fixed Total mode
             duration_years = st.number_input(
                 "Duration (Years)",
                 min_value=0.5,
@@ -111,6 +146,8 @@ def render_recruitment_parameters() -> Dict[str, Any]:
                 help="Simulation duration in years"
             )
             recruitment_params['duration_years'] = duration_years
+            
+        with col3:
             # Calculate expected total
             if rate_unit == "per week":
                 expected_total = int(recruitment_rate * duration_years * 52.14)
@@ -122,6 +159,9 @@ def render_recruitment_parameters() -> Dict[str, Any]:
             recruitment_params['expected_total'] = expected_total
             recruitment_params['rate_per_day'] = rate_per_day
             
+            # Store for mode switching
+            st.session_state.expected_total = expected_total
+            
             st.info(f"""
             **Expected total:** ~{expected_total:,} patients
             
@@ -129,6 +169,9 @@ def render_recruitment_parameters() -> Dict[str, Any]:
             
             Recruitment continues throughout the entire simulation period.
             """)
+    
+    # Track mode for intelligent switching
+    st.session_state.previous_mode = recruitment_mode
     
     return recruitment_params
 

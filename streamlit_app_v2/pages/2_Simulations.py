@@ -228,10 +228,12 @@ if st.session_state.get('simulation_running', False):
                 recruitment_mode="Fixed Total"
             )
         else:
-            # Constant Rate Mode
+            # Constant Rate Mode - use expected total as n_patients for now
+            # TODO: Update V2 engine to support true constant rate mode
+            expected_total = recruitment_params.get('expected_total', 1000)
             results = runner.run(
                 engine_type=recruitment_params['engine_type'],
-                n_patients=0,  # Will be calculated by engine
+                n_patients=expected_total,  # Use expected total
                 duration_years=recruitment_params['duration_years'],
                 seed=recruitment_params['seed'],
                 show_progress=False,  # We have our own progress bar
