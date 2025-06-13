@@ -6,7 +6,7 @@ textColor = "#262730"
 font = "sans serif"
 
 [server]
-port = 8502
+# Don't specify port - let Streamlit Cloud choose
 enableCORS = true  # Changed to true to be compatible with XSRF protection
 enableXsrfProtection = true
 maxUploadSize = 200
