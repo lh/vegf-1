@@ -13,6 +13,7 @@ pyarrow>=12.0.0  # For Parquet support
 matplotlib>=3.7.0
 seaborn>=0.12.0
 plotly>=5.17.0  # For interactive visualizations including Sankey diagrams
+altair>=5.0.0  # For faster, declarative visualizations
 
 # Configuration
 pyyaml>=6.0

@@ -228,9 +228,24 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
         # Import workload analysis functions - use optimized version
         try:
             from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
+            
+            # Try Altair version first for dual bar chart
+            altair_available = False
+            try:
+                from ape.components.treatment_patterns.workload_visualizations_altair import (
+                    create_dual_bar_chart_altair, get_workload_insight_summary
+                )
+                altair_available = True
+            except ImportError:
+                pass
+            
+            # Import Plotly versions (some may be overridden by Altair)
             from ape.components.treatment_patterns.workload_visualizations_optimized import (
-                create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
+                create_dual_bar_chart, create_impact_pyramid, create_bubble_chart
             )
+            if not altair_available:
+                from ape.components.treatment_patterns.workload_visualizations_optimized import get_workload_insight_summary
+            
             workload_available = True
         except ImportError:
             # Fall back to original visualizations if optimized not available
@@ -240,6 +255,7 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
                 )
                 workload_available = True
+                altair_available = False
             except ImportError:
                 # Fall back to original implementation completely
                 try:
@@ -248,8 +264,10 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                         create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
                     )
                     workload_available = True
+                    altair_available = False
                 except ImportError:
                     workload_available = False
+                    altair_available = False
                     st.error("Workload analysis components not available")
         
         if workload_available:
@@ -312,12 +330,18 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     
                     if "Dual Bar Chart" in viz_option:
                         with st.spinner("Creating dual bar chart..."):
-                            fig = create_cached_dual_bar_chart(workload_data, tufte_mode)
-                            
-                            # Apply export configuration
-                            from ape.utils.export_config import get_export_config
-                            config = get_export_config(filename="clinical_workload_dual_bars")
-                            st.plotly_chart(fig, use_container_width=True, config=config)
+                            if altair_available:
+                                # Use Altair for faster rendering
+                                fig = create_dual_bar_chart_altair(workload_data, tufte_mode)
+                                st.altair_chart(fig, use_container_width=True)
+                            else:
+                                # Fall back to Plotly
+                                fig = create_cached_dual_bar_chart(workload_data, tufte_mode)
+                                
+                                # Apply export configuration
+                                from ape.utils.export_config import get_export_config
+                                config = get_export_config(filename="clinical_workload_dual_bars")
+                                st.plotly_chart(fig, use_container_width=True, config=config)
                             
                             st.markdown("""
                             **Understanding the Dual Bar Chart:**
@@ -569,12 +593,18 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     
                     if "Dual Bar Chart" in viz_option:
                         with st.spinner("Creating dual bar chart..."):
-                            fig = create_cached_dual_bar_chart(workload_data, tufte_mode)
-                            
-                            # Apply export configuration
-                            from ape.utils.export_config import get_export_config
-                            config = get_export_config(filename="clinical_workload_dual_bars")
-                            st.plotly_chart(fig, use_container_width=True, config=config)
+                            if altair_available:
+                                # Use Altair for faster rendering
+                                fig = create_dual_bar_chart_altair(workload_data, tufte_mode)
+                                st.altair_chart(fig, use_container_width=True)
+                            else:
+                                # Fall back to Plotly
+                                fig = create_cached_dual_bar_chart(workload_data, tufte_mode)
+                                
+                                # Apply export configuration
+                                from ape.utils.export_config import get_export_config
+                                config = get_export_config(filename="clinical_workload_dual_bars")
+                                st.plotly_chart(fig, use_container_width=True, config=config)
                             
                             st.markdown("""
                             **Understanding the Dual Bar Chart:**
