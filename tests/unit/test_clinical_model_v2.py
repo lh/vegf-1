@@ -1,7 +1,14 @@
 import pytest
 import numpy as np
 from simulation.clinical_model import ClinicalModel, DiseaseState
-from tests.unit.test_vision_recording import ConfigWrapper
+
+
+class ConfigWrapper:
+    """Simple config wrapper for testing."""
+    def __init__(self, parameters, protocol):
+        self.parameters = parameters
+        self.protocol = protocol
+
 
 @pytest.fixture
 def clinical_model():

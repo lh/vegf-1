@@ -50,8 +50,10 @@ def create_interval_distribution_chart(transitions_df):
     fig.update_layout(
         title="",  # Remove title for Tufte style
         xaxis=dict(
-            title="Interval Category",
-            titlefont=dict(size=TUFTE_FONT_SIZES['label']),
+            title=dict(
+                text="Interval Category",
+                font=dict(size=TUFTE_FONT_SIZES['label'])
+            ),
             tickfont=dict(size=TUFTE_FONT_SIZES['tick']),
             showline=True,
             linewidth=TUFTE_LINE_WEIGHTS['axis'],
@@ -63,8 +65,10 @@ def create_interval_distribution_chart(transitions_df):
             tickcolor=TUFTE_COLORS['neutral']
         ),
         yaxis=dict(
-            title="Number of Visits",
-            titlefont=dict(size=TUFTE_FONT_SIZES['label']),
+            title=dict(
+                text="Number of Visits",
+                font=dict(size=TUFTE_FONT_SIZES['label'])
+            ),
             tickfont=dict(size=TUFTE_FONT_SIZES['tick']),
             showline=True,
             linewidth=TUFTE_LINE_WEIGHTS['axis'],
@@ -165,8 +169,10 @@ def create_gap_analysis_chart_tufte(visits_df):
     fig.update_layout(
         title="",  # Empty title to avoid "undefined" display
         xaxis=dict(
-            title="Number of Patients",
-            titlefont=dict(size=TUFTE_FONT_SIZES['label']),
+            title=dict(
+                text="Number of Patients",
+                font=dict(size=TUFTE_FONT_SIZES['label'])
+            ),
             tickfont=dict(size=TUFTE_FONT_SIZES['tick']),
             showgrid=False,
             zeroline=False,

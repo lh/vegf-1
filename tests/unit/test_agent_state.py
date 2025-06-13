@@ -1,7 +1,6 @@
 import pytest
 from datetime import datetime, timedelta
 from simulation.agent_state import AgentState
-from ape.protocols.protocol_parser import ProtocolParser
 from simulation.clinical_model import ClinicalModel
 from simulation.config import SimulationConfig
 
@@ -44,7 +43,17 @@ def config():
                 }
             }
         },
-            protocol=ProtocolParser().load_simulation_config("test_simulation").protocol,
+            protocol={
+                "name": "test_protocol",
+                "spec": {
+                    "min_interval_days": 28,
+                    "max_interval_days": 84,
+                    "treatment": {
+                        "loading_doses": 3,
+                        "effectiveness": 0.8
+                    }
+                }
+            },
             simulation_type="test",
             num_patients=1,
             duration_days=365,

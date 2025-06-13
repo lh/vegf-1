@@ -8,15 +8,9 @@ APE-specific defaults and icon mappings.
 from typing import Optional, Dict, Any, List
 import streamlit as st
 
-# Try to import from PyPI package first, fall back to local implementation
-try:
-    from streamlit_carbon_button import carbon_button, CarbonIcons
-    CARBON_AVAILABLE = True
-except ImportError:
-    from .carbon_button_local import carbon_button, CarbonIcons
-    CARBON_AVAILABLE = False
-    import warnings
-    warnings.warn("Using local carbon button implementation as streamlit-carbon-button is not available")
+from streamlit_carbon_button import carbon_button, CarbonIcons
+
+CARBON_AVAILABLE = True
 
 # Icon mapping based on available Carbon icons (18 total)
 # Maps semantic names to actual CarbonIcons

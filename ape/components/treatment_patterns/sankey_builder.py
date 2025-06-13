@@ -2,12 +2,17 @@
 
 import plotly.graph_objects as go
 import pandas as pd
+import gc
 from ape.utils.visualization_modes import get_mode_colors
 from .pattern_analyzer import STATE_COLOR_MAPPING, get_treatment_state_colors
+from .memory_fix import with_memory_cleanup, clear_plotly_cache
 
 
+@with_memory_cleanup
 def create_treatment_pattern_sankey(transitions_df):
     """Create Sankey diagram of treatment patterns."""
+    # Clear any previous Plotly cache
+    clear_plotly_cache()
     # Get colors from central system
     treatment_colors = get_treatment_state_colors()
     
