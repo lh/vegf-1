@@ -62,11 +62,17 @@ def create_treatment_state_streamgraph(
         fig.update_layout(height=height)
         return fig
     
+    # Get enrollment data if available
+    enrollment_df = None
+    if hasattr(results, 'get_patients_df'):
+        enrollment_df = results.get_patients_df()
+    
     # Generate time series data
     with st.spinner("Generating time series data..."):
         time_series_df = generate_patient_state_time_series(
             visits_df,
-            time_resolution=time_resolution
+            time_resolution=time_resolution,
+            enrollment_df=enrollment_df
         )
     
     if len(time_series_df) == 0:

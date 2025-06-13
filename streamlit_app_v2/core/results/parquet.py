@@ -153,6 +153,11 @@ class ParquetResults(SimulationResults):
         
         return result_df
         
+    def get_patients_df(self) -> pd.DataFrame:
+        """Get patient summary data as DataFrame including enrollment info."""
+        patients_path = self.data_path / 'patients.parquet'
+        return pd.read_parquet(patients_path)
+        
     def get_visits_df(self) -> pd.DataFrame:
         """Get all visits as DataFrame with discontinuation/retreatment info."""
         visits_path = self.data_path / 'visits.parquet'

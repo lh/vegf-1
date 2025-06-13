@@ -2,7 +2,7 @@
 
 **IMPORTANT**: This is the active implementation plan. Always refer to this document when working on the current feature.
 
-## 🚀 Current Phase: Staggered Enrollment Implementation - Phase 2 Data Pipeline
+## 🚀 Current Phase: Staggered Enrollment Implementation - Phase 3 Fix Streamgraph ✅ COMPLETE
 
 ### Overview
 The V2 simulation engines currently implement unrealistic instant recruitment where all patients exist from day 0. This needs to be replaced with proper staggered enrollment as was implemented in V1. The rectangular streamgraph shape revealed this issue - all patients are created at simulation start with only initial visits staggered across the first month.
@@ -58,11 +58,11 @@ Two mutually exclusive modes (user chooses one):
 - [x] Implement strict type checking (datetime vs int days)
 - [x] Fix timing bug where first visits occurred before enrollment
 
-#### Phase 3: Fix Streamgraph (1 day)
-- [ ] Update time_series_generator.py to respect enrollment dates
-- [ ] Add check: `if enrollment_time <= time_point`
-- [ ] Verify streamgraph shows wedge shape (growing patient count)
-- [ ] Test with both calendar and patient time views
+#### Phase 3: Fix Streamgraph (1 day) ✅ COMPLETE
+- [x] Update time_series_generator.py to respect enrollment dates
+- [x] Add check: `if enrollment_time <= time_point`
+- [x] Verify streamgraph shows wedge shape (growing patient count)
+- [x] Test with both calendar and patient time views
 
 #### Phase 4: UI Integration (1-2 days)
 - [ ] Add recruitment mode radio buttons to Simulations page
@@ -140,7 +140,7 @@ arrival_times = np.cumsum(inter_arrival_times)
 ## 📊 Success Metrics
 
 ### Staggered Enrollment Implementation:
-- [ ] Streamgraph shows wedge shape (continuous growth)
+- [x] Streamgraph shows wedge shape (continuous growth)
 - [x] Enrollment follows Poisson distribution (verified with K-S test)
 - [ ] UI clearly shows mutual exclusivity of modes
 - [ ] All visualizations handle varying cohort sizes

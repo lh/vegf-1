@@ -13,7 +13,7 @@ sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
 from core.results import SimulationResults, ParquetResults, ResultsFactory
 from core.results.base import SimulationMetadata
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def create_mock_v2_results(n_patients=100):
@@ -24,25 +24,46 @@ def create_mock_v2_results(n_patients=100):
     for i in range(n_patients):
         patient_id = f"P{i:04d}"
         
+        # Add enrollment date - simulate staggered enrollment
+        enrollment_date = datetime(2024, 1, 1) + timedelta(days=i * 3)  # Every 3 days
+        
         # Create visits (monthly for 1 year)
         visits = []
+        visit_history = []
         for month in range(12):
+            visit_date = enrollment_date + timedelta(days=(month + 1) * 30)  # First visit 30 days after enrollment
             visits.append({
                 'time': month * 30,  # days
                 'injected': True,
                 'vision': 70 - month * 0.5  # Gradual decline
             })
+            visit_history.append({
+                'date': visit_date,
+                'treatment_given': True,
+                'vision': 70 - month * 0.5,
+                'disease_state': 'STABLE'
+            })
         
         # Create a mock patient object instead of dict
         class MockPatient:
-            def __init__(self, pid, visits_list):
+            def __init__(self, pid, visits_list, visit_hist, enroll_date):
                 self.patient_id = pid
                 self.visits = visits_list
+                self.visit_history = visit_hist
                 self.baseline_vision = 70
                 self.final_vision = 64
                 self.current_vision = 64
+                self.enrollment_date = enroll_date
+                self.is_discontinued = False
+                self.discontinuation_date = None
+                self.discontinuation_type = None
+                self.discontinuation_reason = None
+                self.pre_discontinuation_vision = None
+                self.injection_count = len([v for v in visit_hist if v['treatment_given']])
+                self.retreatment_count = 0
+                self.current_state = 'STABLE'
                 
-        patient_histories[patient_id] = MockPatient(patient_id, visits)
+        patient_histories[patient_id] = MockPatient(patient_id, visits, visit_history, enrollment_date)
     
     # Create mock V2Results object
     class MockV2Results:
