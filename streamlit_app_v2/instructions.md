@@ -49,12 +49,14 @@ Two mutually exclusive modes (user chooses one):
 - [x] Update edge case tests for stochastic enrollment
 - [x] Verify implementation with visualization script
 
-#### Phase 2: Data Pipeline (1-2 days)
-- [ ] Update Parquet writer to include enrollment_date
-- [ ] Add enrollment_time_days field (days from simulation start)
-- [ ] Ensure visit times are relative to enrollment
-- [ ] Test data integrity with small simulations
-- [ ] Verify late enrollees are handled correctly
+#### Phase 2: Data Pipeline (1-2 days) ✅ COMPLETE
+- [x] Update Parquet writer to include enrollment_date
+- [x] Add enrollment_time_days field (days from simulation start)
+- [x] Ensure visit times are relative to enrollment
+- [x] Test data integrity with small simulations
+- [x] Verify late enrollees are handled correctly
+- [x] Implement strict type checking (datetime vs int days)
+- [x] Fix timing bug where first visits occurred before enrollment
 
 #### Phase 3: Fix Streamgraph (1 day)
 - [ ] Update time_series_generator.py to respect enrollment dates
@@ -153,6 +155,15 @@ arrival_times = np.cumsum(inter_arrival_times)
 - ✅ Updated edge case tests to handle stochastic variations
 - ✅ Verified enrollment spans entire simulation period (not all at day 0)
 - ✅ Created verification script showing proper distribution
+
+### Phase 2 Accomplishments (2025-01-13):
+- ✅ Updated ParquetWriter to save enrollment_date and enrollment_time_days
+- ✅ Implemented strict type checking for datetime vs int days
+- ✅ Fixed timing bug where first visits could occur before enrollment
+- ✅ All visit times now correctly relative to patient enrollment
+- ✅ Created comprehensive tests for enrollment data integrity
+- ✅ Verified late enrollees have proportionally fewer visits
+- ✅ Updated test fixtures to include enrollment dates
 
 ---
 
