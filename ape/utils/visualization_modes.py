@@ -245,14 +245,7 @@ def init_visualization_mode():
     # Render selector in sidebar
     mode = VisualizationMode.render_mode_selector()
     
-    # Add keyboard shortcut hint
-    if st.sidebar.checkbox("Show Keyboard Shortcuts", value=False):
-        st.sidebar.markdown("""
-        **Keyboard Shortcuts** (coming soon):
-        - `P`: Switch to Presentation Mode
-        - `A`: Switch to Analysis Mode
-        - `E`: Export current view
-        """)
+    # Keyboard shortcuts removed - not implemented in Streamlit context
     
     return mode
 

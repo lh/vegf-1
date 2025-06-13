@@ -53,7 +53,12 @@ def get_export_config(
         'displayModeBar': True,
         'displaylogo': False,
         'modeBarButtonsToAdd': ['toImage'],
-        'modeBarButtonsToRemove': ['pan2d', 'lasso2d', 'select2d', 'autoScale2d']
+        'modeBarButtonsToRemove': ['pan2d', 'lasso2d', 'select2d', 'autoScale2d'],
+        # Disable keyboard shortcuts that don't work well in Streamlit
+        'doubleClick': False,
+        'showTips': False,
+        'showAxisDragHandles': False,
+        'showAxisRangeEntryBoxes': False
     }
     
     return config
@@ -153,11 +158,36 @@ def apply_export_config(fig, filename: str = "chart", **kwargs) -> Dict[str, Any
 # Convenience function for common chart types
 def get_sankey_export_config() -> Dict[str, Any]:
     """Get export config optimized for Sankey diagrams."""
-    return get_export_config(
+    # For Sankey, we want minimal interaction - just view and export
+    config = get_export_config(
         filename="treatment_pattern_sankey",
         width=1400,
         height=800
     )
+    
+    # Remove all interaction buttons except download
+    config['modeBarButtonsToRemove'] = [
+        'pan2d', 'zoom2d', 'zoomIn2d', 'zoomOut2d', 
+        'autoScale2d', 'resetScale2d', 'lasso2d', 
+        'select2d', 'toggleSpikelines', 'hoverClosestCartesian',
+        'hoverCompareCartesian'
+    ]
+    
+    # Only keep the download button
+    config['modeBarButtonsToAdd'] = ['toImage']
+    
+    # Disable all interactivity that might show keyboard shortcuts
+    config.update({
+        'staticPlot': False,  # Keep false so download still works
+        'scrollZoom': False,
+        'doubleClick': False,
+        'showTips': False,
+        'showAxisDragHandles': False,
+        'showAxisRangeEntryBoxes': False,
+        'displayModeBar': 'hover'  # Only show on hover
+    })
+    
+    return config
 
 
 def get_line_chart_export_config() -> Dict[str, Any]:
