@@ -2,14 +2,16 @@
 
 **IMPORTANT**: This is the active implementation plan. Always refer to this document when working on the current feature.
 
-## 🚀 Current Phase: Staggered Enrollment Implementation - Phase 3 Fix Streamgraph ✅ COMPLETE
+## 🚀 Current Phase: Staggered Enrollment Implementation - Ready for Phase 4
 
 ### Overview
 The V2 simulation engines currently implement unrealistic instant recruitment where all patients exist from day 0. This needs to be replaced with proper staggered enrollment as was implemented in V1. The rectangular streamgraph shape revealed this issue - all patients are created at simulation start with only initial visits staggered across the first month.
 
 **Phase 1 Status**: ✅ COMPLETE (2025-01-13) - Core engine changes implemented
-**Current Task**: Update data pipeline to include enrollment dates  
-**Timeline**: 7-10 days total (Phase 1 complete, 5-8 days remaining)
+**Phase 2 Status**: ✅ COMPLETE (2025-01-13) - Data pipeline updated
+**Phase 3 Status**: ✅ COMPLETE (2025-06-13) - Streamgraph shows wedge shape
+**Current Task**: Phase 4 - UI Integration for recruitment modes
+**Timeline**: 7-10 days total (3 phases complete, ~2-4 days remaining)
 **Approach**: Replace instant recruitment entirely (no real-world use case)
 
 ### 📍 Key Documents
@@ -164,6 +166,16 @@ arrival_times = np.cumsum(inter_arrival_times)
 - ✅ Created comprehensive tests for enrollment data integrity
 - ✅ Verified late enrollees have proportionally fewer visits
 - ✅ Updated test fixtures to include enrollment dates
+
+---
+
+### Phase 3 Accomplishments (2025-06-13):
+- ✅ Updated time_series_generator.py to filter patients by enrollment date
+- ✅ Added enrollment time checks to only count enrolled patients at each time point
+- ✅ Streamgraph now shows proper wedge shape (growing from 0 to full patient count)
+- ✅ Percentage view correctly normalizes among enrolled patients only
+- ✅ Tested with multiple time resolutions (week, month, quarter) - all show wedge
+- ✅ Verified in actual UI with 10,000 patient simulation
 
 ---
 
