@@ -1,0 +1,104 @@
+name: Sync Deployment Branch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      # Only sync when these files change
+      - 'APE.py'
+      - 'pages/**'
+      - 'ape/**'
+      - 'simulation_v2/**'
+      - 'simulation/**'
+      - 'visualization/**'
+      - 'assets/**'
+      - 'protocols/**'
+      - 'requirements.txt'
+      - 'README.md'
+      - 'CLAUDE.md'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync-deployment:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+      
+      - name: Sync deployment branch
+        run: |
+          echo "🔄 Starting deployment sync..."
+          
+          # Fetch all branches
+          git fetch origin
+          
+          # Checkout deployment branch
+          git checkout deployment
+          
+          # Merge main with custom strategy
+          echo "🔀 Merging main branch changes..."
+          git merge origin/main --strategy=ours --no-commit --allow-unrelated-histories || true
+          
+          # Selectively checkout files from main
+          echo "📁 Copying deployment files from main..."
+          git checkout origin/main -- \
+            APE.py \
+            pages/ \
+            ape/ \
+            assets/ \
+            protocols/ \
+            simulation_v2/ \
+            simulation/ \
+            visualization/ \
+            requirements.txt \
+            README.md \
+            CLAUDE.md \
+            .streamlit/config.toml \
+            || true
+          
+          # Remove submodules if they somehow got included
+          echo "🧹 Cleaning up submodules..."
+          rm -rf aflibercept_2mg_data eylea_high_dose_data vegf_literature_data 2>/dev/null || true
+          git rm -rf aflibercept_2mg_data eylea_high_dose_data vegf_literature_data 2>/dev/null || true
+          
+          # Remove any test/dev directories
+          echo "🗑️ Removing development files..."
+          git rm -rf tests/ test_*.py dev/ scripts/dev/ meta/ docs/ archive/ workspace/ 2>/dev/null || true
+          
+          # Check if there are changes to commit
+          if git diff --cached --quiet; then
+            echo "✅ No changes to sync"
+          else
+            echo "💾 Committing changes..."
+            git commit -m "🔄 Auto-sync with main - $(date +%Y-%m-%d)" \
+              -m "Synced changes from main branch while maintaining clean deployment structure"
+            
+            echo "📤 Pushing to deployment branch..."
+            git push origin deployment
+            
+            echo "✅ Deployment branch synced successfully!"
+          fi
+      
+      - name: Create sync summary
+        if: success()
+        run: |
+          echo "## Deployment Sync Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Date**: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Main branch commit**: $(git rev-parse origin/main)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deployment branch updated**: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Files synced:" >> $GITHUB_STEP_SUMMARY
+          echo "- Core app files (APE.py, pages/, ape/)" >> $GITHUB_STEP_SUMMARY
+          echo "- Simulation engine (simulation_v2/)" >> $GITHUB_STEP_SUMMARY
+          echo "- Visualization components" >> $GITHUB_STEP_SUMMARY
+          echo "- Requirements and configuration" >> $GITHUB_STEP_SUMMARY
