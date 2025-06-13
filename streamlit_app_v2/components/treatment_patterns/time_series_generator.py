@@ -73,20 +73,29 @@ def generate_patient_state_time_series(
             enrollment_df['patient_id'],
             enrollment_df['enrollment_time_days'] / 30.44
         ))
+        
+        # Pre-compute enrolled counts for all time points at once (major optimization)
+        enrollment_months = enrollment_df['enrollment_time_days'].values / 30.44
+        enrollment_months_sorted = np.sort(enrollment_months)
+        # Use searchsorted for O(log n) lookup per time point instead of O(n)
+        enrolled_at_time = np.searchsorted(enrollment_months_sorted, time_points, side='right')
+    else:
+        # If no enrollment data, all patients enrolled at time 0
+        enrolled_at_time = np.full(len(time_points), total_patients)
     
     # Prepare result list
     results = []
     
     # For each time point, determine each patient's state
-    for t in time_points:
+    for i, t in enumerate(time_points):
         # Count patients in each state at this time
         state_counts = get_patient_states_at_time(visits_df, t, end_time, enrollment_times)
         
+        # Get pre-computed enrolled count (much faster than counting in loop)
+        enrolled_count = enrolled_at_time[i]
+        
         # Add to results
         for state, count in state_counts.items():
-            # For percentage, use only enrolled patients at this time
-            enrolled_count = sum(1 for pid in all_patients 
-                               if enrollment_times.get(pid, 0) <= t)
             percentage = (count / enrolled_count * 100) if enrolled_count > 0 else 0
             
             results.append({
@@ -114,19 +123,23 @@ def get_patient_states_at_time(visits_df: pd.DataFrame, time_point: float, sim_e
     # Filter visits before or at this time point
     past_visits = visits_df[visits_df['time_months'] <= time_point].copy()
     
-    # Get all unique patients
-    all_patients = set(visits_df['patient_id'].unique())
+    # Get all unique patients (no need for set conversion)
+    all_patients = visits_df['patient_id'].unique()
     
     # If we have enrollment times, filter to only enrolled patients
     if enrollment_times:
-        enrolled_patients = {pid for pid in all_patients 
-                           if enrollment_times.get(pid, 0) <= time_point}
-        # Not-yet-enrolled patients don't count
+        # Vectorized enrollment check for better performance
+        enrolled_mask = np.array([
+            enrollment_times.get(pid, 0) <= time_point 
+            for pid in all_patients
+        ])
+        enrolled_patients = set(all_patients[enrolled_mask])
+        
         if not enrolled_patients:
             return {}  # No patients enrolled yet
     else:
         # If no enrollment data, assume all patients enrolled at time 0
-        enrolled_patients = all_patients
+        enrolled_patients = set(all_patients)
     
     if len(past_visits) == 0:
         # All enrolled patients are pre-treatment
@@ -137,12 +150,13 @@ def get_patient_states_at_time(visits_df: pd.DataFrame, time_point: float, sim_e
     last_visits = past_visits.loc[idx].copy()
     
     # Calculate time since last visit
-    last_visits['time_since_last'] = time_point - last_visits['time_months']
+    time_since_last = time_point - last_visits['time_months']
     
-    # Determine states
-    last_visits['current_state'] = last_visits.apply(
-        lambda row: 'No Further Visits' if row['time_since_last'] > 6 else row['treatment_state'],
-        axis=1
+    # Vectorized state determination using np.where instead of apply
+    last_visits['current_state'] = np.where(
+        time_since_last > 6,
+        'No Further Visits',
+        last_visits['treatment_state']
     )
     
     # Filter to only enrolled patients
