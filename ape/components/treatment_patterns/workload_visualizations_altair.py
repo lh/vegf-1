@@ -113,9 +113,7 @@ def create_dual_bar_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool
                            orient='top',
                            labelFontSize=TUFTE_FONT_SIZES['tick'],
                            symbolSize=100,
-                           direction='horizontal',
-                           anchor='middle',
-                           padding=10
+                           direction='horizontal'
                        )),
         opacity=alt.condition(
             alt.datum.Metric == '% of Patients',

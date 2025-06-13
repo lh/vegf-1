@@ -329,6 +329,8 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     tufte_mode = True  # Use clean styling
                     
                     if "Dual Bar Chart" in viz_option:
+                        # Debug info
+                        st.caption(f"Debug: altair_available = {altair_available}")
                         with st.spinner("Creating dual bar chart..."):
                             if altair_available:
                                 # Use Altair for faster rendering
@@ -592,6 +594,8 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     tufte_mode = True  # Use clean styling
                     
                     if "Dual Bar Chart" in viz_option:
+                        # Debug info
+                        st.caption(f"Debug: altair_available = {altair_available}")
                         with st.spinner("Creating dual bar chart..."):
                             if altair_available:
                                 # Use Altair for faster rendering
