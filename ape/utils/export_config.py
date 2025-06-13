@@ -66,6 +66,12 @@ def render_export_settings(location: str = "sidebar") -> None:
     Args:
         location: Where to render - "sidebar" or "main"
     """
+    # Initialize export settings in session state if not present
+    if 'export_format' not in st.session_state:
+        st.session_state.export_format = 'png'
+    if 'export_scale' not in st.session_state:
+        st.session_state.export_scale = 2.0
+    
     container = st.sidebar if location == "sidebar" else st
     
     with container.expander("📊 Export Settings", expanded=False):

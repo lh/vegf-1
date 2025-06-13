@@ -50,6 +50,11 @@ input_data/*
 # Generated output
 output/
 !output/.gitkeep
+
+# Development workspace
+workspace/*
+!workspace/README.md
+
 *.png
 individual_simulation_results.png
 mean_acuity_comparison.png
