@@ -426,14 +426,30 @@ with tab4:
     st.header("Patient Treatment Flow")
     st.markdown("Comprehensive view of patient cohort flow through different treatment states over time.")
     
+    # Import cache helper
+    from components.treatment_patterns.time_series_cache import should_show_week_resolution
+    
     # Use the new comprehensive streamgraph
     col1, col2 = st.columns([3, 1])
     
     with col2:
+        # Determine available resolutions based on data size
+        n_patients = results.metadata.n_patients
+        duration_years = results.metadata.duration_years
+        
+        if should_show_week_resolution(n_patients, duration_years):
+            resolution_options = ["month", "week", "quarter"]
+            resolution_help = "Choose time resolution"
+        else:
+            resolution_options = ["month", "quarter"]
+            resolution_help = f"Week resolution disabled for performance (large dataset)"
+        
         time_resolution = st.radio(
             "Time Resolution",
-            ["month", "week"],
-            key="time_res"
+            resolution_options,
+            index=0,
+            key="time_res",
+            help=resolution_help
         )
         
         normalize = st.checkbox(

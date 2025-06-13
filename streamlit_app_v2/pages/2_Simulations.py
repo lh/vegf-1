@@ -184,6 +184,13 @@ if st.session_state.get('simulation_running', False):
         
         progress_bar.progress(90, text="Processing results...")
         
+        # Pre-compute treatment patterns for better UI performance
+        from components.treatment_patterns.precompute import precompute_treatment_patterns
+        progress_bar.progress(92, text="Pre-computing visualizations...")
+        precompute_treatment_patterns(results, show_progress=False)
+        
+        progress_bar.progress(95, text="Saving results...")
+        
         # Build simulation data
         simulation_data = {
             'results': results,  # This is now a SimulationResults object
