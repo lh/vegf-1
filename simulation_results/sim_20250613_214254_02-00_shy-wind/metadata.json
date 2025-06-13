@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250613_214254_02-00_shy-wind",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 100,
+  "duration_years": 2.0,
+  "seed": 42,
+  "timestamp": "2025-06-13T21:42:54.157436+01:00",
+  "runtime_seconds": 0.00780797004699707,
+  "storage_type": "parquet",
+  "memorable_name": "shy-wind"
+}
