@@ -79,43 +79,17 @@ def render_recruitment_parameters() -> Dict[str, Any]:
             
     else:  # Constant Rate mode
         with col1:
-            # First show the rate unit selector
+            # For initial setup, we need to know the unit first to set proper limits
             # Check if there's a preset unit
             if 'rate_unit' in st.session_state:
-                default_index = 0 if st.session_state.rate_unit == "per week" else 1
+                default_unit_index = 0 if st.session_state.rate_unit == "per week" else 1
+                initial_rate_unit = st.session_state.rate_unit
             else:
-                default_index = 0
-                
-            rate_unit = st.selectbox(
-                "Rate Unit",
-                ["per week", "per month"],
-                index=default_index
-            )
-            recruitment_params['rate_unit'] = rate_unit
+                default_unit_index = 0
+                initial_rate_unit = "per week"
             
-            # Check for preset values first
-            if 'recruitment_rate' in st.session_state and st.session_state.get('rate_unit') == rate_unit:
-                # Use preset value if it matches current unit
-                default_rate = st.session_state.recruitment_rate
-            elif 'n_patients' in st.session_state:
-                # Convert from total patients to rate
-                n_patients = st.session_state.get('n_patients', 1000)
-                duration = st.session_state.get('preset_duration', 2.0)
-                if rate_unit == "per week":
-                    calculated_rate = n_patients / (duration * 52.14)
-                    default_rate = max(0.1, round(calculated_rate, 1))
-                else:  # per month
-                    calculated_rate = n_patients / (duration * 12)
-                    default_rate = max(1.0, round(calculated_rate, 0))
-            else:
-                # Use sensible defaults
-                if rate_unit == "per week":
-                    default_rate = 20.0
-                else:  # per month
-                    default_rate = 80.0
-            
-            # Set limits based on unit
-            if rate_unit == "per week":
+            # Determine rate limits and defaults based on unit
+            if initial_rate_unit == "per week":
                 min_rate = 0.1
                 max_rate = 1000.0
                 step = 0.1
@@ -123,16 +97,44 @@ def render_recruitment_parameters() -> Dict[str, Any]:
                 min_rate = 1.0
                 max_rate = 5000.0
                 step = 1.0
+            
+            # Check for preset values first
+            if 'recruitment_rate' in st.session_state and st.session_state.get('rate_unit') == initial_rate_unit:
+                # Use preset value if it matches current unit
+                default_rate = st.session_state.recruitment_rate
+            elif 'n_patients' in st.session_state:
+                # Convert from total patients to rate
+                n_patients = st.session_state.get('n_patients', 1000)
+                duration = st.session_state.get('preset_duration', 2.0)
+                if initial_rate_unit == "per week":
+                    calculated_rate = n_patients / (duration * 52.14)
+                    default_rate = max(0.1, round(calculated_rate, 1))
+                else:  # per month
+                    calculated_rate = n_patients / (duration * 12)
+                    default_rate = max(1.0, round(calculated_rate, 0))
+            else:
+                # Use sensible defaults
+                default_rate = 20.0 if initial_rate_unit == "per week" else 80.0
                 
+            # Show the rate input first
             recruitment_rate = st.number_input(
-                f"Patients {rate_unit}",
+                "Recruitment Rate",
                 min_value=min_rate,
                 max_value=max_rate,
                 value=default_rate,
                 step=step,
-                help=f"Number of patients to recruit {rate_unit}"
+                help=f"Number of patients to recruit {initial_rate_unit}"
             )
             recruitment_params['recruitment_rate'] = recruitment_rate
+            
+            # Then show the unit selector below
+            rate_unit = st.selectbox(
+                "Rate Unit",
+                ["per week", "per month"],
+                index=default_unit_index,
+                help="Choose whether to specify recruitment rate per week or per month"
+            )
+            recruitment_params['rate_unit'] = rate_unit
             
         with col2:
             # Duration in middle column, consistent with Fixed Total mode
