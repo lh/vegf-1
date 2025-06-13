@@ -1,0 +1,26 @@
+[app]
+# Main application file
+entrypoint = "APE.py"
+
+[deploy]
+# Python version for deployment
+pythonVersion = "3.11"
+
+# Main file path
+mainModule = "APE.py"
+
+[server]
+# Server configuration for deployment
+port = 8501
+enableCORS = false
+enableXsrfProtection = true
+enableWebsocketCompression = true
+
+[runner]
+# For faster deployment restarts
+fastReruns = true
+
+[client]
+# Disable development warnings in production
+showErrorDetails = false
+toolbarMode = "minimal"
