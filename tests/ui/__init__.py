@@ -1,1 +1,0 @@
-# UI tests using Playwright for Streamlit app testing

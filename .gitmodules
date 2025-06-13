@@ -1,9 +1,0 @@
-[submodule "eylea_high_dose_data"]
-	path = eylea_high_dose_data
-	url = https://github.com/lh/Eylea_high_dose.git
-[submodule "aflibercept_2mg_data"]
-	path = aflibercept_2mg_data
-	url = https://github.com/lh/aflibercept-2mg.git
-[submodule "vegf_literature_data"]
-	path = vegf_literature_data
-	url = https://github.com/lh/VEGF-literature.git
