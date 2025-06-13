@@ -10,7 +10,8 @@ The V2 simulation engines currently implement unrealistic instant recruitment wh
 **Phase 1 Status**: ✅ COMPLETE (2025-01-13) - Core engine changes implemented
 **Phase 2 Status**: ✅ COMPLETE (2025-01-13) - Data pipeline updated
 **Phase 3 Status**: ✅ COMPLETE (2025-06-13) - Streamgraph shows wedge shape
-**Current Task**: Phase 4 - UI Integration for recruitment modes
+**Phase 4 Status**: ✅ COMPLETE (2025-06-13) - UI Integration done
+**Current Task**: Ready for Phase 5 - Analysis Enhancement
 **Timeline**: 7-10 days total (3 phases complete, ~2-4 days remaining)
 **Approach**: Replace instant recruitment entirely (no real-world use case)
 
@@ -66,12 +67,12 @@ Two mutually exclusive modes (user chooses one):
 - [x] Verify streamgraph shows wedge shape (growing patient count)
 - [x] Test with both calendar and patient time views
 
-#### Phase 4: UI Integration (1-2 days)
-- [ ] Add recruitment mode radio buttons to Simulations page
-- [ ] Add conditional inputs (total vs rate)
-- [ ] Calculate and display derived value
-- [ ] Wire parameters to simulation engines
-- [ ] Add help text explaining the modes
+#### Phase 4: UI Integration (1-2 days) ✅ COMPLETE
+- [x] Add recruitment mode radio buttons to Simulations page
+- [x] Add conditional inputs (total vs rate)
+- [x] Calculate and display derived value
+- [x] Wire parameters to simulation engines
+- [x] Add help text explaining the modes
 
 #### Phase 5: Analysis Enhancement (2-3 days)
 - [ ] Add enrollment statistics section to Analysis Overview
@@ -176,6 +177,18 @@ arrival_times = np.cumsum(inter_arrival_times)
 - ✅ Percentage view correctly normalizes among enrolled patients only
 - ✅ Tested with multiple time resolutions (week, month, quarter) - all show wedge
 - ✅ Verified in actual UI with 10,000 patient simulation
+
+---
+
+### Phase 4 Accomplishments (2025-06-13):
+- ✅ Created enhanced UI components with recruitment mode selection
+- ✅ Implemented radio buttons for Fixed Total vs Constant Rate modes
+- ✅ Added conditional inputs that change based on selected mode
+- ✅ Automatic calculation of derived values (rates/totals)
+- ✅ Updated preset buttons to work with new recruitment modes
+- ✅ Wired parameters through to simulation engines
+- ✅ Added help text with tooltips explaining each mode
+- ✅ Updated parameter storage to include recruitment details
 
 ---
 

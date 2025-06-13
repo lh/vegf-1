@@ -46,17 +46,21 @@ class SimulationRunner:
         n_patients: int,
         duration_years: float,
         seed: int,
-        show_progress: bool = True
+        show_progress: bool = True,
+        recruitment_mode: str = "Fixed Total",
+        patient_arrival_rate: Optional[float] = None
     ) -> SimulationResults:
         """
         Run simulation and return results in Parquet format.
         
         Args:
             engine_type: 'abs' or 'des'
-            n_patients: Number of patients to simulate
+            n_patients: Number of patients to simulate (Fixed Total Mode)
             duration_years: Duration in years
             seed: Random seed
             show_progress: Show progress indicators
+            recruitment_mode: "Fixed Total" or "Constant Rate"
+            patient_arrival_rate: Patients per week (Constant Rate Mode only)
             
         Returns:
             ParquetResults instance with simulation data
