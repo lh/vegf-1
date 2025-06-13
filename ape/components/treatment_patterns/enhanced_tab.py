@@ -51,6 +51,11 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
             transitions_df, visits_df = extract_treatment_patterns_vectorized(results)
         return transitions_df, visits_df
     
+    @st.cache_data
+    def get_cached_visits_df(sim_id):
+        """Cache visits DataFrame to avoid repeated parquet reads."""
+        return results.get_visits_df()
+    
     with subtab1:
         # Sankey Flow Analysis (was subtab2)
         st.subheader("Patient Journey Visualisation")
@@ -240,20 +245,27 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                 st.error("Workload analysis components not available")
         
         if workload_available:
-            # Get visits data for workload analysis
-            if 'visits_df' not in locals():
-                with st.spinner("Loading visit data..."):
-                    # Try to get visits from results
-                    if hasattr(results, 'get_visits_df'):
-                        visits_df = results.get_visits_df()
-                    else:
-                        st.error("Visit data not available in simulation results")
-                        visits_df = pd.DataFrame()
+            # Get cached visits data for workload analysis
+            with st.spinner("Loading visit data..."):
+                try:
+                    visits_df = get_cached_visits_df(results.metadata.sim_id)
+                except:
+                    st.error("Visit data not available in simulation results")
+                    visits_df = pd.DataFrame()
             
             if not visits_df.empty:
-                # Run workload analysis
+                # Cache workload analysis results
+                @st.cache_data
+                def analyze_workload(visit_data_json, sim_id):
+                    """Cache workload analysis results."""
+                    visits_df_local = pd.read_json(visit_data_json)
+                    return calculate_clinical_workload_attribution(visits_df_local)
+                
+                # Run workload analysis with caching
                 with st.spinner("Analysing clinical workload attribution..."):
-                    workload_data = calculate_clinical_workload_attribution(visits_df)
+                    # Convert to JSON for stable cache key
+                    visits_json = visits_df.to_json()
+                    workload_data = analyze_workload(visits_json, results.metadata.sim_id)
                 
                 if workload_data['summary_stats']:
                     # Show key insight at the top
@@ -475,9 +487,18 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                         visits_df = pd.DataFrame()
             
             if not visits_df.empty:
-                # Run workload analysis
+                # Cache workload analysis results
+                @st.cache_data
+                def analyze_workload(visit_data_json, sim_id):
+                    """Cache workload analysis results."""
+                    visits_df_local = pd.read_json(visit_data_json)
+                    return calculate_clinical_workload_attribution(visits_df_local)
+                
+                # Run workload analysis with caching
                 with st.spinner("Analysing clinical workload attribution..."):
-                    workload_data = calculate_clinical_workload_attribution(visits_df)
+                    # Convert to JSON for stable cache key
+                    visits_json = visits_df.to_json()
+                    workload_data = analyze_workload(visits_json, results.metadata.sim_id)
                 
                 if workload_data['summary_stats']:
                     # Show key insight at the top
