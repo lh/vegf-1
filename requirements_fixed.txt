@@ -17,9 +17,6 @@ plotly>=5.17.0  # For interactive visualizations including Sankey diagrams
 # Configuration
 pyyaml>=6.0
 
-# UI Components
-# Note: streamlit-carbon-button is a local module, not a PyPI package
-
 # Utilities
 haikunator>=2.1.0  # For memorable simulation names
 pendulum>=3.0.0  # For human-friendly datetime formatting
