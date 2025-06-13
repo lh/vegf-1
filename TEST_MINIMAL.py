@@ -1,6 +1,8 @@
 """Minimal test app to diagnose Streamlit Cloud deployment issues."""
 
 import streamlit as st
+import os
+import sys
 
 st.set_page_config(page_title="Test Deployment", page_icon="🧪")
 
@@ -48,16 +50,11 @@ except Exception as e:
 # Test app-specific imports
 st.header("Testing App Imports")
 
-try:
-    import sys
-    st.write(f"Python version: {sys.version}")
-    st.write(f"Python path: {sys.executable}")
-    st.write(f"Working directory: {os.getcwd()}")
-except:
-    pass
+st.write(f"Python version: {sys.version}")
+st.write(f"Python path: {sys.executable}")
+st.write(f"Working directory: {os.getcwd()}")
 
 # List files in directory
-import os
 st.header("Files in Root Directory")
 files = os.listdir(".")
 st.write(files[:20])  # First 20 files
