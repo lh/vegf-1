@@ -51,6 +51,7 @@ def render_recruitment_parameters() -> Dict[str, Any]:
                 max_value=20.0,
                 value=st.session_state.get('preset_duration', 2.0),
                 step=0.5,
+                format="%.1f",
                 help="Simulation duration in years"
             )
             recruitment_params['duration_years'] = duration_years
@@ -106,6 +107,7 @@ def render_recruitment_parameters() -> Dict[str, Any]:
                 max_value=20.0,
                 value=st.session_state.get('preset_duration', 2.0),
                 step=0.5,
+                format="%.1f",
                 help="Simulation duration in years"
             )
             recruitment_params['duration_years'] = duration_years
