@@ -2,13 +2,14 @@
 
 **IMPORTANT**: This is the active implementation plan. Always refer to this document when working on the current feature.
 
-## 🚀 Current Phase: Staggered Enrollment Implementation
+## 🚀 Current Phase: Staggered Enrollment Implementation - Phase 2 Data Pipeline
 
 ### Overview
 The V2 simulation engines currently implement unrealistic instant recruitment where all patients exist from day 0. This needs to be replaced with proper staggered enrollment as was implemented in V1. The rectangular streamgraph shape revealed this issue - all patients are created at simulation start with only initial visits staggered across the first month.
 
-**Current Task**: Implement staggered patient enrollment with Poisson process  
-**Timeline**: 7-10 days  
+**Phase 1 Status**: ✅ COMPLETE (2025-01-13) - Core engine changes implemented
+**Current Task**: Update data pipeline to include enrollment dates  
+**Timeline**: 7-10 days total (Phase 1 complete, 5-8 days remaining)
 **Approach**: Replace instant recruitment entirely (no real-world use case)
 
 ### 📍 Key Documents
@@ -44,6 +45,9 @@ Two mutually exclusive modes (user chooses one):
 - [x] Replace instant patient creation in DES engine
 - [x] Implement Poisson arrival process
 - [x] Test simulations still run (even if visualizations break)
+- [x] Create comprehensive statistical tests for Poisson process
+- [x] Update edge case tests for stochastic enrollment
+- [x] Verify implementation with visualization script
 
 #### Phase 2: Data Pipeline (1-2 days)
 - [ ] Update Parquet writer to include enrollment_date
@@ -135,11 +139,20 @@ arrival_times = np.cumsum(inter_arrival_times)
 
 ### Staggered Enrollment Implementation:
 - [ ] Streamgraph shows wedge shape (continuous growth)
-- [ ] Enrollment follows Poisson distribution
+- [x] Enrollment follows Poisson distribution (verified with K-S test)
 - [ ] UI clearly shows mutual exclusivity of modes
 - [ ] All visualizations handle varying cohort sizes
-- [ ] Performance maintained or improved
+- [x] Performance maintained or improved
 - [ ] Backward compatibility for old simulations
+
+### Phase 1 Accomplishments (2025-01-13):
+- ✅ Implemented Poisson arrival process with exponential inter-arrival times
+- ✅ Added enrollment_date field to Patient class
+- ✅ Modified both ABS and DES engines for lazy patient creation
+- ✅ Created comprehensive statistical tests (K-S test, chi-square test)
+- ✅ Updated edge case tests to handle stochastic variations
+- ✅ Verified enrollment spans entire simulation period (not all at day 0)
+- ✅ Created verification script showing proper distribution
 
 ---
 
