@@ -6,14 +6,14 @@ textColor = "#262730"
 font = "sans serif"
 
 [server]
-port = 8502
-enableCORS = true  # Changed to true to be compatible with XSRF protection
+# Don't specify port - let Streamlit Cloud choose
+enableCORS = true
 enableXsrfProtection = true
 maxUploadSize = 200
 
 [browser]
 gatherUsageStats = false
-serverAddress = "localhost"
+# Don't specify serverAddress for cloud deployment
 
 [runner]
 fastReruns = true
