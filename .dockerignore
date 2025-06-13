@@ -1,0 +1,71 @@
+# Development directories
+dev/
+archive/
+literature_extraction/
+tests*/
+scripts*/
+meta/
+docs/
+Paper/
+notebooks/
+examples/
+mcp/
+
+# Git
+.git/
+.gitignore
+.gitmodules
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Development files
+requirements-dev.txt
+CLAUDE*.md
+TODO*.md
+REFACTORING*.md
+*_PLAN*.md
+*.log
+
+# Test and build artifacts
+htmlcov/
+.coverage
+test_results/
+playwright-report/
+test-results/
+node_modules/
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
+debug_*.json
+*_test_data.json
+
+# Documentation build
+docs/_build/
+
+# Large data files
+*.parquet
+*.csv
+*.sql
+input_data/
+
+# Specific exclusions
+streamlit_app*/
+vegf-carbon-buttons/
+migration/

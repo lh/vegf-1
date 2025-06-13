@@ -119,16 +119,21 @@ from ape.core.results import SimulationResults
 
 ### 🔄 IN PROGRESS
 - [ ] Full application functionality testing
-- [ ] Merge tests_v2 with existing tests/
-- [ ] Merge scripts_v2 with existing scripts/
+- [ ] Archive streamlit_app_v2/
+
+### ✅ RECENTLY COMPLETED
+- [x] Merged tests_v2 with existing tests/
+- [x] Renamed scripts_v2 to scripts/
+- [x] Created deployment guide (DEPLOYMENT_GUIDE.md)
+- [x] Created Docker configuration (Dockerfile, .dockerignore)
+- [x] Created deployment checklist (DEPLOYMENT_CHECKLIST.md)
+- [x] Updated pre-commit hooks for new structure
 
 ### 📋 TODO
-- [ ] Archive streamlit_app_v2/
-- [ ] Update documentation
-- [ ] Create deployment guide
-- [ ] Test all pages functionality
+- [ ] Update main README.md for new structure
+- [ ] Test all pages functionality thoroughly
 - [ ] Validate scientific computations
-- [ ] Create Docker configuration
+- [ ] Clean up any remaining references to old structure
 
 ## Deployment Strategy
 

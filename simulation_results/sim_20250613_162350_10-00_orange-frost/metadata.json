@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250613_162350_10-00_orange-frost",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 50000,
+  "duration_years": 10.0,
+  "seed": 42,
+  "timestamp": "2025-06-13T16:23:50.428115+01:00",
+  "runtime_seconds": 10.883985996246338,
+  "storage_type": "parquet",
+  "memorable_name": "orange-frost"
+}

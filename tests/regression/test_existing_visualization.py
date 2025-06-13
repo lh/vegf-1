@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 
 # Add parent directories to path
 
-from streamlit_app_v2.utils.chart_builder import ChartBuilder
+from ape.utils.chart_builder import ChartBuilder
 
 
 @pytest.mark.skip(reason="Legacy visualization tests - ChartBuilder now requires Streamlit session state and needs to be rewritten for new architecture")
