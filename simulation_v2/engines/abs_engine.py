@@ -202,8 +202,10 @@ class ABSEngine:
                 self.patients[patient_id] = patient
                 self.enrollment_dates[patient_id] = arrival_date
                 
-                # Schedule initial visit on arrival day
-                visit_schedule[patient_id] = arrival_date
+                # Schedule initial visit for start of next day after enrollment
+                # This ensures visit time is after enrollment time
+                next_day = arrival_date.date() + timedelta(days=1)
+                visit_schedule[patient_id] = datetime.combine(next_day, datetime.min.time())
                 
                 arrival_index += 1
             

@@ -185,9 +185,12 @@ class DESEngine:
                 self.patients[event.patient_id] = patient
                 self.enrollment_dates[event.patient_id] = event.time
                 
-                # Schedule first visit
+                # Schedule first visit for next day after enrollment
+                # This ensures visit happens after enrollment time
+                next_day = event.time.date() + timedelta(days=1)
+                first_visit_time = datetime.combine(next_day, datetime.min.time())
                 heapq.heappush(self.event_queue, Event(
-                    time=event.time,
+                    time=first_visit_time,
                     patient_id=event.patient_id,
                     event_type=EventType.VISIT
                 ))
