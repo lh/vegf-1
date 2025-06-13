@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250613_084033_03-00_orange-wildflower",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 200,
+  "duration_years": 3.0,
+  "seed": 789,
+  "timestamp": "2025-06-13T08:40:33.583916+01:00",
+  "runtime_seconds": 0.015365839004516602,
+  "storage_type": "parquet",
+  "memorable_name": "orange-wildflower"
+}

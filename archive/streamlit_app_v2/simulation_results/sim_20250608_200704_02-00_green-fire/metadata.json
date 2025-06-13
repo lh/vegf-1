@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250608_200704_02-00_green-fire",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 100,
+  "duration_years": 2.0,
+  "seed": 42,
+  "timestamp": "2025-06-08T20:07:04.212138+01:00",
+  "runtime_seconds": 0.010598897933959961,
+  "storage_type": "parquet",
+  "memorable_name": "green-fire"
+}

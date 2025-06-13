@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250613_111950_01-00_crimson-bread",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 0,
+  "duration_years": 1.0,
+  "seed": 42,
+  "timestamp": "2025-06-13T11:19:50.425955+01:00",
+  "runtime_seconds": 0.00022292137145996094,
+  "storage_type": "parquet",
+  "memorable_name": "crimson-bread"
+}

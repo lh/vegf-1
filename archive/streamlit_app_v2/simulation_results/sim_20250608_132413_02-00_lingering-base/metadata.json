@@ -1,0 +1,12 @@
+{
+  "sim_id": "sim_20250608_132413_02-00_lingering-base",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 100,
+  "duration_years": 2.0,
+  "seed": 42,
+  "timestamp": "2025-06-08T13:24:13.338393",
+  "runtime_seconds": 0.010230779647827148,
+  "storage_type": "parquet"
+}

@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250608_164511_10-00_sparkling-queen",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 10000,
+  "duration_years": 10.0,
+  "seed": 42,
+  "timestamp": "2025-06-08T16:45:11.445183+01:00",
+  "runtime_seconds": 4.226536273956299,
+  "storage_type": "parquet",
+  "memorable_name": "sparkling-queen"
+}

@@ -1,0 +1,702 @@
+{
+  "config": {
+    "configFile": "/Users/rose/Code/CC/streamlit_app_v2/playwright.config.ts",
+    "rootDir": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 8
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "playwright-report"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/rose/Code/CC/streamlit_app_v2/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 8
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/rose/Code/CC/streamlit_app_v2/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 8
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/rose/Code/CC/streamlit_app_v2/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 8
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/rose/Code/CC/streamlit_app_v2/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 8
+        },
+        "id": "Mobile Chrome",
+        "name": "Mobile Chrome",
+        "testDir": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/rose/Code/CC/streamlit_app_v2/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 8
+        },
+        "id": "Mobile Safari",
+        "name": "Mobile Safari",
+        "testDir": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.52.0",
+    "workers": 8,
+    "webServer": {
+      "command": "streamlit run APE.py --server.port 8502 --server.headless true",
+      "url": "http://localhost:8502",
+      "reuseExistingServer": true,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "carbon/test-home-migration.spec.ts",
+      "file": "carbon/test-home-migration.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Carbon Button Home Page Migration",
+          "file": "carbon/test-home-migration.spec.ts",
+          "line": 4,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Home page loads with Carbon buttons and correct state",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 7798,
+                      "error": {
+                        "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('button:has-text(\"Protocol Manager\")').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('button:has-text(\"Protocol Manager\")').first()\u001b[22m\n",
+                        "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('button:has-text(\"Protocol Manager\")').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('button:has-text(\"Protocol Manager\")').first()\u001b[22m\n\n    at /Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts:17:34",
+                        "location": {
+                          "file": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts",
+                          "column": 34,
+                          "line": 17
+                        },
+                        "snippet": "  15 |     // Check Protocol Manager button is enabled\n  16 |     const protocolButton = page.locator('button:has-text(\"Protocol Manager\")').first();\n> 17 |     await expect(protocolButton).toBeVisible();\n     |                                  ^\n  18 |     await expect(protocolButton).toBeEnabled();\n  19 |     \n  20 |     // Check Run Simulation button is disabled (no protocol loaded)"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts",
+                            "column": 34,
+                            "line": 17
+                          },
+                          "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('button:has-text(\"Protocol Manager\")').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('button:has-text(\"Protocol Manager\")').first()\u001b[22m\n\n\n  15 |     // Check Protocol Manager button is enabled\n  16 |     const protocolButton = page.locator('button:has-text(\"Protocol Manager\")').first();\n> 17 |     await expect(protocolButton).toBeVisible();\n     |                                  ^\n  18 |     await expect(protocolButton).toBeEnabled();\n  19 |     \n  20 |     // Check Run Simulation button is disabled (no protocol loaded)\n    at /Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts:17:34"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-03T11:51:12.595Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/rose/Code/CC/streamlit_app_v2/test-results/carbon-test-home-migration-22c8f-n-buttons-and-correct-state-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/rose/Code/CC/streamlit_app_v2/test-results/carbon-test-home-migration-22c8f-n-buttons-and-correct-state-chromium/video.webm"
+                        },
+                        {
+                          "name": "_error-context-0",
+                          "contentType": "text/markdown",
+                          "path": "/Users/rose/Code/CC/streamlit_app_v2/test-results/carbon-test-home-migration-22c8f-n-buttons-and-correct-state-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts",
+                        "column": 34,
+                        "line": 17
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7a80cb998d0056410858-aa344d6d6835312b7e0a",
+              "file": "carbon/test-home-migration.spec.ts",
+              "line": 5,
+              "column": 7
+            },
+            {
+              "title": "Home page buttons become enabled with session state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 4214,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-03T11:51:12.591Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "7a80cb998d0056410858-f37d357785deda9254b7",
+              "file": "carbon/test-home-migration.spec.ts",
+              "line": 52,
+              "column": 7
+            },
+            {
+              "title": "Home page loads with Carbon buttons and correct state",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 9211,
+                      "error": {
+                        "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('button:has-text(\"Protocol Manager\")').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('button:has-text(\"Protocol Manager\")').first()\u001b[22m\n",
+                        "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('button:has-text(\"Protocol Manager\")').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('button:has-text(\"Protocol Manager\")').first()\u001b[22m\n\n    at /Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts:17:34",
+                        "location": {
+                          "file": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts",
+                          "column": 34,
+                          "line": 17
+                        },
+                        "snippet": "  15 |     // Check Protocol Manager button is enabled\n  16 |     const protocolButton = page.locator('button:has-text(\"Protocol Manager\")').first();\n> 17 |     await expect(protocolButton).toBeVisible();\n     |                                  ^\n  18 |     await expect(protocolButton).toBeEnabled();\n  19 |     \n  20 |     // Check Run Simulation button is disabled (no protocol loaded)"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts",
+                            "column": 34,
+                            "line": 17
+                          },
+                          "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('button:has-text(\"Protocol Manager\")').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('button:has-text(\"Protocol Manager\")').first()\u001b[22m\n\n\n  15 |     // Check Protocol Manager button is enabled\n  16 |     const protocolButton = page.locator('button:has-text(\"Protocol Manager\")').first();\n> 17 |     await expect(protocolButton).toBeVisible();\n     |                                  ^\n  18 |     await expect(protocolButton).toBeEnabled();\n  19 |     \n  20 |     // Check Run Simulation button is disabled (no protocol loaded)\n    at /Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts:17:34"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-03T11:51:12.594Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/rose/Code/CC/streamlit_app_v2/test-results/carbon-test-home-migration-22c8f-n-buttons-and-correct-state-firefox/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/rose/Code/CC/streamlit_app_v2/test-results/carbon-test-home-migration-22c8f-n-buttons-and-correct-state-firefox/video.webm"
+                        },
+                        {
+                          "name": "_error-context-0",
+                          "contentType": "text/markdown",
+                          "path": "/Users/rose/Code/CC/streamlit_app_v2/test-results/carbon-test-home-migration-22c8f-n-buttons-and-correct-state-firefox/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts",
+                        "column": 34,
+                        "line": 17
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7a80cb998d0056410858-73c2cc482cc5ef0a8f2b",
+              "file": "carbon/test-home-migration.spec.ts",
+              "line": 5,
+              "column": 7
+            },
+            {
+              "title": "Home page buttons become enabled with session state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 4532,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-03T11:51:12.581Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "7a80cb998d0056410858-9a441179e725696e0e7c",
+              "file": "carbon/test-home-migration.spec.ts",
+              "line": 52,
+              "column": 7
+            },
+            {
+              "title": "Home page loads with Carbon buttons and correct state",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 4,
+                      "status": "failed",
+                      "duration": 6942,
+                      "error": {
+                        "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('button:has-text(\"Protocol Manager\")').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('button:has-text(\"Protocol Manager\")').first()\u001b[22m\n",
+                        "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('button:has-text(\"Protocol Manager\")').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('button:has-text(\"Protocol Manager\")').first()\u001b[22m\n\n    at /Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts:17:34",
+                        "location": {
+                          "file": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts",
+                          "column": 34,
+                          "line": 17
+                        },
+                        "snippet": "  15 |     // Check Protocol Manager button is enabled\n  16 |     const protocolButton = page.locator('button:has-text(\"Protocol Manager\")').first();\n> 17 |     await expect(protocolButton).toBeVisible();\n     |                                  ^\n  18 |     await expect(protocolButton).toBeEnabled();\n  19 |     \n  20 |     // Check Run Simulation button is disabled (no protocol loaded)"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts",
+                            "column": 34,
+                            "line": 17
+                          },
+                          "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('button:has-text(\"Protocol Manager\")').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('button:has-text(\"Protocol Manager\")').first()\u001b[22m\n\n\n  15 |     // Check Protocol Manager button is enabled\n  16 |     const protocolButton = page.locator('button:has-text(\"Protocol Manager\")').first();\n> 17 |     await expect(protocolButton).toBeVisible();\n     |                                  ^\n  18 |     await expect(protocolButton).toBeEnabled();\n  19 |     \n  20 |     // Check Run Simulation button is disabled (no protocol loaded)\n    at /Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts:17:34"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-03T11:51:12.589Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/rose/Code/CC/streamlit_app_v2/test-results/carbon-test-home-migration-22c8f-n-buttons-and-correct-state-webkit/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/rose/Code/CC/streamlit_app_v2/test-results/carbon-test-home-migration-22c8f-n-buttons-and-correct-state-webkit/video.webm"
+                        },
+                        {
+                          "name": "_error-context-0",
+                          "contentType": "text/markdown",
+                          "path": "/Users/rose/Code/CC/streamlit_app_v2/test-results/carbon-test-home-migration-22c8f-n-buttons-and-correct-state-webkit/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts",
+                        "column": 34,
+                        "line": 17
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7a80cb998d0056410858-20a77c74b73ef0931c53",
+              "file": "carbon/test-home-migration.spec.ts",
+              "line": 5,
+              "column": 7
+            },
+            {
+              "title": "Home page buttons become enabled with session state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 2743,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-03T11:51:12.590Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "7a80cb998d0056410858-5d08613d8aea60e448b1",
+              "file": "carbon/test-home-migration.spec.ts",
+              "line": 52,
+              "column": 7
+            },
+            {
+              "title": "Home page loads with Carbon buttons and correct state",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 6,
+                      "status": "failed",
+                      "duration": 8300,
+                      "error": {
+                        "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('button:has-text(\"Protocol Manager\")').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('button:has-text(\"Protocol Manager\")').first()\u001b[22m\n",
+                        "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('button:has-text(\"Protocol Manager\")').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('button:has-text(\"Protocol Manager\")').first()\u001b[22m\n\n    at /Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts:17:34",
+                        "location": {
+                          "file": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts",
+                          "column": 34,
+                          "line": 17
+                        },
+                        "snippet": "  15 |     // Check Protocol Manager button is enabled\n  16 |     const protocolButton = page.locator('button:has-text(\"Protocol Manager\")').first();\n> 17 |     await expect(protocolButton).toBeVisible();\n     |                                  ^\n  18 |     await expect(protocolButton).toBeEnabled();\n  19 |     \n  20 |     // Check Run Simulation button is disabled (no protocol loaded)"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts",
+                            "column": 34,
+                            "line": 17
+                          },
+                          "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('button:has-text(\"Protocol Manager\")').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('button:has-text(\"Protocol Manager\")').first()\u001b[22m\n\n\n  15 |     // Check Protocol Manager button is enabled\n  16 |     const protocolButton = page.locator('button:has-text(\"Protocol Manager\")').first();\n> 17 |     await expect(protocolButton).toBeVisible();\n     |                                  ^\n  18 |     await expect(protocolButton).toBeEnabled();\n  19 |     \n  20 |     // Check Run Simulation button is disabled (no protocol loaded)\n    at /Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts:17:34"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-03T11:51:12.584Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/rose/Code/CC/streamlit_app_v2/test-results/carbon-test-home-migration-22c8f-n-buttons-and-correct-state-Mobile-Chrome/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/rose/Code/CC/streamlit_app_v2/test-results/carbon-test-home-migration-22c8f-n-buttons-and-correct-state-Mobile-Chrome/video.webm"
+                        },
+                        {
+                          "name": "_error-context-0",
+                          "contentType": "text/markdown",
+                          "path": "/Users/rose/Code/CC/streamlit_app_v2/test-results/carbon-test-home-migration-22c8f-n-buttons-and-correct-state-Mobile-Chrome/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts",
+                        "column": 34,
+                        "line": 17
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7a80cb998d0056410858-86129f15671b50dbe8d1",
+              "file": "carbon/test-home-migration.spec.ts",
+              "line": 5,
+              "column": 7
+            },
+            {
+              "title": "Home page buttons become enabled with session state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 7,
+                      "status": "passed",
+                      "duration": 4529,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-03T11:51:12.588Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "7a80cb998d0056410858-6ac9798f1d123fc9cc37",
+              "file": "carbon/test-home-migration.spec.ts",
+              "line": 52,
+              "column": 7
+            },
+            {
+              "title": "Home page loads with Carbon buttons and correct state",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 5,
+                      "status": "failed",
+                      "duration": 6837,
+                      "error": {
+                        "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('button:has-text(\"Protocol Manager\")').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('button:has-text(\"Protocol Manager\")').first()\u001b[22m\n",
+                        "stack": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('button:has-text(\"Protocol Manager\")').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('button:has-text(\"Protocol Manager\")').first()\u001b[22m\n\n    at /Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts:17:34",
+                        "location": {
+                          "file": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts",
+                          "column": 34,
+                          "line": 17
+                        },
+                        "snippet": "  15 |     // Check Protocol Manager button is enabled\n  16 |     const protocolButton = page.locator('button:has-text(\"Protocol Manager\")').first();\n> 17 |     await expect(protocolButton).toBeVisible();\n     |                                  ^\n  18 |     await expect(protocolButton).toBeEnabled();\n  19 |     \n  20 |     // Check Run Simulation button is disabled (no protocol loaded)"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts",
+                            "column": 34,
+                            "line": 17
+                          },
+                          "message": "Error: \u001b[31mTimed out 5000ms waiting for \u001b[39m\u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m()\u001b[22m\n\nLocator: locator('button:has-text(\"Protocol Manager\")').first()\nExpected: visible\nReceived: <element(s) not found>\nCall log:\n\u001b[2m  - expect.toBeVisible with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('button:has-text(\"Protocol Manager\")').first()\u001b[22m\n\n\n  15 |     // Check Protocol Manager button is enabled\n  16 |     const protocolButton = page.locator('button:has-text(\"Protocol Manager\")').first();\n> 17 |     await expect(protocolButton).toBeVisible();\n     |                                  ^\n  18 |     await expect(protocolButton).toBeEnabled();\n  19 |     \n  20 |     // Check Run Simulation button is disabled (no protocol loaded)\n    at /Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts:17:34"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-03T11:51:16.057Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/rose/Code/CC/streamlit_app_v2/test-results/carbon-test-home-migration-22c8f-n-buttons-and-correct-state-Mobile-Safari/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/rose/Code/CC/streamlit_app_v2/test-results/carbon-test-home-migration-22c8f-n-buttons-and-correct-state-Mobile-Safari/video.webm"
+                        },
+                        {
+                          "name": "_error-context-0",
+                          "contentType": "text/markdown",
+                          "path": "/Users/rose/Code/CC/streamlit_app_v2/test-results/carbon-test-home-migration-22c8f-n-buttons-and-correct-state-Mobile-Safari/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/rose/Code/CC/streamlit_app_v2/tests/playwright/carbon/test-home-migration.spec.ts",
+                        "column": 34,
+                        "line": 17
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "7a80cb998d0056410858-57b05759aa2ac90daf96",
+              "file": "carbon/test-home-migration.spec.ts",
+              "line": 5,
+              "column": 7
+            },
+            {
+              "title": "Home page buttons become enabled with session state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1605,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-06-03T11:51:17.970Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "7a80cb998d0056410858-16250b530d7f33a9a5b8",
+              "file": "carbon/test-home-migration.spec.ts",
+              "line": 52,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-06-03T11:51:11.294Z",
+    "duration": 11977.318000000001,
+    "expected": 5,
+    "skipped": 0,
+    "unexpected": 5,
+    "flaky": 0
+  }
+}

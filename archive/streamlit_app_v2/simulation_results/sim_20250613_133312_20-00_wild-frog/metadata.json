@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250613_133312_20-00_wild-frog",
+  "protocol_name": "NHS Aflibercept Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 10000,
+  "duration_years": 20.0,
+  "seed": 42,
+  "timestamp": "2025-06-13T13:33:12.072740+01:00",
+  "runtime_seconds": 2.980814218521118,
+  "storage_type": "parquet",
+  "memorable_name": "wild-frog"
+}

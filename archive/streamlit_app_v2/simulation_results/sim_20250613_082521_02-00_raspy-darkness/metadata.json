@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250613_082521_02-00_raspy-darkness",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 100,
+  "duration_years": 2.0,
+  "seed": 42,
+  "timestamp": "2025-06-13T08:25:21.493965+01:00",
+  "runtime_seconds": 0.008460044860839844,
+  "storage_type": "parquet",
+  "memorable_name": "raspy-darkness"
+}

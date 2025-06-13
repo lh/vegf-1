@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250608_164446_10-00_summer-shape",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 10000,
+  "duration_years": 10.0,
+  "seed": 42,
+  "timestamp": "2025-06-08T16:44:46.848193+01:00",
+  "runtime_seconds": 4.521255254745483,
+  "storage_type": "parquet",
+  "memorable_name": "summer-shape"
+}

@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250609_115816_10-00_raspy-union",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 10000,
+  "duration_years": 10.0,
+  "seed": 42,
+  "timestamp": "2025-06-09T11:58:16.675379+01:00",
+  "runtime_seconds": 3.8919332027435303,
+  "storage_type": "parquet",
+  "memorable_name": "raspy-union"
+}

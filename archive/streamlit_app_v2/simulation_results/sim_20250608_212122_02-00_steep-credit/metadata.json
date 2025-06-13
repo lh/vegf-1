@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250608_212122_02-00_steep-credit",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 100,
+  "duration_years": 2.0,
+  "seed": 42,
+  "timestamp": "2025-06-08T21:21:22.426620+01:00",
+  "runtime_seconds": 0.01058506965637207,
+  "storage_type": "parquet",
+  "memorable_name": "steep-credit"
+}

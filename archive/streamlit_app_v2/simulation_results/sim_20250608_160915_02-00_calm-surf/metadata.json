@@ -1,0 +1,12 @@
+{
+  "sim_id": "sim_20250608_160915_02-00_calm-surf",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 500,
+  "duration_years": 2.0,
+  "seed": 42,
+  "timestamp": "2025-06-08T16:09:15.176454",
+  "runtime_seconds": 0.05635714530944824,
+  "storage_type": "parquet"
+}

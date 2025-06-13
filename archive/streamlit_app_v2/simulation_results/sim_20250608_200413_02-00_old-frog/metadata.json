@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250608_200413_02-00_old-frog",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 100,
+  "duration_years": 2.0,
+  "seed": 42,
+  "timestamp": "2025-06-08T20:04:13.756060+01:00",
+  "runtime_seconds": 0.010596036911010742,
+  "storage_type": "parquet",
+  "memorable_name": "old-frog"
+}

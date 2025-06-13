@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250608_164434_10-00_lively-grass",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 10000,
+  "duration_years": 10.0,
+  "seed": 42,
+  "timestamp": "2025-06-08T16:44:34.714792+01:00",
+  "runtime_seconds": 4.511693000793457,
+  "storage_type": "parquet",
+  "memorable_name": "lively-grass"
+}

@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250613_081307_02-00_dark-boat",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 100,
+  "duration_years": 2.0,
+  "seed": 123,
+  "timestamp": "2025-06-13T08:13:07.693041+01:00",
+  "runtime_seconds": 0.006072044372558594,
+  "storage_type": "parquet",
+  "memorable_name": "dark-boat"
+}

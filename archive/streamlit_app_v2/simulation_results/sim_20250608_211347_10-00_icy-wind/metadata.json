@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250608_211347_10-00_icy-wind",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 10000,
+  "duration_years": 10.0,
+  "seed": 42,
+  "timestamp": "2025-06-08T21:13:47.578640+01:00",
+  "runtime_seconds": 4.074617147445679,
+  "storage_type": "parquet",
+  "memorable_name": "icy-wind"
+}

@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250613_105723_05-00_divine-mountain",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 0,
+  "duration_years": 5.0,
+  "seed": 42,
+  "timestamp": "2025-06-13T10:57:23.222361+01:00",
+  "runtime_seconds": 0.0008270740509033203,
+  "storage_type": "parquet",
+  "memorable_name": "divine-mountain"
+}

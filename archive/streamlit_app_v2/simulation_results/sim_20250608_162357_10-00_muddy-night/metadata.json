@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250608_162357_10-00_muddy-night",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 10000,
+  "duration_years": 10.0,
+  "seed": 42,
+  "timestamp": "2025-06-08T16:23:57.256988",
+  "runtime_seconds": 3.9465830326080322,
+  "storage_type": "parquet",
+  "memorable_name": "muddy-night"
+}

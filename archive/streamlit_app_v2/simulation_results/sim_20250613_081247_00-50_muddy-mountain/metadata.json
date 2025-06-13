@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250613_081247_00-50_muddy-mountain",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 10,
+  "duration_years": 0.5,
+  "seed": 42,
+  "timestamp": "2025-06-13T08:12:47.711358+01:00",
+  "runtime_seconds": 0.0006940364837646484,
+  "storage_type": "parquet",
+  "memorable_name": "muddy-mountain"
+}

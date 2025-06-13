@@ -1,0 +1,12 @@
+{
+  "sim_id": "sim_20250608_151114_04-50_white-rice",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 1980,
+  "duration_years": 4.5,
+  "seed": 42,
+  "timestamp": "2025-06-08T15:11:14.675315",
+  "runtime_seconds": 0.41302919387817383,
+  "storage_type": "parquet"
+}

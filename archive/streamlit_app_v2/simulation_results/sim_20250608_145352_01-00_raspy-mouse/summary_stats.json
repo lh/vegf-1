@@ -1,0 +1,12 @@
+{
+  "total_patients": 103,
+  "total_injections": 693.0,
+  "mean_final_vision": 63.41747572815534,
+  "std_final_vision": 11.386717642218972,
+  "discontinuation_rate": 0.0,
+  "write_time_seconds": 0.00642704963684082,
+  "chunk_size": 5000.0,
+  "total_visits": 951,
+  "mean_visits_per_patient": 9.233009708737864,
+  "patient_count": 103
+}

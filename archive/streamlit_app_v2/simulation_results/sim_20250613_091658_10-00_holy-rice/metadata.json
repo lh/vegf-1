@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250613_091658_10-00_holy-rice",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 10000,
+  "duration_years": 10.0,
+  "seed": 42,
+  "timestamp": "2025-06-13T09:16:58.711447+01:00",
+  "runtime_seconds": 2.199723720550537,
+  "storage_type": "parquet",
+  "memorable_name": "holy-rice"
+}

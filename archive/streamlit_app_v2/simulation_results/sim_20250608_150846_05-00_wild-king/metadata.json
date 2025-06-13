@@ -1,0 +1,12 @@
+{
+  "sim_id": "sim_20250608_150846_05-00_wild-king",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 2000,
+  "duration_years": 5.0,
+  "seed": 42,
+  "timestamp": "2025-06-08T15:08:46.833169",
+  "runtime_seconds": 0.45342516899108887,
+  "storage_type": "parquet"
+}

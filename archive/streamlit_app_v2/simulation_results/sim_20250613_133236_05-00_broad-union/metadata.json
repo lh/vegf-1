@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250613_133236_05-00_broad-union",
+  "protocol_name": "NHS Aflibercept Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 5214,
+  "duration_years": 5.0,
+  "seed": 42,
+  "timestamp": "2025-06-13T13:32:36.158745+01:00",
+  "runtime_seconds": 0.67392897605896,
+  "storage_type": "parquet",
+  "memorable_name": "broad-union"
+}
