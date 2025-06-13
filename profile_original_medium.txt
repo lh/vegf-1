@@ -1,0 +1,28 @@
+         70142 function calls (69635 primitive calls) in 0.018 seconds
+
+   Ordered by: cumulative time
+   List reduced from 873 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.018    0.018 /Users/rose/Code/CC/ape/components/treatment_patterns/workload_analyzer.py:12(calculate_clinical_workload_attribution)
+        1    0.000    0.000    0.010    0.010 /Users/rose/Code/CC/ape/components/treatment_patterns/workload_analyzer.py:105(_categorize_treatment_intensity)
+        1    0.000    0.000    0.010    0.010 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/pandas/core/frame.py:10170(apply)
+        1    0.000    0.000    0.010    0.010 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/pandas/core/apply.py:864(apply)
+        1    0.000    0.000    0.010    0.010 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/pandas/core/apply.py:1061(apply_standard)
+        1    0.000    0.000    0.009    0.009 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/pandas/core/apply.py:1070(apply_series_generator)
+     1000    0.000    0.000    0.007    0.000 /Users/rose/Code/CC/ape/components/treatment_patterns/workload_analyzer.py:108(categorize_patient)
+     3030    0.002    0.000    0.006    0.000 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/pandas/core/series.py:1095(__getitem__)
+        1    0.000    0.000    0.003    0.003 /Users/rose/Code/CC/ape/components/treatment_patterns/workload_analyzer.py:134(_calculate_visit_contributions)
+     3030    0.001    0.000    0.003    0.000 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/pandas/core/series.py:1220(_get_value)
+        1    0.000    0.000    0.002    0.002 /Users/rose/Code/CC/ape/components/treatment_patterns/workload_analyzer.py:67(_calculate_patient_intensity_profiles)
+19243/19184    0.001    0.000    0.002    0.000 {built-in method builtins.isinstance}
+     1001    0.001    0.000    0.002    0.000 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/pandas/core/apply.py:1247(series_generator)
+        1    0.000    0.000    0.001    0.001 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/pandas/core/frame.py:6997(sort_values)
+     3056    0.001    0.000    0.001    0.000 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/pandas/core/indexing.py:2765(check_dict_or_set_indexers)
+        6    0.000    0.000    0.001    0.000 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/pandas/core/algorithms.py:610(factorize)
+        1    0.000    0.000    0.001    0.001 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/pandas/core/sorting.py:301(lexsort_indexer)
+      9/3    0.000    0.000    0.001    0.000 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/pandas/core/groupby/generic.py:232(aggregate)
+        2    0.000    0.000    0.001    0.001 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/pandas/core/arrays/categorical.py:371(__init__)
+        1    0.000    0.000    0.001    0.001 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/pandas/core/frame.py:10813(merge)
+
+

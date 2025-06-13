@@ -228,21 +228,29 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
         # Import workload analysis functions - use optimized version
         try:
             from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
-            from ape.components.treatment_patterns.workload_visualizations import (
+            from ape.components.treatment_patterns.workload_visualizations_optimized import (
                 create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
             )
             workload_available = True
         except ImportError:
-            # Fall back to original if optimized not available
+            # Fall back to original visualizations if optimized not available
             try:
-                from ape.components.treatment_patterns.workload_analyzer import calculate_clinical_workload_attribution, format_workload_insight
+                from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
                 from ape.components.treatment_patterns.workload_visualizations import (
                     create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
                 )
                 workload_available = True
             except ImportError:
-                workload_available = False
-                st.error("Workload analysis components not available")
+                # Fall back to original implementation completely
+                try:
+                    from ape.components.treatment_patterns.workload_analyzer import calculate_clinical_workload_attribution, format_workload_insight
+                    from ape.components.treatment_patterns.workload_visualizations import (
+                        create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
+                    )
+                    workload_available = True
+                except ImportError:
+                    workload_available = False
+                    st.error("Workload analysis components not available")
         
         if workload_available:
             # Get cached visits data for workload analysis
@@ -260,6 +268,22 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     """Cache workload analysis results."""
                     visits_df_local = pd.read_json(visit_data_json)
                     return calculate_clinical_workload_attribution(visits_df_local)
+                
+                # Cache the actual figures to avoid re-rendering
+                @st.cache_data
+                def create_cached_dual_bar_chart(workload_data, tufte_mode=True):
+                    """Cache the dual bar chart figure."""
+                    return create_dual_bar_chart(workload_data, tufte_mode)
+                
+                @st.cache_data
+                def create_cached_impact_pyramid(workload_data, tufte_mode=True):
+                    """Cache the impact pyramid figure."""
+                    return create_impact_pyramid(workload_data, tufte_mode)
+                
+                @st.cache_data
+                def create_cached_bubble_chart(workload_data, tufte_mode=True):
+                    """Cache the bubble chart figure."""
+                    return create_bubble_chart(workload_data, tufte_mode)
                 
                 # Run workload analysis with caching
                 with st.spinner("Analysing clinical workload attribution..."):
@@ -288,7 +312,7 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     
                     if "Dual Bar Chart" in viz_option:
                         with st.spinner("Creating dual bar chart..."):
-                            fig = create_dual_bar_chart(workload_data, tufte_mode)
+                            fig = create_cached_dual_bar_chart(workload_data, tufte_mode)
                             
                             # Apply export configuration
                             from ape.utils.export_config import get_export_config
@@ -304,7 +328,7 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     
                     elif "Impact Pyramid" in viz_option:
                         with st.spinner("Creating impact pyramid..."):
-                            fig = create_impact_pyramid(workload_data, tufte_mode)
+                            fig = create_cached_impact_pyramid(workload_data, tufte_mode)
                             
                             config = get_export_config(filename="clinical_workload_pyramid")
                             st.plotly_chart(fig, use_container_width=True, config=config)
@@ -318,7 +342,7 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     
                     elif "Bubble Chart" in viz_option:
                         with st.spinner("Creating bubble chart..."):
-                            fig = create_bubble_chart(workload_data, tufte_mode)
+                            fig = create_cached_bubble_chart(workload_data, tufte_mode)
                             
                             config = get_export_config(filename="clinical_workload_bubble")
                             st.plotly_chart(fig, use_container_width=True, config=config)
@@ -459,21 +483,29 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
         # Import workload analysis functions - use optimized version
         try:
             from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
-            from ape.components.treatment_patterns.workload_visualizations import (
+            from ape.components.treatment_patterns.workload_visualizations_optimized import (
                 create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
             )
             workload_available = True
         except ImportError:
-            # Fall back to original if optimized not available
+            # Fall back to original visualizations if optimized not available
             try:
-                from ape.components.treatment_patterns.workload_analyzer import calculate_clinical_workload_attribution, format_workload_insight
+                from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
                 from ape.components.treatment_patterns.workload_visualizations import (
                     create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
                 )
                 workload_available = True
             except ImportError:
-                workload_available = False
-                st.error("❌ Workload analysis components not available")
+                # Fall back to original implementation completely
+                try:
+                    from ape.components.treatment_patterns.workload_analyzer import calculate_clinical_workload_attribution, format_workload_insight
+                    from ape.components.treatment_patterns.workload_visualizations import (
+                        create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
+                    )
+                    workload_available = True
+                except ImportError:
+                    workload_available = False
+                    st.error("❌ Workload analysis components not available")
         
         if workload_available:
             # Get visits data for workload analysis
@@ -493,6 +525,22 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     """Cache workload analysis results."""
                     visits_df_local = pd.read_json(visit_data_json)
                     return calculate_clinical_workload_attribution(visits_df_local)
+                
+                # Cache the actual figures to avoid re-rendering
+                @st.cache_data
+                def create_cached_dual_bar_chart(workload_data, tufte_mode=True):
+                    """Cache the dual bar chart figure."""
+                    return create_dual_bar_chart(workload_data, tufte_mode)
+                
+                @st.cache_data
+                def create_cached_impact_pyramid(workload_data, tufte_mode=True):
+                    """Cache the impact pyramid figure."""
+                    return create_impact_pyramid(workload_data, tufte_mode)
+                
+                @st.cache_data
+                def create_cached_bubble_chart(workload_data, tufte_mode=True):
+                    """Cache the bubble chart figure."""
+                    return create_bubble_chart(workload_data, tufte_mode)
                 
                 # Run workload analysis with caching
                 with st.spinner("Analysing clinical workload attribution..."):
@@ -521,7 +569,7 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     
                     if "Dual Bar Chart" in viz_option:
                         with st.spinner("Creating dual bar chart..."):
-                            fig = create_dual_bar_chart(workload_data, tufte_mode)
+                            fig = create_cached_dual_bar_chart(workload_data, tufte_mode)
                             
                             # Apply export configuration
                             from ape.utils.export_config import get_export_config
@@ -537,7 +585,7 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     
                     elif "Impact Pyramid" in viz_option:
                         with st.spinner("Creating impact pyramid..."):
-                            fig = create_impact_pyramid(workload_data, tufte_mode)
+                            fig = create_cached_impact_pyramid(workload_data, tufte_mode)
                             
                             config = get_export_config(filename="clinical_workload_pyramid")
                             st.plotly_chart(fig, use_container_width=True, config=config)
@@ -551,7 +599,7 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     
                     elif "Bubble Chart" in viz_option:
                         with st.spinner("Creating bubble chart..."):
-                            fig = create_bubble_chart(workload_data, tufte_mode)
+                            fig = create_cached_bubble_chart(workload_data, tufte_mode)
                             
                             config = get_export_config(filename="clinical_workload_bubble")
                             st.plotly_chart(fig, use_container_width=True, config=config)

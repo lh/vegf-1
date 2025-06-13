@@ -1,0 +1,28 @@
+         463106 function calls (443610 primitive calls) in 0.213 seconds
+
+   Ordered by: cumulative time
+   List reduced from 3628 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.213    0.213 /Users/rose/Code/CC/ape/components/treatment_patterns/workload_visualizations.py:43(create_dual_bar_chart)
+        1    0.000    0.000    0.184    0.184 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/plotly/subplots.py:6(make_subplots)
+        1    0.000    0.000    0.184    0.184 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/plotly/_subplots.py:42(make_subplots)
+  814/812    0.000    0.000    0.182    0.000 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/importlib/__init__.py:73(import_module)
+  816/812    0.000    0.000    0.181    0.000 <frozen importlib._bootstrap>:1375(_gcd_import)
+ 1275/813    0.002    0.000    0.181    0.000 <frozen importlib._bootstrap>:1349(_find_and_load)
+  601/414    0.000    0.000    0.179    0.000 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/_plotly_utils/importers.py:23(__getattr__)
+  704/242    0.001    0.000    0.177    0.001 <frozen importlib._bootstrap>:1304(_find_and_load_unlocked)
+  683/241    0.001    0.000    0.170    0.001 <frozen importlib._bootstrap>:911(_load_unlocked)
+  679/241    0.001    0.000    0.168    0.001 <frozen importlib._bootstrap_external>:989(exec_module)
+ 1459/481    0.000    0.000    0.158    0.000 <frozen importlib._bootstrap>:480(_call_with_frames_removed)
+  704/241    0.002    0.000    0.158    0.001 {built-in method builtins.exec}
+        1    0.000    0.000    0.156    0.156 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/plotly/graph_objs/_figure.py:5(__init__)
+        1    0.000    0.000    0.156    0.156 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/plotly/basedatatypes.py:410(__init__)
+5625/1800    0.001    0.000    0.156    0.000 {built-in method builtins.hasattr}
+   569/98    0.000    0.000    0.156    0.002 <frozen importlib._bootstrap>:1390(_handle_fromlist)
+     83/2    0.000    0.000    0.155    0.077 {built-in method builtins.__import__}
+        1    0.000    0.000    0.155    0.155 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/plotly/offline/__init__.py:1(<module>)
+        1    0.000    0.000    0.155    0.155 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/plotly/offline/offline.py:1(<module>)
+        1    0.000    0.000    0.154    0.154 /opt/homebrew/Caskroom/miniconda/base/lib/python3.12/site-packages/plotly/tools.py:1(<module>)
+
+
