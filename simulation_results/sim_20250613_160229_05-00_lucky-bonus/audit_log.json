@@ -1,0 +1,151 @@
+[
+  {
+    "event": "protocol_loaded",
+    "timestamp": "2025-06-13T16:02:29.685401",
+    "protocol": {
+      "protocol_name": "NHS Aflibercept Treat and Extend",
+      "protocol_version": "1.0",
+      "source_file": "/Users/rose/Code/CC/protocols/v2/nhs_aflibercept_tae_v1.0.yaml",
+      "checksum": "f9c85d4c25cacc57dcf94627222dc0a49f4dde00aead5c0b17686b023349d44c",
+      "load_timestamp": "2025-06-13T16:02:29.685174",
+      "all_parameters": {
+        "name": "NHS Aflibercept Treat and Extend",
+        "version": "1.0",
+        "created_date": "2025-01-13",
+        "author": "NHS Analysis Team",
+        "description": "NHS-based treat-and-extend protocol for aflibercept derived from wet AMD cost calculator",
+        "protocol_type": "treat_and_extend",
+        "min_interval_days": 28,
+        "max_interval_days": 112,
+        "extension_days": 28,
+        "shortening_days": 14,
+        "disease_transitions": {
+          "NAIVE": {
+            "NAIVE": 0.0,
+            "STABLE": 0.25,
+            "ACTIVE": 0.65,
+            "HIGHLY_ACTIVE": 0.1
+          },
+          "STABLE": {
+            "NAIVE": 0.0,
+            "STABLE": 0.8,
+            "ACTIVE": 0.18,
+            "HIGHLY_ACTIVE": 0.02
+          },
+          "ACTIVE": {
+            "NAIVE": 0.0,
+            "STABLE": 0.15,
+            "ACTIVE": 0.75,
+            "HIGHLY_ACTIVE": 0.1
+          },
+          "HIGHLY_ACTIVE": {
+            "NAIVE": 0.0,
+            "STABLE": 0.03,
+            "ACTIVE": 0.12,
+            "HIGHLY_ACTIVE": 0.85
+          }
+        },
+        "vision_change_model": {
+          "naive_treated": {
+            "mean": 0,
+            "std": 1
+          },
+          "naive_untreated": {
+            "mean": -3,
+            "std": 2
+          },
+          "stable_treated": {
+            "mean": 0.5,
+            "std": 1
+          },
+          "stable_untreated": {
+            "mean": -0.5,
+            "std": 1
+          },
+          "active_treated": {
+            "mean": -1.5,
+            "std": 2
+          },
+          "active_untreated": {
+            "mean": -4,
+            "std": 3
+          },
+          "highly_active_treated": {
+            "mean": -3,
+            "std": 3
+          },
+          "highly_active_untreated": {
+            "mean": -6,
+            "std": 4
+          }
+        },
+        "treatment_effect_on_transitions": {
+          "NAIVE": {
+            "multipliers": {}
+          },
+          "STABLE": {
+            "multipliers": {
+              "STABLE": 1.15,
+              "ACTIVE": 0.85
+            }
+          },
+          "ACTIVE": {
+            "multipliers": {
+              "STABLE": 1.5,
+              "ACTIVE": 0.85,
+              "HIGHLY_ACTIVE": 0.6
+            }
+          },
+          "HIGHLY_ACTIVE": {
+            "multipliers": {
+              "STABLE": 1.5,
+              "ACTIVE": 1.3,
+              "HIGHLY_ACTIVE": 0.85
+            }
+          }
+        },
+        "baseline_vision_mean": 65,
+        "baseline_vision_std": 12,
+        "baseline_vision_min": 20,
+        "baseline_vision_max": 85,
+        "discontinuation_rules": {
+          "poor_vision_threshold": 35,
+          "poor_vision_probability": 0.12,
+          "high_injection_count": 24,
+          "high_injection_probability": 0.03,
+          "long_treatment_months": 36,
+          "long_treatment_probability": 0.02,
+          "discontinuation_types": [
+            "planned",
+            "adverse",
+            "ineffective",
+            "access"
+          ]
+        },
+        "source_file": "/Users/rose/Code/CC/protocols/v2/nhs_aflibercept_tae_v1.0.yaml",
+        "load_timestamp": "2025-06-13T16:02:29.685174",
+        "checksum": "f9c85d4c25cacc57dcf94627222dc0a49f4dde00aead5c0b17686b023349d44c"
+      }
+    }
+  },
+  {
+    "event": "simulation_start",
+    "timestamp": "2025-06-13T16:02:29.685498",
+    "engine_type": "abs",
+    "n_patients": 2000,
+    "duration_years": 5.0,
+    "seed": 42,
+    "protocol_name": "NHS Aflibercept Treat and Extend",
+    "protocol_version": "1.0",
+    "protocol_checksum": "f9c85d4c25cacc57dcf94627222dc0a49f4dde00aead5c0b17686b023349d44c"
+  },
+  {
+    "event": "simulation_complete",
+    "timestamp": "2025-06-13T16:02:29.917403",
+    "total_injections": 22850,
+    "final_vision_mean": 41.303015075376884,
+    "final_vision_std": 18.988952914394513,
+    "discontinuation_rate": 0.350251256281407,
+    "patient_count": 1990
+  }
+]

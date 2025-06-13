@@ -1,0 +1,265 @@
+{
+  "timestamp": "2025-06-03T10:33:28.361Z",
+  "totalButtons": 8,
+  "buttons": [
+    {
+      "label": "Deploy",
+      "page": "Home",
+      "type": "action",
+      "hasIcon": false,
+      "fullWidth": false,
+      "inSidebar": false,
+      "formContext": false,
+      "key": "stBaseButton-header"
+    },
+    {
+      "label": "",
+      "page": "Home",
+      "type": "action",
+      "hasIcon": false,
+      "fullWidth": false,
+      "inSidebar": false,
+      "formContext": false,
+      "key": "stBaseButton-headerNoPadding"
+    },
+    {
+      "label": "",
+      "page": "Home",
+      "type": "action",
+      "hasIcon": false,
+      "fullWidth": false,
+      "inSidebar": false,
+      "formContext": false,
+      "key": "stBaseButton-headerNoPadding"
+    },
+    {
+      "label": "",
+      "page": "Home",
+      "type": "navigation",
+      "hasIcon": false,
+      "fullWidth": false,
+      "inSidebar": true,
+      "formContext": false,
+      "key": "stBaseButton-headerNoPadding"
+    },
+    {
+      "label": "",
+      "page": "Home",
+      "type": "action",
+      "hasIcon": false,
+      "fullWidth": false,
+      "inSidebar": false,
+      "formContext": false,
+      "key": "stBaseButton-elementToolbar"
+    },
+    {
+      "label": "Protocol Manager\nBrowse, view, and validate treatment protocols",
+      "page": "Home",
+      "type": "action",
+      "hasIcon": true,
+      "iconEmoji": "📋",
+      "fullWidth": false,
+      "inSidebar": false,
+      "formContext": false,
+      "key": "stBaseButton-secondary"
+    },
+    {
+      "label": "Run Simulation\nExecute simulations with selected protocols",
+      "page": "Home",
+      "type": "action",
+      "hasIcon": true,
+      "iconEmoji": "🚀",
+      "fullWidth": false,
+      "inSidebar": false,
+      "formContext": false,
+      "key": "stBaseButton-secondary"
+    },
+    {
+      "label": "Analysis\nVisualize and compare simulation results",
+      "page": "Home",
+      "type": "action",
+      "hasIcon": true,
+      "iconEmoji": "📊",
+      "fullWidth": false,
+      "inSidebar": false,
+      "formContext": false,
+      "key": "stBaseButton-secondary"
+    }
+  ],
+  "byType": {
+    "action": [
+      {
+        "label": "Deploy",
+        "page": "Home",
+        "type": "action",
+        "hasIcon": false,
+        "fullWidth": false,
+        "inSidebar": false,
+        "formContext": false,
+        "key": "stBaseButton-header"
+      },
+      {
+        "label": "",
+        "page": "Home",
+        "type": "action",
+        "hasIcon": false,
+        "fullWidth": false,
+        "inSidebar": false,
+        "formContext": false,
+        "key": "stBaseButton-headerNoPadding"
+      },
+      {
+        "label": "",
+        "page": "Home",
+        "type": "action",
+        "hasIcon": false,
+        "fullWidth": false,
+        "inSidebar": false,
+        "formContext": false,
+        "key": "stBaseButton-headerNoPadding"
+      },
+      {
+        "label": "",
+        "page": "Home",
+        "type": "action",
+        "hasIcon": false,
+        "fullWidth": false,
+        "inSidebar": false,
+        "formContext": false,
+        "key": "stBaseButton-elementToolbar"
+      },
+      {
+        "label": "Protocol Manager\nBrowse, view, and validate treatment protocols",
+        "page": "Home",
+        "type": "action",
+        "hasIcon": true,
+        "iconEmoji": "📋",
+        "fullWidth": false,
+        "inSidebar": false,
+        "formContext": false,
+        "key": "stBaseButton-secondary"
+      },
+      {
+        "label": "Run Simulation\nExecute simulations with selected protocols",
+        "page": "Home",
+        "type": "action",
+        "hasIcon": true,
+        "iconEmoji": "🚀",
+        "fullWidth": false,
+        "inSidebar": false,
+        "formContext": false,
+        "key": "stBaseButton-secondary"
+      },
+      {
+        "label": "Analysis\nVisualize and compare simulation results",
+        "page": "Home",
+        "type": "action",
+        "hasIcon": true,
+        "iconEmoji": "📊",
+        "fullWidth": false,
+        "inSidebar": false,
+        "formContext": false,
+        "key": "stBaseButton-secondary"
+      }
+    ],
+    "navigation": [
+      {
+        "label": "",
+        "page": "Home",
+        "type": "navigation",
+        "hasIcon": false,
+        "fullWidth": false,
+        "inSidebar": true,
+        "formContext": false,
+        "key": "stBaseButton-headerNoPadding"
+      }
+    ]
+  },
+  "byPage": {
+    "Home": [
+      {
+        "label": "Deploy",
+        "page": "Home",
+        "type": "action",
+        "hasIcon": false,
+        "fullWidth": false,
+        "inSidebar": false,
+        "formContext": false,
+        "key": "stBaseButton-header"
+      },
+      {
+        "label": "",
+        "page": "Home",
+        "type": "action",
+        "hasIcon": false,
+        "fullWidth": false,
+        "inSidebar": false,
+        "formContext": false,
+        "key": "stBaseButton-headerNoPadding"
+      },
+      {
+        "label": "",
+        "page": "Home",
+        "type": "action",
+        "hasIcon": false,
+        "fullWidth": false,
+        "inSidebar": false,
+        "formContext": false,
+        "key": "stBaseButton-headerNoPadding"
+      },
+      {
+        "label": "",
+        "page": "Home",
+        "type": "navigation",
+        "hasIcon": false,
+        "fullWidth": false,
+        "inSidebar": true,
+        "formContext": false,
+        "key": "stBaseButton-headerNoPadding"
+      },
+      {
+        "label": "",
+        "page": "Home",
+        "type": "action",
+        "hasIcon": false,
+        "fullWidth": false,
+        "inSidebar": false,
+        "formContext": false,
+        "key": "stBaseButton-elementToolbar"
+      },
+      {
+        "label": "Protocol Manager\nBrowse, view, and validate treatment protocols",
+        "page": "Home",
+        "type": "action",
+        "hasIcon": true,
+        "iconEmoji": "📋",
+        "fullWidth": false,
+        "inSidebar": false,
+        "formContext": false,
+        "key": "stBaseButton-secondary"
+      },
+      {
+        "label": "Run Simulation\nExecute simulations with selected protocols",
+        "page": "Home",
+        "type": "action",
+        "hasIcon": true,
+        "iconEmoji": "🚀",
+        "fullWidth": false,
+        "inSidebar": false,
+        "formContext": false,
+        "key": "stBaseButton-secondary"
+      },
+      {
+        "label": "Analysis\nVisualize and compare simulation results",
+        "page": "Home",
+        "type": "action",
+        "hasIcon": true,
+        "iconEmoji": "📊",
+        "fullWidth": false,
+        "inSidebar": false,
+        "formContext": false,
+        "key": "stBaseButton-secondary"
+      }
+    ]
+  }
+}

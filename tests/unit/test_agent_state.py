@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime, timedelta
 from simulation.agent_state import AgentState
-from protocols.protocol_parser import ProtocolParser
+from ape.protocols.protocol_parser import ProtocolParser
 from simulation.clinical_model import ClinicalModel
 from simulation.config import SimulationConfig
 

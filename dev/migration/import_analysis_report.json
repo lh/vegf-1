@@ -1,0 +1,7158 @@
+{
+  "summary": {
+    "total_files": 132,
+    "circular_dependencies": 0,
+    "modules_with_most_dependencies": [
+      [
+        "pages.3_Analysis",
+        16
+      ],
+      [
+        "pages.2_Simulations",
+        10
+      ],
+      [
+        "components.treatment_patterns.enhanced_tab",
+        8
+      ],
+      [
+        "pages.4_Experiments",
+        6
+      ],
+      [
+        "verify_streamgraph_ui",
+        5
+      ],
+      [
+        "visualizations.streamgraph_treatment_states",
+        5
+      ],
+      [
+        "tests.ui.test_package_ui",
+        5
+      ],
+      [
+        "test_streamgraph_performance",
+        4
+      ],
+      [
+        "verify_sankey_works",
+        4
+      ],
+      [
+        "components.import_component",
+        4
+      ]
+    ]
+  },
+  "circular_dependencies": [],
+  "file_analysis": {
+    "APE": {
+      "file": "APE.py",
+      "categories": {
+        "internal": [
+          "utils"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.carbon_button_helpers",
+            "names": [
+              "navigation_button"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "run_analysis": {
+      "file": "run_analysis.py",
+      "categories": {
+        "internal": [
+          "subprocess"
+        ],
+        "external": [],
+        "stdlib": [
+          "sys"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "subprocess",
+          "sys"
+        ],
+        "from_imports": []
+      }
+    },
+    "test_recruitment_ui": {
+      "file": "test_recruitment_ui.py",
+      "categories": {
+        "internal": [
+          "components"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.simulation_ui_v2",
+            "names": [
+              "render_recruitment_parameters",
+              "render_preset_buttons_v2"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "analyze_treatment_states": {
+      "file": "analyze_treatment_states.py",
+      "categories": {
+        "internal": [
+          "core"
+        ],
+        "external": [
+          "pandas",
+          "numpy"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "sys",
+          "pandas",
+          "numpy"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.parquet",
+            "names": [
+              "ParquetResults"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "test_cache_performance": {
+      "file": "test_cache_performance.py",
+      "categories": {
+        "internal": [
+          "core",
+          "components"
+        ],
+        "external": [],
+        "stdlib": [
+          "sys",
+          "json",
+          "time",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "sys",
+          "time",
+          "json"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.time_series_cache",
+            "names": [
+              "get_cached_time_series_data",
+              "compute_df_hash",
+              "should_show_week_resolution"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.data_manager",
+            "names": [
+              "get_treatment_pattern_data"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "check_carbon_icons": {
+      "file": "check_carbon_icons.py",
+      "categories": {
+        "internal": [
+          "subprocess",
+          "tempfile"
+        ],
+        "external": [],
+        "stdlib": [
+          "sys",
+          "os"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "subprocess",
+          "sys",
+          "tempfile",
+          "os"
+        ],
+        "from_imports": []
+      }
+    },
+    "test_analysis_overview": {
+      "file": "test_analysis_overview.py",
+      "categories": {
+        "internal": [
+          "pages"
+        ],
+        "external": [
+          "pandas",
+          "streamlit"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "sys",
+          "streamlit",
+          "pandas"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pages.analysis_overview",
+            "names": [
+              "main"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "check_carbon_params": {
+      "file": "check_carbon_params.py",
+      "categories": {
+        "internal": [
+          "streamlit_carbon_button"
+        ],
+        "external": [],
+        "stdlib": [
+          "inspect"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "inspect"
+        ],
+        "from_imports": [
+          {
+            "module": "streamlit_carbon_button",
+            "names": [
+              "carbon_button"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "test_streamgraph_ui": {
+      "file": "test_streamgraph_ui.py",
+      "categories": {
+        "internal": [
+          "visualizations",
+          "simulation_v2",
+          "core"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          },
+          {
+            "module": "visualizations.streamgraph_treatment_states",
+            "names": [
+              "create_treatment_state_streamgraph"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "debug_streamgraph_data": {
+      "file": "debug_streamgraph_data.py",
+      "categories": {
+        "internal": [
+          "core"
+        ],
+        "external": [
+          "pandas"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "sys",
+          "pandas"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.parquet",
+            "names": [
+              "ParquetResults"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "test_streamgraph_data": {
+      "file": "test_streamgraph_data.py",
+      "categories": {
+        "internal": [
+          "simulation_v2",
+          "core",
+          "components"
+        ],
+        "external": [
+          "pandas"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "sys",
+          "pandas"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.pattern_analyzer",
+            "names": [
+              "extract_treatment_patterns_vectorized"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.time_series_generator",
+            "names": [
+              "generate_patient_state_time_series"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "test_streamgraph_performance": {
+      "file": "test_streamgraph_performance.py",
+      "categories": {
+        "internal": [
+          "core",
+          "components"
+        ],
+        "external": [
+          "pandas"
+        ],
+        "stdlib": [
+          "sys",
+          "json",
+          "time",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "sys",
+          "time",
+          "pandas",
+          "json"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.pattern_analyzer",
+            "names": [
+              "extract_treatment_patterns_vectorized"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.time_series_generator",
+            "names": [
+              "generate_patient_state_time_series"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.time_series_generator_optimized",
+            "names": [
+              "generate_patient_state_time_series_optimized"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "test_streamgraph_views": {
+      "file": "test_streamgraph_views.py",
+      "categories": {
+        "internal": [
+          "simulation_v2",
+          "core",
+          "components"
+        ],
+        "external": [
+          "pandas",
+          "matplotlib.pyplot"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "sys",
+          "pandas",
+          "matplotlib.pyplot"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.pattern_analyzer",
+            "names": [
+              "extract_treatment_patterns_vectorized"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.time_series_generator",
+            "names": [
+              "generate_patient_state_time_series"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "test_wedge_shape": {
+      "file": "test_wedge_shape.py",
+      "categories": {
+        "internal": [
+          "simulation_v2",
+          "core",
+          "components"
+        ],
+        "external": [
+          "pandas",
+          "numpy",
+          "matplotlib.pyplot"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "sys",
+          "pandas",
+          "numpy",
+          "matplotlib.pyplot"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.pattern_analyzer",
+            "names": [
+              "extract_treatment_patterns_vectorized"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.time_series_generator",
+            "names": [
+              "generate_patient_state_time_series"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "verify_staggered_enrollment": {
+      "file": "verify_staggered_enrollment.py",
+      "categories": {
+        "internal": [
+          "simulation_v2"
+        ],
+        "external": [
+          "numpy",
+          "matplotlib.pyplot"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "sys",
+          "numpy",
+          "matplotlib.pyplot"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "verify_streamgraph_ui": {
+      "file": "verify_streamgraph_ui.py",
+      "categories": {
+        "internal": [
+          "visualizations",
+          "core",
+          "components"
+        ],
+        "external": [
+          "pandas"
+        ],
+        "stdlib": [
+          "sys",
+          "traceback",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "sys",
+          "pandas",
+          "traceback"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.parquet",
+            "names": [
+              "ParquetResults"
+            ],
+            "level": 0
+          },
+          {
+            "module": "visualizations.streamgraph_treatment_states",
+            "names": [
+              "create_treatment_state_streamgraph"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.pattern_analyzer",
+            "names": [
+              "extract_treatment_patterns_vectorized"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.time_series_generator",
+            "names": [
+              "generate_patient_state_time_series"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "verify_sankey_works": {
+      "file": "verify_sankey_works.py",
+      "categories": {
+        "internal": [
+          "core",
+          "components"
+        ],
+        "external": [],
+        "stdlib": [
+          "sys",
+          "json",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "sys",
+          "json"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.storage.registry",
+            "names": [
+              "SimulationRegistry"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns",
+            "names": [
+              "extract_treatment_patterns_vectorized"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.interval_analyzer",
+            "names": [
+              "calculate_interval_statistics"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "core.simulation_runner": {
+      "file": "core/simulation_runner.py",
+      "categories": {
+        "internal": [
+          "results",
+          "simulation_v2"
+        ],
+        "external": [
+          "yaml"
+        ],
+        "stdlib": [
+          "sys",
+          "json",
+          "time",
+          "typing",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "sys",
+          "time",
+          "yaml",
+          "json"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "typing",
+            "names": [
+              "Dict",
+              "Any",
+              "List",
+              "Optional"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 1
+          },
+          {
+            "module": "results.base",
+            "names": [
+              "SimulationResults"
+            ],
+            "level": 1
+          }
+        ]
+      }
+    },
+    "core.__init__": {
+      "file": "core/__init__.py",
+      "categories": {
+        "internal": [
+          "simulation_runner"
+        ],
+        "external": [],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [],
+        "from_imports": [
+          {
+            "module": "simulation_runner",
+            "names": [
+              "SimulationRunner",
+              "upgrade_existing_results"
+            ],
+            "level": 1
+          }
+        ]
+      }
+    },
+    "experiments.check_disease_states": {
+      "file": "experiments/check_disease_states.py",
+      "categories": {
+        "internal": [
+          "core"
+        ],
+        "external": [
+          "pandas"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "sys",
+          "pandas"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "experiments.visualize_simulation_pathways": {
+      "file": "experiments/visualize_simulation_pathways.py",
+      "categories": {
+        "internal": [
+          "core"
+        ],
+        "external": [
+          "pandas",
+          "streamlit",
+          "plotly.graph_objects"
+        ],
+        "stdlib": [
+          "sys",
+          "json",
+          "datetime",
+          "collections",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "pandas",
+          "plotly.graph_objects",
+          "json",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "collections",
+            "names": [
+              "defaultdict"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "experiments.detect_treatment_gaps": {
+      "file": "experiments/detect_treatment_gaps.py",
+      "categories": {
+        "internal": [
+          "core",
+          "argparse"
+        ],
+        "external": [
+          "pandas",
+          "numpy"
+        ],
+        "stdlib": [
+          "sys",
+          "json",
+          "datetime",
+          "collections",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pandas",
+          "numpy",
+          "json",
+          "sys",
+          "argparse"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime",
+              "timedelta"
+            ],
+            "level": 0
+          },
+          {
+            "module": "collections",
+            "names": [
+              "defaultdict"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsManagerFactory"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "experiments.treatment_patterns_enhanced_sankey": {
+      "file": "experiments/treatment_patterns_enhanced_sankey.py",
+      "categories": {
+        "internal": [
+          "core",
+          "treatment_patterns_visualization"
+        ],
+        "external": [
+          "pandas",
+          "streamlit",
+          "plotly.graph_objects",
+          "numpy"
+        ],
+        "stdlib": [
+          "sys",
+          "json",
+          "time",
+          "traceback",
+          "datetime",
+          "collections",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "pandas",
+          "numpy",
+          "plotly.graph_objects",
+          "json",
+          "sys",
+          "time",
+          "traceback"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "collections",
+            "names": [
+              "defaultdict"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "treatment_patterns_visualization",
+            "names": [
+              "get_available_simulations",
+              "extract_treatment_patterns_vectorized",
+              "determine_treatment_state_vectorized",
+              "create_interval_distribution_chart",
+              "create_gap_analysis_chart",
+              "TREATMENT_STATE_COLORS"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "experiments.visualize_simulation_pathways_fast": {
+      "file": "experiments/visualize_simulation_pathways_fast.py",
+      "categories": {
+        "internal": [
+          "visualize_simulation_pathways",
+          "core"
+        ],
+        "external": [
+          "pandas",
+          "streamlit",
+          "plotly.graph_objects",
+          "numpy"
+        ],
+        "stdlib": [
+          "sys",
+          "json",
+          "time",
+          "traceback",
+          "datetime",
+          "collections",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "pandas",
+          "numpy",
+          "plotly.graph_objects",
+          "json",
+          "sys",
+          "time",
+          "traceback"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "collections",
+            "names": [
+              "defaultdict"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "visualize_simulation_pathways",
+            "names": [
+              "extract_patient_transitions"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "experiments.debug_simulation_data": {
+      "file": "experiments/debug_simulation_data.py",
+      "categories": {
+        "internal": [
+          "core"
+        ],
+        "external": [
+          "pandas"
+        ],
+        "stdlib": [
+          "sys",
+          "json",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "sys",
+          "pandas",
+          "json"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "experiments.analyze_hidden_sankey_flows": {
+      "file": "experiments/analyze_hidden_sankey_flows.py",
+      "categories": {
+        "internal": [
+          "core",
+          "components"
+        ],
+        "external": [
+          "pandas",
+          "numpy"
+        ],
+        "stdlib": [
+          "sys",
+          "collections",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pandas",
+          "numpy",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "collections",
+            "names": [
+              "defaultdict"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns",
+            "names": [
+              "extract_treatment_patterns_vectorized"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "experiments.sankey_customization_demo": {
+      "file": "experiments/sankey_customization_demo.py",
+      "categories": {
+        "internal": [
+          "core",
+          "components"
+        ],
+        "external": [
+          "pandas",
+          "streamlit",
+          "plotly.graph_objects",
+          "numpy"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "plotly.graph_objects",
+          "pandas",
+          "numpy",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns",
+            "names": [
+              "extract_treatment_patterns_vectorized"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "experiments.run_v2_simulation_with_discontinuation": {
+      "file": "experiments/run_v2_simulation_with_discontinuation.py",
+      "categories": {
+        "internal": [
+          "streamlit_app_v2",
+          "simulation_v2"
+        ],
+        "external": [
+          "yaml"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "sys",
+          "yaml"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.core.discontinuation_profile",
+            "names": [
+              "DiscontinuationProfile"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.engines.abs_engine_v2",
+            "names": [
+              "ABSEngineV2"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.core.disease_model",
+            "names": [
+              "DiseaseModel"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.core.protocol",
+            "names": [
+              "StandardProtocol"
+            ],
+            "level": 0
+          },
+          {
+            "module": "streamlit_app_v2.core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "experiments.treatment_patterns_visualization": {
+      "file": "experiments/treatment_patterns_visualization.py",
+      "categories": {
+        "internal": [
+          "core"
+        ],
+        "external": [
+          "pandas",
+          "streamlit",
+          "plotly.graph_objects",
+          "numpy"
+        ],
+        "stdlib": [
+          "sys",
+          "json",
+          "time",
+          "traceback",
+          "datetime",
+          "collections",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "pandas",
+          "numpy",
+          "plotly.graph_objects",
+          "json",
+          "sys",
+          "time",
+          "traceback"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "collections",
+            "names": [
+              "defaultdict"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.test_setup": {
+      "file": "tests/test_setup.py",
+      "categories": {
+        "internal": [
+          "simulation_v2",
+          "psutil"
+        ],
+        "external": [
+          "pytest"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "sys",
+          "psutil"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.core.disease_model",
+            "names": [
+              "DiseaseState"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.test_simulation_package_security": {
+      "file": "tests/test_simulation_package_security.py",
+      "categories": {
+        "internal": [
+          "tempfile",
+          "unittest",
+          "utils",
+          "zipfile"
+        ],
+        "external": [
+          "pandas",
+          "pytest"
+        ],
+        "stdlib": [
+          "os",
+          "json",
+          "re",
+          "time",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "tempfile",
+          "zipfile",
+          "json",
+          "os",
+          "pandas",
+          "time",
+          "re"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "unittest.mock",
+            "names": [
+              "Mock",
+              "patch"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_package",
+            "names": [
+              "SimulationPackageManager",
+              "SecurityError",
+              "PackageValidationError"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.__init__": {
+      "file": "tests/__init__.py",
+      "categories": {
+        "internal": [],
+        "external": [],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [],
+        "from_imports": []
+      }
+    },
+    "tests.save_baseline": {
+      "file": "tests/save_baseline.py",
+      "categories": {
+        "internal": [
+          "subprocess",
+          "shutil",
+          "platform",
+          "psutil"
+        ],
+        "external": [],
+        "stdlib": [
+          "sys",
+          "json",
+          "pathlib",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "json",
+          "subprocess",
+          "sys",
+          "platform",
+          "psutil",
+          "shutil"
+        ],
+        "from_imports": [
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.test_simulation_package": {
+      "file": "tests/test_simulation_package.py",
+      "categories": {
+        "internal": [
+          "unittest",
+          "utils",
+          "zipfile",
+          "hashlib",
+          "core",
+          "tempfile"
+        ],
+        "external": [
+          "pandas",
+          "pytest"
+        ],
+        "stdlib": [
+          "json",
+          "time",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "tempfile",
+          "zipfile",
+          "json",
+          "hashlib",
+          "pandas",
+          "tempfile",
+          "tempfile",
+          "pandas",
+          "json",
+          "json",
+          "time"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "unittest.mock",
+            "names": [
+              "Mock",
+              "patch",
+              "MagicMock"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_package",
+            "names": [
+              "SimulationPackageManager",
+              "SecurityError"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.test_improved_naming": {
+      "file": "tests/test_improved_naming.py",
+      "categories": {
+        "internal": [],
+        "external": [
+          "pytest"
+        ],
+        "stdlib": [
+          "random",
+          "re",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "re",
+          "random"
+        ],
+        "from_imports": [
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "utils.state_helpers": {
+      "file": "utils/state_helpers.py",
+      "categories": {
+        "internal": [
+          "components"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "json",
+          "time",
+          "typing",
+          "logging",
+          "datetime",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "json",
+          "time",
+          "logging"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Dict",
+              "Any",
+              "Optional"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.performance_config",
+            "names": [
+              "should_precalculate"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns",
+            "names": [
+              "extract_treatment_patterns_vectorized"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.pattern_analyzer_enhanced",
+            "names": [
+              "extract_treatment_patterns_with_terminals"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "utils.clean_duplicate_protocols": {
+      "file": "utils/clean_duplicate_protocols.py",
+      "categories": {
+        "internal": [],
+        "external": [],
+        "stdlib": [
+          "time",
+          "collections",
+          "pathlib",
+          "re"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "re",
+          "time"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "collections",
+            "names": [
+              "defaultdict"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "utils.advanced_icons": {
+      "file": "utils/advanced_icons.py",
+      "categories": {
+        "internal": [
+          "uuid"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "uuid"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Optional"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "utils.simulation_package": {
+      "file": "utils/simulation_package.py",
+      "categories": {
+        "internal": [
+          "shutil",
+          "zipfile",
+          "hashlib",
+          "core",
+          "tempfile"
+        ],
+        "external": [
+          "pandas",
+          "yaml"
+        ],
+        "stdlib": [
+          "json",
+          "os",
+          "re",
+          "typing",
+          "logging",
+          "datetime",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "zipfile",
+          "json",
+          "hashlib",
+          "tempfile",
+          "shutil",
+          "logging",
+          "pandas",
+          "os",
+          "re",
+          "os",
+          "re",
+          "os",
+          "re",
+          "re",
+          "re",
+          "yaml",
+          "shutil"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Dict",
+              "Any",
+              "Optional",
+              "Union"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.base",
+            "names": [
+              "SimulationMetadata"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.parquet",
+            "names": [
+              "ParquetResults"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "utils.export_config": {
+      "file": "utils/export_config.py",
+      "categories": {
+        "internal": [],
+        "external": [
+          "streamlit.components.v1",
+          "streamlit"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "streamlit.components.v1"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Dict",
+              "Any",
+              "Optional"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "utils.icons": {
+      "file": "utils/icons.py",
+      "categories": {
+        "internal": [],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Union",
+              "Dict",
+              "Any"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "utils.__init__": {
+      "file": "utils/__init__.py",
+      "categories": {
+        "internal": [],
+        "external": [],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [],
+        "from_imports": []
+      }
+    },
+    "utils.carbon_button_helpers": {
+      "file": "utils/carbon_button_helpers.py",
+      "categories": {
+        "internal": [
+          "streamlit_carbon_button"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit"
+        ],
+        "from_imports": [
+          {
+            "module": "streamlit_carbon_button",
+            "names": [
+              "carbon_button",
+              "CarbonIcons"
+            ],
+            "level": 0
+          },
+          {
+            "module": "typing",
+            "names": [
+              "Optional",
+              "Dict",
+              "Any",
+              "List"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "utils.simulation_loader": {
+      "file": "utils/simulation_loader.py",
+      "categories": {
+        "internal": [
+          "tempfile",
+          "simulation_v2",
+          "core"
+        ],
+        "external": [
+          "streamlit",
+          "yaml"
+        ],
+        "stdlib": [
+          "json",
+          "typing",
+          "logging",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "json",
+          "logging",
+          "yaml",
+          "tempfile",
+          "yaml",
+          "tempfile"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "typing",
+            "names": [
+              "Optional",
+              "Dict",
+              "Any"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "utils.chart_builder": {
+      "file": "utils/chart_builder.py",
+      "categories": {
+        "internal": [
+          "style_constants",
+          "visualization_modes",
+          "tufte_zoom_style"
+        ],
+        "external": [
+          "streamlit",
+          "matplotlib",
+          "matplotlib.pyplot",
+          "numpy"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "matplotlib.pyplot",
+          "streamlit",
+          "numpy"
+        ],
+        "from_imports": [
+          {
+            "module": "matplotlib.ticker",
+            "names": [
+              "MaxNLocator"
+            ],
+            "level": 0
+          },
+          {
+            "module": "typing",
+            "names": [
+              "Optional",
+              "Tuple",
+              "Dict",
+              "Any",
+              "Callable"
+            ],
+            "level": 0
+          },
+          {
+            "module": "visualization_modes",
+            "names": [
+              "mode_aware_figure",
+              "get_mode_colors"
+            ],
+            "level": 1
+          },
+          {
+            "module": "tufte_zoom_style",
+            "names": [
+              "style_axis",
+              "format_zoom_legend",
+              "add_reference_line"
+            ],
+            "level": 1
+          },
+          {
+            "module": "style_constants",
+            "names": [
+              "StyleConstants"
+            ],
+            "level": 1
+          }
+        ]
+      }
+    },
+    "utils.environment": {
+      "file": "utils/environment.py",
+      "categories": {
+        "internal": [
+          "psutil"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "os"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "os",
+          "streamlit",
+          "psutil"
+        ],
+        "from_imports": []
+      }
+    },
+    "utils.tufte_zoom_style": {
+      "file": "utils/tufte_zoom_style.py",
+      "categories": {
+        "internal": [],
+        "external": [
+          "matplotlib.pyplot",
+          "numpy",
+          "matplotlib",
+          "seaborn"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "matplotlib.pyplot",
+          "matplotlib",
+          "seaborn",
+          "numpy"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Dict",
+              "Any",
+              "Optional",
+              "Tuple"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "utils.button_styling_deprecated": {
+      "file": "utils/button_styling_deprecated.py",
+      "categories": {
+        "internal": [],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Optional",
+              "Dict",
+              "Any"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "utils.style_constants": {
+      "file": "utils/style_constants.py",
+      "categories": {
+        "internal": [],
+        "external": [
+          "numpy"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "numpy"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Dict",
+              "List",
+              "Tuple",
+              "Optional"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "utils.icons_example": {
+      "file": "utils/icons_example.py",
+      "categories": {
+        "internal": [
+          "icons"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit"
+        ],
+        "from_imports": [
+          {
+            "module": "icons",
+            "names": [
+              "get_icon",
+              "icon",
+              "icon_button",
+              "ICON_TYPE"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "utils.visualization_modes": {
+      "file": "utils/visualization_modes.py",
+      "categories": {
+        "internal": [],
+        "external": [
+          "streamlit",
+          "matplotlib.pyplot"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "matplotlib.pyplot"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Dict",
+              "Any",
+              "Optional"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "utils.icon_button_solutions": {
+      "file": "utils/icon_button_solutions.py",
+      "categories": {
+        "internal": [
+          "streamlit_extras",
+          "base64"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "base64"
+        ],
+        "from_imports": [
+          {
+            "module": "streamlit_extras.stylable_container",
+            "names": [
+              "stylable_container"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "components.import_component": {
+      "file": "components/import_component.py",
+      "categories": {
+        "internal": [
+          "tempfile",
+          "core",
+          "utils"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "os",
+          "logging",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "logging",
+          "os",
+          "tempfile"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_package",
+            "names": [
+              "SimulationPackageManager",
+              "SecurityError",
+              "PackageValidationError"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.storage.registry",
+            "names": [
+              "SimulationRegistry"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_loader",
+            "names": [
+              "load_simulation_results"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "components.simulation_io": {
+      "file": "components/simulation_io.py",
+      "categories": {
+        "internal": [
+          "core",
+          "utils"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "os",
+          "typing",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "os"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "typing",
+            "names": [
+              "Optional"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_package",
+            "names": [
+              "SimulationPackageManager",
+              "SecurityError",
+              "PackageValidationError"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.storage.registry",
+            "names": [
+              "SimulationRegistry"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_loader",
+            "names": [
+              "load_simulation_results"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "components.__init__": {
+      "file": "components/__init__.py",
+      "categories": {
+        "internal": [
+          "simulation_io",
+          "simulation_ui"
+        ],
+        "external": [],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [],
+        "from_imports": [
+          {
+            "module": "simulation_io",
+            "names": [
+              "create_export_package",
+              "handle_import",
+              "render_manage_section"
+            ],
+            "level": 1
+          },
+          {
+            "module": "simulation_ui",
+            "names": [
+              "render_preset_buttons",
+              "render_parameter_inputs",
+              "render_runtime_estimate",
+              "render_control_buttons",
+              "render_recent_simulations",
+              "render_simulation_card",
+              "clear_preset_values"
+            ],
+            "level": 1
+          }
+        ]
+      }
+    },
+    "components.export": {
+      "file": "components/export.py",
+      "categories": {
+        "internal": [
+          "core",
+          "utils"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "logging",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "logging"
+        ],
+        "from_imports": [
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_package",
+            "names": [
+              "SimulationPackageManager"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "components.simulation_ui": {
+      "file": "components/simulation_ui.py",
+      "categories": {
+        "internal": [
+          "core",
+          "pendulum",
+          "utils"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "json",
+          "typing",
+          "pathlib",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "json",
+          "pendulum"
+        ],
+        "from_imports": [
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "typing",
+            "names": [
+              "Dict",
+              "Any",
+              "List",
+              "Tuple"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.carbon_button_helpers",
+            "names": [
+              "ape_button"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_loader",
+            "names": [
+              "load_simulation_results"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "components.simulation_ui_v2": {
+      "file": "components/simulation_ui_v2.py",
+      "categories": {
+        "internal": [],
+        "external": [
+          "streamlit",
+          "numpy"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "numpy"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Tuple",
+              "Dict",
+              "Any"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "visualizations.streamgraph_treatment_states": {
+      "file": "visualizations/streamgraph_treatment_states.py",
+      "categories": {
+        "internal": [
+          "components",
+          "utils"
+        ],
+        "external": [
+          "pandas",
+          "plotly.express",
+          "streamlit",
+          "plotly.graph_objects"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "plotly.graph_objects",
+          "plotly.express",
+          "pandas",
+          "streamlit"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Optional"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.visualization_modes",
+            "names": [
+              "get_mode_colors"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.pattern_analyzer",
+            "names": [
+              "STATE_COLOR_MAPPING"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.data_manager",
+            "names": [
+              "get_treatment_pattern_data"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.time_series_generator",
+            "names": [
+              "generate_patient_state_time_series"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.time_series_cache",
+            "names": [
+              "get_cached_time_series_data",
+              "compute_df_hash"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "visualizations.streamgraph": {
+      "file": "visualizations/streamgraph.py",
+      "categories": {
+        "internal": [
+          "core",
+          "utils"
+        ],
+        "external": [
+          "pandas",
+          "streamlit",
+          "plotly.graph_objects",
+          "numpy"
+        ],
+        "stdlib": [
+          "typing",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pandas",
+          "numpy",
+          "plotly.graph_objects",
+          "streamlit"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Dict",
+              "List",
+              "Optional",
+              "Tuple"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.color_system",
+            "names": [
+              "ColorSystem"
+            ],
+            "level": 2
+          },
+          {
+            "module": "utils.tufte_style",
+            "names": [
+              "style_axis"
+            ],
+            "level": 2
+          },
+          {
+            "module": "core.results.parquet",
+            "names": [
+              "ParquetResults"
+            ],
+            "level": 2
+          }
+        ]
+      }
+    },
+    "visualizations.streamgraph_comprehensive": {
+      "file": "visualizations/streamgraph_comprehensive.py",
+      "categories": {
+        "internal": [
+          "components",
+          "streamgraph_treatment_states"
+        ],
+        "external": [
+          "pandas",
+          "streamlit",
+          "plotly.graph_objects",
+          "numpy"
+        ],
+        "stdlib": [
+          "typing",
+          "collections",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pandas",
+          "numpy",
+          "plotly.graph_objects",
+          "streamlit"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "typing",
+            "names": [
+              "Optional",
+              "Dict",
+              "Tuple",
+              "Any"
+            ],
+            "level": 0
+          },
+          {
+            "module": "collections",
+            "names": [
+              "defaultdict"
+            ],
+            "level": 0
+          },
+          {
+            "module": "streamgraph_treatment_states",
+            "names": [
+              "create_treatment_state_streamgraph"
+            ],
+            "level": 1
+          },
+          {
+            "module": "components.treatment_patterns.time_series_generator",
+            "names": [
+              "generate_patient_state_time_series"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.data_manager",
+            "names": [
+              "get_treatment_pattern_data"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "visualizations.streamgraph_simple": {
+      "file": "visualizations/streamgraph_simple.py",
+      "categories": {
+        "internal": [
+          "utils"
+        ],
+        "external": [
+          "pandas",
+          "streamlit",
+          "matplotlib.pyplot",
+          "numpy"
+        ],
+        "stdlib": [
+          "typing",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pandas",
+          "numpy",
+          "matplotlib.pyplot",
+          "streamlit"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "typing",
+            "names": [
+              "Optional"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.chart_builder",
+            "names": [
+              "ChartBuilder"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.style_constants",
+            "names": [
+              "StyleConstants"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "visualizations.streamgraph_enhanced": {
+      "file": "visualizations/streamgraph_enhanced.py",
+      "categories": {
+        "internal": [
+          "core"
+        ],
+        "external": [
+          "pandas",
+          "streamlit",
+          "plotly.graph_objects",
+          "numpy"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pandas",
+          "numpy",
+          "plotly.graph_objects",
+          "streamlit"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Optional",
+              "TYPE_CHECKING"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.parquet",
+            "names": [
+              "ParquetResults"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "visualizations.streamgraph_plotly": {
+      "file": "visualizations/streamgraph_plotly.py",
+      "categories": {
+        "internal": [
+          "utils"
+        ],
+        "external": [
+          "pandas",
+          "streamlit",
+          "plotly.graph_objects",
+          "numpy"
+        ],
+        "stdlib": [
+          "json",
+          "typing",
+          "collections",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pandas",
+          "numpy",
+          "plotly.graph_objects",
+          "streamlit",
+          "json"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "typing",
+            "names": [
+              "Optional",
+              "Dict",
+              "List",
+              "Tuple"
+            ],
+            "level": 0
+          },
+          {
+            "module": "collections",
+            "names": [
+              "defaultdict"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.style_constants",
+            "names": [
+              "StyleConstants"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "examples.streamlit_simulation": {
+      "file": "examples/streamlit_simulation.py",
+      "categories": {
+        "internal": [
+          "simulation_v2",
+          "core"
+        ],
+        "external": [],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.monitoring.memory",
+            "names": [
+              "MemoryMonitor"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "scripts.run_tests": {
+      "file": "scripts/run_tests.py",
+      "categories": {
+        "internal": [
+          "subprocess",
+          "argparse"
+        ],
+        "external": [],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "argparse",
+          "subprocess",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "scripts.setup_git_hooks": {
+      "file": "scripts/setup_git_hooks.py",
+      "categories": {
+        "internal": [
+          "stat"
+        ],
+        "external": [],
+        "stdlib": [
+          "sys",
+          "os",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "os",
+          "sys",
+          "stat"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "pages.4_Experiments": {
+      "file": "pages/4_Experiments.py",
+      "categories": {
+        "internal": [
+          "core",
+          "components",
+          "utils"
+        ],
+        "external": [
+          "pandas",
+          "streamlit",
+          "plotly.graph_objects",
+          "numpy"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "plotly.graph_objects",
+          "pandas",
+          "numpy",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns",
+            "names": [
+              "extract_treatment_patterns_vectorized"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.pattern_analyzer_enhanced",
+            "names": [
+              "extract_treatment_patterns_with_terminals"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.visualization_modes",
+            "names": [
+              "get_mode_colors"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.export_config",
+            "names": [
+              "get_export_config",
+              "render_export_settings"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.sankey_builder",
+            "names": [
+              "get_treatment_state_colors"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.sankey_builder",
+            "names": [
+              "get_treatment_state_colors"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "pages.3_Analysis": {
+      "file": "pages/3_Analysis.py",
+      "categories": {
+        "internal": [
+          "visualizations",
+          "components",
+          "utils",
+          "hashlib"
+        ],
+        "external": [
+          "streamlit",
+          "seaborn",
+          "matplotlib.pyplot",
+          "matplotlib.ticker",
+          "pandas",
+          "numpy"
+        ],
+        "stdlib": [
+          "sys",
+          "json",
+          "time",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "sys",
+          "pandas",
+          "numpy",
+          "matplotlib.pyplot",
+          "matplotlib.ticker",
+          "seaborn",
+          "time",
+          "hashlib",
+          "json",
+          "json"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.visualization_modes",
+            "names": [
+              "init_visualization_mode",
+              "mode_aware_figure",
+              "get_mode_colors",
+              "apply_visualization_mode"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.tufte_zoom_style",
+            "names": [
+              "style_axis",
+              "add_reference_line",
+              "format_zoom_legend"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.style_constants",
+            "names": [
+              "StyleConstants"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.chart_builder",
+            "names": [
+              "ChartBuilder"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.export_config",
+            "names": [
+              "render_export_settings"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.carbon_button_helpers",
+            "names": [
+              "top_navigation_home_button",
+              "ape_button"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.state_helpers",
+            "names": [
+              "get_active_simulation"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.enhanced_tab",
+            "names": [
+              "render_enhanced_treatment_patterns_tab"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.pattern_analyzer_enhanced",
+            "names": [
+              "extract_treatment_patterns_with_terminals"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.sankey_builder_enhanced",
+            "names": [
+              "create_enhanced_sankey_with_terminals"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns",
+            "names": [
+              "extract_treatment_patterns_vectorized",
+              "create_enhanced_sankey_with_colored_streams"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.export_config",
+            "names": [
+              "get_sankey_export_config"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.time_series_cache",
+            "names": [
+              "should_show_week_resolution"
+            ],
+            "level": 0
+          },
+          {
+            "module": "visualizations.streamgraph_treatment_states",
+            "names": [
+              "create_treatment_state_streamgraph"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.export_config",
+            "names": [
+              "get_export_config"
+            ],
+            "level": 0
+          },
+          {
+            "module": "visualizations.streamgraph_comprehensive",
+            "names": [
+              "calculate_patient_cohort_flow"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns",
+            "names": [
+              "create_interval_distribution_chart",
+              "create_gap_analysis_chart_tufte",
+              "calculate_interval_statistics"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.export_config",
+            "names": [
+              "get_export_config"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.workload_analyzer",
+            "names": [
+              "calculate_clinical_workload_attribution",
+              "format_workload_insight"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.workload_visualizations",
+            "names": [
+              "create_dual_bar_chart",
+              "create_impact_pyramid",
+              "create_bubble_chart",
+              "get_workload_insight_summary"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.carbon_button_helpers",
+            "names": [
+              "ape_button"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.export_config",
+            "names": [
+              "get_export_config"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "pages.99_Carbon_Button_Test": {
+      "file": "pages/99_Carbon_Button_Test.py",
+      "categories": {
+        "internal": [
+          "streamlit_carbon_button",
+          "utils"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "sys",
+          "time",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "time",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "streamlit_carbon_button",
+            "names": [
+              "carbon_button",
+              "CarbonIcons"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.carbon_button_helpers",
+            "names": [
+              "ape_button",
+              "create_button_group",
+              "navigation_button",
+              "top_navigation_home_button",
+              "confirm_dialog_buttons",
+              "save_button",
+              "delete_button",
+              "upload_button"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "pages.1_Protocol_Manager": {
+      "file": "pages/1_Protocol_Manager.py",
+      "categories": {
+        "internal": [
+          "simulation_v2",
+          "utils"
+        ],
+        "external": [
+          "streamlit",
+          "matplotlib.pyplot",
+          "yaml",
+          "pandas",
+          "numpy"
+        ],
+        "stdlib": [
+          "sys",
+          "json",
+          "re",
+          "time",
+          "datetime",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "sys",
+          "yaml",
+          "json",
+          "re",
+          "time",
+          "pandas",
+          "numpy",
+          "matplotlib.pyplot"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.carbon_button_helpers",
+            "names": [
+              "top_navigation_home_button",
+              "ape_button",
+              "delete_button",
+              "navigation_button"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "pages.98_Debug_Environment": {
+      "file": "pages/98_Debug_Environment.py",
+      "categories": {
+        "internal": [
+          "core",
+          "utils"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "sys",
+          "os",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "os",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.environment",
+            "names": [
+              "get_environment_info",
+              "is_streamlit_cloud",
+              "get_memory_limit_mb"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.monitoring.memory",
+            "names": [
+              "MemoryMonitor"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "pages.2_Simulations": {
+      "file": "pages/2_Simulations.py",
+      "categories": {
+        "internal": [
+          "simulation_v2",
+          "core",
+          "components",
+          "utils"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.monitoring.memory",
+            "names": [
+              "MemoryMonitor"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.state_helpers",
+            "names": [
+              "add_simulation_to_registry",
+              "save_protocol_spec",
+              "set_active_simulation",
+              "list_simulation_summaries",
+              "get_active_simulation"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.environment",
+            "names": [
+              "should_check_memory_limits",
+              "is_streamlit_cloud"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.carbon_button_helpers",
+            "names": [
+              "top_navigation_home_button",
+              "ape_button",
+              "navigation_button"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.simulation_io",
+            "names": [
+              "create_export_package",
+              "handle_import",
+              "render_manage_section"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.simulation_ui",
+            "names": [
+              "render_preset_buttons",
+              "render_parameter_inputs",
+              "render_runtime_estimate",
+              "render_control_buttons",
+              "render_recent_simulations",
+              "clear_preset_values"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.simulation_ui_v2",
+            "names": [
+              "render_enhanced_parameter_inputs",
+              "render_preset_buttons_v2",
+              "calculate_runtime_estimate_v2"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.precompute",
+            "names": [
+              "precompute_treatment_patterns"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "core.storage.writer_types": {
+      "file": "core/storage/writer_types.py",
+      "categories": {
+        "internal": [],
+        "external": [],
+        "stdlib": [
+          "typing",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "TypedDict",
+              "Optional",
+              "Any"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "core.storage.registry": {
+      "file": "core/storage/registry.py",
+      "categories": {
+        "internal": [
+          "shutil"
+        ],
+        "external": [
+          "pandas"
+        ],
+        "stdlib": [
+          "json",
+          "typing",
+          "pathlib",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "json",
+          "pandas",
+          "shutil"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "typing",
+            "names": [
+              "List",
+              "Dict",
+              "Any",
+              "Optional"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "core.storage.__init__": {
+      "file": "core/storage/__init__.py",
+      "categories": {
+        "internal": [
+          "writer",
+          "reader",
+          "registry"
+        ],
+        "external": [],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [],
+        "from_imports": [
+          {
+            "module": "writer",
+            "names": [
+              "ParquetWriter"
+            ],
+            "level": 1
+          },
+          {
+            "module": "reader",
+            "names": [
+              "ParquetReader"
+            ],
+            "level": 1
+          },
+          {
+            "module": "registry",
+            "names": [
+              "SimulationRegistry"
+            ],
+            "level": 1
+          }
+        ]
+      }
+    },
+    "core.storage.reader": {
+      "file": "core/storage/reader.py",
+      "categories": {
+        "internal": [
+          "pyarrow.parquet"
+        ],
+        "external": [
+          "pandas",
+          "numpy"
+        ],
+        "stdlib": [
+          "typing",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pandas",
+          "pyarrow.parquet",
+          "numpy"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "typing",
+            "names": [
+              "Iterator",
+              "Optional",
+              "List",
+              "Dict",
+              "Any",
+              "Tuple"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "core.storage.writer": {
+      "file": "core/storage/writer.py",
+      "categories": {
+        "internal": [
+          "pyarrow",
+          "pyarrow.parquet",
+          "writer_types"
+        ],
+        "external": [
+          "pandas"
+        ],
+        "stdlib": [
+          "time",
+          "typing",
+          "pathlib",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pandas",
+          "pyarrow",
+          "pyarrow.parquet",
+          "time"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "typing",
+            "names": [
+              "Any",
+              "Iterator",
+              "Optional",
+              "Callable"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "writer_types",
+            "names": [
+              "PatientRecord",
+              "VisitRecord",
+              "ensure_datetime",
+              "ensure_int_days"
+            ],
+            "level": 1
+          }
+        ]
+      }
+    },
+    "core.results.parquet": {
+      "file": "core/results/parquet.py",
+      "categories": {
+        "internal": [
+          "pyarrow.parquet",
+          "shutil",
+          "base",
+          "storage"
+        ],
+        "external": [
+          "pandas",
+          "numpy"
+        ],
+        "stdlib": [
+          "json",
+          "typing",
+          "pathlib",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "json",
+          "pandas",
+          "pyarrow.parquet",
+          "numpy",
+          "shutil"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Dict",
+              "Any",
+              "Iterator",
+              "Optional",
+              "List",
+              "Tuple",
+              "Callable"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "base",
+            "names": [
+              "SimulationResults",
+              "SimulationMetadata"
+            ],
+            "level": 1
+          },
+          {
+            "module": "storage",
+            "names": [
+              "ParquetWriter",
+              "ParquetReader"
+            ],
+            "level": 2
+          }
+        ]
+      }
+    },
+    "core.results.__init__": {
+      "file": "core/results/__init__.py",
+      "categories": {
+        "internal": [
+          "factory",
+          "base",
+          "parquet"
+        ],
+        "external": [],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [],
+        "from_imports": [
+          {
+            "module": "base",
+            "names": [
+              "SimulationResults"
+            ],
+            "level": 1
+          },
+          {
+            "module": "parquet",
+            "names": [
+              "ParquetResults"
+            ],
+            "level": 1
+          },
+          {
+            "module": "factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 1
+          }
+        ]
+      }
+    },
+    "core.results.factory": {
+      "file": "core/results/factory.py",
+      "categories": {
+        "internal": [
+          "uuid",
+          "haikunator",
+          "parquet",
+          "pendulum",
+          "base"
+        ],
+        "external": [],
+        "stdlib": [
+          "typing",
+          "pathlib",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "uuid",
+          "pendulum"
+        ],
+        "from_imports": [
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "typing",
+            "names": [
+              "Any",
+              "Optional",
+              "Dict"
+            ],
+            "level": 0
+          },
+          {
+            "module": "base",
+            "names": [
+              "SimulationResults",
+              "SimulationMetadata"
+            ],
+            "level": 1
+          },
+          {
+            "module": "parquet",
+            "names": [
+              "ParquetResults"
+            ],
+            "level": 1
+          },
+          {
+            "module": "haikunator",
+            "names": [
+              "Haikunator"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "core.results.base": {
+      "file": "core/results/base.py",
+      "categories": {
+        "internal": [],
+        "external": [
+          "pandas"
+        ],
+        "stdlib": [
+          "abc",
+          "dataclasses",
+          "typing",
+          "datetime",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pandas"
+        ],
+        "from_imports": [
+          {
+            "module": "abc",
+            "names": [
+              "ABC",
+              "abstractmethod"
+            ],
+            "level": 0
+          },
+          {
+            "module": "typing",
+            "names": [
+              "Dict",
+              "Any",
+              "Iterator",
+              "Optional",
+              "List",
+              "Tuple"
+            ],
+            "level": 0
+          },
+          {
+            "module": "dataclasses",
+            "names": [
+              "dataclass"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "core.monitoring.memory": {
+      "file": "core/monitoring/memory.py",
+      "categories": {
+        "internal": [
+          "results",
+          "gc",
+          "psutil",
+          "utils"
+        ],
+        "external": [
+          "streamlit",
+          "matplotlib.pyplot"
+        ],
+        "stdlib": [
+          "sys",
+          "os",
+          "typing",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "psutil",
+          "os",
+          "gc",
+          "streamlit",
+          "sys",
+          "matplotlib.pyplot"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Dict",
+              "Tuple",
+              "Optional"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.environment",
+            "names": [
+              "is_streamlit_cloud",
+              "get_memory_limit_mb"
+            ],
+            "level": 0
+          },
+          {
+            "module": "results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 2
+          }
+        ]
+      }
+    },
+    "core.monitoring.__init__": {
+      "file": "core/monitoring/__init__.py",
+      "categories": {
+        "internal": [
+          "memory"
+        ],
+        "external": [],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [],
+        "from_imports": [
+          {
+            "module": "memory",
+            "names": [
+              "MemoryMonitor",
+              "get_memory_usage"
+            ],
+            "level": 1
+          }
+        ]
+      }
+    },
+    "tests.ui.test_app_runner": {
+      "file": "tests/ui/test_app_runner.py",
+      "categories": {
+        "internal": [
+          "subprocess",
+          "signal",
+          "argparse"
+        ],
+        "external": [
+          "requests"
+        ],
+        "stdlib": [
+          "sys",
+          "time",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "subprocess",
+          "time",
+          "sys",
+          "signal",
+          "requests",
+          "argparse"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.ui.conftest": {
+      "file": "tests/ui/conftest.py",
+      "categories": {
+        "internal": [
+          "subprocess",
+          "socket",
+          "signal",
+          "playwright"
+        ],
+        "external": [
+          "pytest"
+        ],
+        "stdlib": [
+          "os",
+          "time",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "subprocess",
+          "time",
+          "socket",
+          "os",
+          "signal"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "playwright.sync_api",
+            "names": [
+              "sync_playwright"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.ui.test_package_ui": {
+      "file": "tests/ui/test_package_ui.py",
+      "categories": {
+        "internal": [
+          "tempfile",
+          "unittest",
+          "utils",
+          "components",
+          "core",
+          "pages"
+        ],
+        "external": [
+          "pytest",
+          "streamlit"
+        ],
+        "stdlib": [
+          "json",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "streamlit",
+          "tempfile",
+          "json"
+        ],
+        "from_imports": [
+          {
+            "module": "unittest.mock",
+            "names": [
+              "Mock",
+              "patch",
+              "MagicMock"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.export",
+            "names": [
+              "render_export_section"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.export",
+            "names": [
+              "render_export_section"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.export",
+            "names": [
+              "render_export_section"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.import_component",
+            "names": [
+              "render_import_section"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.import_component",
+            "names": [
+              "render_import_section"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pages.protocol_manager_import",
+            "names": [
+              "render_import_section"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_package",
+            "names": [
+              "SimulationPackageManager"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pages.protocol_manager_import",
+            "names": [
+              "render_import_section"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_package",
+            "names": [
+              "SecurityError"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_package",
+            "names": [
+              "SimulationPackageManager"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_package",
+            "names": [
+              "SimulationPackageManager"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.ui.test_no_nested_expanders": {
+      "file": "tests/ui/test_no_nested_expanders.py",
+      "categories": {
+        "internal": [
+          "components",
+          "unittest"
+        ],
+        "external": [
+          "pytest",
+          "streamlit"
+        ],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "streamlit"
+        ],
+        "from_imports": [
+          {
+            "module": "unittest.mock",
+            "names": [
+              "Mock",
+              "MagicMock",
+              "patch",
+              "call"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.import_component",
+            "names": [
+              "render_import_section"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.import_component",
+            "names": [
+              "render_import_section"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.export",
+            "names": [
+              "render_export_section"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.ui.__init__": {
+      "file": "tests/ui/__init__.py",
+      "categories": {
+        "internal": [],
+        "external": [],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [],
+        "from_imports": []
+      }
+    },
+    "tests.ui.test_analysis_overview": {
+      "file": "tests/ui/test_analysis_overview.py",
+      "categories": {
+        "internal": [
+          "tempfile",
+          "simulation_v2",
+          "core"
+        ],
+        "external": [
+          "pandas",
+          "pytest",
+          "numpy"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "sys",
+          "tempfile",
+          "pandas",
+          "numpy"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.ui.test_streamlit_ui": {
+      "file": "tests/ui/test_streamlit_ui.py",
+      "categories": {
+        "internal": [
+          "playwright"
+        ],
+        "external": [
+          "pytest"
+        ],
+        "stdlib": [
+          "time",
+          "pathlib",
+          "re"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "time",
+          "re"
+        ],
+        "from_imports": [
+          {
+            "module": "playwright.sync_api",
+            "names": [
+              "expect"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.ui.test_analysis_page_api": {
+      "file": "tests/ui/test_analysis_page_api.py",
+      "categories": {
+        "internal": [
+          "core"
+        ],
+        "external": [
+          "pandas",
+          "pytest",
+          "numpy"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "pandas",
+          "numpy",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.base",
+            "names": [
+              "SimulationResults",
+              "SimulationMetadata"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.parquet",
+            "names": [
+              "ParquetResults"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.ui.test_ui_with_mcp": {
+      "file": "tests/ui/test_ui_with_mcp.py",
+      "categories": {
+        "internal": [],
+        "external": [],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [],
+        "from_imports": []
+      }
+    },
+    "tests.ui.test_with_mcp_puppeteer": {
+      "file": "tests/ui/test_with_mcp_puppeteer.py",
+      "categories": {
+        "internal": [],
+        "external": [],
+        "stdlib": [
+          "time"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "time"
+        ],
+        "from_imports": []
+      }
+    },
+    "tests.ui.test_simulation_ui_integration": {
+      "file": "tests/ui/test_simulation_ui_integration.py",
+      "categories": {
+        "internal": [
+          "tempfile",
+          "core",
+          "shutil",
+          "unittest"
+        ],
+        "external": [
+          "pytest",
+          "streamlit"
+        ],
+        "stdlib": [
+          "json",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "streamlit",
+          "json",
+          "tempfile",
+          "shutil"
+        ],
+        "from_imports": [
+          {
+            "module": "unittest.mock",
+            "names": [
+              "Mock",
+              "patch",
+              "MagicMock",
+              "call"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.memory.test_real_simulation": {
+      "file": "tests/memory/test_real_simulation.py",
+      "categories": {
+        "internal": [
+          "tempfile",
+          "simulation_v2",
+          "core"
+        ],
+        "external": [
+          "pytest"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "tempfile",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.parquet",
+            "names": [
+              "ParquetResults"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.memory.test_results_architecture": {
+      "file": "tests/memory/test_results_architecture.py",
+      "categories": {
+        "internal": [
+          "tempfile",
+          "core"
+        ],
+        "external": [
+          "pytest"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "tempfile",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results",
+            "names": [
+              "SimulationResults",
+              "ParquetResults",
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.base",
+            "names": [
+              "SimulationMetadata"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime",
+              "timedelta"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.memory.__init__": {
+      "file": "tests/memory/__init__.py",
+      "categories": {
+        "internal": [],
+        "external": [],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [],
+        "from_imports": []
+      }
+    },
+    "tests.memory.test_phase2_integration": {
+      "file": "tests/memory/test_phase2_integration.py",
+      "categories": {
+        "internal": [
+          "tempfile",
+          "tests",
+          "simulation_v2",
+          "core"
+        ],
+        "external": [
+          "pytest"
+        ],
+        "stdlib": [
+          "sys",
+          "time",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "tempfile",
+          "sys",
+          "time"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.storage",
+            "names": [
+              "ParquetWriter",
+              "ParquetReader",
+              "SimulationRegistry"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.engines.abs_engine",
+            "names": [
+              "SimulationResults"
+            ],
+            "level": 0
+          },
+          {
+            "module": "tests.memory.test_results_architecture",
+            "names": [
+              "create_mock_v2_results"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.parquet",
+            "names": [
+              "ParquetResults"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.integration.__init__": {
+      "file": "tests/integration/__init__.py",
+      "categories": {
+        "internal": [],
+        "external": [],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [],
+        "from_imports": []
+      }
+    },
+    "tests.integration.test_simulation_selection_sync": {
+      "file": "tests/integration/test_simulation_selection_sync.py",
+      "categories": {
+        "internal": [
+          "shutil",
+          "unittest",
+          "utils",
+          "tests",
+          "core",
+          "tempfile"
+        ],
+        "external": [
+          "pytest",
+          "streamlit"
+        ],
+        "stdlib": [
+          "sys",
+          "json",
+          "pathlib",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "streamlit",
+          "json",
+          "tempfile",
+          "shutil",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "unittest.mock",
+            "names": [
+              "Mock",
+              "patch",
+              "MagicMock"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_package",
+            "names": [
+              "SimulationPackageManager"
+            ],
+            "level": 0
+          },
+          {
+            "module": "tests.fixtures.create_test_simulation",
+            "names": [
+              "create_test_simulation"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_loader",
+            "names": [
+              "load_simulation_results"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_loader",
+            "names": [
+              "load_simulation_results"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_loader",
+            "names": [
+              "ensure_simulation_loaded"
+            ],
+            "level": 0
+          },
+          {
+            "module": "tests.fixtures.create_test_simulation",
+            "names": [
+              "create_test_simulation"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_loader",
+            "names": [
+              "load_simulation_results"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.simulation_loader",
+            "names": [
+              "load_simulation_results"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.integration.manual_state_integration_test": {
+      "file": "tests/integration/manual_state_integration_test.py",
+      "categories": {
+        "internal": [
+          "utils"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.state_helpers",
+            "names": [
+              "init_simulation_registry",
+              "add_simulation_to_registry",
+              "list_simulation_summaries",
+              "set_active_simulation",
+              "get_active_simulation",
+              "save_protocol_spec",
+              "get_simulation_registry"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.fixtures.__init__": {
+      "file": "tests/fixtures/__init__.py",
+      "categories": {
+        "internal": [],
+        "external": [],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [],
+        "from_imports": []
+      }
+    },
+    "tests.fixtures.create_test_simulation": {
+      "file": "tests/fixtures/create_test_simulation.py",
+      "categories": {
+        "internal": [
+          "simulation_v2",
+          "shutil",
+          "core"
+        ],
+        "external": [],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "sys",
+          "shutil"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.regression.test_protocol_manager": {
+      "file": "tests/regression/test_protocol_manager.py",
+      "categories": {
+        "internal": [
+          "tempfile",
+          "simulation_v2",
+          "shutil"
+        ],
+        "external": [
+          "pytest",
+          "yaml"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "yaml",
+          "tempfile",
+          "shutil",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.regression.test_memory_baseline": {
+      "file": "tests/regression/test_memory_baseline.py",
+      "categories": {
+        "internal": [
+          "simulation_v2",
+          "psutil",
+          "gc"
+        ],
+        "external": [
+          "pytest"
+        ],
+        "stdlib": [
+          "sys",
+          "os",
+          "pickle",
+          "datetime",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "psutil",
+          "gc",
+          "os",
+          "sys",
+          "pickle"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.regression.test_staggered_enrollment": {
+      "file": "tests/regression/test_staggered_enrollment.py",
+      "categories": {
+        "internal": [
+          "simulation_v2"
+        ],
+        "external": [
+          "pytest",
+          "numpy",
+          "scipy"
+        ],
+        "stdlib": [
+          "sys",
+          "os",
+          "pathlib",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "numpy",
+          "sys",
+          "os"
+        ],
+        "from_imports": [
+          {
+            "module": "datetime",
+            "names": [
+              "datetime",
+              "timedelta"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "scipy",
+            "names": [
+              "stats"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.regression.test_error_recovery": {
+      "file": "tests/regression/test_error_recovery.py",
+      "categories": {
+        "internal": [
+          "urllib.request",
+          "tempfile",
+          "unittest"
+        ],
+        "external": [
+          "pytest",
+          "yaml"
+        ],
+        "stdlib": [
+          "sys",
+          "json",
+          "pickle",
+          "datetime",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "pickle",
+          "json",
+          "tempfile",
+          "sys",
+          "urllib.request",
+          "yaml"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "unittest.mock",
+            "names": [
+              "patch",
+              "MagicMock"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime",
+              "timezone",
+              "timedelta"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.regression.__init__": {
+      "file": "tests/regression/__init__.py",
+      "categories": {
+        "internal": [],
+        "external": [],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [],
+        "from_imports": []
+      }
+    },
+    "tests.regression.test_existing_state": {
+      "file": "tests/regression/test_existing_state.py",
+      "categories": {
+        "internal": [
+          "simulation_v2"
+        ],
+        "external": [
+          "pytest"
+        ],
+        "stdlib": [
+          "sys",
+          "json",
+          "pickle",
+          "datetime",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "pickle",
+          "json",
+          "sys",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.core.patient",
+            "names": [
+              "Patient"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.core.disease_model",
+            "names": [
+              "DiseaseState"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.regression.test_existing_visualization": {
+      "file": "tests/regression/test_existing_visualization.py",
+      "categories": {
+        "internal": [
+          "weakref",
+          "streamlit_app_v2",
+          "gc",
+          "types"
+        ],
+        "external": [
+          "pandas",
+          "pytest",
+          "numpy",
+          "matplotlib.pyplot"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "matplotlib.pyplot",
+          "numpy",
+          "pandas",
+          "gc",
+          "weakref",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime",
+              "timedelta"
+            ],
+            "level": 0
+          },
+          {
+            "module": "streamlit_app_v2.utils.chart_builder",
+            "names": [
+              "ChartBuilder"
+            ],
+            "level": 0
+          },
+          {
+            "module": "types",
+            "names": [
+              "SimpleNamespace"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.regression.test_style_axis_regression": {
+      "file": "tests/regression/test_style_axis_regression.py",
+      "categories": {
+        "internal": [
+          "utils"
+        ],
+        "external": [
+          "pytest",
+          "numpy",
+          "matplotlib.pyplot"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib",
+          "inspect"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "matplotlib.pyplot",
+          "inspect",
+          "sys",
+          "numpy"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.tufte_zoom_style",
+            "names": [
+              "style_axis"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.tufte_zoom_style",
+            "names": [
+              "style_axis"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.tufte_zoom_style",
+            "names": [
+              "style_axis"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.tufte_zoom_style",
+            "names": [
+              "style_axis",
+              "create_figure"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.tufte_zoom_style",
+            "names": [
+              "style_axis",
+              "create_figure",
+              "add_reference_line",
+              "format_zoom_legend",
+              "add_zoom_annotation",
+              "setup_zoom_tufte_style"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.visualization_modes",
+            "names": [
+              "init_visualization_mode",
+              "mode_aware_figure",
+              "get_mode_colors",
+              "apply_visualization_mode"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.tufte_zoom_style",
+            "names": [
+              "create_figure",
+              "style_axis",
+              "add_reference_line"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.regression.test_edge_cases": {
+      "file": "tests/regression/test_edge_cases.py",
+      "categories": {
+        "internal": [
+          "simulation_v2",
+          "psutil",
+          "gc"
+        ],
+        "external": [
+          "pytest"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "sys",
+          "psutil",
+          "gc"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "datetime",
+            "names": [
+              "datetime"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.regression.test_chart_builder_current": {
+      "file": "tests/regression/test_chart_builder_current.py",
+      "categories": {
+        "internal": [
+          "weakref",
+          "gc",
+          "utils"
+        ],
+        "external": [
+          "pytest",
+          "numpy",
+          "matplotlib.pyplot"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "matplotlib.pyplot",
+          "numpy",
+          "sys",
+          "gc",
+          "weakref"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.chart_builder",
+            "names": [
+              "ChartBuilder"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.style_constants",
+            "names": [
+              "StyleConstants"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.regression.test_existing_simulation": {
+      "file": "tests/regression/test_existing_simulation.py",
+      "categories": {
+        "internal": [
+          "simulation_v2"
+        ],
+        "external": [
+          "pytest"
+        ],
+        "stdlib": [
+          "sys",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pytest",
+          "sys"
+        ],
+        "from_imports": [
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.core.simulation_runner",
+            "names": [
+              "SimulationRunner"
+            ],
+            "level": 0
+          },
+          {
+            "module": "simulation_v2.protocols.protocol_spec",
+            "names": [
+              "ProtocolSpecification"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "tests.performance.test_vectorization_speed": {
+      "file": "tests/performance/test_vectorization_speed.py",
+      "categories": {
+        "internal": [],
+        "external": [
+          "pandas",
+          "numpy"
+        ],
+        "stdlib": [
+          "time",
+          "datetime"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "time",
+          "pandas",
+          "numpy"
+        ],
+        "from_imports": [
+          {
+            "module": "datetime",
+            "names": [
+              "datetime",
+              "timedelta"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "components.treatment_patterns.time_series_generator": {
+      "file": "components/treatment_patterns/time_series_generator.py",
+      "categories": {
+        "internal": [],
+        "external": [
+          "pandas",
+          "numpy",
+          "streamlit"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pandas",
+          "numpy",
+          "streamlit"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Optional"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "components.treatment_patterns.performance_config": {
+      "file": "components/treatment_patterns/performance_config.py",
+      "categories": {
+        "internal": [],
+        "external": [],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [],
+        "from_imports": []
+      }
+    },
+    "components.treatment_patterns.time_series_cache": {
+      "file": "components/treatment_patterns/time_series_cache.py",
+      "categories": {
+        "internal": [
+          "core",
+          "components",
+          "hashlib"
+        ],
+        "external": [
+          "pandas",
+          "streamlit"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "pandas",
+          "hashlib"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Tuple",
+              "Optional"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.time_series_generator",
+            "names": [
+              "generate_patient_state_time_series"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.data_manager",
+            "names": [
+              "get_treatment_pattern_data"
+            ],
+            "level": 0
+          },
+          {
+            "module": "core.results.factory",
+            "names": [
+              "ResultsFactory"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "components.treatment_patterns.workload_visualizations": {
+      "file": "components/treatment_patterns/workload_visualizations.py",
+      "categories": {
+        "internal": [
+          "utils"
+        ],
+        "external": [
+          "plotly.express",
+          "plotly",
+          "pandas",
+          "plotly.graph_objects",
+          "numpy"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "plotly.graph_objects",
+          "plotly.express",
+          "pandas",
+          "numpy"
+        ],
+        "from_imports": [
+          {
+            "module": "plotly.subplots",
+            "names": [
+              "make_subplots"
+            ],
+            "level": 0
+          },
+          {
+            "module": "typing",
+            "names": [
+              "Dict",
+              "Any",
+              "List",
+              "Tuple"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.style_constants",
+            "names": [
+              "StyleConstants"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "components.treatment_patterns.interval_analyzer": {
+      "file": "components/treatment_patterns/interval_analyzer.py",
+      "categories": {
+        "internal": [],
+        "external": [
+          "pandas",
+          "numpy",
+          "plotly.graph_objects"
+        ],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [
+          "numpy",
+          "pandas",
+          "plotly.graph_objects"
+        ],
+        "from_imports": []
+      }
+    },
+    "components.treatment_patterns.pattern_analyzer_enhanced": {
+      "file": "components/treatment_patterns/pattern_analyzer_enhanced.py",
+      "categories": {
+        "internal": [
+          "components",
+          "utils"
+        ],
+        "external": [
+          "pandas",
+          "numpy"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pandas",
+          "numpy"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Tuple",
+              "Dict",
+              "List"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.visualization_modes",
+            "names": [
+              "get_mode_colors"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns",
+            "names": [
+              "extract_treatment_patterns_vectorized"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "components.treatment_patterns.enhanced_tab": {
+      "file": "components/treatment_patterns/enhanced_tab.py",
+      "categories": {
+        "internal": [
+          "components",
+          "utils"
+        ],
+        "external": [
+          "pandas",
+          "streamlit",
+          "numpy"
+        ],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "numpy",
+          "pandas"
+        ],
+        "from_imports": [
+          {
+            "module": "utils.style_constants",
+            "names": [
+              "StyleConstants"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.chart_builder",
+            "names": [
+              "ChartBuilder"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns",
+            "names": [
+              "extract_treatment_patterns_vectorized",
+              "create_enhanced_sankey_with_colored_streams",
+              "create_gradient_sankey",
+              "create_interval_distribution_chart",
+              "create_gap_analysis_chart_tufte",
+              "calculate_interval_statistics"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.pattern_analyzer_enhanced",
+            "names": [
+              "extract_treatment_patterns_with_terminals"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.sankey_builder_enhanced",
+            "names": [
+              "create_enhanced_sankey_with_terminals"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.export_config",
+            "names": [
+              "get_sankey_export_config"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.export_config",
+            "names": [
+              "get_export_config"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.workload_analyzer",
+            "names": [
+              "calculate_clinical_workload_attribution",
+              "format_workload_insight"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.workload_visualizations",
+            "names": [
+              "create_dual_bar_chart",
+              "create_impact_pyramid",
+              "create_bubble_chart",
+              "get_workload_insight_summary"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.export_config",
+            "names": [
+              "get_export_config"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.workload_analyzer",
+            "names": [
+              "calculate_clinical_workload_attribution",
+              "format_workload_insight"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.workload_visualizations",
+            "names": [
+              "create_dual_bar_chart",
+              "create_impact_pyramid",
+              "create_bubble_chart",
+              "get_workload_insight_summary"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.export_config",
+            "names": [
+              "get_export_config"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "components.treatment_patterns.__init__": {
+      "file": "components/treatment_patterns/__init__.py",
+      "categories": {
+        "internal": [
+          "pattern_analyzer",
+          "pattern_analyzer_enhanced",
+          "sankey_builder_enhanced",
+          "sankey_builder",
+          "interval_analyzer"
+        ],
+        "external": [],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [],
+        "from_imports": [
+          {
+            "module": "pattern_analyzer",
+            "names": [
+              "extract_treatment_patterns_vectorized",
+              "determine_treatment_state_vectorized",
+              "TREATMENT_STATE_COLORS"
+            ],
+            "level": 1
+          },
+          {
+            "module": "sankey_builder",
+            "names": [
+              "create_treatment_pattern_sankey",
+              "create_enhanced_sankey_with_colored_streams",
+              "create_gradient_sankey"
+            ],
+            "level": 1
+          },
+          {
+            "module": "interval_analyzer",
+            "names": [
+              "create_interval_distribution_chart",
+              "create_gap_analysis_chart_tufte",
+              "calculate_interval_statistics"
+            ],
+            "level": 1
+          },
+          {
+            "module": "pattern_analyzer_enhanced",
+            "names": [
+              "extract_treatment_patterns_with_terminals"
+            ],
+            "level": 1
+          },
+          {
+            "module": "sankey_builder_enhanced",
+            "names": [
+              "create_enhanced_sankey_with_terminals",
+              "create_enhanced_sankey_with_terminals_destination_colored"
+            ],
+            "level": 1
+          }
+        ]
+      }
+    },
+    "components.treatment_patterns.time_series_generator_fast": {
+      "file": "components/treatment_patterns/time_series_generator_fast.py",
+      "categories": {
+        "internal": [],
+        "external": [
+          "pandas",
+          "numpy",
+          "streamlit"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pandas",
+          "numpy",
+          "streamlit"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Optional"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "components.treatment_patterns.precompute": {
+      "file": "components/treatment_patterns/precompute.py",
+      "categories": {
+        "internal": [
+          "components"
+        ],
+        "external": [
+          "streamlit"
+        ],
+        "stdlib": [
+          "typing",
+          "pathlib"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Optional"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pathlib",
+            "names": [
+              "Path"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.time_series_cache",
+            "names": [
+              "get_cached_time_series_data",
+              "compute_df_hash",
+              "should_show_week_resolution"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns.data_manager",
+            "names": [
+              "get_treatment_pattern_data"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "components.treatment_patterns.workload_analyzer": {
+      "file": "components/treatment_patterns/workload_analyzer.py",
+      "categories": {
+        "internal": [
+          "utils"
+        ],
+        "external": [
+          "pandas",
+          "numpy"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pandas",
+          "numpy"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Dict",
+              "Tuple",
+              "List"
+            ],
+            "level": 0
+          },
+          {
+            "module": "utils.visualization_modes",
+            "names": [
+              "get_mode_colors"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "components.treatment_patterns.time_series_generator_optimized": {
+      "file": "components/treatment_patterns/time_series_generator_optimized.py",
+      "categories": {
+        "internal": [],
+        "external": [
+          "pandas",
+          "numpy",
+          "streamlit"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "pandas",
+          "numpy",
+          "streamlit"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Optional"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "components.treatment_patterns.sankey_builder": {
+      "file": "components/treatment_patterns/sankey_builder.py",
+      "categories": {
+        "internal": [
+          "pattern_analyzer",
+          "utils"
+        ],
+        "external": [
+          "pandas",
+          "plotly.graph_objects"
+        ],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [
+          "plotly.graph_objects",
+          "pandas"
+        ],
+        "from_imports": [
+          {
+            "module": "utils.visualization_modes",
+            "names": [
+              "get_mode_colors"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pattern_analyzer",
+            "names": [
+              "STATE_COLOR_MAPPING",
+              "get_treatment_state_colors"
+            ],
+            "level": 1
+          }
+        ]
+      }
+    },
+    "components.treatment_patterns.pattern_analyzer": {
+      "file": "components/treatment_patterns/pattern_analyzer.py",
+      "categories": {
+        "internal": [
+          "utils"
+        ],
+        "external": [
+          "pandas",
+          "streamlit"
+        ],
+        "stdlib": []
+      },
+      "raw_imports": {
+        "imports": [
+          "pandas",
+          "streamlit"
+        ],
+        "from_imports": [
+          {
+            "module": "utils.visualization_modes",
+            "names": [
+              "get_mode_colors"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "components.treatment_patterns.data_manager": {
+      "file": "components/treatment_patterns/data_manager.py",
+      "categories": {
+        "internal": [
+          "components"
+        ],
+        "external": [
+          "pandas",
+          "streamlit"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "streamlit",
+          "pandas"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Tuple",
+              "Optional"
+            ],
+            "level": 0
+          },
+          {
+            "module": "components.treatment_patterns",
+            "names": [
+              "extract_treatment_patterns_vectorized"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    },
+    "components.treatment_patterns.sankey_builder_enhanced": {
+      "file": "components/treatment_patterns/sankey_builder_enhanced.py",
+      "categories": {
+        "internal": [
+          "pattern_analyzer",
+          "pattern_analyzer_enhanced",
+          "utils"
+        ],
+        "external": [
+          "pandas",
+          "plotly.graph_objects"
+        ],
+        "stdlib": [
+          "typing"
+        ]
+      },
+      "raw_imports": {
+        "imports": [
+          "plotly.graph_objects",
+          "pandas"
+        ],
+        "from_imports": [
+          {
+            "module": "typing",
+            "names": [
+              "Dict",
+              "List"
+            ],
+            "level": 0
+          },
+          {
+            "module": "pattern_analyzer",
+            "names": [
+              "get_treatment_state_colors"
+            ],
+            "level": 1
+          },
+          {
+            "module": "pattern_analyzer_enhanced",
+            "names": [
+              "get_terminal_node_colors"
+            ],
+            "level": 1
+          },
+          {
+            "module": "utils.visualization_modes",
+            "names": [
+              "get_mode_colors"
+            ],
+            "level": 0
+          }
+        ]
+      }
+    }
+  },
+  "dependency_graph": {
+    "APE": [
+      "utils.carbon_button_helpers"
+    ],
+    "test_recruitment_ui": [
+      "components.simulation_ui_v2"
+    ],
+    "analyze_treatment_states": [
+      "core.results.parquet"
+    ],
+    "test_cache_performance": [
+      "components.treatment_patterns.time_series_cache",
+      "components.treatment_patterns.data_manager",
+      "core.results.factory"
+    ],
+    "test_analysis_overview": [
+      "pages.analysis_overview"
+    ],
+    "test_streamgraph_ui": [
+      "visualizations.streamgraph_treatment_states",
+      "core.simulation_runner"
+    ],
+    "debug_streamgraph_data": [
+      "core.results.parquet"
+    ],
+    "test_streamgraph_data": [
+      "components.treatment_patterns.time_series_generator",
+      "components.treatment_patterns.pattern_analyzer",
+      "core.simulation_runner"
+    ],
+    "test_streamgraph_performance": [
+      "components.treatment_patterns.time_series_generator",
+      "components.treatment_patterns.pattern_analyzer",
+      "core.results.factory",
+      "components.treatment_patterns.time_series_generator_optimized"
+    ],
+    "test_streamgraph_views": [
+      "components.treatment_patterns.time_series_generator",
+      "components.treatment_patterns.pattern_analyzer",
+      "core.simulation_runner"
+    ],
+    "test_wedge_shape": [
+      "components.treatment_patterns.time_series_generator",
+      "components.treatment_patterns.pattern_analyzer",
+      "core.simulation_runner"
+    ],
+    "verify_streamgraph_ui": [
+      "core.results.parquet",
+      "components.treatment_patterns.time_series_generator",
+      "components.treatment_patterns.pattern_analyzer",
+      "core.results.factory",
+      "visualizations.streamgraph_treatment_states"
+    ],
+    "verify_sankey_works": [
+      "core.storage.registry",
+      "components.treatment_patterns",
+      "core.results.factory",
+      "components.treatment_patterns.interval_analyzer"
+    ],
+    "experiments.check_disease_states": [
+      "core.results.factory"
+    ],
+    "experiments.visualize_simulation_pathways": [
+      "core.results.factory"
+    ],
+    "experiments.detect_treatment_gaps": [
+      "core.results.factory"
+    ],
+    "experiments.treatment_patterns_enhanced_sankey": [
+      "core.results.factory"
+    ],
+    "experiments.visualize_simulation_pathways_fast": [
+      "core.results.factory"
+    ],
+    "experiments.debug_simulation_data": [
+      "core.results.factory"
+    ],
+    "experiments.analyze_hidden_sankey_flows": [
+      "components.treatment_patterns",
+      "core.results.factory"
+    ],
+    "experiments.sankey_customization_demo": [
+      "components.treatment_patterns",
+      "core.results.factory"
+    ],
+    "experiments.treatment_patterns_visualization": [
+      "core.results.factory"
+    ],
+    "tests.test_simulation_package_security": [
+      "utils.simulation_package"
+    ],
+    "tests.test_simulation_package": [
+      "core.results.factory",
+      "utils.simulation_package"
+    ],
+    "utils.state_helpers": [
+      "components.treatment_patterns",
+      "components.treatment_patterns.performance_config",
+      "components.treatment_patterns.pattern_analyzer_enhanced"
+    ],
+    "utils.simulation_package": [
+      "core.results.base",
+      "core.results.factory",
+      "core.results.parquet"
+    ],
+    "utils.simulation_loader": [
+      "core.results.factory"
+    ],
+    "components.import_component": [
+      "core.storage.registry",
+      "core.results.factory",
+      "utils.simulation_package",
+      "utils.simulation_loader"
+    ],
+    "components.simulation_io": [
+      "core.storage.registry",
+      "core.results.factory",
+      "utils.simulation_package",
+      "utils.simulation_loader"
+    ],
+    "components.export": [
+      "core.results.factory",
+      "utils.simulation_package"
+    ],
+    "components.simulation_ui": [
+      "utils.simulation_loader",
+      "utils.carbon_button_helpers",
+      "core.results.factory"
+    ],
+    "visualizations.streamgraph_treatment_states": [
+      "components.treatment_patterns.time_series_generator",
+      "components.treatment_patterns.data_manager",
+      "components.treatment_patterns.time_series_cache",
+      "utils.visualization_modes",
+      "components.treatment_patterns.pattern_analyzer"
+    ],
+    "visualizations.streamgraph": [
+      "utils.color_system",
+      "core.results.parquet",
+      "utils.tufte_style"
+    ],
+    "visualizations.streamgraph_comprehensive": [
+      "components.treatment_patterns.time_series_generator",
+      "components.treatment_patterns.data_manager"
+    ],
+    "visualizations.streamgraph_simple": [
+      "utils.chart_builder",
+      "utils.style_constants"
+    ],
+    "visualizations.streamgraph_enhanced": [
+      "core.results.parquet"
+    ],
+    "visualizations.streamgraph_plotly": [
+      "utils.style_constants"
+    ],
+    "examples.streamlit_simulation": [
+      "core.monitoring.memory",
+      "core.simulation_runner"
+    ],
+    "pages.4_Experiments": [
+      "components.treatment_patterns.pattern_analyzer_enhanced",
+      "components.treatment_patterns",
+      "utils.visualization_modes",
+      "core.results.factory",
+      "utils.export_config",
+      "components.treatment_patterns.sankey_builder"
+    ],
+    "pages.3_Analysis": [
+      "components.treatment_patterns.pattern_analyzer_enhanced",
+      "utils.state_helpers",
+      "utils.style_constants",
+      "components.treatment_patterns.sankey_builder_enhanced",
+      "utils.chart_builder",
+      "utils.tufte_zoom_style",
+      "utils.carbon_button_helpers",
+      "components.treatment_patterns",
+      "visualizations.streamgraph_comprehensive",
+      "components.treatment_patterns.time_series_cache",
+      "utils.visualization_modes",
+      "utils.export_config",
+      "components.treatment_patterns.workload_visualizations",
+      "components.treatment_patterns.enhanced_tab",
+      "visualizations.streamgraph_treatment_states",
+      "components.treatment_patterns.workload_analyzer"
+    ],
+    "pages.99_Carbon_Button_Test": [
+      "utils.carbon_button_helpers"
+    ],
+    "pages.1_Protocol_Manager": [
+      "utils.carbon_button_helpers"
+    ],
+    "pages.98_Debug_Environment": [
+      "utils.environment",
+      "core.monitoring.memory"
+    ],
+    "pages.2_Simulations": [
+      "components.treatment_patterns.precompute",
+      "core.monitoring.memory",
+      "utils.state_helpers",
+      "components.simulation_ui_v2",
+      "utils.carbon_button_helpers",
+      "utils.environment",
+      "components.simulation_ui",
+      "components.simulation_io",
+      "core.results.factory",
+      "core.simulation_runner"
+    ],
+    "core.monitoring.memory": [
+      "utils.environment"
+    ],
+    "tests.ui.test_package_ui": [
+      "components.export",
+      "components.import_component",
+      "pages.protocol_manager_import",
+      "utils.simulation_package",
+      "core.results.factory"
+    ],
+    "tests.ui.test_no_nested_expanders": [
+      "components.export",
+      "components.import_component"
+    ],
+    "tests.ui.test_analysis_overview": [
+      "core.simulation_runner"
+    ],
+    "tests.ui.test_analysis_page_api": [
+      "core.results.base",
+      "core.results.parquet"
+    ],
+    "tests.ui.test_simulation_ui_integration": [
+      "core.results.factory"
+    ],
+    "tests.memory.test_real_simulation": [
+      "core.results",
+      "core.results.parquet",
+      "core.simulation_runner"
+    ],
+    "tests.memory.test_results_architecture": [
+      "core.results.base",
+      "core.results"
+    ],
+    "tests.memory.test_phase2_integration": [
+      "core.storage",
+      "core.results",
+      "core.results.parquet"
+    ],
+    "tests.integration.test_simulation_selection_sync": [
+      "utils.simulation_loader",
+      "core.results.factory",
+      "utils.simulation_package"
+    ],
+    "tests.integration.manual_state_integration_test": [
+      "utils.state_helpers"
+    ],
+    "tests.fixtures.create_test_simulation": [
+      "core.results.factory",
+      "core.simulation_runner"
+    ],
+    "tests.regression.test_style_axis_regression": [
+      "utils.tufte_zoom_style",
+      "utils.visualization_modes"
+    ],
+    "tests.regression.test_chart_builder_current": [
+      "utils.chart_builder",
+      "utils.style_constants"
+    ],
+    "components.treatment_patterns.time_series_cache": [
+      "components.treatment_patterns.time_series_generator",
+      "components.treatment_patterns.data_manager",
+      "core.results.factory"
+    ],
+    "components.treatment_patterns.workload_visualizations": [
+      "utils.style_constants"
+    ],
+    "components.treatment_patterns.pattern_analyzer_enhanced": [
+      "components.treatment_patterns",
+      "utils.visualization_modes"
+    ],
+    "components.treatment_patterns.enhanced_tab": [
+      "components.treatment_patterns.pattern_analyzer_enhanced",
+      "components.treatment_patterns.sankey_builder_enhanced",
+      "utils.style_constants",
+      "utils.chart_builder",
+      "components.treatment_patterns",
+      "utils.export_config",
+      "components.treatment_patterns.workload_visualizations",
+      "components.treatment_patterns.workload_analyzer"
+    ],
+    "components.treatment_patterns.precompute": [
+      "components.treatment_patterns.time_series_cache",
+      "components.treatment_patterns.data_manager"
+    ],
+    "components.treatment_patterns.workload_analyzer": [
+      "utils.visualization_modes"
+    ],
+    "components.treatment_patterns.sankey_builder": [
+      "utils.visualization_modes"
+    ],
+    "components.treatment_patterns.pattern_analyzer": [
+      "utils.visualization_modes"
+    ],
+    "components.treatment_patterns.data_manager": [
+      "components.treatment_patterns"
+    ],
+    "components.treatment_patterns.sankey_builder_enhanced": [
+      "utils.visualization_modes"
+    ]
+  }
+}
