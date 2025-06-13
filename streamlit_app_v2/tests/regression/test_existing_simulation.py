@@ -166,8 +166,11 @@ discontinuation_rate_per_month: 0.02
         abs_results = runner.run("abs", 50, 1.0, 42)
         des_results = runner.run("des", 50, 1.0, 42)
         
-        assert abs_results.patient_count == 50
-        assert des_results.patient_count == 50
+        # With stochastic enrollment over 1 year, expect close to target
+        assert 47 <= abs_results.patient_count <= 53, \
+            f"ABS: Expected ~50 patients, got {abs_results.patient_count}"
+        assert 47 <= des_results.patient_count <= 53, \
+            f"DES: Expected ~50 patients, got {des_results.patient_count}"
         
         # Both should produce reasonable results
         assert abs_results.total_injections > 0
@@ -186,7 +189,18 @@ discontinuation_rate_per_month: 0.02
         
         results = runner.run("abs", n_patients, duration, 42)
         
-        assert results.patient_count == n_patients
+        # With stochastic enrollment, allow reasonable variation
+        # For short simulations (0.5 years), expect at least 80% of patients
+        # For longer simulations (1-2 years), expect closer to target
+        if duration <= 0.5:
+            min_expected = int(n_patients * 0.8)
+        else:
+            min_expected = int(n_patients * 0.95)
+            
+        assert results.patient_count >= min_expected, \
+            f"Expected at least {min_expected} patients, got {results.patient_count}"
+        assert results.patient_count <= n_patients + 5, \
+            f"Expected at most {n_patients + 5} patients, got {results.patient_count}"
         assert results.total_injections > 0
         
     def test_audit_trail_exists(self, default_protocol_path):

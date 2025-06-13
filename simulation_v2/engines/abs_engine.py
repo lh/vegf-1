@@ -125,9 +125,9 @@ class ABSEngine:
         if self.is_fixed_total_mode:
             # Fixed Total Mode: distribute n_patients across duration
             # Calculate arrival rate to achieve target total
-            # Add small buffer to ensure we generate enough arrivals
-            arrival_rate_per_day = (self.n_patients * 1.1) / duration_days
-            expected_patients = int(self.n_patients * 1.2)  # 20% buffer
+            arrival_rate_per_day = self.n_patients / duration_days
+            # Generate extra to ensure we hit target (will stop at n_patients)
+            expected_patients = int(self.n_patients * 1.3)  # 30% buffer
         else:
             # Constant Rate Mode: use specified weekly rate
             arrival_rate_per_day = self.patient_arrival_rate / 7.0
