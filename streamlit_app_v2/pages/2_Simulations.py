@@ -41,6 +41,10 @@ from components.simulation_ui import (
     render_preset_buttons, render_parameter_inputs, render_runtime_estimate,
     render_control_buttons, render_recent_simulations, clear_preset_values
 )
+from components.simulation_ui_v2 import (
+    render_enhanced_parameter_inputs, render_preset_buttons_v2,
+    calculate_runtime_estimate_v2
+)
 
 # Show memory usage in sidebar
 monitor = MemoryMonitor()
@@ -99,14 +103,33 @@ st.header("New")
 protocol_info = st.session_state.current_protocol
 st.caption(f"Protocol: **{protocol_info['name']}** v{protocol_info['version']}")
 
-# Preset buttons
-render_preset_buttons()
+# Use v2 UI components for Phase 4 implementation
+use_v2_ui = True  # Feature flag - set to True to enable new recruitment modes
 
-# Parameter inputs
-engine_type, n_patients, duration_years, seed = render_parameter_inputs()
-
-# Runtime estimate
-render_runtime_estimate(n_patients, duration_years)
+if use_v2_ui:
+    # V2: Enhanced UI with recruitment modes
+    render_preset_buttons_v2()
+    
+    # Get all parameters including recruitment mode
+    engine_type, recruitment_params, seed = render_enhanced_parameter_inputs()
+    
+    # Extract values for compatibility with rest of code
+    if recruitment_params['mode'] == 'Fixed Total':
+        n_patients = recruitment_params['n_patients']
+        duration_years = recruitment_params['duration_years']
+    else:
+        # For constant rate mode, use expected total
+        n_patients = recruitment_params.get('expected_total', 1000)
+        duration_years = recruitment_params['duration_years']
+    
+    # Runtime estimate using v2 calculator
+    runtime_estimate = calculate_runtime_estimate_v2(recruitment_params)
+    st.caption(f"Estimated runtime: {runtime_estimate}")
+else:
+    # V1: Original UI (kept for fallback)
+    render_preset_buttons()
+    engine_type, n_patients, duration_years, seed = render_parameter_inputs()
+    render_runtime_estimate(n_patients, duration_years)
 
 # Section 4: Action buttons (Control Panel)
 st.markdown("---")
@@ -136,6 +159,20 @@ if st.session_state.get('show_manage', False):
 if run_clicked:
     # Set simulation running state to show closed eyes ape
     st.session_state.simulation_running = True
+    
+    # Store parameters for the simulation run
+    if use_v2_ui:
+        st.session_state.recruitment_params = recruitment_params
+    else:
+        # Convert old-style parameters to recruitment params format
+        st.session_state.recruitment_params = {
+            'mode': 'Fixed Total',
+            'n_patients': n_patients,
+            'duration_years': duration_years,
+            'engine_type': engine_type,
+            'seed': seed
+        }
+    
     st.rerun()
 
 # Check if we should be running a simulation (after rerun)
@@ -143,6 +180,15 @@ if st.session_state.get('simulation_running', False):
     # Create progress indicators
     progress_bar = st.progress(0, text="Initializing simulation...")
     status_text = st.empty()
+    
+    # Retrieve recruitment parameters
+    recruitment_params = st.session_state.get('recruitment_params', {
+        'mode': 'Fixed Total',
+        'n_patients': n_patients,
+        'duration_years': duration_years,
+        'engine_type': engine_type,
+        'seed': seed
+    })
     
     try:
         # Load protocol spec
@@ -170,29 +216,56 @@ if st.session_state.get('simulation_running', False):
         progress_bar.progress(30, text=f"Running {engine_type.upper()} simulation...")
         start_time = datetime.now()
         
-        # Run simulation (always saves to Parquet)
-        results = runner.run(
-            engine_type=engine_type,
-            n_patients=n_patients,
-            duration_years=duration_years,
-            seed=seed,
-            show_progress=False  # We have our own progress bar
-        )
+        # Extract values for the run
+        if recruitment_params['mode'] == 'Fixed Total':
+            # Fixed Total Mode
+            results = runner.run(
+                engine_type=recruitment_params['engine_type'],
+                n_patients=recruitment_params['n_patients'],
+                duration_years=recruitment_params['duration_years'],
+                seed=recruitment_params['seed'],
+                show_progress=False,  # We have our own progress bar
+                recruitment_mode="Fixed Total"
+            )
+        else:
+            # Constant Rate Mode - use expected total as n_patients for now
+            # TODO: Update V2 engine to support true constant rate mode
+            expected_total = recruitment_params.get('expected_total', 1000)
+            results = runner.run(
+                engine_type=recruitment_params['engine_type'],
+                n_patients=expected_total,  # Use expected total
+                duration_years=recruitment_params['duration_years'],
+                seed=recruitment_params['seed'],
+                show_progress=False,  # We have our own progress bar
+                recruitment_mode="Constant Rate",
+                patient_arrival_rate=recruitment_params['recruitment_rate']
+            )
         
         end_time = datetime.now()
         runtime = (end_time - start_time).total_seconds()
         
         progress_bar.progress(90, text="Processing results...")
         
+        # Pre-compute treatment patterns for better UI performance
+        from components.treatment_patterns.precompute import precompute_treatment_patterns
+        progress_bar.progress(92, text="Pre-computing visualizations...")
+        precompute_treatment_patterns(results, show_progress=False)
+        
+        progress_bar.progress(95, text="Saving results...")
+        
         # Build simulation data
         simulation_data = {
             'results': results,  # This is now a SimulationResults object
             'protocol': protocol_info,
             'parameters': {
-                'engine': engine_type,
-                'n_patients': n_patients,
-                'duration_years': duration_years,
-                'seed': seed
+                'engine': recruitment_params['engine_type'],
+                'n_patients': recruitment_params.get('n_patients', 0),
+                'duration_years': recruitment_params['duration_years'],
+                'seed': recruitment_params['seed'],
+                'recruitment_mode': recruitment_params['mode'],
+                'recruitment_rate': recruitment_params.get('recruitment_rate'),
+                'rate_unit': recruitment_params.get('rate_unit'),
+                'expected_total': recruitment_params.get('expected_total')
             },
             'runtime': runtime,
             'timestamp': datetime.now().isoformat(),

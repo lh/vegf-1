@@ -20,6 +20,10 @@ class TestAnalysisOverview:
     @pytest.fixture
     def protocol_spec(self):
         """Load test protocol."""
+        # Check v2 directory first, then fallback
+        v2_path = Path("protocols/v2/eylea.yaml")
+        if v2_path.exists():
+            return ProtocolSpecification.from_yaml(v2_path)
         return ProtocolSpecification.from_yaml(Path("protocols/eylea.yaml"))
         
     def test_analysis_overview_with_parquet(self, protocol_spec):

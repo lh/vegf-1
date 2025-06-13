@@ -11,6 +11,9 @@ import pyarrow.parquet as pq
 from pathlib import Path
 from typing import Any, Iterator, Optional, Callable
 import time
+from datetime import datetime
+
+from .writer_types import PatientRecord, VisitRecord, ensure_datetime, ensure_int_days
 
 
 class ParquetWriter:
@@ -50,14 +53,17 @@ class ParquetWriter:
         # Total steps for progress tracking
         total_patients = len(raw_results.patient_histories)
         
-        # Find the earliest visit date to use as reference
+        # Find the earliest enrollment date to use as simulation start reference
         start_date = None
         for patient_id, patient in raw_results.patient_histories.items():
-            visits = getattr(patient, 'visit_history', [])
-            if visits and isinstance(visits[0], dict) and 'date' in visits[0]:
-                visit_date = visits[0]['date']
-                if start_date is None or visit_date < start_date:
-                    start_date = visit_date
+            enrollment_date = getattr(patient, 'enrollment_date', None)
+            if not enrollment_date:
+                raise ValueError(
+                    f"Patient {patient_id} missing enrollment_date. "
+                    "All patients must have an enrollment date."
+                )
+            if start_date is None or enrollment_date < start_date:
+                start_date = enrollment_date
         
         # Step 1: Write patient summaries
         if progress_callback:
@@ -107,7 +113,7 @@ class ParquetWriter:
         if progress_callback:
             progress_callback(100, "Complete!")
             
-    def _extract_patient_summary(self, patient_id: str, patient: Any, start_date=None) -> dict:
+    def _extract_patient_summary(self, patient_id: str, patient: Any, start_date: datetime) -> PatientRecord:
         """Extract summary data for a patient."""
         # Get final vision (last visit)
         if hasattr(patient, 'visit_history') and patient.visit_history:
@@ -124,27 +130,56 @@ class ParquetWriter:
             final_vision = getattr(patient, 'current_vision', getattr(patient, 'vision', 70))
             total_visits = len(getattr(patient, 'visits', []))
         
-        # Convert discontinuation_date to days if we have a start date
+        # Get enrollment_date and ensure it's a datetime
+        enrollment_date = getattr(patient, 'enrollment_date', None)
+        if not enrollment_date:
+            raise ValueError(f"Patient {patient_id} missing enrollment_date")
+        
+        # Ensure enrollment_date is a datetime object
+        enrollment_date = ensure_datetime(enrollment_date, f"Patient {patient_id} enrollment_date")
+        
+        # Ensure start_date is provided and is a datetime
+        if not start_date:
+            raise ValueError("Start date not provided for time calculation")
+        start_date = ensure_datetime(start_date, "Simulation start_date")
+            
+        # Calculate days from simulation start
+        time_delta = enrollment_date - start_date
+        enrollment_time_days = ensure_int_days(
+            time_delta.total_seconds(), 
+            f"Patient {patient_id} enrollment_time_days"
+        )
+        
+        # Convert discontinuation_date to days if patient is discontinued
         disc_date = getattr(patient, 'discontinuation_date', getattr(patient, 'discontinuation_time', None))
         disc_time_days = None
-        if disc_date and start_date and hasattr(disc_date, 'timestamp'):
+        if disc_date:
+            # Ensure it's a datetime object
+            disc_date = ensure_datetime(disc_date, f"Patient {patient_id} discontinuation_date")
             time_delta = disc_date - start_date
-            disc_time_days = int(time_delta.total_seconds() / (24 * 3600))
+            disc_time_days = ensure_int_days(
+                time_delta.total_seconds(),
+                f"Patient {patient_id} discontinuation_time_days"
+            )
             
-        return {
-            'patient_id': patient_id,
-            'baseline_vision': getattr(patient, 'baseline_vision', 70),
-            'final_vision': final_vision,
+        # Build record with strict typing
+        record: PatientRecord = {
+            'patient_id': str(patient_id),
+            'enrollment_date': enrollment_date,  # datetime object
+            'enrollment_time_days': int(enrollment_time_days),  # int days
+            'baseline_vision': int(getattr(patient, 'baseline_vision', 70)),
+            'final_vision': int(final_vision),
             'final_disease_state': str(getattr(patient, 'current_state', getattr(patient, 'disease_state', 'unknown'))),
-            'total_injections': getattr(patient, 'injection_count', 0),
-            'total_visits': total_visits,
-            'discontinued': getattr(patient, 'is_discontinued', getattr(patient, 'discontinued', False)),
-            'discontinuation_time': disc_time_days,  # Now in days, not datetime
+            'total_injections': int(getattr(patient, 'injection_count', 0)),
+            'total_visits': int(total_visits),
+            'discontinued': bool(getattr(patient, 'is_discontinued', getattr(patient, 'discontinued', False))),
+            'discontinuation_time': disc_time_days,  # int days or None
             'discontinuation_type': getattr(patient, 'discontinuation_type', None),
             'discontinuation_reason': getattr(patient, 'discontinuation_reason', None),
             'pre_discontinuation_vision': getattr(patient, 'pre_discontinuation_vision', None),
-            'retreatment_count': getattr(patient, 'retreatment_count', 0)
+            'retreatment_count': int(getattr(patient, 'retreatment_count', 0))
         }
+        return record
         
     def _write_patient_chunk(self, records: list, is_final: bool) -> None:
         """Write a chunk of patient records."""
@@ -178,38 +213,71 @@ class ParquetWriter:
             # Extract visits
             visits = getattr(patient, 'visit_history', getattr(patient, 'visits', []))
             
+            # Get patient's enrollment date - REQUIRED
+            enrollment_date = getattr(patient, 'enrollment_date', None)
+            if not enrollment_date:
+                raise ValueError(
+                    f"Patient {patient_id} missing enrollment_date. "
+                    "All patients must have an enrollment date."
+                )
+            
             for i, visit in enumerate(visits):
                 # Handle both dict and object formats
                 if isinstance(visit, dict):
                     # Dict format from visit_history
                     visit_date = visit.get('date')
-                    if visit_date and hasattr(visit_date, 'timestamp'):
-                        # Calculate days from simulation start (first visit)
-                        if i == 0:
-                            start_date = visit_date
-                        time_delta = visit_date - visits[0].get('date', visit_date)
-                        time_days = int(time_delta.total_seconds() / (24 * 3600))
-                    else:
-                        time_days = i * 30  # Fallback: assume monthly visits
+                    if not visit_date:
+                        raise ValueError(
+                            f"Visit {i} for patient {patient_id} missing date"
+                        )
+                    
+                    # Ensure visit date is a datetime object
+                    visit_date = ensure_datetime(visit_date, f"Patient {patient_id} visit {i} date")
+                    
+                    # Calculate days from patient enrollment
+                    time_delta = visit_date - enrollment_date
+                    time_days_from_enrollment = ensure_int_days(
+                        time_delta.total_seconds(),
+                        f"Patient {patient_id} visit {i} time_days"
+                    )
                         
-                    record = {
-                        'patient_id': patient_id,
-                        'date': visit_date,  # Store original datetime
-                        'time_days': time_days,  # Days from start
-                        'vision': visit.get('vision', 70),
-                        'injected': visit.get('treatment_given', False),
-                        'next_interval_days': visit.get('next_interval_days', None),
+                    # Build record with strict typing
+                    record: VisitRecord = {
+                        'patient_id': str(patient_id),
+                        'date': visit_date,  # datetime object
+                        'time_days': int(time_days_from_enrollment),  # int days
+                        'vision': int(visit.get('vision', 70)),
+                        'injected': bool(visit.get('treatment_given', False)),
+                        'next_interval_days': visit.get('next_interval_days', None) if visit.get('next_interval_days') is None else int(visit.get('next_interval_days')),
                         'disease_state': str(visit.get('disease_state', ''))
                     }
                 else:
-                    # Object format (fallback)
-                    record = {
-                        'patient_id': patient_id,
-                        'date': getattr(visit, 'date', None),
-                        'time_days': getattr(visit, 'time_days', getattr(visit, 'time', i * 30)),
-                        'vision': getattr(visit, 'visual_acuity', getattr(visit, 'vision', 70)),
-                        'injected': getattr(visit, 'received_injection', getattr(visit, 'injected', False)),
-                        'next_interval_days': getattr(visit, 'next_interval_days', None),
+                    # Object format
+                    visit_date = getattr(visit, 'date', None)
+                    if not visit_date:
+                        raise ValueError(
+                            f"Visit {i} for patient {patient_id} missing date attribute"
+                        )
+                    
+                    # Ensure visit date is a datetime object
+                    visit_date = ensure_datetime(visit_date, f"Patient {patient_id} visit {i} date")
+                    
+                    # Calculate days from patient enrollment
+                    time_delta = visit_date - enrollment_date
+                    time_days_from_enrollment = ensure_int_days(
+                        time_delta.total_seconds(),
+                        f"Patient {patient_id} visit {i} time_days"
+                    )
+                    
+                    # Build record with strict typing
+                    next_interval = getattr(visit, 'next_interval_days', None)
+                    record: VisitRecord = {
+                        'patient_id': str(patient_id),
+                        'date': visit_date,  # datetime object
+                        'time_days': int(time_days_from_enrollment),  # int days
+                        'vision': int(getattr(visit, 'visual_acuity', getattr(visit, 'vision', 70))),
+                        'injected': bool(getattr(visit, 'received_injection', getattr(visit, 'injected', False))),
+                        'next_interval_days': None if next_interval is None else int(next_interval),
                         'disease_state': str(getattr(visit, 'disease_state', ''))
                     }
                 visit_records.append(record)

@@ -27,10 +27,13 @@ def create_test_simulation(output_dir: Path = None, n_patients: int = 10, durati
         duration_years: Duration in years (default: 0.1)
     """
     
-    # Use the eylea protocol
-    protocol_path = Path(__file__).parent.parent.parent / "protocols" / "eylea.yaml"
+    # Use the eylea protocol - check v2 directory first, then fallback
+    protocol_path = Path(__file__).parent.parent.parent / "protocols" / "v2" / "eylea.yaml"
     if not protocol_path.exists():
-        raise FileNotFoundError(f"Protocol not found: {protocol_path}")
+        # Try old location as fallback
+        protocol_path = Path(__file__).parent.parent.parent / "protocols" / "eylea.yaml"
+        if not protocol_path.exists():
+            raise FileNotFoundError(f"Protocol not found in either protocols/v2/ or protocols/")
     
     # Load protocol
     spec = ProtocolSpecification.from_yaml(protocol_path)

@@ -62,11 +62,25 @@ def create_treatment_state_streamgraph(
         fig.update_layout(height=height)
         return fig
     
-    # Generate time series data
-    with st.spinner("Generating time series data..."):
-        time_series_df = generate_patient_state_time_series(
-            visits_df,
-            time_resolution=time_resolution
+    # Import cache functions
+    from components.treatment_patterns.time_series_cache import (
+        get_cached_time_series_data, compute_df_hash
+    )
+    
+    # Compute hashes for cache invalidation
+    visits_hash = compute_df_hash(visits_df)
+    enrollment_hash = None
+    if hasattr(results, 'get_patients_df'):
+        enrollment_df = results.get_patients_df()
+        enrollment_hash = compute_df_hash(enrollment_df)
+    
+    # Get cached time series data - expensive computation happens only once
+    with st.spinner("Loading time series data..."):
+        time_series_df = get_cached_time_series_data(
+            results.metadata.sim_id,
+            visits_hash,
+            time_resolution,
+            enrollment_hash
         )
     
     if len(time_series_df) == 0:

@@ -170,6 +170,7 @@ def render_parameter_inputs() -> Tuple[str, int, float, int]:
             max_value=20.0,
             value=duration_value,
             step=0.5,
+            format="%.1f",
             key=widget_key
         )
 

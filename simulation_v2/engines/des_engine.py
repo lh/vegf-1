@@ -9,6 +9,7 @@ In DES, the simulation advances by processing events in chronological order:
 
 import heapq
 import random
+import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple, Callable
 from dataclasses import dataclass
@@ -50,7 +51,8 @@ class DESEngine:
         self,
         disease_model: DiseaseModel,
         protocol: Protocol,
-        n_patients: int,
+        n_patients: int = None,
+        patient_arrival_rate: Optional[float] = None,
         seed: Optional[int] = None,
         visit_metadata_enhancer: Optional[Callable] = None
     ):
@@ -60,21 +62,33 @@ class DESEngine:
         Args:
             disease_model: Disease state transition model
             protocol: Treatment protocol
-            n_patients: Number of patients to simulate
+            n_patients: Total number of patients (for Fixed Total Mode)
+            patient_arrival_rate: Patients per week (for Constant Rate Mode)
             seed: Random seed for reproducibility
             visit_metadata_enhancer: Optional function to enhance visit metadata
+            
+        Note: Either n_patients or patient_arrival_rate must be specified, not both.
         """
         self.disease_model = disease_model
         self.protocol = protocol
-        self.n_patients = n_patients
         self.visit_metadata_enhancer = visit_metadata_enhancer
+        
+        # Validate recruitment mode
+        if (n_patients is None) == (patient_arrival_rate is None):
+            raise ValueError("Must specify either n_patients (Fixed Total Mode) or patient_arrival_rate (Constant Rate Mode), not both")
+            
+        self.n_patients = n_patients
+        self.patient_arrival_rate = patient_arrival_rate
+        self.is_fixed_total_mode = n_patients is not None
         
         if seed is not None:
             random.seed(seed)
+            np.random.seed(seed)
             
-        # Initialize patients
+        # Initialize empty patient dictionary and event queue
         self.patients: Dict[str, Patient] = {}
         self.event_queue: List[Event] = []
+        self.enrollment_dates: Dict[str, datetime] = {}
         
     def _sample_baseline_vision(self) -> int:
         """
@@ -84,6 +98,55 @@ class DESEngine:
         """
         vision = int(random.gauss(70, 10))
         return max(20, min(90, vision))
+        
+    def _schedule_patient_arrivals(self, start_date: datetime, end_date: datetime):
+        """
+        Schedule patient arrival events using Poisson process.
+        
+        Args:
+            start_date: Simulation start date
+            end_date: Simulation end date
+        """
+        duration_days = (end_date - start_date).days
+        
+        # Handle edge case of zero patients
+        if self.is_fixed_total_mode and self.n_patients == 0:
+            return
+            
+        if self.is_fixed_total_mode:
+            # Fixed Total Mode: distribute n_patients across duration
+            arrival_rate_per_day = self.n_patients / duration_days
+            # Generate extra to ensure we hit target (will stop at n_patients)
+            expected_patients = int(self.n_patients * 1.3)  # 30% buffer
+        else:
+            # Constant Rate Mode: use specified weekly rate
+            arrival_rate_per_day = self.patient_arrival_rate / 7.0
+            expected_patients = int(arrival_rate_per_day * duration_days * 1.2)  # 20% buffer
+            
+        # Generate inter-arrival times using exponential distribution
+        mean_interarrival_days = 1.0 / arrival_rate_per_day
+        interarrival_times = np.random.exponential(mean_interarrival_days, size=expected_patients)
+        
+        # Schedule enrollment events
+        current_time = start_date
+        patient_num = 0
+        
+        for interval in interarrival_times:
+            current_time += timedelta(days=interval)
+            if current_time >= end_date:
+                break
+                
+            patient_id = f"P{patient_num:04d}"
+            heapq.heappush(self.event_queue, Event(
+                time=current_time,
+                patient_id=patient_id,
+                event_type=EventType.ENROLLMENT
+            ))
+            patient_num += 1
+            
+            # For Fixed Total Mode, stop when we reach target
+            if self.is_fixed_total_mode and patient_num >= self.n_patients:
+                break
         
     def run(self, duration_years: float, start_date: Optional[datetime] = None) -> SimulationResults:
         """
@@ -101,19 +164,8 @@ class DESEngine:
             
         end_date = start_date + timedelta(days=int(duration_years * 365.25))
         
-        # Initialize patients and schedule enrollments
-        for i in range(self.n_patients):
-            patient_id = f"P{i:04d}"
-            
-            # Schedule enrollment (staggered over first month)
-            enrollment_day = random.randint(0, 28)
-            enrollment_date = start_date + timedelta(days=enrollment_day)
-            
-            heapq.heappush(self.event_queue, Event(
-                time=enrollment_date,
-                patient_id=patient_id,
-                event_type=EventType.ENROLLMENT
-            ))
+        # Schedule patient arrivals using Poisson process
+        self._schedule_patient_arrivals(start_date, end_date)
             
         # Process events
         total_injections = 0
@@ -127,13 +179,18 @@ class DESEngine:
                 patient = Patient(
                     event.patient_id, 
                     baseline_vision,
-                    visit_metadata_enhancer=self.visit_metadata_enhancer
+                    visit_metadata_enhancer=self.visit_metadata_enhancer,
+                    enrollment_date=event.time
                 )
                 self.patients[event.patient_id] = patient
+                self.enrollment_dates[event.patient_id] = event.time
                 
-                # Schedule first visit
+                # Schedule first visit for next day after enrollment
+                # This ensures visit happens after enrollment time
+                next_day = event.time.date() + timedelta(days=1)
+                first_visit_time = datetime.combine(next_day, datetime.min.time())
                 heapq.heappush(self.event_queue, Event(
-                    time=event.time,
+                    time=first_visit_time,
                     patient_id=event.patient_id,
                     event_type=EventType.VISIT
                 ))
@@ -192,13 +249,14 @@ class DESEngine:
         # Calculate final statistics
         final_visions = [p.current_vision for p in self.patients.values()]
         discontinued = sum(1 for p in self.patients.values() if p.is_discontinued)
+        actual_patient_count = len(self.patients)
         
         return SimulationResults(
             total_injections=total_injections,
             patient_histories=self.patients,
             final_vision_mean=sum(final_visions) / len(final_visions) if final_visions else 0,
             final_vision_std=self._calculate_std(final_visions),
-            discontinuation_rate=discontinued / len(self.patients) if self.patients else 0
+            discontinuation_rate=discontinued / actual_patient_count if actual_patient_count else 0
         )
         
     def _calculate_vision_change(

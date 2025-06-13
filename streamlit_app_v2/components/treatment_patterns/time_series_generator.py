@@ -9,7 +9,8 @@ def generate_patient_state_time_series(
     visits_df: pd.DataFrame,
     time_resolution: str = 'month',
     start_time: float = 0,
-    end_time: Optional[float] = None
+    end_time: Optional[float] = None,
+    enrollment_df: Optional[pd.DataFrame] = None
 ) -> pd.DataFrame:
     """
     Generate time series of patient counts by state.
@@ -19,6 +20,7 @@ def generate_patient_state_time_series(
         time_resolution: 'week' or 'month'
         start_time: Start time in months
         end_time: End time in months (None = max from data)
+        enrollment_df: Optional DataFrame with patient enrollment info (patient_id, enrollment_time_days)
     
     Returns:
         DataFrame with columns:
@@ -35,9 +37,27 @@ def generate_patient_state_time_series(
     if visits_df['patient_id'].nunique() == 1:
         st.warning("Streamgraph may not be meaningful with single patient")
     
-    # Convert to months for consistency
+    # Convert patient-relative time to calendar time
     visits_df = visits_df.copy()
-    visits_df['time_months'] = visits_df['time_days'] / 30.44
+    
+    # Convert enrollment times to months for consistency
+    if enrollment_df is not None and 'enrollment_time_days' in enrollment_df.columns:
+        enrollment_times = dict(zip(
+            enrollment_df['patient_id'],
+            enrollment_df['enrollment_time_days'] / 30.44
+        ))
+        
+        # Convert patient-relative visit times to calendar times (vectorized)
+        # Calendar time = enrollment time + patient time
+        visits_df['patient_time_months'] = visits_df['time_days'] / 30.44
+        visits_df['enrollment_time_months'] = visits_df['patient_id'].map(enrollment_times).fillna(0)
+        visits_df['calendar_time_months'] = visits_df['enrollment_time_months'] + visits_df['patient_time_months']
+        visits_df['time_months'] = visits_df['calendar_time_months']
+    else:
+        # If no enrollment data, assume all patients enrolled at time 0
+        # So patient time = calendar time
+        visits_df['time_months'] = visits_df['time_days'] / 30.44
+        enrollment_times = {}
     
     # Determine time range
     if end_time is None:
@@ -63,59 +83,124 @@ def generate_patient_state_time_series(
     all_patients = visits_df['patient_id'].unique()
     total_patients = len(all_patients)
     
+    # Pre-compute enrolled counts for all time points (enrollment_times already computed above)
+    if enrollment_times:
+        # Pre-compute enrolled counts for all time points at once (major optimization)
+        enrollment_months = enrollment_df['enrollment_time_days'].values / 30.44
+        enrollment_months_sorted = np.sort(enrollment_months)
+        # Use searchsorted for O(log n) lookup per time point instead of O(n)
+        enrolled_at_time = np.searchsorted(enrollment_months_sorted, time_points, side='right')
+    else:
+        # If no enrollment data, all patients enrolled at time 0
+        enrolled_at_time = np.full(len(time_points), total_patients)
+    
     # Prepare result list
     results = []
     
     # For each time point, determine each patient's state
-    for t in time_points:
+    for i, t in enumerate(time_points):
         # Count patients in each state at this time
-        state_counts = get_patient_states_at_time(visits_df, t, end_time)
+        state_counts = get_patient_states_at_time(visits_df, t, end_time, enrollment_times)
+        
+        # Get pre-computed enrolled count (much faster than counting in loop)
+        enrolled_count = enrolled_at_time[i]
         
         # Add to results
         for state, count in state_counts.items():
+            percentage = (count / enrolled_count * 100) if enrolled_count > 0 else 0
+            
             results.append({
                 'time_point': t,
                 'state': state,
                 'patient_count': count,
-                'percentage': (count / total_patients * 100) if total_patients > 0 else 0
+                'percentage': percentage
             })
     
     return pd.DataFrame(results)
 
-def get_patient_states_at_time(visits_df: pd.DataFrame, time_point: float, sim_end_time: float) -> dict:
+def get_patient_states_at_time(visits_df: pd.DataFrame, time_point: float, sim_end_time: float, 
+                              enrollment_times: dict = None) -> dict:
     """
     Determine patient states at a specific time point using vectorized operations.
+    
+    Args:
+        visits_df: Visit data
+        time_point: Time point in months
+        sim_end_time: Simulation end time in months
+        enrollment_times: Dict of {patient_id: enrollment_time_months}
     
     Returns dict of {state: count}
     """
     # Filter visits before or at this time point
     past_visits = visits_df[visits_df['time_months'] <= time_point].copy()
     
+    # Get all unique patients (no need for set conversion)
+    all_patients = visits_df['patient_id'].unique()
+    
+    # If we have enrollment times, filter to only enrolled patients
+    if enrollment_times:
+        # Vectorized enrollment check for better performance
+        enrolled_mask = np.array([
+            enrollment_times.get(pid, 0) <= time_point 
+            for pid in all_patients
+        ])
+        enrolled_patients = set(all_patients[enrolled_mask])
+        
+        if not enrolled_patients:
+            return {}  # No patients enrolled yet
+    else:
+        # If no enrollment data, assume all patients enrolled at time 0
+        enrolled_patients = set(all_patients)
+    
     if len(past_visits) == 0:
-        # All patients are pre-treatment
-        total_patients = visits_df['patient_id'].nunique()
-        return {'Pre-Treatment': total_patients}
+        # All enrolled patients are pre-treatment
+        return {'Pre-Treatment': len(enrolled_patients)}
     
     # Get the most recent visit for each patient
     idx = past_visits.groupby('patient_id')['time_months'].idxmax()
     last_visits = past_visits.loc[idx].copy()
     
     # Calculate time since last visit
-    last_visits['time_since_last'] = time_point - last_visits['time_months']
+    time_since_last = time_point - last_visits['time_months']
     
-    # Determine states
-    last_visits['current_state'] = last_visits.apply(
-        lambda row: 'No Further Visits' if row['time_since_last'] > 6 else row['treatment_state'],
-        axis=1
-    )
+    # Special handling for Initial Treatment state
+    # A patient is in "Initial Treatment" if:
+    # 1. They are enrolled but have not had their first visit yet, OR
+    # 2. They have had their first visit but it was marked as "Initial Treatment"
+    #    and not enough time has passed for a second visit
+    
+    # Check if each patient's most recent visit is their first visit
+    is_first_visit = last_visits['visit_num'] == 0
+    
+    # For patients whose most recent visit is their first visit,
+    # they could still be in "Initial Treatment" phase
+    # We'll keep them in Initial Treatment for a reasonable period (e.g., up to 2 months)
+    # after their first visit to represent the initial treatment period
+    
+    # Vectorized state determination
+    conditions = [
+        time_since_last > 6,  # No further visits after 6 months
+        is_first_visit & (time_since_last <= 2) & (last_visits['treatment_state'] == 'Initial Treatment'),  # Still in initial period
+        True  # Default case
+    ]
+    
+    choices = [
+        'No Further Visits',
+        'Initial Treatment',  # Keep in Initial Treatment for up to 2 months after first visit
+        last_visits['treatment_state']  # Use the visit's treatment state
+    ]
+    
+    last_visits['current_state'] = np.select(conditions, choices)
+    
+    # Filter to only enrolled patients
+    last_visits = last_visits[last_visits['patient_id'].isin(enrolled_patients)]
     
     # Count states
     state_counts = last_visits['current_state'].value_counts().to_dict()
     
-    # Add pre-treatment patients (those not in past_visits)
-    all_patients = set(visits_df['patient_id'].unique())
+    # Add pre-treatment patients (enrolled but not yet visited)
     patients_with_visits = set(last_visits['patient_id'].unique())
-    pre_treatment_count = len(all_patients - patients_with_visits)
+    pre_treatment_count = len(enrolled_patients - patients_with_visits)
     
     if pre_treatment_count > 0:
         state_counts['Pre-Treatment'] = pre_treatment_count

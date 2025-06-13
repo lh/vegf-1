@@ -2,13 +2,17 @@
 
 **IMPORTANT**: This is the active implementation plan. Always refer to this document when working on the current feature.
 
-## 🚀 Current Phase: Staggered Enrollment Implementation
+## 🚀 Current Phase: Staggered Enrollment Implementation - Ready for Phase 4
 
 ### Overview
 The V2 simulation engines currently implement unrealistic instant recruitment where all patients exist from day 0. This needs to be replaced with proper staggered enrollment as was implemented in V1. The rectangular streamgraph shape revealed this issue - all patients are created at simulation start with only initial visits staggered across the first month.
 
-**Current Task**: Implement staggered patient enrollment with Poisson process  
-**Timeline**: 7-10 days  
+**Phase 1 Status**: ✅ COMPLETE (2025-01-13) - Core engine changes implemented
+**Phase 2 Status**: ✅ COMPLETE (2025-01-13) - Data pipeline updated
+**Phase 3 Status**: ✅ COMPLETE (2025-06-13) - Streamgraph shows wedge shape
+**Phase 4 Status**: ✅ COMPLETE (2025-06-13) - UI Integration done
+**Current Task**: Ready for Phase 5 - Analysis Enhancement
+**Timeline**: 7-10 days total (3 phases complete, ~2-4 days remaining)
 **Approach**: Replace instant recruitment entirely (no real-world use case)
 
 ### 📍 Key Documents
@@ -37,33 +41,38 @@ Two mutually exclusive modes (user chooses one):
 
 ### Implementation Phases
 
-#### Phase 1: Core Engine Changes (2-3 days)
-- [ ] Study V1 `StaggeredABS` implementation
-- [ ] Add enrollment_date to Patient class
-- [ ] Replace instant patient creation in ABS engine
-- [ ] Replace instant patient creation in DES engine
-- [ ] Implement Poisson arrival process
-- [ ] Test simulations still run (even if visualizations break)
+#### Phase 1: Core Engine Changes (2-3 days) ✅ COMPLETE
+- [x] Study V1 `StaggeredABS` implementation
+- [x] Add enrollment_date to Patient class
+- [x] Replace instant patient creation in ABS engine
+- [x] Replace instant patient creation in DES engine
+- [x] Implement Poisson arrival process
+- [x] Test simulations still run (even if visualizations break)
+- [x] Create comprehensive statistical tests for Poisson process
+- [x] Update edge case tests for stochastic enrollment
+- [x] Verify implementation with visualization script
 
-#### Phase 2: Data Pipeline (1-2 days)
-- [ ] Update Parquet writer to include enrollment_date
-- [ ] Add enrollment_time_days field (days from simulation start)
-- [ ] Ensure visit times are relative to enrollment
-- [ ] Test data integrity with small simulations
-- [ ] Verify late enrollees are handled correctly
+#### Phase 2: Data Pipeline (1-2 days) ✅ COMPLETE
+- [x] Update Parquet writer to include enrollment_date
+- [x] Add enrollment_time_days field (days from simulation start)
+- [x] Ensure visit times are relative to enrollment
+- [x] Test data integrity with small simulations
+- [x] Verify late enrollees are handled correctly
+- [x] Implement strict type checking (datetime vs int days)
+- [x] Fix timing bug where first visits occurred before enrollment
 
-#### Phase 3: Fix Streamgraph (1 day)
-- [ ] Update time_series_generator.py to respect enrollment dates
-- [ ] Add check: `if enrollment_time <= time_point`
-- [ ] Verify streamgraph shows wedge shape (growing patient count)
-- [ ] Test with both calendar and patient time views
+#### Phase 3: Fix Streamgraph (1 day) ✅ COMPLETE
+- [x] Update time_series_generator.py to respect enrollment dates
+- [x] Add check: `if enrollment_time <= time_point`
+- [x] Verify streamgraph shows wedge shape (growing patient count)
+- [x] Test with both calendar and patient time views
 
-#### Phase 4: UI Integration (1-2 days)
-- [ ] Add recruitment mode radio buttons to Simulations page
-- [ ] Add conditional inputs (total vs rate)
-- [ ] Calculate and display derived value
-- [ ] Wire parameters to simulation engines
-- [ ] Add help text explaining the modes
+#### Phase 4: UI Integration (1-2 days) ✅ COMPLETE
+- [x] Add recruitment mode radio buttons to Simulations page
+- [x] Add conditional inputs (total vs rate)
+- [x] Calculate and display derived value
+- [x] Wire parameters to simulation engines
+- [x] Add help text explaining the modes
 
 #### Phase 5: Analysis Enhancement (2-3 days)
 - [ ] Add enrollment statistics section to Analysis Overview
@@ -134,12 +143,52 @@ arrival_times = np.cumsum(inter_arrival_times)
 ## 📊 Success Metrics
 
 ### Staggered Enrollment Implementation:
-- [ ] Streamgraph shows wedge shape (continuous growth)
-- [ ] Enrollment follows Poisson distribution
+- [x] Streamgraph shows wedge shape (continuous growth)
+- [x] Enrollment follows Poisson distribution (verified with K-S test)
 - [ ] UI clearly shows mutual exclusivity of modes
 - [ ] All visualizations handle varying cohort sizes
-- [ ] Performance maintained or improved
+- [x] Performance maintained or improved
 - [ ] Backward compatibility for old simulations
+
+### Phase 1 Accomplishments (2025-01-13):
+- ✅ Implemented Poisson arrival process with exponential inter-arrival times
+- ✅ Added enrollment_date field to Patient class
+- ✅ Modified both ABS and DES engines for lazy patient creation
+- ✅ Created comprehensive statistical tests (K-S test, chi-square test)
+- ✅ Updated edge case tests to handle stochastic variations
+- ✅ Verified enrollment spans entire simulation period (not all at day 0)
+- ✅ Created verification script showing proper distribution
+
+### Phase 2 Accomplishments (2025-01-13):
+- ✅ Updated ParquetWriter to save enrollment_date and enrollment_time_days
+- ✅ Implemented strict type checking for datetime vs int days
+- ✅ Fixed timing bug where first visits could occur before enrollment
+- ✅ All visit times now correctly relative to patient enrollment
+- ✅ Created comprehensive tests for enrollment data integrity
+- ✅ Verified late enrollees have proportionally fewer visits
+- ✅ Updated test fixtures to include enrollment dates
+
+---
+
+### Phase 3 Accomplishments (2025-06-13):
+- ✅ Updated time_series_generator.py to filter patients by enrollment date
+- ✅ Added enrollment time checks to only count enrolled patients at each time point
+- ✅ Streamgraph now shows proper wedge shape (growing from 0 to full patient count)
+- ✅ Percentage view correctly normalizes among enrolled patients only
+- ✅ Tested with multiple time resolutions (week, month, quarter) - all show wedge
+- ✅ Verified in actual UI with 10,000 patient simulation
+
+---
+
+### Phase 4 Accomplishments (2025-06-13):
+- ✅ Created enhanced UI components with recruitment mode selection
+- ✅ Implemented radio buttons for Fixed Total vs Constant Rate modes
+- ✅ Added conditional inputs that change based on selected mode
+- ✅ Automatic calculation of derived values (rates/totals)
+- ✅ Updated preset buttons to work with new recruitment modes
+- ✅ Wired parameters through to simulation engines
+- ✅ Added help text with tooltips explaining each mode
+- ✅ Updated parameter storage to include recruitment details
 
 ---
 
