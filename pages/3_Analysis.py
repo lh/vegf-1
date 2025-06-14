@@ -569,12 +569,10 @@ with tab6:
     Understanding this helps optimise resource allocation and identify high-impact patient segments.
     """)
     
-    # FORCE ALTAIR FOR TESTING
+    # Import workload analysis components
     from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
-    from ape.components.treatment_patterns.workload_visualizations_altair import (
-        create_dual_bar_chart_altair, create_bubble_chart_altair
-    )
     from ape.components.treatment_patterns.workload_visualizations_optimized import (
+        create_dual_bar_chart_plotly, create_bubble_chart_plotly, 
         create_impact_pyramid, get_workload_insight_summary
     )
     workload_available = True
@@ -668,22 +666,22 @@ with tab6:
                 ).hexdigest()[:8]
                 
                 @st.cache_data(show_spinner="Creating all visualizations...", ttl=300)
-                def get_all_workload_visualizations_v4(_workload_data, _tufte_mode, cache_key):
-                    """Create all workload visualizations once and cache them. V3 to clear old cache."""
+                def get_all_workload_visualizations_v6(_workload_data, _tufte_mode, cache_key):
+                    """Create all workload visualizations once and cache them. V6 back to Plotly."""
                     figs = {}
-                    figs['bar'] = create_dual_bar_chart_altair(_workload_data, _tufte_mode)
+                    figs['bar'] = create_dual_bar_chart_plotly(_workload_data, _tufte_mode)
                     figs['pyramid'] = create_impact_pyramid(_workload_data, _tufte_mode)
-                    figs['bubble'] = create_bubble_chart_altair(_workload_data, _tufte_mode)
+                    figs['bubble'] = create_bubble_chart_plotly(_workload_data, _tufte_mode)
                     return figs
                 
                 # Get all figures (cached after first creation)
-                all_figs = get_all_workload_visualizations_v4(workload_data, tufte_mode, workload_hash)
+                all_figs = get_all_workload_visualizations_v6(workload_data, tufte_mode, workload_hash)
                 
                 # Display selected visualization
                 if viz_option == 'bar':
                     st.subheader("Clinical Workload Attribution: Patient Distribution vs Visit Volume")
-                    # Altair chart - use fixed width for better appearance
-                    st.altair_chart(all_figs['bar'], use_container_width=False)
+                    config = get_export_config(filename="clinical_workload_bar")
+                    st.plotly_chart(all_figs['bar'], use_container_width=True, config=config)
                     
                     st.markdown("""
                     **Understanding the Dual Bar Chart:**
@@ -711,8 +709,8 @@ with tab6:
                     col1, col2 = st.columns([3, 2])  # 60/40 split
                     
                     with col1:
-                        # Altair chart - no config needed
-                        st.altair_chart(all_figs['bubble'], use_container_width=False)
+                        config = get_export_config(filename="clinical_workload_bubble")
+                        st.plotly_chart(all_figs['bubble'], use_container_width=True, config=config)
                     
                     with col2:
                         st.markdown("### Reading the Chart")
