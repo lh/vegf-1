@@ -10,6 +10,7 @@ from datetime import datetime
 import re
 
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
+from ape.utils.startup_redirect import handle_page_startup
 
 st.set_page_config(
     page_title="Protocol Manager", 
@@ -17,6 +18,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# Check for startup redirect
+handle_page_startup("protocol_manager")
 
 # Style Streamlit native buttons to be less obtrusive
 st.markdown("""

@@ -16,6 +16,7 @@ from ape.utils.state_helpers import (
     get_active_simulation
 )
 from ape.utils.environment import should_check_memory_limits, is_streamlit_cloud
+from ape.utils.startup_redirect import handle_page_startup
 
 st.set_page_config(
     page_title="Simulations", 
@@ -23,6 +24,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"  # Show sidebar for memory monitoring
 )
+
+# Check for startup redirect
+handle_page_startup("simulations")
 
 # Add parent for utils import
 from ape.utils.carbon_button_helpers import (

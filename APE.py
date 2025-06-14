@@ -16,17 +16,14 @@ st.set_page_config(
     initial_sidebar_state="collapsed"  # Start with sidebar hidden
 )
 
+# Import startup redirect to handle crash recovery
+from ape.utils.startup_redirect import initialize_session_state, check_deployment_recovery
+
+# Initialize session state and check for crash recovery
+initialize_session_state()
+
 # Import Carbon button helpers
 from ape.utils.carbon_button_helpers import navigation_button
-
-
-# Initialize session state
-if 'simulation_results' not in st.session_state:
-    st.session_state.simulation_results = None
-if 'current_protocol' not in st.session_state:
-    st.session_state.current_protocol = None
-if 'audit_trail' not in st.session_state:
-    st.session_state.audit_trail = None
 
 # Main page with logo
 logo_col, title_col = st.columns([1, 4])
@@ -86,7 +83,7 @@ with col2:
         help_text="Run new simulations or manage existing ones",
         full_width=True
     ):
-        st.switch_page("ape/pages/2_Simulations.py")
+        st.switch_page("pages/2_Simulations.py")
 
 with col3:
     # Disable Analysis if no simulation results are available
@@ -99,7 +96,7 @@ with col3:
         disabled=analysis_disabled,
         button_type="ghost" if analysis_disabled else "secondary"
     ):
-        st.switch_page("ape/pages/3_Analysis.py")
+        st.switch_page("pages/3_Analysis.py")
 
 # Quick status line (optional - much more subtle)
 if st.session_state.current_protocol or st.session_state.simulation_results:

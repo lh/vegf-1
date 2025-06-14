@@ -23,6 +23,7 @@ from ape.utils.tufte_zoom_style import (
 from ape.utils.style_constants import StyleConstants
 from ape.utils.chart_builder import ChartBuilder
 from ape.utils.export_config import render_export_settings
+from ape.utils.startup_redirect import handle_page_startup
 
 st.set_page_config(
     page_title="Analysis", 
@@ -30,6 +31,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# Check for startup redirect
+handle_page_startup("analysis")
 
 # Add parent for utils import
 from ape.utils.carbon_button_helpers import top_navigation_home_button, ape_button
