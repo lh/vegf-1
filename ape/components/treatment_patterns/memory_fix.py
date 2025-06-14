@@ -1,42 +1,39 @@
-"""Memory management for treatment pattern visualizations."""
+"""Memory management utilities for treatment pattern visualizations.
+
+This module provides decorators and utilities to help manage memory usage
+when creating large visualizations with Plotly.
+"""
 
 import gc
-import plotly.graph_objects as go
-import streamlit as st
+import functools
+from typing import Any, Callable
 
 
-def clear_plotly_cache():
-    """Clear Plotly figure cache to prevent memory buildup."""
-    # Force garbage collection
-    gc.collect()
+def with_memory_cleanup(func: Callable) -> Callable:
+    """Decorator that performs garbage collection after function execution.
     
-    # Clear any cached Plotly figures in session state
-    for key in list(st.session_state.keys()):
-        if 'plotly' in key.lower() or 'sankey' in key.lower() or 'fig' in key.lower():
-            del st.session_state[key]
-
-
-def with_memory_cleanup(func):
-    """Decorator to ensure memory cleanup after creating visualizations."""
-    def wrapper(*args, **kwargs):
+    This helps free memory after creating large Plotly figures.
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs) -> Any:
         try:
-            return func(*args, **kwargs)
+            result = func(*args, **kwargs)
+            return result
         finally:
-            # Schedule garbage collection after figure creation
+            # Force garbage collection to free memory
             gc.collect()
+    
     return wrapper
 
 
-@st.cache_data(ttl=300)  # Cache for 5 minutes
-def create_cached_sankey_data(transitions_df_json):
-    """Cache the processed Sankey data to avoid recomputation."""
-    import pandas as pd
-    transitions_df = pd.read_json(transitions_df_json)
+def clear_plotly_cache():
+    """Clear any internal Plotly caches to free memory.
     
-    # Process data once and cache it
-    flow_counts = transitions_df.groupby(['from_state', 'to_state']).size().reset_index(name='count')
-    min_flow_size = max(1, len(transitions_df) * 0.001)
-    is_terminal = flow_counts['to_state'].str.contains('Still in')
-    flow_counts = flow_counts[(flow_counts['count'] >= min_flow_size) | is_terminal]
+    Plotly may cache certain objects internally. This function
+    attempts to clear those caches.
+    """
+    # Force garbage collection
+    gc.collect()
     
-    return flow_counts.to_json()
+    # Note: Plotly doesn't expose internal caches directly,
+    # but garbage collection helps free unreferenced objects

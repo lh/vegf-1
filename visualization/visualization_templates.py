@@ -33,7 +33,7 @@ import pandas as pd
 
 # Import our centralized styling systems
 from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
-from ape.utils.tufte_zoom_style import (
+from streamlit_app.utils.tufte_style import (
     set_tufte_style, style_axis, style_bar_chart, style_line,
     add_data_label, add_reference_line, add_text_annotation,
     TUFTE_COLORS
@@ -411,8 +411,15 @@ def create_patient_time_visualization(data, time_col='time_weeks', acuity_col='v
     
     # For now, this is a placeholder. In a real implementation, this would
     # create the visualization using the template parameters.
-    # TODO: Implement create_tufte_patient_time_visualization
-    raise NotImplementedError("create_tufte_patient_time_visualization not yet implemented")
+    from streamlit_app.utils.tufte_style import create_tufte_patient_time_visualization
+    return create_tufte_patient_time_visualization(
+        data, 
+        time_col=time_col, 
+        acuity_col=acuity_col,
+        sample_size_col=sample_size_col, 
+        title=title,
+        **kwargs
+    )
 
 
 def create_enrollment_chart(data, title='Patient Enrollment Over Time', **kwargs):
@@ -434,8 +441,8 @@ def create_enrollment_chart(data, title='Patient Enrollment Over Time', **kwargs
         (fig, ax) - The figure and axes with the visualization
     """
     # Placeholder - would implement using the template
-    # TODO: Implement create_tufte_enrollment_chart
-    raise NotImplementedError("create_tufte_enrollment_chart not yet implemented")
+    from streamlit_app.utils.tufte_style import create_tufte_enrollment_chart
+    return create_tufte_enrollment_chart(data, title=title, **kwargs)
 
 
 # Discontinuation Retreatment Chart

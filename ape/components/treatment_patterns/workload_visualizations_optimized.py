@@ -21,7 +21,9 @@ from plotly.subplots import make_subplots
 
 # Optimized Tufte constants
 TUFTE_CONFIG = {
-    'font': dict(family='Arial', size=12),
+    'font_family': 'Arial',
+    'font_size': 12,
+    'line_width': 1,
     'margin': dict(l=60, r=40, t=40, b=60),
     'plot_bgcolor': 'white',
     'paper_bgcolor': 'white'

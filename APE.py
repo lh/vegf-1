@@ -86,7 +86,7 @@ with col2:
         help_text="Run new simulations or manage existing ones",
         full_width=True
     ):
-        st.switch_page("pages/2_Simulations.py")
+        st.switch_page("ape/pages/2_Simulations.py")
 
 with col3:
     # Disable Analysis if no simulation results are available
@@ -99,7 +99,7 @@ with col3:
         disabled=analysis_disabled,
         button_type="ghost" if analysis_disabled else "secondary"
     ):
-        st.switch_page("pages/3_Analysis.py")
+        st.switch_page("ape/pages/3_Analysis.py")
 
 # Quick status line (optional - much more subtle)
 if st.session_state.current_protocol or st.session_state.simulation_results:
