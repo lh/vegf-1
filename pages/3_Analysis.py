@@ -909,16 +909,20 @@ with tab8:
         with col4:
             st.metric("Max Interval", f"{int(np.max(intervals))} days")
         
-        # Visualize interval distribution
-        chart = (ChartBuilder('Distribution of Treatment Intervals')
-                .with_labels(xlabel='Interval (days)', ylabel='Number of Intervals')
-                .with_count_axis('y')
-                .plot(lambda ax, colors: ax.hist(intervals, bins=20, 
-                                               color=colors['primary'], 
-                                               edgecolor=colors['neutral'], 
-                                               linewidth=1.5, alpha=0.7))
-                .build())
-        st.pyplot(chart.figure)
+        # Visualize interval distribution with Tufte-compliant chart
+        from ape.components.treatment_patterns.interval_visualization import (
+            create_interval_distribution_tufte, create_interval_summary_table
+        )
+        
+        # Create the interval distribution chart
+        interval_fig = create_interval_distribution_tufte(intervals)
+        config = get_export_config(filename="treatment_intervals_distribution")
+        st.plotly_chart(interval_fig, use_container_width=True, config=config)
+        
+        # Optionally show detailed statistics table
+        with st.expander("View Detailed Statistics"):
+            stats_fig = create_interval_summary_table(intervals_df)
+            st.plotly_chart(stats_fig, use_container_width=True, config=config)
     else:
         st.info("No treatment intervals found - data will appear as patients have follow-up visits.")
 
