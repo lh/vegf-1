@@ -38,6 +38,9 @@ Use Git and github  for version control. You have access to the gh command. Use 
 # Development Environment
 - This is a development environment. Always git commit and push after changes. Use the gh command for github if needed.
 - "When modifying Streamlit components, test changes with test scripts and show the user the results before updating the app"
+- **NO SILENT FALLBACKS**: Never add try/except blocks that hide errors or fall back to alternative implementations. Fail fast with clear error messages.
+- **TESTING REQUIRES FAILURES**: When testing new features, force their use without fallbacks so errors are visible.
+- **EXPLICIT ERRORS**: If something might fail, let it fail with a clear error message rather than silently switching to an alternative.
 
 # Playwright Integration
 
