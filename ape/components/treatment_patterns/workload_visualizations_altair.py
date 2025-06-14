@@ -196,10 +196,15 @@ def create_dual_bar_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool
         )
     )
     
+    # Combine legend components first
+    legend_combined = alt.hconcat(legend, legend_text).resolve_scale(
+        y='independent'
+    )
+    
     # Combine main chart with legend
     chart = alt.hconcat(
         main_chart,
-        (legend + legend_text).properties(width=150)
+        legend_combined
     ).configure_view(
         strokeWidth=0
     ).configure_axis(
