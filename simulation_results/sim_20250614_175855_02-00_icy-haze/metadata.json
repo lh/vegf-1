@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250614_175855_02-00_icy-haze",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 1000,
+  "duration_years": 2.0,
+  "seed": 42,
+  "timestamp": "2025-06-14T17:58:55.873351+01:00",
+  "runtime_seconds": 0.0590667724609375,
+  "storage_type": "parquet",
+  "memorable_name": "icy-haze"
+}

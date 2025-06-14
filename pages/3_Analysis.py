@@ -97,15 +97,14 @@ stats = get_cached_stats(results.metadata.sim_id)
 is_large_dataset = stats['patient_count'] > 1000
 
 # Create tabs for different analyses - Patient Journey first as it's the most visual
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
     "Patient Journey Visualisation", 
     "Vision Outcomes", 
     "Patient Trajectories", 
     "Patient States",
-    "Treatment Intervals",
+    "Treatment Intervals & Gaps",
     "Clinical Workload Analysis",
     "Pattern Details",
-    "Treatment Summary",
     "Audit Trail"
 ])
 
@@ -496,80 +495,9 @@ with tab4:
     st.caption("*Patient counts are conserved throughout the simulation - total always equals initial population.")
 
 with tab5:
-    # Treatment Intervals tab (from subtab2 of Treatment Patterns)
-    st.header("Treatment Intervals")
-    
-    st.markdown("""
-    This analysis shows **treatment pattern transitions** - when patients move between different 
-    treatment intensities (e.g., from monthly to bi-monthly visits). Each data point represents 
-    a **change in treatment pattern**, not every individual visit.
-    
-    **Use this view to understand:**
-    - How treatment patterns evolve over time
-    - Treatment adherence and protocol compliance
-    - When patients transition to less frequent visits
-    """)
-    
-    # Import needed functions
-    from ape.components.treatment_patterns import (
-        create_interval_distribution_chart,
-        create_gap_analysis_chart_tufte,
-        calculate_interval_statistics
-    )
-    
-    # Reuse cached treatment patterns if available
-    if 'transitions_df' not in locals() or 'visits_df' not in locals():
-        with st.spinner("Loading treatment patterns..."):
-            transitions_df, visits_df = get_cached_treatment_patterns(results.metadata.sim_id)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("Distribution of Treatment Intervals")
-        if len(transitions_df) > 0:
-            interval_fig = create_interval_distribution_chart(transitions_df)
-            # Apply export config
-            from ape.utils.export_config import get_export_config
-            config = get_export_config(filename="treatment_intervals")
-            st.plotly_chart(interval_fig, use_container_width=True, config=config)
-        else:
-            st.info("No interval data available yet - patterns will appear as the simulation progresses")
-    
-    with col2:
-        st.subheader("Patient Gap Analysis")
-        if len(visits_df) > 0:
-            gap_fig = create_gap_analysis_chart_tufte(visits_df)
-            # Apply export config
-            config = get_export_config(filename="gap_analysis")
-            st.plotly_chart(gap_fig, use_container_width=True, config=config)
-        else:
-            st.info("No visit data available yet - data will appear as patients have follow-up visits")
-    
-    # Calculate and show detailed statistics
-    if len(visits_df) > 0:
-        interval_stats = calculate_interval_statistics(visits_df)
-        
-        st.subheader("Detailed Interval Statistics")
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            st.metric("Median Interval", f"{interval_stats['median']:.1f} days")
-            st.metric("Min Interval", f"{interval_stats['min']:.1f} days")
-        
-        with col2:
-            st.metric("Mean Interval", f"{interval_stats['mean']:.1f} days")
-            st.metric("Max Interval", f"{interval_stats['max']:.1f} days")
-        
-        with col3:
-            st.metric("Std Deviation", f"{interval_stats['std']:.1f} days")
-            if 'p25' in interval_stats:
-                st.metric("25th Percentile", f"{interval_stats['p25']:.1f} days")
-        
-        with col4:
-            if 'p75' in interval_stats:
-                st.metric("75th Percentile", f"{interval_stats['p75']:.1f} days")
-            total_visits = len(visits_df)
-            st.metric("Total Visits Analyzed", f"{StyleConstants.format_count(total_visits)}")
+    # Combined Treatment Intervals & Gaps tab
+    from ape.components.treatment_patterns.combined_intervals_tab import render_combined_intervals_tab
+    render_combined_intervals_tab(results, stats, params)
 
 with tab6:
     # Clinical Workload Analysis (new tab)
@@ -874,81 +802,6 @@ with tab7:
         """)
 
 with tab8:
-    # Treatment Summary tab (from subtab4 of Treatment Patterns)
-    st.header("Treatment Summary")
-    
-    st.markdown("""
-    This analysis shows the **raw distribution of all visit intervals** - the actual time between 
-    every consecutive pair of visits for all patients. This includes all visits, not just pattern 
-    changes.
-    
-    **Use this view to understand:**
-    - Actual clinic visit frequency and workload
-    - True distribution of treatment intervals
-    - Overall treatment burden across the patient population
-    """)
-    
-    # Always show full dataset statistics
-    total_patients = stats['patient_count']
-    total_injections = stats.get('total_injections', 0)
-    mean_injections = total_injections / total_patients if total_patients > 0 else 0
-    
-    # Show key metrics
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Total Patients", f"{StyleConstants.format_count(total_patients)}")
-    with col2:
-        st.metric("Total Injections", f"{StyleConstants.format_count(int(total_injections))}")
-    with col3:
-        st.metric("Mean Injections/Patient", f"{StyleConstants.format_statistic(mean_injections)}")
-    with col4:
-        st.metric("Injection Rate", f"{(total_injections / (total_patients * params['duration_years'])):.1f}/year")
-    
-    # Cache functions for treatment intervals
-    @st.cache_data
-    def get_cached_treatment_intervals(sim_id):
-        """Cache treatment intervals calculation."""
-        return results.get_treatment_intervals_df()
-    
-    # Get treatment intervals - cached!
-    with st.spinner("Loading treatment intervals..."):
-        intervals_df = get_cached_treatment_intervals(results.metadata.sim_id)
-    
-    if len(intervals_df) > 0:
-        # Extract just the numeric intervals
-        intervals = intervals_df['interval_days'].values
-        
-        # Interval distribution summary
-        st.subheader("Treatment Interval Summary")
-        
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Mean Interval", f"{StyleConstants.format_statistic(np.mean(intervals))} days")
-        with col2:
-            st.metric("Median Interval", f"{StyleConstants.format_statistic(np.median(intervals))} days")
-        with col3:
-            st.metric("Min Interval", f"{int(np.min(intervals))} days")
-        with col4:
-            st.metric("Max Interval", f"{int(np.max(intervals))} days")
-        
-        # Visualize interval distribution with Tufte-compliant chart
-        from ape.components.treatment_patterns.interval_visualization import (
-            create_interval_distribution_tufte, create_interval_summary_table
-        )
-        
-        # Create the interval distribution chart
-        interval_fig = create_interval_distribution_tufte(intervals)
-        config = get_export_config(filename="treatment_intervals_distribution")
-        st.plotly_chart(interval_fig, use_container_width=True, config=config)
-        
-        # Optionally show detailed statistics table
-        with st.expander("View Detailed Statistics"):
-            stats_fig = create_interval_summary_table(intervals_df)
-            st.plotly_chart(stats_fig, use_container_width=True, config=config)
-    else:
-        st.info("No treatment intervals found - data will appear as patients have follow-up visits.")
-
-with tab9:
     st.header("Audit Trail")
     st.markdown("Complete parameter tracking and simulation events.")
     

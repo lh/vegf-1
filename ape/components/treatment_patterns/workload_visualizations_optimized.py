@@ -19,13 +19,8 @@ from typing import Dict, Any, List, Tuple
 import plotly.express as px
 from plotly.subplots import make_subplots
 
-# Optimized Tufte constants
-TUFTE_CONFIG = {
-    'font': dict(family='Arial', size=12),
-    'margin': dict(l=60, r=40, t=40, b=60),
-    'plot_bgcolor': 'white',
-    'paper_bgcolor': 'white'
-}
+# Import centralized Tufte style
+from ape.utils.tufte_style import TUFTE_PLOTLY_CONFIG as TUFTE_CONFIG
 
 
 def create_dual_bar_chart_optimized(workload_data: Dict[str, Any], tufte_mode: bool = True) -> go.Figure:

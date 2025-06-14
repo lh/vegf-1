@@ -4,24 +4,11 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-# Tufte-style constants
-TUFTE_FONT_SIZES = {
-    'title': 16,
-    'label': 14,
-    'tick': 12,
-    'annotation': 11,
-}
-
-TUFTE_LINE_WEIGHTS = {
-    'axis': 1.0,
-    'grid': 0.5,
-    'annotation': 1.0,
-}
-
-TUFTE_COLORS = {
-    'neutral': '#264653',
-    'grid': '#E0E0E0',
-}
+# Import centralized Tufte style constants
+from ape.utils.tufte_style import (
+    TUFTE_FONT_SIZES, TUFTE_LINE_WEIGHTS, TUFTE_COLORS,
+    TUFTE_AXIS_CONFIG, TUFTE_GRID_CONFIG
+)
 
 
 def create_interval_distribution_chart(transitions_df):
@@ -42,15 +29,15 @@ def create_interval_distribution_chart(transitions_df):
     
     hist, bin_edges = np.histogram(interval_data, bins=bins)
     
-    # Use semantic colors for treatment intervals
+    # Use semantic colors for treatment intervals - NO HARDCODED FALLBACKS!
     interval_colors = [
-        colors.get('intensive_monthly', '#4A90E2'),      # Monthly
-        colors.get('regular_6_8_weeks', '#7FBA00'),      # 6-8 weeks
-        colors.get('primary', '#5A7C8A'),                # 9-11 weeks (no specific semantic color)
-        colors.get('extended_12_weeks', '#5A8F00'),      # 12-16 weeks
-        colors.get('treatment_gap_3_6', '#FFD700'),      # 3-6 months
-        colors.get('extended_gap_6_12', '#FF9500'),      # 6-12 months
-        colors.get('long_gap_12_plus', '#FF6347')        # 12+ months
+        colors['intensive_monthly'],      # Monthly
+        colors['regular_6_8_weeks'],      # 6-8 weeks
+        colors['primary'],                # 9-11 weeks (no specific semantic color)
+        colors['extended_12_weeks'],      # 12-16 weeks
+        colors['treatment_gap_3_6'],      # 3-6 months
+        colors['extended_gap_6_12'],      # 6-12 months
+        colors['long_gap_12_plus']        # 12+ months
     ]
     
     # Create bar chart
@@ -162,8 +149,26 @@ def create_gap_analysis_chart_tufte(visits_df):
     # Sort categories for horizontal bar chart
     gap_summary = gap_summary.sort_values(ascending=True)
     
+    # Import color system
+    from ape.utils.visualization_modes import get_mode_colors
+    colors = get_mode_colors()
+    
     # Create a clean horizontal bar chart (Tufte-style)
     fig = go.Figure()
+    
+    # Map gap categories to semantic colors - NO HARDCODED VALUES!
+    gap_colors = []
+    for idx in gap_summary.index:
+        if '≤6 weeks' in str(idx):
+            gap_colors.append(colors['intensive_monthly'])
+        elif '6-9 weeks' in str(idx):
+            gap_colors.append(colors['regular_6_8_weeks'])
+        elif '9-12 weeks' in str(idx):
+            gap_colors.append(colors['extended_12_weeks'])
+        elif '12-16 weeks' in str(idx):
+            gap_colors.append(colors['maximum_extension'])
+        else:  # Gaps (>16 weeks)
+            gap_colors.append(colors['treatment_gap_3_6'])
     
     # Add bars
     fig.add_trace(go.Bar(
@@ -172,11 +177,7 @@ def create_gap_analysis_chart_tufte(visits_df):
         orientation='h',
         text=[f'{val:,} ({val/len(patient_gaps)*100:.1f}%)' for val in gap_summary.values],
         textposition='outside',
-        marker_color=['#4a90e2' if '≤6 weeks' in str(idx) else
-                     '#7fba00' if '6-9 weeks' in str(idx) else
-                     '#5c8a00' if '9-12 weeks' in str(idx) else
-                     '#ffd700' if '12-16 weeks' in str(idx) else
-                     '#ff6347' for idx in gap_summary.index],
+        marker_color=gap_colors,
         showlegend=False
     ))
     
