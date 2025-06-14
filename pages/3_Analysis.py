@@ -596,8 +596,10 @@ with tab6:
                 return calculate_clinical_workload_attribution(visits_df)
             
             # Create a hash of the visits data for cache key
+            # Use only relevant columns to avoid cache misses from unrelated changes
+            cache_cols = ['patient_id', 'time_days', 'interval_days'] if 'interval_days' in visits_df.columns else ['patient_id', 'time_days']
             visits_hash = hashlib.md5(
-                pd.util.hash_pandas_object(visits_df, index=True).values.tobytes()
+                pd.util.hash_pandas_object(visits_df[cache_cols], index=False).values.tobytes()
             ).hexdigest()[:8]
             
             workload_data = get_cached_workload_data(visits_hash)

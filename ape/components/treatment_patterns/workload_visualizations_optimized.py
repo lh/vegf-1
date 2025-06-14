@@ -334,9 +334,13 @@ def _create_empty_chart(message: str) -> go.Figure:
 
 
 def _hex_to_rgba_fast(hex_color: str, alpha: float) -> str:
-    """Fast hex to RGBA conversion."""
-    hex_color = hex_color.lstrip('#')
-    return f"({int(hex_color[0:2], 16)},{int(hex_color[2:4], 16)},{int(hex_color[4:6], 16)},{alpha})"
+    """Fast hex to RGBA conversion without string manipulation."""
+    # Remove # if present
+    if hex_color.startswith('#'):
+        hex_color = hex_color[1:]
+    # Direct conversion using bit shifting for speed
+    rgb = int(hex_color, 16)
+    return f"({rgb >> 16},{(rgb >> 8) & 0xFF},{rgb & 0xFF},{alpha})"
 
 
 def get_workload_insight_summary(workload_data: Dict[str, Any]) -> str:
@@ -379,6 +383,13 @@ def get_workload_insight_summary(workload_data: Dict[str, Any]) -> str:
 
 
 # Export optimized versions with same names for drop-in replacement
+# This allows seamless switching between standard and optimized versions
 create_dual_bar_chart = create_dual_bar_chart_optimized
 create_impact_pyramid = create_impact_pyramid_optimized
 create_bubble_chart = create_bubble_chart_optimized
+
+# Public API:
+# - create_dual_bar_chart(workload_data, tufte_mode=True) -> go.Figure
+# - create_impact_pyramid(workload_data, tufte_mode=True) -> go.Figure  
+# - create_bubble_chart(workload_data, tufte_mode=True) -> go.Figure
+# - get_workload_insight_summary(workload_data) -> str
