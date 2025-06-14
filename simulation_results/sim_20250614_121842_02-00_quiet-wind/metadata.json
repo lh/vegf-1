@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250614_121842_02-00_quiet-wind",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 1000,
+  "duration_years": 2.0,
+  "seed": 42,
+  "timestamp": "2025-06-14T12:18:42.073810+01:00",
+  "runtime_seconds": 0.06088829040527344,
+  "storage_type": "parquet",
+  "memorable_name": "quiet-wind"
+}
