@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250614_184812_05-00_frosty-silence",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 2000,
+  "duration_years": 5.0,
+  "seed": 42,
+  "timestamp": "2025-06-14T18:48:12.328292+01:00",
+  "runtime_seconds": 0.2438831329345703,
+  "storage_type": "parquet",
+  "memorable_name": "frosty-silence"
+}
