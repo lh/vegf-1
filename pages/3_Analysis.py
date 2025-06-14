@@ -572,7 +572,7 @@ with tab6:
     # Import workload analysis components
     from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
     from ape.components.treatment_patterns.workload_visualizations_optimized import (
-        create_dual_bar_chart_plotly, create_bubble_chart_plotly, 
+        create_dual_bar_chart, create_bubble_chart, 
         create_impact_pyramid, get_workload_insight_summary
     )
     workload_available = True
@@ -667,11 +667,11 @@ with tab6:
                 
                 @st.cache_data(show_spinner="Creating all visualizations...", ttl=300)
                 def get_all_workload_visualizations_v6(_workload_data, _tufte_mode, cache_key):
-                    """Create all workload visualizations once and cache them. V6 back to Plotly."""
+                    """Create all workload visualizations once and cache them."""
                     figs = {}
-                    figs['bar'] = create_dual_bar_chart_plotly(_workload_data, _tufte_mode)
+                    figs['bar'] = create_dual_bar_chart(_workload_data, _tufte_mode)
                     figs['pyramid'] = create_impact_pyramid(_workload_data, _tufte_mode)
-                    figs['bubble'] = create_bubble_chart_plotly(_workload_data, _tufte_mode)
+                    figs['bubble'] = create_bubble_chart(_workload_data, _tufte_mode)
                     return figs
                 
                 # Get all figures (cached after first creation)
