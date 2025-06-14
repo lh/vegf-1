@@ -59,30 +59,40 @@ def create_dual_bar_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool
     
     category_definitions = workload_data['category_definitions']
     
+    # Create color mappings for each category
+    category_colors = {}
+    for category in sorted_stats:
+        cat_name = category[0]
+        category_colors[cat_name] = category_definitions.get(cat_name, {}).get('color', '#cccccc')
+    
     for category, stats in sorted_stats:
-        # Patient percentage record
+        base_color = category_colors[category]
+        
+        # Patient percentage record (lighter shade)
         data_records.append({
             'Category': category,
             'Metric': '% of Patients',
             'Value': stats['patient_percentage'],
-            'Color': category_definitions.get(category, {}).get('color', '#cccccc'),
-            'SortOrder': sorted_stats.index((category, stats)),  # Maintain sort order
-            'Label': f"{stats['patient_percentage']:.1f}%" if stats['patient_percentage'] < 1 else f"{stats['patient_percentage']:.0f}%"
+            'SortOrder': sorted_stats.index((category, stats)),
+            'Label': f"{stats['patient_percentage']:.1f}%" if stats['patient_percentage'] < 1 else f"{stats['patient_percentage']:.0f}%",
+            'CategoryColor': base_color,
+            'IsPatient': True
         })
         
-        # Visit percentage record
+        # Visit percentage record (darker shade)
         data_records.append({
             'Category': category,
             'Metric': '% of Visits',
             'Value': stats['visit_percentage'],
-            'Color': category_definitions.get(category, {}).get('color', '#cccccc'),
             'SortOrder': sorted_stats.index((category, stats)),
-            'Label': f"{stats['visit_percentage']:.1f}%" if stats['visit_percentage'] < 1 else f"{stats['visit_percentage']:.0f}%"
+            'Label': f"{stats['visit_percentage']:.1f}%" if stats['visit_percentage'] < 1 else f"{stats['visit_percentage']:.0f}%",
+            'CategoryColor': base_color,
+            'IsPatient': False
         })
     
     df = pd.DataFrame(data_records)
     
-    # Create the grouped bar chart with better positioning
+    # Create the grouped bar chart with semantic colors
     base = alt.Chart(df).encode(
         x=alt.X('Category:N', 
                 sort=alt.SortField(field='SortOrder', order='ascending'),
@@ -101,24 +111,15 @@ def create_dual_bar_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool
                     grid=False,
                     titlePadding=10
                 ),
-                scale=alt.Scale(domain=[0, max(df['Value'].max() * 1.15, 10)])),  # Add space for labels
+                scale=alt.Scale(domain=[0, max(df['Value'].max() * 1.15, 10)])),
         xOffset=alt.XOffset('Metric:N', title=None),
-        color=alt.Color('Metric:N', 
-                       scale=alt.Scale(
-                           domain=['% of Patients', '% of Visits'],
-                           range=['#8ab4d6', '#2c7fb8']  # Light blue for patients, dark blue for visits
-                       ),
-                       legend=alt.Legend(
-                           title=None,
-                           orient='top',
-                           labelFontSize=TUFTE_FONT_SIZES['tick'],
-                           symbolSize=100,
-                           direction='horizontal'
-                       )),
+        color=alt.Color('CategoryColor:N',
+                       scale=None,  # Use exact colors from data
+                       legend=None),  # We'll create a custom legend
         opacity=alt.condition(
-            alt.datum.Metric == '% of Patients',
-            alt.value(0.6),
-            alt.value(1.0)
+            alt.datum.IsPatient,
+            alt.value(0.5),  # Light for patients
+            alt.value(1.0)   # Full opacity for visits
         ),
         tooltip=[
             alt.Tooltip('Category:N', title='Category'),
@@ -140,13 +141,60 @@ def create_dual_bar_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool
         text='Label:N'
     )
     
+    # Create manual legend data
+    legend_data = pd.DataFrame([
+        {'label': '% of Patients', 'order': 0},
+        {'label': '% of Visits', 'order': 1}
+    ])
+    
+    # Create legend as separate chart
+    legend = alt.Chart(legend_data).mark_square(size=150).encode(
+        y=alt.Y('label:N', axis=None, sort=alt.SortField(field='order')),
+        color=alt.condition(
+            alt.datum.label == '% of Patients',
+            alt.value('#8ab4d6'),  # Light blue
+            alt.value('#2c7fb8')   # Dark blue
+        ),
+        opacity=alt.condition(
+            alt.datum.label == '% of Patients',
+            alt.value(0.5),
+            alt.value(1.0)
+        )
+    ).properties(
+        width=100,
+        height=50
+    )
+    
+    legend_text = alt.Chart(legend_data).mark_text(
+        align='left',
+        baseline='middle',
+        dx=20,
+        fontSize=12
+    ).encode(
+        y=alt.Y('label:N', axis=None, sort=alt.SortField(field='order')),
+        text='label:N'
+    ).properties(
+        width=100,
+        height=50
+    )
+    
     # Combine bars and text
-    chart = (bars + text).properties(
-        width=700,
-        height=400,
-        padding={'left': 20, 'right': 20, 'top': 40, 'bottom': 20}
+    main_chart = (bars + text).properties(
+        width=500,  # Narrower width
+        height=350,
+        title=alt.TitleParams(
+            text='Clinical Workload Attribution',
+            fontSize=TUFTE_FONT_SIZES['title'],
+            anchor='middle'
+        )
+    )
+    
+    # Combine main chart with legend
+    chart = alt.hconcat(
+        main_chart,
+        (legend + legend_text).properties(width=150)
     ).configure_view(
-        strokeWidth=0  # Remove border
+        strokeWidth=0
     ).configure_axis(
         domainWidth=1,
         domainColor=TUFTE_COLORS['neutral'],
@@ -154,10 +202,6 @@ def create_dual_bar_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool
         tickColor=TUFTE_COLORS['neutral'],
         labelColor=TUFTE_COLORS['neutral'],
         titleColor=TUFTE_COLORS['neutral']
-    ).configure_legend(
-        strokeColor='white',
-        fillColor='white',
-        padding=10
     )
     
     return chart

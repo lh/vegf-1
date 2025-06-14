@@ -680,8 +680,8 @@ with tab6:
                 # Display selected visualization
                 if viz_option == 'bar':
                     st.subheader("Clinical Workload Attribution: Patient Distribution vs Visit Volume")
-                    # Altair chart - no config needed
-                    st.altair_chart(all_figs['bar'], use_container_width=True)
+                    # Altair chart - use fixed width for better appearance
+                    st.altair_chart(all_figs['bar'], use_container_width=False)
                     
                     st.markdown("""
                     **Understanding the Dual Bar Chart:**
