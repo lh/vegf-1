@@ -132,11 +132,8 @@ def create_dual_bar_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool
         text='Metric:N'
     ).properties(width=100)
     
-    # Combine chart with legend
-    final_chart = alt.hconcat(
-        (chart + text),
-        alt.hconcat(legend, legend_labels).properties(width=150)
-    ).configure_axis(
+    # For now, return just the chart without the legend to debug
+    return (chart + text).configure_axis(
         grid=False,
         labelFontSize=12,
         titleFontSize=14
@@ -145,8 +142,6 @@ def create_dual_bar_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool
     ).configure_title(
         fontSize=16
     )
-    
-    return final_chart
 
 
 def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool = True) -> alt.Chart:
