@@ -8,15 +8,17 @@
 ## Issues to Address
 
 ### 1. Entry Point Problem
-**Issue**: Application never opens at the front page (APE.py), always opens at Analysis page
-- **Expected**: Should open at the main landing page
-- **Actual**: Automatically redirects to pages/3_Analysis.py
+**Issue**: Application opens at the last page where it crashed/was closed, not the front page
+- **Expected**: Should open at the main landing page (APE.py)
+- **Actual**: Opens at whatever page was active when app last crashed/closed
 - **Impact**: Users miss the main navigation and context
-- **Possible causes**:
-  - Streamlit Cloud configuration
-  - Session state persistence
-  - URL routing issue
-  - Page navigation logic in APE.py
+- **Root cause**: Browser caching or Streamlit session persistence
+- **Possible workarounds to investigate**:
+  - Clear session state on app startup
+  - Force redirect to main page on initialization
+  - Add URL parameter handling to reset to home
+  - Browser cache control headers
+  - Streamlit config for session handling
 
 ### 2. Altair Visualization Quality
 **Issue**: The new Altair graph in Clinical Workload Analysis is ugly
