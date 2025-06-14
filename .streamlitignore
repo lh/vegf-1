@@ -1,0 +1,145 @@
+# Research and development directories
+archive/
+research/
+paper/
+tests/
+meta/
+temp/
+
+# Development files
+*.test.py
+*_test.py
+test_*.py
+.pytest_cache/
+.coverage
+conftest.py
+pytest.ini
+
+# Documentation (except main README)
+docs/
+*.md
+!README.md
+
+# Version control
+.git/
+.github/
+.gitignore
+.gitmodules
+.gitattributes
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.local
+.venv/
+venv/
+env/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Development tools
+.vscode/
+.idea/
+*.sublime-*
+.spyderproject
+.spyproject
+
+# Logs and temporary files
+*.log
+logs/
+temp/
+tmp/
+cache/
+
+# Output directories
+output/
+simulation_results/
+reports/
+debug_output/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Development scripts
+scripts/
+dev/
+workspace/
+
+# Node modules (if any frontend tools used)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+simulations.db
+
+# Backup files
+*.bak
+*.backup
+*.old
+*_old.*
+
+# IDE specific
+.ropeproject/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# pyenv
+.python-version
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# CI/CD
+.travis.yml
+.gitlab-ci.yml
+.circleci/
+.github/
+
+# Other development files
+Makefile
+setup.py
+setup.cfg
+tox.ini
+.pre-commit-config.yaml
+
+# Specific files to ignore
+requirements-dev.txt
+requirements_fixed.txt
+requirements_minimal.txt
+instructions.md
+FILE_MIGRATION_MAP.md
+HYBRID_REFACTORING_PLAN.md
+WHERE_TO_PUT_THINGS.md
+TESTING.md
+*_README.md
+packages.txt
