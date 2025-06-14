@@ -225,52 +225,21 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
         Understanding this helps optimise resource allocation and identify high-impact patient segments.
         """)
         
-        # Import workload analysis functions - use optimized version
-        try:
-            from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
-            
-            # Try Altair version first for dual bar chart
-            altair_available = False
-            altair_error = None
-            try:
-                from ape.components.treatment_patterns.workload_visualizations_altair import (
-                    create_dual_bar_chart_altair, get_workload_insight_summary
-                )
-                altair_available = True
-            except ImportError as e:
-                altair_error = str(e)
-                pass
-            
-            # Import Plotly versions (some may be overridden by Altair)
-            from ape.components.treatment_patterns.workload_visualizations_optimized import (
-                create_dual_bar_chart, create_impact_pyramid, create_bubble_chart
-            )
-            if not altair_available:
-                from ape.components.treatment_patterns.workload_visualizations_optimized import get_workload_insight_summary
-            
-            workload_available = True
-        except ImportError:
-            # Fall back to original visualizations if optimized not available
-            try:
-                from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
-                from ape.components.treatment_patterns.workload_visualizations import (
-                    create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
-                )
-                workload_available = True
-                altair_available = False
-            except ImportError:
-                # Fall back to original implementation completely
-                try:
-                    from ape.components.treatment_patterns.workload_analyzer import calculate_clinical_workload_attribution, format_workload_insight
-                    from ape.components.treatment_patterns.workload_visualizations import (
-                        create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
-                    )
-                    workload_available = True
-                    altair_available = False
-                except ImportError:
-                    workload_available = False
-                    altair_available = False
-                    st.error("Workload analysis components not available")
+        # FORCE ALTAIR USAGE FOR TESTING - NO FALLBACKS
+        from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
+        
+        # Import Altair version for dual bar chart
+        from ape.components.treatment_patterns.workload_visualizations_altair import (
+            create_dual_bar_chart_altair, get_workload_insight_summary
+        )
+        
+        # Import Plotly versions for other charts
+        from ape.components.treatment_patterns.workload_visualizations_optimized import (
+            create_impact_pyramid, create_bubble_chart
+        )
+        
+        workload_available = True
+        altair_available = True
         
         if workload_available:
             # Get cached visits data for workload analysis

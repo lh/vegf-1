@@ -87,15 +87,17 @@ Follow FILE_MIGRATION_MAP.md to move:
 - [x] Create comprehensive .streamlitignore file
 - [ ] Test deployment exclusions work
 
-### ⏳ Phase 4: Clean Root Directory
-- [ ] Ensure root has only essential files
-- [ ] Update any broken imports
-- [ ] Test application still runs
+### ✅ Phase 4: Clean Root Directory (COMPLETE)
+- [x] Ensure root has only essential files
+- [x] Update any broken imports (fixed visualization/__init__.py)
+- [x] Test application still runs (verified with streamlit run APE.py)
 
-### ⏳ Phase 5: Merge Deployment Improvements
-- [ ] Bring in Altair fixes from deployment branch
-- [ ] Bring in other improvements
-- [ ] Document known issues (entry point, Altair aesthetics)
+### ✅ Phase 5: Merge Deployment Improvements (COMPLETE)
+- [x] Bring in Altair fixes from deployment branch
+- [x] Import workload_visualizations_altair.py
+- [x] Update enhanced_tab.py to force Altair usage
+- [x] Update pages/3_Analysis.py to use Altair
+- [x] Document known issues (entry point, Altair aesthetics) in DEPLOYMENT_ISSUES_20250114.md
 
 ### ⏳ Phase 6: Final Testing & Cleanup
 - [ ] Test local deployment
