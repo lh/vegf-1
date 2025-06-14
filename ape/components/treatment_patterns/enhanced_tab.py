@@ -225,52 +225,17 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
         Understanding this helps optimise resource allocation and identify high-impact patient segments.
         """)
         
-        # Import workload analysis functions - use optimized version
-        try:
-            from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
-            
-            # Try Altair version first for dual bar chart
-            altair_available = False
-            altair_error = None
-            try:
-                from ape.components.treatment_patterns.workload_visualizations_altair import (
-                    create_dual_bar_chart_altair, get_workload_insight_summary
-                )
-                altair_available = True
-            except ImportError as e:
-                altair_error = str(e)
-                pass
-            
-            # Import Plotly versions (some may be overridden by Altair)
-            from ape.components.treatment_patterns.workload_visualizations_optimized import (
-                create_dual_bar_chart, create_impact_pyramid, create_bubble_chart
-            )
-            if not altair_available:
-                from ape.components.treatment_patterns.workload_visualizations_optimized import get_workload_insight_summary
-            
-            workload_available = True
-        except ImportError:
-            # Fall back to original visualizations if optimized not available
-            try:
-                from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
-                from ape.components.treatment_patterns.workload_visualizations import (
-                    create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
-                )
-                workload_available = True
-                altair_available = False
-            except ImportError:
-                # Fall back to original implementation completely
-                try:
-                    from ape.components.treatment_patterns.workload_analyzer import calculate_clinical_workload_attribution, format_workload_insight
-                    from ape.components.treatment_patterns.workload_visualizations import (
-                        create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
-                    )
-                    workload_available = True
-                    altair_available = False
-                except ImportError:
-                    workload_available = False
-                    altair_available = False
-                    st.error("Workload analysis components not available")
+        # FORCE ALTAIR USAGE FOR TESTING - NO FALLBACKS
+        from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
+        # Import Altair version for dual bar chart
+        from ape.components.treatment_patterns.workload_visualizations_altair import (
+            create_dual_bar_chart_altair, get_workload_insight_summary
+        )
+        # Import other visualizations from optimized
+        from ape.components.treatment_patterns.workload_visualizations_optimized import (
+            create_impact_pyramid, create_bubble_chart
+        )
+        workload_available = True
         
         if workload_available:
             # Get cached visits data for workload analysis
@@ -292,8 +257,8 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                 # Cache the actual figures to avoid re-rendering
                 @st.cache_data
                 def create_cached_dual_bar_chart(workload_data, tufte_mode=True):
-                    """Cache the dual bar chart figure."""
-                    return create_dual_bar_chart(workload_data, tufte_mode)
+                    """Cache the dual bar chart figure - USING ALTAIR."""
+                    return create_dual_bar_chart_altair(workload_data, tufte_mode)
                 
                 @st.cache_data
                 def create_cached_impact_pyramid(workload_data, tufte_mode=True):
@@ -331,13 +296,8 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     tufte_mode = True  # Use clean styling
                     
                     if "Dual Bar Chart" in viz_option:
-                        # Debug info
-                        if 'altair_error' in locals() and altair_error:
-                            st.error(f"Altair import failed: {altair_error}")
-                        
                         with st.spinner("Creating dual bar chart..."):
-                            # Always try to use Altair - no fallback!
-                            from ape.components.treatment_patterns.workload_visualizations_altair import create_dual_bar_chart_altair
+                            # FORCE ALTAIR - NO FALLBACK
                             fig = create_dual_bar_chart_altair(workload_data, tufte_mode)
                             st.altair_chart(fig, use_container_width=True)
                             
@@ -502,32 +462,15 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
         Understanding this helps optimise resource allocation and identify high-impact patient segments.
         """)
         
-        # Import workload analysis functions - use optimized version
-        try:
-            from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
-            from ape.components.treatment_patterns.workload_visualizations_optimized import (
-                create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
-            )
-            workload_available = True
-        except ImportError:
-            # Fall back to original visualizations if optimized not available
-            try:
-                from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
-                from ape.components.treatment_patterns.workload_visualizations import (
-                    create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
-                )
-                workload_available = True
-            except ImportError:
-                # Fall back to original implementation completely
-                try:
-                    from ape.components.treatment_patterns.workload_analyzer import calculate_clinical_workload_attribution, format_workload_insight
-                    from ape.components.treatment_patterns.workload_visualizations import (
-                        create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
-                    )
-                    workload_available = True
-                except ImportError:
-                    workload_available = False
-                    st.error("❌ Workload analysis components not available")
+        # FORCE ALTAIR USAGE FOR TESTING - NO FALLBACKS
+        from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
+        # Import Altair version for dual bar chart
+        from ape.components.treatment_patterns.workload_visualizations_altair import create_dual_bar_chart_altair
+        # Import other visualizations from optimized
+        from ape.components.treatment_patterns.workload_visualizations_optimized import (
+            create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
+        )
+        workload_available = True
         
         if workload_available:
             # Get visits data for workload analysis
@@ -551,8 +494,8 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                 # Cache the actual figures to avoid re-rendering
                 @st.cache_data
                 def create_cached_dual_bar_chart(workload_data, tufte_mode=True):
-                    """Cache the dual bar chart figure."""
-                    return create_dual_bar_chart(workload_data, tufte_mode)
+                    """Cache the dual bar chart figure - USING ALTAIR."""
+                    return create_dual_bar_chart_altair(workload_data, tufte_mode)
                 
                 @st.cache_data
                 def create_cached_impact_pyramid(workload_data, tufte_mode=True):
@@ -590,13 +533,8 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     tufte_mode = True  # Use clean styling
                     
                     if "Dual Bar Chart" in viz_option:
-                        # Debug info
-                        if 'altair_error' in locals() and altair_error:
-                            st.error(f"Altair import failed: {altair_error}")
-                        
                         with st.spinner("Creating dual bar chart..."):
-                            # Always try to use Altair - no fallback!
-                            from ape.components.treatment_patterns.workload_visualizations_altair import create_dual_bar_chart_altair
+                            # FORCE ALTAIR - NO FALLBACK
                             fig = create_dual_bar_chart_altair(workload_data, tufte_mode)
                             st.altair_chart(fig, use_container_width=True)
                             

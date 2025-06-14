@@ -14,7 +14,7 @@ import matplotlib.patheffects as path_effects
 # Import our centralized styling systems if available
 try:
     from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
-    from streamlit_app.utils.tufte_style import (
+    from ape.utils.tufte_zoom_style import (
         set_tufte_style, style_axis, TUFTE_COLORS
     )
 except ImportError:
