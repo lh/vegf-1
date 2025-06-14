@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import seaborn as sns
 import time
+import hashlib
 
 # Import visualization mode system - no fallbacks!
 from ape.utils.visualization_modes import (
@@ -588,9 +589,18 @@ with tab6:
                     visits_df = pd.DataFrame()
         
         if not visits_df.empty:
-            # Run workload analysis
-            with st.spinner("Analysing clinical workload attribution..."):
-                workload_data = calculate_clinical_workload_attribution(visits_df)
+            # Run workload analysis with caching
+            @st.cache_data(show_spinner="Analysing clinical workload attribution...")
+            def get_cached_workload_data(visits_df_hash):
+                """Cache the expensive workload calculation."""
+                return calculate_clinical_workload_attribution(visits_df)
+            
+            # Create a hash of the visits data for cache key
+            visits_hash = hashlib.md5(
+                pd.util.hash_pandas_object(visits_df, index=True).values.tobytes()
+            ).hexdigest()[:8]
+            
+            workload_data = get_cached_workload_data(visits_hash)
             
             if workload_data['summary_stats']:
                 # Show key insight at the top
@@ -617,7 +627,6 @@ with tab6:
                         full_width=True
                     ):
                         st.session_state.workload_viz_type = 'bar'
-                        st.rerun()
                 
                 with col2:
                     if ape_button(
@@ -627,7 +636,6 @@ with tab6:
                         full_width=True
                     ):
                         st.session_state.workload_viz_type = 'pyramid'
-                        st.rerun()
                 
                 with col3:
                     if ape_button(
@@ -637,7 +645,6 @@ with tab6:
                         full_width=True
                     ):
                         st.session_state.workload_viz_type = 'bubble'
-                        st.rerun()
                 
                 # Get selected option
                 viz_option = st.session_state.workload_viz_type
@@ -647,7 +654,6 @@ with tab6:
                 tufte_mode = True  # Use clean styling
                 
                 # Cache key includes both sim_id and workload data hash
-                import hashlib
                 import json
                 
                 # Create a hash of the workload data for cache key
