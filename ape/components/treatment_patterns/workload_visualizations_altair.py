@@ -187,11 +187,15 @@ def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool =
         range=df['Color'].tolist()
     )
     
-    # Create the bubble chart with MUCH bigger sizing
-    # Scale bubble area proportional to workload intensity squared for better visual impact
-    df['Bubble Size'] = df['Workload Intensity'] ** 2 * 5000  # Much bigger multiplier
+    # Create the bubble chart with simple, visible sizing
+    # Direct proportional sizing for clarity
+    df['Bubble Size'] = df['Workload Intensity'] * 2000  # Simple multiplier
     
-    bubbles = alt.Chart(df).mark_circle(opacity=0.7).encode(
+    bubbles = alt.Chart(df).mark_circle(
+        opacity=1.0,  # Full opacity
+        stroke='black',  # Add black outline
+        strokeWidth=1
+    ).encode(
         x=alt.X('Patient %:Q', 
                 scale=alt.Scale(domain=[0, max(100, df['Patient %'].max() * 1.1)]),
                 title='% of Patients'),
@@ -232,13 +236,11 @@ def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool =
         'y': [0, max_val]
     })
     
-    # Get colors from system
-    colors = get_mode_colors()
-    
     line = alt.Chart(line_df).mark_line(
-        color=colors.get('neutral', '#CCCCCC'),
+        strokeDash=[2, 2],  # Small dashes
+        color='#999999',
         strokeWidth=1,
-        opacity=0.3  # Very pale
+        opacity=0.5  # More visible
     ).encode(
         x=alt.X('x:Q'),
         y=alt.Y('y:Q')
