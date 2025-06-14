@@ -95,6 +95,13 @@ def create_dual_bar_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool
     
     df = pd.DataFrame(data_records)
     
+    # Create unique color mapping
+    unique_categories = df[['Category', 'CategoryColor']].drop_duplicates()
+    color_scale = alt.Scale(
+        domain=unique_categories['Category'].tolist(),
+        range=unique_categories['CategoryColor'].tolist()
+    )
+    
     # Create the grouped bar chart with semantic colors
     base = alt.Chart(df).encode(
         x=alt.X('Category:N', 
@@ -116,8 +123,8 @@ def create_dual_bar_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool
                 ),
                 scale=alt.Scale(domain=[0, max(df['Value'].max() * 1.15, 10)])),
         xOffset=alt.XOffset('Metric:N', title=None),
-        color=alt.Color('CategoryColor:N',
-                       scale=None,  # Use exact colors from data
+        color=alt.Color('Category:N',
+                       scale=color_scale,
                        legend=None),  # We'll create a custom legend
         opacity=alt.condition(
             alt.datum.IsPatient,
