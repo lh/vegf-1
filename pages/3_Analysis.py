@@ -667,9 +667,9 @@ with tab6:
                     ).encode()
                 ).hexdigest()[:8]
                 
-                @st.cache_data(show_spinner="Creating all visualizations...")
-                def get_all_workload_visualizations(_workload_data, _tufte_mode, cache_key):
-                    """Create all workload visualizations once and cache them."""
+                @st.cache_data(show_spinner="Creating all visualizations...", ttl=300)
+                def get_all_workload_visualizations_v2(_workload_data, _tufte_mode, cache_key):
+                    """Create all workload visualizations once and cache them. V2 to clear old cache."""
                     figs = {}
                     figs['bar'] = create_dual_bar_chart_altair(_workload_data, _tufte_mode)
                     figs['pyramid'] = create_impact_pyramid(_workload_data, _tufte_mode)
@@ -677,7 +677,7 @@ with tab6:
                     return figs
                 
                 # Get all figures (cached after first creation)
-                all_figs = get_all_workload_visualizations(workload_data, tufte_mode, workload_hash)
+                all_figs = get_all_workload_visualizations_v2(workload_data, tufte_mode, workload_hash)
                 
                 # Display selected visualization
                 if viz_option == 'bar':
