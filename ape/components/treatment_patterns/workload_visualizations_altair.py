@@ -30,193 +30,123 @@ TUFTE_COLORS = {
 
 def create_dual_bar_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool = True) -> alt.Chart:
     """
-    Create dual bar chart using Altair - 2-3x faster than Plotly version.
+    Create dual bar chart using Altair - simplified version.
     
     Args:
         workload_data: Output from calculate_clinical_workload_attribution
-        tufte_mode: Whether to use clean Tufte styling (ignored for consistency)
+        tufte_mode: Whether to use clean Tufte styling (always True)
         
     Returns:
         Altair chart object
     """
     if not workload_data['summary_stats']:
-        # Return empty chart with message
         return alt.Chart(pd.DataFrame()).mark_text(
-            size=16, 
-            color='gray',
-            text='No workload data available'
-        ).properties(
-            width=800,
-            height=500
-        )
+            text='No workload data available', size=16, color='gray'
+        ).properties(width=500, height=350)
     
-    # Prepare data for Altair
-    data_records = []
+    # Prepare data
+    records = []
+    sorted_stats = sorted(workload_data['summary_stats'].items(), 
+                         key=lambda x: x[1]['workload_intensity'], 
+                         reverse=True)
     
-    # Sort by workload intensity
-    sorted_stats = sorted(
-        workload_data['summary_stats'].items(),
-        key=lambda x: x[1]['workload_intensity'],
-        reverse=True
-    )
+    for idx, (category, stats) in enumerate(sorted_stats):
+        color = workload_data['category_definitions'].get(category, {}).get('color', '#999999')
+        # Add both patient and visit percentages
+        for metric, value in [('% of Patients', stats['patient_percentage']), 
+                             ('% of Visits', stats['visit_percentage'])]:
+            records.append({
+                'Category': category,
+                'Metric': metric,
+                'Value': value,
+                'Color': color,
+                'SortOrder': idx,
+                'Label': f"{value:.0f}%" if value >= 1 else f"{value:.1f}%"
+            })
     
-    category_definitions = workload_data['category_definitions']
+    df = pd.DataFrame(records)
     
-    # Create color mappings for each category
-    category_colors = {}
-    for category in sorted_stats:
-        cat_name = category[0]
-        category_colors[cat_name] = category_definitions.get(cat_name, {}).get('color', '#cccccc')
+    # Get unique categories and their colors for the scale
+    unique_cats = df[['Category', 'Color', 'SortOrder']].drop_duplicates().sort_values('SortOrder')
     
-    for category, stats in sorted_stats:
-        base_color = category_colors[category]
-        
-        # Patient percentage record (lighter shade)
-        data_records.append({
-            'Category': category,
-            'Metric': '% of Patients',
-            'Value': stats['patient_percentage'],
-            'SortOrder': sorted_stats.index((category, stats)),
-            'Label': f"{stats['patient_percentage']:.1f}%" if stats['patient_percentage'] < 1 else f"{stats['patient_percentage']:.0f}%",
-            'CategoryColor': base_color,
-            'IsPatient': True
-        })
-        
-        # Visit percentage record (darker shade)
-        data_records.append({
-            'Category': category,
-            'Metric': '% of Visits',
-            'Value': stats['visit_percentage'],
-            'SortOrder': sorted_stats.index((category, stats)),
-            'Label': f"{stats['visit_percentage']:.1f}%" if stats['visit_percentage'] < 1 else f"{stats['visit_percentage']:.0f}%",
-            'CategoryColor': base_color,
-            'IsPatient': False
-        })
-    
-    df = pd.DataFrame(data_records)
-    
-    # Create unique color mapping
-    unique_categories = df[['Category', 'CategoryColor']].drop_duplicates()
-    color_scale = alt.Scale(
-        domain=unique_categories['Category'].tolist(),
-        range=unique_categories['CategoryColor'].tolist()
-    )
-    
-    # Create the grouped bar chart with semantic colors
-    base = alt.Chart(df).encode(
+    # Create the chart
+    chart = alt.Chart(df).mark_bar().encode(
         x=alt.X('Category:N', 
-                sort=alt.SortField(field='SortOrder', order='ascending'),
+                sort=alt.SortField('SortOrder'),
                 title='Treatment Intensity Category',
-                axis=alt.Axis(
-                    labelAngle=0,
-                    labelFontSize=TUFTE_FONT_SIZES['tick'],
-                    titleFontSize=TUFTE_FONT_SIZES['label'],
-                    titlePadding=10
-                )),
+                axis=alt.Axis(labelAngle=0)),
         y=alt.Y('Value:Q', 
                 title='Percentage',
-                axis=alt.Axis(
-                    labelFontSize=TUFTE_FONT_SIZES['tick'],
-                    titleFontSize=TUFTE_FONT_SIZES['label'],
-                    grid=False,
-                    titlePadding=10
-                ),
-                scale=alt.Scale(domain=[0, max(df['Value'].max() * 1.15, 10)])),
-        xOffset=alt.XOffset('Metric:N', title=None),
+                scale=alt.Scale(domain=[0, max(60, df['Value'].max() * 1.1)])),
+        xOffset='Metric:N',
         color=alt.Color('Category:N',
-                       scale=color_scale,
-                       legend=None),  # We'll create a custom legend
+                       scale=alt.Scale(domain=unique_cats['Category'].tolist(),
+                                      range=unique_cats['Color'].tolist()),
+                       legend=None),
         opacity=alt.condition(
-            alt.datum.IsPatient,
-            alt.value(0.5),  # Light for patients
-            alt.value(1.0)   # Full opacity for visits
+            alt.datum.Metric == '% of Patients',
+            alt.value(0.5),
+            alt.value(1.0)
         ),
-        tooltip=[
-            alt.Tooltip('Category:N', title='Category'),
-            alt.Tooltip('Metric:N', title='Metric'),
-            alt.Tooltip('Value:Q', title='Value', format='.1f')
-        ]
+        tooltip=['Category', 'Metric', alt.Tooltip('Value:Q', format='.1f')]
+    ).properties(
+        width=500,
+        height=350,
+        title='Clinical Workload Attribution'
     )
     
-    # Create bars
-    bars = base.mark_bar(size=30)
-    
-    # Add text labels on top of bars
-    text = base.mark_text(
-        align='center',
-        baseline='bottom',
+    # Add value labels on bars
+    text = chart.mark_text(
         dy=-5,
         fontSize=10
     ).encode(
         text='Label:N'
     )
     
-    # Get colors from the system
+    # Add a simple legend
     colors = get_mode_colors()
+    legend_df = pd.DataFrame({
+        'Metric': ['% of Patients', '% of Visits'],
+        'y': [0, 1]
+    })
     
-    # Create manual legend data for metric types
-    legend_data = pd.DataFrame([
-        {'label': '% of Patients', 'order': 0},
-        {'label': '% of Visits', 'order': 1}
-    ])
-    
-    # Simple legend showing opacity difference using neutral color
-    legend = alt.Chart(legend_data).mark_square(size=150).encode(
-        y=alt.Y('label:N', axis=None, sort=alt.SortField(field='order')),
+    legend = alt.Chart(legend_df).mark_rect(
+        width=15,
+        height=15
+    ).encode(
+        y=alt.Y('y:O', axis=None),
         color=alt.value(colors.get('neutral', '#264653')),
         opacity=alt.condition(
-            alt.datum.label == '% of Patients',
+            alt.datum.Metric == '% of Patients',
             alt.value(0.5),
             alt.value(1.0)
         )
-    ).properties(
-        width=20
-    )
+    ).properties(width=20)
     
-    legend_text = alt.Chart(legend_data).mark_text(
+    legend_labels = alt.Chart(legend_df).mark_text(
         align='left',
-        baseline='middle',
-        dx=10,
+        dx=20,
         fontSize=12
     ).encode(
-        y=alt.Y('label:N', axis=None, sort=alt.SortField(field='order')),
-        text='label:N'
-    ).properties(
-        width=120
-    )
+        y=alt.Y('y:O', axis=None),
+        text='Metric:N'
+    ).properties(width=100)
     
-    # Combine bars and text
-    main_chart = (bars + text).properties(
-        width=500,  # Narrower width
-        height=350,
-        title=alt.TitleParams(
-            text='Clinical Workload Attribution',
-            fontSize=TUFTE_FONT_SIZES['title'],
-            anchor='middle'
-        )
-    )
-    
-    # Combine legend components first
-    legend_combined = alt.hconcat(legend, legend_text).resolve_scale(
-        y='independent'
-    )
-    
-    # Combine main chart with legend
-    chart = alt.hconcat(
-        main_chart,
-        legend_combined
+    # Combine chart with legend
+    final_chart = alt.hconcat(
+        (chart + text),
+        alt.hconcat(legend, legend_labels).properties(width=150)
+    ).configure_axis(
+        grid=False,
+        labelFontSize=12,
+        titleFontSize=14
     ).configure_view(
         strokeWidth=0
-    ).configure_axis(
-        domainWidth=1,
-        domainColor=TUFTE_COLORS['neutral'],
-        tickWidth=1,
-        tickColor=TUFTE_COLORS['neutral'],
-        labelColor=TUFTE_COLORS['neutral'],
-        titleColor=TUFTE_COLORS['neutral']
+    ).configure_title(
+        fontSize=16
     )
     
-    return chart
+    return final_chart
 
 
 def get_workload_insight_summary(workload_data: Dict[str, Any]) -> str:
