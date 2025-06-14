@@ -26,6 +26,10 @@ TUFTE_COLORS = {
 
 def create_interval_distribution_chart(transitions_df):
     """Create distribution of treatment intervals."""
+    # Import color system
+    from ape.utils.visualization_modes import get_mode_colors
+    colors = get_mode_colors()
+    
     # Get intervals from transitions
     interval_data = transitions_df[transitions_df['interval_days'] > 0]['interval_days']
     
@@ -38,11 +42,22 @@ def create_interval_distribution_chart(transitions_df):
     
     hist, bin_edges = np.histogram(interval_data, bins=bins)
     
+    # Use semantic colors for treatment intervals
+    interval_colors = [
+        colors.get('intensive_monthly', '#4A90E2'),      # Monthly
+        colors.get('regular_6_8_weeks', '#7FBA00'),      # 6-8 weeks
+        colors.get('primary', '#5A7C8A'),                # 9-11 weeks (no specific semantic color)
+        colors.get('extended_12_weeks', '#5A8F00'),      # 12-16 weeks
+        colors.get('treatment_gap_3_6', '#FFD700'),      # 3-6 months
+        colors.get('extended_gap_6_12', '#FF9500'),      # 6-12 months
+        colors.get('long_gap_12_plus', '#FF6347')        # 12+ months
+    ]
+    
     # Create bar chart
     fig.add_trace(go.Bar(
         x=labels,
         y=hist,
-        marker_color=['#4a90e2', '#7fba00', '#5c8a00', '#2d5016', '#ffd700', '#ff9500', '#ff6347'],
+        marker_color=interval_colors,
         text=hist,
         textposition='auto',
     ))

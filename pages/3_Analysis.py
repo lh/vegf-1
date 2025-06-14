@@ -499,6 +499,17 @@ with tab5:
     # Treatment Intervals tab (from subtab2 of Treatment Patterns)
     st.header("Treatment Intervals")
     
+    st.markdown("""
+    This analysis shows **treatment pattern transitions** - when patients move between different 
+    treatment intensities (e.g., from monthly to bi-monthly visits). Each data point represents 
+    a **change in treatment pattern**, not every individual visit.
+    
+    **Use this view to understand:**
+    - How treatment patterns evolve over time
+    - Treatment adherence and protocol compliance
+    - When patients transition to less frequent visits
+    """)
+    
     # Import needed functions
     from ape.components.treatment_patterns import (
         create_interval_distribution_chart,
@@ -865,6 +876,17 @@ with tab7:
 with tab8:
     # Treatment Summary tab (from subtab4 of Treatment Patterns)
     st.header("Treatment Summary")
+    
+    st.markdown("""
+    This analysis shows the **raw distribution of all visit intervals** - the actual time between 
+    every consecutive pair of visits for all patients. This includes all visits, not just pattern 
+    changes.
+    
+    **Use this view to understand:**
+    - Actual clinic visit frequency and workload
+    - True distribution of treatment intervals
+    - Overall treatment burden across the patient population
+    """)
     
     # Always show full dataset statistics
     total_patients = stats['patient_count']
