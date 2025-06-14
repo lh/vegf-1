@@ -25,7 +25,7 @@
 ## Development
 
 ### Project Organization
-See `WHERE_TO_PUT_THINGS.md` for detailed directory guidelines.
+The repository uses a hybrid structure with production code at the root and research/development work in dedicated directories. See `docs/development/WHERE_TO_PUT_THINGS.md` for detailed guidelines on file placement.
 
 ### Git Worktrees for Parallel Development
 Work on multiple features simultaneously:
@@ -77,26 +77,45 @@ docker run -p 8501:8501 ape-app
 
 ## Repository Structure
 
+This repository uses a hybrid structure that separates production code from research and development:
+
+### Production Code (Deployed)
 ```
 ├── APE.py                    # Main application entry point
-├── pages/                    # Streamlit pages (required location)
+├── pages/                    # Streamlit pages
 │   ├── 1_Protocol_Manager.py # Protocol creation and management
 │   ├── 2_Simulations.py      # Run and monitor simulations
 │   └── 3_Analysis.py         # Analyze and visualize results
 ├── ape/                      # Core application modules
 │   ├── components/           # UI components and simulation I/O
-│   ├── core/                 # Simulation engine
+│   ├── core/                 # Simulation engines (ABS/DES)
 │   ├── utils/                # Utilities and helpers
 │   └── visualizations/       # Visualization modules
-├── simulation/               # Simulation models (ABS/DES)
-├── protocols/                # Protocol configurations (YAML)
+├── protocols/                # Treatment protocol configurations (YAML)
 ├── visualization/            # Visualization system
-│   └── color_system.py       # Centralized styling
-├── tests/                    # Test suite
-├── dev/                      # Development tools
-├── workspace/                # Development playground
-└── output/                   # Generated outputs (gitignored)
+│   └── color_system.py       # Centralized color definitions
+├── assets/                   # Images and static files
+└── .streamlit/              # Streamlit configuration
 ```
+
+### Research & Development (Not Deployed)
+```
+├── research/                 # Active research work
+│   ├── data_analysis/        # Real patient data analysis
+│   ├── experiments/          # Prototype features
+│   └── test_scripts/         # Development utilities
+├── tests/                    # Comprehensive test suite
+├── paper/                    # Academic paper materials
+├── archive/                  # Historical/deprecated code
+│   ├── legacy_apps/          # Old Streamlit implementations
+│   └── old_docs/             # Outdated documentation
+├── meta/                     # Project metadata
+│   ├── planning/             # Design documents
+│   └── postmortems/          # Learning documentation
+└── docs/                     # Current documentation
+```
+
+The `.streamlitignore` file ensures only production code is deployed to Streamlit Cloud.
 
 ## Important: Scientific Integrity
 
@@ -128,9 +147,10 @@ Protocols are defined in YAML format in the `protocols/` directory.
 
 ## Related Documentation
 
-- `DEPLOYMENT_GUIDE.md` - Production deployment instructions
-- `WHERE_TO_PUT_THINGS.md` - Directory organization guide  
+- `docs/deployment/DEPLOYMENT_GUIDE.md` - Production deployment instructions
+- `docs/development/WHERE_TO_PUT_THINGS.md` - Directory organization guide  
 - `meta/planning/GIT_WORKTREE_STRATEGY.md` - Parallel development workflow
+- `CLAUDE.md` - AI assistant instructions and development principles
 - API Documentation: [https://lh.github.io/vegf-1/](https://lh.github.io/vegf-1/)
 
 ## License
