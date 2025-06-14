@@ -225,21 +225,15 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
         Understanding this helps optimise resource allocation and identify high-impact patient segments.
         """)
         
-        # FORCE ALTAIR USAGE FOR TESTING - NO FALLBACKS
+        # Import workload analysis components
         from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
         
-        # Import Altair version for dual bar chart
-        from ape.components.treatment_patterns.workload_visualizations_altair import (
-            create_dual_bar_chart_altair, get_workload_insight_summary
-        )
-        
-        # Import Plotly versions for other charts
+        # Import Plotly visualizations
         from ape.components.treatment_patterns.workload_visualizations_optimized import (
-            create_impact_pyramid, create_bubble_chart
+            create_dual_bar_chart, create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
         )
         
         workload_available = True
-        altair_available = True
         
         if workload_available:
             # Get cached visits data for workload analysis
@@ -300,15 +294,9 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     tufte_mode = True  # Use clean styling
                     
                     if "Dual Bar Chart" in viz_option:
-                        # Debug info
-                        if 'altair_error' in locals() and altair_error:
-                            st.error(f"Altair import failed: {altair_error}")
-                        
                         with st.spinner("Creating dual bar chart..."):
-                            # Always try to use Altair - no fallback!
-                            from ape.components.treatment_patterns.workload_visualizations_altair import create_dual_bar_chart_altair
-                            fig = create_dual_bar_chart_altair(workload_data, tufte_mode)
-                            st.altair_chart(fig, use_container_width=True)
+                            fig = create_dual_bar_chart(workload_data, tufte_mode)
+                            st.plotly_chart(fig, use_container_width=True)
                             
                             st.markdown("""
                             **Understanding the Dual Bar Chart:**
