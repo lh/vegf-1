@@ -149,6 +149,104 @@ def create_dual_bar_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool
     return final_chart
 
 
+def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool = True) -> alt.Chart:
+    """
+    Create bubble chart using Altair - simpler and faster than Plotly.
+    
+    Shows relationship between patient percentage (x) and visit percentage (y),
+    with bubble size representing workload intensity.
+    """
+    if not workload_data['summary_stats']:
+        return alt.Chart(pd.DataFrame()).mark_text(
+            text='No workload data available', size=16, color='gray'
+        ).properties(width=500, height=500)
+    
+    # Prepare data
+    records = []
+    for category, stats in workload_data['summary_stats'].items():
+        records.append({
+            'Category': category,
+            'Patient %': stats['patient_percentage'],
+            'Visit %': stats['visit_percentage'],
+            'Workload Intensity': stats['workload_intensity'],
+            'Color': workload_data['category_definitions'].get(category, {}).get('color', '#999999'),
+            'Patient Count': stats['patient_count'],
+            'Visit Count': stats['visit_count']
+        })
+    
+    df = pd.DataFrame(records)
+    
+    # Create color scale
+    color_scale = alt.Scale(
+        domain=df['Category'].tolist(),
+        range=df['Color'].tolist()
+    )
+    
+    # Create the bubble chart
+    bubbles = alt.Chart(df).mark_circle(opacity=0.8).encode(
+        x=alt.X('Patient %:Q', 
+                scale=alt.Scale(domain=[0, max(100, df['Patient %'].max() * 1.1)]),
+                title='% of Patients'),
+        y=alt.Y('Visit %:Q',
+                scale=alt.Scale(domain=[0, max(100, df['Visit %'].max() * 1.1)]),
+                title='% of Visits'),
+        size=alt.Size('Workload Intensity:Q',
+                     scale=alt.Scale(range=[100, 1000]),
+                     legend=alt.Legend(title='Workload Intensity')),
+        color=alt.Color('Category:N', scale=color_scale, legend=None),
+        tooltip=[
+            alt.Tooltip('Category:N', title='Category'),
+            alt.Tooltip('Patient Count:Q', title='Patients'),
+            alt.Tooltip('Patient %:Q', title='% of Patients', format='.1f'),
+            alt.Tooltip('Visit Count:Q', title='Visits'),
+            alt.Tooltip('Visit %:Q', title='% of Visits', format='.1f'),
+            alt.Tooltip('Workload Intensity:Q', title='Efficiency', format='.1fx')
+        ]
+    )
+    
+    # Add text labels
+    text = alt.Chart(df).mark_text(dy=-15, fontSize=11).encode(
+        x='Patient %:Q',
+        y='Visit %:Q',
+        text='Category:N',
+        color=alt.value('#333333')
+    )
+    
+    # Create diagonal reference line (1:1 ratio)
+    max_val = max(df['Patient %'].max(), df['Visit %'].max())
+    line_df = pd.DataFrame({
+        'x': [0, max_val],
+        'y': [0, max_val]
+    })
+    
+    line = alt.Chart(line_df).mark_line(
+        strokeDash=[5, 5],
+        color='#264653',
+        strokeWidth=2
+    ).encode(
+        x=alt.X('x:Q'),
+        y=alt.Y('y:Q')
+    )
+    
+    # Combine all elements
+    chart = (line + bubbles + text).properties(
+        width=500,
+        height=500,
+        title='Workload Impact Analysis'
+    ).configure_axis(
+        grid=True,
+        gridOpacity=0.3,
+        labelFontSize=12,
+        titleFontSize=14
+    ).configure_view(
+        strokeWidth=0
+    ).configure_title(
+        fontSize=16
+    )
+    
+    return chart
+
+
 def get_workload_insight_summary(workload_data: Dict[str, Any]) -> str:
     """
     Generate a formatted summary of key workload insights.
