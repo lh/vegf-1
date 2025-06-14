@@ -187,11 +187,11 @@ def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool =
         range=df['Color'].tolist()
     )
     
-    # Create the bubble chart with better sizing
+    # Create the bubble chart with MUCH bigger sizing
     # Scale bubble area proportional to workload intensity squared for better visual impact
-    df['Bubble Size'] = df['Workload Intensity'] ** 2 * 1000
+    df['Bubble Size'] = df['Workload Intensity'] ** 2 * 5000  # Much bigger multiplier
     
-    bubbles = alt.Chart(df).mark_circle(opacity=0.8).encode(
+    bubbles = alt.Chart(df).mark_circle(opacity=0.7).encode(
         x=alt.X('Patient %:Q', 
                 scale=alt.Scale(domain=[0, max(100, df['Patient %'].max() * 1.1)]),
                 title='% of Patients'),
@@ -199,7 +199,7 @@ def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool =
                 scale=alt.Scale(domain=[0, max(100, df['Visit %'].max() * 1.1)]),
                 title='% of Visits'),
         size=alt.Size('Bubble Size:Q',
-                     scale=alt.Scale(range=[200, 5000]),
+                     scale=alt.Scale(range=[1000, 20000]),  # Much bigger range
                      legend=None),  # We'll explain size in the text
         color=alt.Color('Category:N', scale=color_scale, legend=None),
         tooltip=[
@@ -212,16 +212,17 @@ def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool =
         ]
     )
     
-    # Add text labels positioned above bubbles
+    # Add text labels positioned above bubbles with better font
     text = alt.Chart(df).mark_text(
-        fontSize=12, 
-        fontWeight='bold',
-        dy=-25  # Fixed offset above bubbles
+        fontSize=11, 
+        fontWeight='normal',  # Not bold
+        font='Arial',  # Match app font
+        dy=-40  # Higher offset for bigger bubbles
     ).encode(
         x='Patient %:Q',
         y='Visit %:Q',
         text='Category:N',
-        color=alt.value('#333333')
+        color=alt.value('#666666')  # Lighter gray
     )
     
     # Create diagonal reference line (1:1 ratio)
@@ -250,13 +251,19 @@ def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool =
         title='Workload Impact Analysis'
     ).configure_axis(
         grid=True,
-        gridOpacity=0.3,
-        labelFontSize=12,
-        titleFontSize=14
+        gridOpacity=0.15,
+        labelFontSize=11,
+        titleFontSize=13,
+        labelFont='Arial',
+        titleFont='Arial',
+        labelColor='#666666',
+        titleColor='#333333'
     ).configure_view(
         strokeWidth=0
     ).configure_title(
-        fontSize=16
+        fontSize=14,
+        font='Arial',
+        color='#333333'
     )
     
     return chart

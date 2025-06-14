@@ -89,6 +89,45 @@ chart.properties(
 )
 ```
 
+### 6. Mark Properties vs Encoding Properties
+**Problem**: `TypeError` when putting mark properties in encode()
+```python
+# This will fail:
+text = alt.Chart(df).mark_text().encode(
+    x='x:Q',
+    y='y:Q',
+    text='label:N',
+    dy=-10,  # ERROR: dy is not an encoding!
+    fontSize=12  # ERROR: fontSize is not an encoding!
+)
+```
+
+**Solution**: Mark properties go in mark_*() method
+```python
+# Put visual properties in the mark method:
+text = alt.Chart(df).mark_text(
+    dy=-10,      # Vertical offset
+    dx=5,        # Horizontal offset  
+    fontSize=12,
+    font='Arial',
+    fontWeight='normal',
+    align='center',
+    baseline='middle'
+).encode(
+    x='x:Q',
+    y='y:Q', 
+    text='label:N',
+    color='category:N'  # Color CAN be an encoding
+)
+```
+
+**Common mark properties**:
+- Position adjustments: `dy`, `dx`, `angle`
+- Font properties: `fontSize`, `font`, `fontWeight`, `fontStyle`
+- Text properties: `align`, `baseline`, `limit`
+- Shape properties: `size`, `strokeWidth`, `opacity` (when fixed)
+- Mark-specific: `interpolate` (lines), `cornerRadius` (bars), etc.
+
 ## Best Practices
 
 ### 1. Data Preparation
