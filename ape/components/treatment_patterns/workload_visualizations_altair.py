@@ -9,6 +9,9 @@ import pandas as pd
 from typing import Dict, Any
 import streamlit as st
 
+# Import color system
+from ape.utils.visualization_modes import get_mode_colors
+
 # Enable Altair data transformer for larger datasets
 alt.data_transformers.enable('default', max_rows=None)
 
@@ -141,41 +144,38 @@ def create_dual_bar_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool
         text='Label:N'
     )
     
-    # Create manual legend data
+    # Get colors from the system
+    colors = get_mode_colors()
+    
+    # Create manual legend data for metric types
     legend_data = pd.DataFrame([
         {'label': '% of Patients', 'order': 0},
         {'label': '% of Visits', 'order': 1}
     ])
     
-    # Create legend as separate chart
+    # Simple legend showing opacity difference using neutral color
     legend = alt.Chart(legend_data).mark_square(size=150).encode(
         y=alt.Y('label:N', axis=None, sort=alt.SortField(field='order')),
-        color=alt.condition(
-            alt.datum.label == '% of Patients',
-            alt.value('#8ab4d6'),  # Light blue
-            alt.value('#2c7fb8')   # Dark blue
-        ),
+        color=alt.value(colors.get('neutral', '#264653')),
         opacity=alt.condition(
             alt.datum.label == '% of Patients',
             alt.value(0.5),
             alt.value(1.0)
         )
     ).properties(
-        width=100,
-        height=50
+        width=20
     )
     
     legend_text = alt.Chart(legend_data).mark_text(
         align='left',
         baseline='middle',
-        dx=20,
+        dx=10,
         fontSize=12
     ).encode(
         y=alt.Y('label:N', axis=None, sort=alt.SortField(field='order')),
         text='label:N'
     ).properties(
-        width=100,
-        height=50
+        width=120
     )
     
     # Combine bars and text
