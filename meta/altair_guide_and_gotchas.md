@@ -262,10 +262,87 @@ final = alt.hconcat(main_chart, legend)
 | `marker_color=` | `color=` encoding |
 | `hovertemplate=` | `tooltip=` list |
 
+## Font and Rendering Quality Issues
+
+### Problem: Poor font rendering and invisible chart elements
+Symptoms:
+- Blurry or pixelated fonts
+- Chart elements (like bubbles) not visible
+- "Washed out" appearance like "bad bitmap behind ground glass"
+
+### Root Causes:
+1. **Browser rendering**: Altair charts are rendered as SVG by browsers, quality varies
+2. **DPI limitations**: Default rendering may be at low resolution
+3. **Font availability**: Specified fonts may not be available, causing poor fallbacks
+4. **Mark type issues**: Some marks render better than others
+
+### Solutions:
+
+#### 1. Use `mark_point` instead of `mark_circle`
+```python
+# Better rendering:
+chart = alt.Chart(df).mark_point(
+    filled=True,
+    opacity=0.8,
+    stroke='black',
+    strokeWidth=2,
+    strokeOpacity=1.0
+)
+
+# Instead of:
+chart = alt.Chart(df).mark_circle()
+```
+
+#### 2. Use font stacks with fallbacks
+```python
+font='Helvetica, Arial, sans-serif'  # Provides fallbacks
+```
+
+#### 3. Use reasonable size ranges
+```python
+# Good:
+size=alt.Size('value:Q', scale=alt.Scale(range=[200, 3000]))
+
+# Bad (too large):
+size=alt.Size('value:Q', scale=alt.Scale(range=[1000, 20000]))
+```
+
+#### 4. Increase font sizes and use bold
+```python
+mark_text(
+    fontSize=14,  # Larger than default
+    fontWeight='bold',
+    font='Helvetica, Arial, sans-serif'
+)
+```
+
+#### 5. Thicker strokes and higher contrast
+```python
+# For lines:
+strokeWidth=2,  # Instead of 1
+color='#CCCCCC',  # Light but visible
+
+# For text:
+color='#333333'  # Dark gray instead of light
+```
+
 ## Resources
 - [Altair Documentation](https://altair-viz.github.io/)
 - [Altair Gallery](https://altair-viz.github.io/gallery/index.html)
 - [Vega-Lite Specification](https://vega.github.io/vega-lite/)
+- [GitHub Issue: Blurry chart rendering](https://github.com/altair-viz/altair/issues/2114)
 
 ---
-*Last updated: 2025-06-14 after Clinical Workload Analysis implementation*
+## Known Limitations
+
+### High-Resolution Display Issues
+Altair charts can appear blurry or pixelated on high-resolution (4K/Retina) displays. This is a fundamental issue with how Vega-Lite renders in browsers. For production web applications requiring crisp visuals on modern displays, consider using Plotly or other alternatives.
+
+### When to Avoid Altair
+- Production web applications viewed on high-res displays
+- Applications where font rendering quality is critical
+- Complex visualizations with many small elements
+- When consistent cross-browser rendering is required
+
+---
+*Last updated: 2025-06-14 after discovering rendering issues on high-resolution displays*

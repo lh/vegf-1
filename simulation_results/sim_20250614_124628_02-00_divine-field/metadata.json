@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250614_124628_02-00_divine-field",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 1000,
+  "duration_years": 2.0,
+  "seed": 42,
+  "timestamp": "2025-06-14T12:46:28.678369+01:00",
+  "runtime_seconds": 0.06409478187561035,
+  "storage_type": "parquet",
+  "memorable_name": "divine-field"
+}

@@ -187,14 +187,17 @@ def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool =
         range=df['Color'].tolist()
     )
     
-    # Create the bubble chart with simple, visible sizing
-    # Direct proportional sizing for clarity
-    df['Bubble Size'] = df['Workload Intensity'] * 2000  # Simple multiplier
+    # Use more reasonable bubble sizing
+    # Scale based on workload intensity with reasonable multiplier
+    df['Bubble Size'] = df['Workload Intensity'] * 50  # Smaller base multiplier
     
-    bubbles = alt.Chart(df).mark_circle(
-        opacity=1.0,  # Full opacity
-        stroke='black',  # Add black outline
-        strokeWidth=1
+    # Use mark_point instead of mark_circle for better rendering
+    bubbles = alt.Chart(df).mark_point(
+        filled=True,  # Filled points render better
+        opacity=0.8,  # Slight transparency for overlap visibility
+        stroke='black',  # Black outline for definition
+        strokeWidth=2,  # Thicker stroke for visibility
+        strokeOpacity=1.0  # Full opacity on stroke
     ).encode(
         x=alt.X('Patient %:Q', 
                 scale=alt.Scale(domain=[0, max(100, df['Patient %'].max() * 1.1)]),
@@ -203,8 +206,8 @@ def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool =
                 scale=alt.Scale(domain=[0, max(100, df['Visit %'].max() * 1.1)]),
                 title='% of Visits'),
         size=alt.Size('Bubble Size:Q',
-                     scale=alt.Scale(range=[1000, 20000]),  # Much bigger range
-                     legend=None),  # We'll explain size in the text
+                     scale=alt.Scale(range=[200, 3000]),  # More reasonable range
+                     legend=None),
         color=alt.Color('Category:N', scale=color_scale, legend=None),
         tooltip=[
             alt.Tooltip('Category:N', title='Category'),
@@ -216,17 +219,17 @@ def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool =
         ]
     )
     
-    # Add text labels positioned above bubbles with better font
+    # Add text labels with better font settings
     text = alt.Chart(df).mark_text(
-        fontSize=11, 
-        fontWeight='normal',  # Not bold
-        font='Arial',  # Match app font
-        dy=-40  # Higher offset for bigger bubbles
+        fontSize=14,  # Larger font size
+        fontWeight='bold',  # Bold for better visibility
+        font='Helvetica, Arial, sans-serif',  # Font stack for fallback
+        dy=-25  # Adjusted for smaller bubbles
     ).encode(
         x='Patient %:Q',
         y='Visit %:Q',
         text='Category:N',
-        color=alt.value('#666666')  # Lighter gray
+        color=alt.value('#333333')  # Darker for better contrast
     )
     
     # Create diagonal reference line (1:1 ratio)
@@ -237,10 +240,10 @@ def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool =
     })
     
     line = alt.Chart(line_df).mark_line(
-        strokeDash=[2, 2],  # Small dashes
-        color='#999999',
-        strokeWidth=1,
-        opacity=0.5  # More visible
+        strokeDash=[6, 6],  # Larger dashes for visibility
+        color='#CCCCCC',  # Lighter gray
+        strokeWidth=2,  # Thicker line
+        opacity=0.8  # More visible
     ).encode(
         x=alt.X('x:Q'),
         y=alt.Y('y:Q')
@@ -248,24 +251,26 @@ def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool =
     
     # Combine all elements
     chart = (line + bubbles + text).properties(
-        width=500,
-        height=500,
+        width=600,  # Slightly larger
+        height=600,
         title='Workload Impact Analysis'
     ).configure_axis(
         grid=True,
-        gridOpacity=0.15,
-        labelFontSize=11,
-        titleFontSize=13,
-        labelFont='Arial',
-        titleFont='Arial',
-        labelColor='#666666',
-        titleColor='#333333'
+        gridOpacity=0.2,  # Slightly more visible grid
+        labelFontSize=14,  # Larger labels
+        titleFontSize=16,  # Larger titles
+        labelFont='Helvetica, Arial, sans-serif',
+        titleFont='Helvetica, Arial, sans-serif',
+        labelColor='#444444',  # Darker labels
+        titleColor='#222222',  # Darker titles
+        domainWidth=1.5  # Thicker axis lines
     ).configure_view(
         strokeWidth=0
     ).configure_title(
-        fontSize=14,
-        font='Arial',
-        color='#333333'
+        fontSize=18,  # Larger title
+        font='Helvetica, Arial, sans-serif',
+        color='#222222',
+        anchor='start'  # Left-align title
     )
     
     return chart
