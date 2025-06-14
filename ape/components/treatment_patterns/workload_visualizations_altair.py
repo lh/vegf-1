@@ -212,13 +212,16 @@ def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool =
         ]
     )
     
-    # Add text labels with dynamic positioning based on bubble size
-    text = alt.Chart(df).mark_text(fontSize=12, fontWeight='bold').encode(
+    # Add text labels positioned above bubbles
+    text = alt.Chart(df).mark_text(
+        fontSize=12, 
+        fontWeight='bold',
+        dy=-25  # Fixed offset above bubbles
+    ).encode(
         x='Patient %:Q',
         y='Visit %:Q',
         text='Category:N',
-        color=alt.value('#333333'),
-        dy=alt.expr('-sqrt(datum["Bubble Size"]) / 40 - 10')  # Position above bubble
+        color=alt.value('#333333')
     )
     
     # Create diagonal reference line (1:1 ratio)
