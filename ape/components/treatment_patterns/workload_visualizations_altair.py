@@ -187,7 +187,10 @@ def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool =
         range=df['Color'].tolist()
     )
     
-    # Create the bubble chart
+    # Create the bubble chart with better sizing
+    # Scale bubble area proportional to workload intensity squared for better visual impact
+    df['Bubble Size'] = df['Workload Intensity'] ** 2 * 1000
+    
     bubbles = alt.Chart(df).mark_circle(opacity=0.8).encode(
         x=alt.X('Patient %:Q', 
                 scale=alt.Scale(domain=[0, max(100, df['Patient %'].max() * 1.1)]),
@@ -195,9 +198,9 @@ def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool =
         y=alt.Y('Visit %:Q',
                 scale=alt.Scale(domain=[0, max(100, df['Visit %'].max() * 1.1)]),
                 title='% of Visits'),
-        size=alt.Size('Workload Intensity:Q',
-                     scale=alt.Scale(range=[100, 1000]),
-                     legend=alt.Legend(title='Workload Intensity')),
+        size=alt.Size('Bubble Size:Q',
+                     scale=alt.Scale(range=[200, 5000]),
+                     legend=None),  # We'll explain size in the text
         color=alt.Color('Category:N', scale=color_scale, legend=None),
         tooltip=[
             alt.Tooltip('Category:N', title='Category'),
@@ -209,12 +212,13 @@ def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool =
         ]
     )
     
-    # Add text labels
-    text = alt.Chart(df).mark_text(dy=-15, fontSize=11).encode(
+    # Add text labels with dynamic positioning based on bubble size
+    text = alt.Chart(df).mark_text(fontSize=12, fontWeight='bold').encode(
         x='Patient %:Q',
         y='Visit %:Q',
         text='Category:N',
-        color=alt.value('#333333')
+        color=alt.value('#333333'),
+        dy=alt.expr('-sqrt(datum["Bubble Size"]) / 40 - 10')  # Position above bubble
     )
     
     # Create diagonal reference line (1:1 ratio)
