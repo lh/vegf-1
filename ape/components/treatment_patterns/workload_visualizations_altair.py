@@ -228,10 +228,13 @@ def create_bubble_chart_altair(workload_data: Dict[str, Any], tufte_mode: bool =
         'y': [0, max_val]
     })
     
+    # Get colors from system
+    colors = get_mode_colors()
+    
     line = alt.Chart(line_df).mark_line(
-        strokeDash=[5, 5],
-        color='#264653',
-        strokeWidth=2
+        color=colors.get('neutral', '#CCCCCC'),
+        strokeWidth=1,
+        opacity=0.3  # Very pale
     ).encode(
         x=alt.X('x:Q'),
         y=alt.Y('y:Q')
