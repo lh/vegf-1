@@ -571,9 +571,11 @@ with tab6:
     
     # FORCE ALTAIR FOR TESTING
     from ape.components.treatment_patterns.workload_analyzer_optimized import calculate_clinical_workload_attribution, format_workload_insight
-    from ape.components.treatment_patterns.workload_visualizations_altair import create_dual_bar_chart_altair
+    from ape.components.treatment_patterns.workload_visualizations_altair import (
+        create_dual_bar_chart_altair, create_bubble_chart_altair
+    )
     from ape.components.treatment_patterns.workload_visualizations_optimized import (
-        create_impact_pyramid, create_bubble_chart, get_workload_insight_summary
+        create_impact_pyramid, get_workload_insight_summary
     )
     workload_available = True
     
@@ -671,7 +673,7 @@ with tab6:
                     figs = {}
                     figs['bar'] = create_dual_bar_chart_altair(_workload_data, _tufte_mode)
                     figs['pyramid'] = create_impact_pyramid(_workload_data, _tufte_mode)
-                    figs['bubble'] = create_bubble_chart(_workload_data, _tufte_mode)
+                    figs['bubble'] = create_bubble_chart_altair(_workload_data, _tufte_mode)
                     return figs
                 
                 # Get all figures (cached after first creation)
@@ -709,8 +711,8 @@ with tab6:
                     col1, col2 = st.columns([3, 2])  # 60/40 split
                     
                     with col1:
-                        config = get_export_config(filename="clinical_workload_bubble")
-                        st.plotly_chart(all_figs['bubble'], use_container_width=False, config=config)  # Fixed width
+                        # Altair chart - no config needed
+                        st.altair_chart(all_figs['bubble'], use_container_width=False)
                     
                     with col2:
                         st.markdown("### Reading the Chart")
