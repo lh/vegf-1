@@ -231,12 +231,14 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
             
             # Try Altair version first for dual bar chart
             altair_available = False
+            altair_error = None
             try:
                 from ape.components.treatment_patterns.workload_visualizations_altair import (
                     create_dual_bar_chart_altair, get_workload_insight_summary
                 )
                 altair_available = True
-            except ImportError:
+            except ImportError as e:
+                altair_error = str(e)
                 pass
             
             # Import Plotly versions (some may be overridden by Altair)
@@ -330,20 +332,14 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     
                     if "Dual Bar Chart" in viz_option:
                         # Debug info
-                        st.caption(f"Debug: altair_available = {altair_available}")
+                        if 'altair_error' in locals() and altair_error:
+                            st.error(f"Altair import failed: {altair_error}")
+                        
                         with st.spinner("Creating dual bar chart..."):
-                            if altair_available:
-                                # Use Altair for faster rendering
-                                fig = create_dual_bar_chart_altair(workload_data, tufte_mode)
-                                st.altair_chart(fig, use_container_width=True)
-                            else:
-                                # Fall back to Plotly
-                                fig = create_cached_dual_bar_chart(workload_data, tufte_mode)
-                                
-                                # Apply export configuration
-                                from ape.utils.export_config import get_export_config
-                                config = get_export_config(filename="clinical_workload_dual_bars")
-                                st.plotly_chart(fig, use_container_width=True, config=config)
+                            # Always try to use Altair - no fallback!
+                            from ape.components.treatment_patterns.workload_visualizations_altair import create_dual_bar_chart_altair
+                            fig = create_dual_bar_chart_altair(workload_data, tufte_mode)
+                            st.altair_chart(fig, use_container_width=True)
                             
                             st.markdown("""
                             **Understanding the Dual Bar Chart:**
@@ -595,20 +591,14 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     
                     if "Dual Bar Chart" in viz_option:
                         # Debug info
-                        st.caption(f"Debug: altair_available = {altair_available}")
+                        if 'altair_error' in locals() and altair_error:
+                            st.error(f"Altair import failed: {altair_error}")
+                        
                         with st.spinner("Creating dual bar chart..."):
-                            if altair_available:
-                                # Use Altair for faster rendering
-                                fig = create_dual_bar_chart_altair(workload_data, tufte_mode)
-                                st.altair_chart(fig, use_container_width=True)
-                            else:
-                                # Fall back to Plotly
-                                fig = create_cached_dual_bar_chart(workload_data, tufte_mode)
-                                
-                                # Apply export configuration
-                                from ape.utils.export_config import get_export_config
-                                config = get_export_config(filename="clinical_workload_dual_bars")
-                                st.plotly_chart(fig, use_container_width=True, config=config)
+                            # Always try to use Altair - no fallback!
+                            from ape.components.treatment_patterns.workload_visualizations_altair import create_dual_bar_chart_altair
+                            fig = create_dual_bar_chart_altair(workload_data, tufte_mode)
+                            st.altair_chart(fig, use_container_width=True)
                             
                             st.markdown("""
                             **Understanding the Dual Bar Chart:**
