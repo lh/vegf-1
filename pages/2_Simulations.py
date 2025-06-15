@@ -35,7 +35,7 @@ from ape.utils.carbon_button_helpers import (
 )
 
 # Import UI components
-from ape.components.ui.workflow_indicator import workflow_progress_indicator, consistent_button_bar
+from ape.components.ui.workflow_indicator import workflow_progress_indicator
 from ape.components.ui.quick_start_box import quick_start_box
 
 # Import our new component modules
@@ -51,6 +51,9 @@ from ape.components.simulation_ui_v2 import (
 
 # Show workflow progress first
 workflow_progress_indicator("simulation")
+
+# Add placeholder for action bar (will be populated after parameters are defined)
+action_bar_placeholder = st.empty()
 
 # Show memory usage in sidebar
 monitor = MemoryMonitor()
@@ -205,52 +208,48 @@ else:
 runtime_estimate = calculate_runtime_estimate_v2(recruitment_params)
 st.caption(f"Estimated runtime: {runtime_estimate}")
 
+# Now populate the action bar with the defined parameters
+has_results = st.session_state.get('current_sim_id') is not None
+with action_bar_placeholder.container():
+    col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
+    
+    with col2:
+        if has_results:
+            if navigation_button("View Analysis", key="view_analysis_top", 
+                               help_text="Analyze simulation results", 
+                               full_width=True, button_type="secondary"):
+                st.switch_page("pages/3_Analysis.py")
+    
+    with col3:
+        if st.session_state.get('show_manage', False):
+            if navigation_button("Close", key="close_manage", help_text="Close manage panel", 
+                               full_width=True, button_type="ghost"):
+                st.session_state.show_manage = False
+                st.rerun()
+        else:
+            if navigation_button("Manage", key="show_manage", help_text="Import/export simulations", 
+                               full_width=True, button_type="ghost"):
+                st.session_state.show_manage = True
+                st.rerun()
+                
+    with col4:
+        if navigation_button("Run Simulation →", key="run_sim_top", 
+                           help_text="Start the simulation", 
+                           full_width=True, button_type="primary"):
+            # Set simulation running state to show closed eyes ape
+            st.session_state.simulation_running = True
+            
+            # Store parameters for the simulation run
+            st.session_state.recruitment_params = recruitment_params
+            
+            st.rerun()
+
 # Show manage panel if toggled
 if st.session_state.get('show_manage', False):
     # Make the manage section 1/4 width by using columns
     manage_cols = st.columns([3, 1])  # 3:1 ratio gives us the rightmost quarter
     with manage_cols[1]:
         render_manage_section()
-
-# Section 4: Action buttons (Control Panel) using consistent button bar
-st.markdown("---")
-has_results = st.session_state.get('current_sim_id') is not None
-
-# Create button bar with appropriate options
-left_buttons = [("← Back to Protocol", "back_protocol", "Change protocol selection")]
-right_buttons = []
-
-if has_results:
-    right_buttons.append(("View Analysis", "view_analysis", "Analyze simulation results"))
-
-right_buttons.append(("Manage", "manage", "Import/export simulations"))
-
-clicked = consistent_button_bar(
-    left_buttons=left_buttons,
-    right_buttons=right_buttons,
-    primary_action=("Run Simulation", "run_sim", "Start the simulation")
-)
-
-# Handle button clicks
-if clicked.get("back_protocol"):
-    st.switch_page("pages/1_Protocol_Manager.py")
-
-if clicked.get("view_analysis") and has_results:
-    st.switch_page("pages/3_Analysis.py")
-
-if clicked.get("manage"):
-    st.session_state.show_manage = not st.session_state.get('show_manage', False)
-    st.rerun()
-
-# Handle Run Simulation click
-if clicked.get("run_sim"):
-    # Set simulation running state to show closed eyes ape
-    st.session_state.simulation_running = True
-    
-    # Store parameters for the simulation run
-    st.session_state.recruitment_params = recruitment_params
-    
-    st.rerun()
 
 # Check if we should be running a simulation (after rerun)
 if st.session_state.get('simulation_running', False):
