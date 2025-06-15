@@ -73,12 +73,9 @@ def handle_import(uploaded_file) -> bool:
             
             # Load the imported simulation
             if load_simulation_results(sim_id):
-                # Mark as imported
-                if 'imported_simulations' not in st.session_state:
-                    st.session_state.imported_simulations = set()
-                st.session_state.imported_simulations.add(sim_id)
-                
                 st.success("Simulation imported successfully!")
+                # Force a rerun to show the imported simulation
+                st.rerun()
                 return True
             else:
                 st.error("Failed to load imported simulation")

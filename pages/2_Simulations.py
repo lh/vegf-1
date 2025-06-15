@@ -332,7 +332,14 @@ if st.session_state.get('simulation_running', False):
         
         def update_progress():
             """Update progress bar smoothly based on estimated time."""
+            from streamlit.runtime.scriptrunner import get_script_run_ctx
+            
             while not progress_stop_event.is_set() and not simulation_complete:
+                # Check if we still have a valid Streamlit context
+                if get_script_run_ctx() is None:
+                    # No context - exit gracefully without errors
+                    break
+                    
                 try:
                     elapsed = time.time() - start_time
                     # Progress from 10% to 85% during simulation
@@ -345,7 +352,7 @@ if st.session_state.get('simulation_running', False):
                     else:
                         status_text.caption(f"Running... {elapsed/60:.1f}m")
                 except:
-                    # Session context may be gone - exit gracefully
+                    # Any other error - exit gracefully
                     break
                 
                 time.sleep(0.1)  # Update every 100ms
