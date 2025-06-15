@@ -81,6 +81,9 @@ output/simulation_results/ape_simulation_*.json
 output/simulation_results/*.parquet
 output/simulations/*.parquet
 
+# Main simulation results directory (v2 format)
+simulation_results/
+
 # Streamlit app v2 simulation results
 streamlit_app_v2/data/simulations/
 streamlit_app_v2/output/simulations/

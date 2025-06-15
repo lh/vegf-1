@@ -22,6 +22,12 @@ st.set_page_config(
 # Check for startup redirect
 handle_page_startup("protocol_manager")
 
+# Import UI components
+from ape.components.ui.workflow_indicator import workflow_progress_indicator, consistent_button_bar
+
+# Show workflow progress
+workflow_progress_indicator("protocol")
+
 # Style Streamlit native buttons to be less obtrusive
 st.markdown("""
 <style>
@@ -160,19 +166,14 @@ st.markdown("""
 
 # Add parent for utils import
 from ape.utils.carbon_button_helpers import (
-    top_navigation_home_button, ape_button, delete_button,
+    ape_button, delete_button,
     navigation_button
 )
 
 
-# Top navigation
-col1, col2, col3 = st.columns([1, 6, 1])
-with col1:
-    if top_navigation_home_button():
-        st.switch_page("APE.py")
-with col2:
-    st.title("Protocol Manager")
-    st.markdown("Browse, view, and validate treatment protocol specifications.")
+# Page title
+st.title("Protocol Manager")
+st.markdown("Browse, view, and validate treatment protocol specifications.")
 
 # Protocol directory - use parent directory path
 PROTOCOL_DIR = Path(__file__).parent.parent / "protocols" / "v2"
@@ -490,30 +491,17 @@ try:
     }
     
     
-    # Main content with prominent action button
-    col1, col2, col3 = st.columns([2, 1, 1])
+    # Main content header
+    st.header(f"{spec.name} v{spec.version}")
     
+    col1, col2 = st.columns([3, 1])
     with col1:
-        st.header(f"{spec.name} v{spec.version}")
         st.markdown(f"**Author:** {spec.author}")
         st.markdown(f"**Description:** {spec.description}")
         st.markdown(f"**Protocol Type:** {spec.protocol_type}")
-        
     with col2:
-        # Move technical details to a single compact line at bottom
-        st.markdown("")  # Spacer
-        st.markdown("")  # Spacer
-        st.markdown("")  # Spacer
-        st.caption(f"Created: {spec.created_date} • {spec.checksum[:8]}...")
-        
-    with col3:
-        # Now we have room for a bigger button!
-        st.markdown("")  # Small spacer
-        
-        if ape_button("Next: Run Simulation", key="main_sim_btn",
-                     icon="play", full_width=True,
-                     is_primary_action=True):
-            st.switch_page("pages/2_Simulations.py")
+        st.caption(f"Created: {spec.created_date}")
+        st.caption(f"Checksum: {spec.checksum[:8]}...")
     
     # Protocol parameters tabs
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -632,6 +620,28 @@ try:
     if selected_file.parent == TEMP_DIR:
         st.markdown("---")
         st.caption("This temporary protocol expires in 1 hour")
+    
+    # Consistent button bar at bottom
+    st.markdown("---")
+    clicked = consistent_button_bar(
+        left_buttons=[
+            ("← Home", "back_home", "Return to home page")
+        ],
+        right_buttons=[
+            ("Use Default & Continue", "quick_continue", "Use this protocol with default settings")
+        ],
+        primary_action=("Setup Simulation", "setup_sim", "Configure simulation parameters")
+    )
+    
+    # Handle button clicks
+    if clicked.get("back_home"):
+        st.switch_page("APE.py")
+    elif clicked.get("quick_continue"):
+        # Set a flag for quick start mode
+        st.session_state.quick_start_mode = True
+        st.switch_page("pages/2_Simulations.py")
+    elif clicked.get("setup_sim"):
+        st.switch_page("pages/2_Simulations.py")
     
 except Exception as e:
     st.error(f"Error loading protocol: {e}")

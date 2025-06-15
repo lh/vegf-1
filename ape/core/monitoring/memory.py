@@ -89,25 +89,20 @@ class MemoryMonitor:
         status, message = self.check_memory_status()
         
         with st.sidebar:
-            st.markdown("### 💾 Memory Usage")
+            st.markdown("### Memory Usage")
             
-            # Color-coded message
-            if status == 'critical':
-                st.error(message)
-            elif status == 'warning':
-                st.warning(message)
-            else:
-                st.success(message)
-                
-            # Progress bar
+            # Single progress bar with text
             progress = min(info['used_mb'] / self.USABLE_MB, 1.0)
-            st.progress(progress, text=f"{info['used_mb']:.0f} / {self.USABLE_MB:.0f} MB")
             
-            # Details in expander
-            with st.expander("Details"):
-                st.text(f"Process: {info['used_mb']:.1f} MB")
-                st.text(f"Available: {info['available_mb']:.1f} MB")
-                st.text(f"System: {info['percent']:.1f}% used")
+            # Show progress bar with status-appropriate text
+            if status == 'critical':
+                st.progress(progress, text=f"{info['used_mb']:.0f} / {self.USABLE_MB:.0f} MB")
+                st.caption("⚠️ Critical - may affect performance")
+            elif status == 'warning':
+                st.progress(progress, text=f"{info['used_mb']:.0f} / {self.USABLE_MB:.0f} MB")
+                st.caption("⚠️ High usage")
+            else:
+                st.progress(progress, text=f"{info['used_mb']:.0f} / {self.USABLE_MB:.0f} MB")
                 
     def check_simulation_feasibility(self, n_patients: int, duration_years: float) -> Tuple[bool, Optional[str]]:
         """

@@ -110,11 +110,7 @@ def import_simulation_package(uploaded_file):
                     st.error("Failed to load imported simulation")
                     return
                 
-                # Mark as imported in session state for visual indicators
-                if 'imported_simulations' not in st.session_state:
-                    st.session_state.imported_simulations = set()
-                st.session_state.imported_simulations.add(sim_id)
-                st.session_state.imported_simulation = True
+                # No need to mark in session state anymore - the memorable_name prefix handles it
                 
                 # Show import details in a container instead of expander
                 with st.container():
@@ -127,6 +123,9 @@ def import_simulation_package(uploaded_file):
                     
                     # Navigation options
                     st.info("🎯 The imported simulation is now available for analysis.")
+                    
+                    # Add a flag to trigger rerun after showing details
+                    st.session_state.need_rerun_after_import = True
                     
                     col1, col2 = st.columns(2)
                     with col1:

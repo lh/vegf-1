@@ -498,7 +498,8 @@ class SimulationPackageManager:
                 'seed': [results.metadata.seed],
                 'timestamp': [results.metadata.timestamp.isoformat()],
                 'runtime_seconds': [results.metadata.runtime_seconds],
-                'storage_type': [results.metadata.storage_type]
+                'storage_type': [results.metadata.storage_type],
+                'memorable_name': [results.metadata.memorable_name]
             }
             
             metadata_df = pd.DataFrame(metadata_dict)
@@ -673,8 +674,61 @@ For support, please refer to APE documentation.
             metadata_df = pd.read_parquet(data_dir / "metadata.parquet")
             metadata_row = metadata_df.iloc[0]
             
-            # 2. Create new simulation metadata with imported prefix
-            new_sim_id = f"imported_{metadata_row['sim_id']}"
+            # 2. Extract original memorable name (if available)
+            original_memorable_name = metadata_row.get('memorable_name', '')
+            
+            # Always add imported- prefix to distinguish imported simulations
+            # But also check for name clashes and add numeric suffix if needed
+            from ape.core.results.factory import ResultsFactory
+            
+            # Get all existing memorable names
+            existing_names = set()
+            if ResultsFactory.DEFAULT_RESULTS_DIR.exists():
+                for sim_dir in ResultsFactory.DEFAULT_RESULTS_DIR.iterdir():
+                    if sim_dir.is_dir():
+                        metadata_path = sim_dir / "metadata.json"
+                        if metadata_path.exists():
+                            try:
+                                with open(metadata_path) as f:
+                                    existing_metadata = json.load(f)
+                                    if 'memorable_name' in existing_metadata:
+                                        existing_names.add(existing_metadata['memorable_name'])
+                            except:
+                                pass
+            
+            # Base name for the imported simulation
+            if original_memorable_name:
+                # Preserve original name but add imported- prefix
+                base_name = f"imported-{original_memorable_name}"
+            else:
+                # No original name - generate a new one with imported- prefix
+                try:
+                    from haikunator import Haikunator
+                    haikunator = Haikunator()
+                    base_name = f"imported-{haikunator.haikunate(token_length=0, delimiter='-')}"
+                except ImportError:
+                    # Fallback if haikunator not available
+                    base_name = "imported-simulation"
+            
+            # Check for name clashes and add suffix if needed
+            new_memorable_name = base_name
+            suffix = 1
+            while new_memorable_name in existing_names:
+                new_memorable_name = f"{base_name}-{suffix}"
+                suffix += 1
+            
+            # Parse original sim_id to extract timestamp and duration
+            original_sim_id = metadata_row['sim_id']
+            sim_id_parts = original_sim_id.split('_')
+            
+            if len(sim_id_parts) >= 4:  # New format: sim_TIMESTAMP_DURATION_NAME
+                timestamp_part = sim_id_parts[1]
+                duration_code = sim_id_parts[2]
+                # Create new sim_id with same format but new memorable name
+                new_sim_id = f"sim_{timestamp_part}_{duration_code}_{new_memorable_name}"
+            else:
+                # Old format fallback - just prefix with imported
+                new_sim_id = f"imported_{original_sim_id}"
             
             # Parse timestamp
             from datetime import datetime
@@ -694,7 +748,8 @@ For support, please refer to APE documentation.
                 seed=int(metadata_row['seed']),
                 timestamp=timestamp,
                 runtime_seconds=float(metadata_row['runtime_seconds']),
-                storage_type='parquet'  # All simulations now use Parquet
+                storage_type='parquet',  # All simulations now use Parquet
+                memorable_name=new_memorable_name
             )
             
             # 3. Create destination directory for the imported simulation
@@ -731,10 +786,10 @@ For support, please refer to APE documentation.
             shutil.copy2(audit_path, dest_path / "audit_log.json")
             logger.info("Preserved original audit log without modifications")
             
-            # Save the new metadata
+            # Save the new metadata (already cleaned above)
             metadata_dict = {
                 'sim_id': new_metadata.sim_id,
-                'protocol_name': new_metadata.protocol_name,
+                'protocol_name': new_metadata.protocol_name,  # Already cleaned
                 'protocol_version': new_metadata.protocol_version,
                 'engine_type': new_metadata.engine_type,
                 'n_patients': new_metadata.n_patients,
@@ -742,7 +797,8 @@ For support, please refer to APE documentation.
                 'seed': new_metadata.seed,
                 'timestamp': new_metadata.timestamp.isoformat(),
                 'runtime_seconds': new_metadata.runtime_seconds,
-                'storage_type': new_metadata.storage_type
+                'storage_type': new_metadata.storage_type,
+                'memorable_name': new_metadata.memorable_name
             }
             
             with open(dest_path / "metadata.json", 'w') as f:
