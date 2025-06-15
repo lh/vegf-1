@@ -34,6 +34,7 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                 # Completed step - clickable with ghost Carbon button
                 if navigation_button(
                     display_label,
+                    icon_name=None,  # Disable auto-icon since we're using our own
                     key=f"workflow_{step_id}",
                     full_width=True,
                     help_text="Click to go back",
@@ -46,6 +47,7 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                     # Make it an action button
                     if navigation_button(
                         display_label,
+                        icon_name=None,  # Disable auto-icon since we're using our own
                         key=f"workflow_action_{step_id}",
                         full_width=True,
                         button_type="primary",
@@ -56,6 +58,7 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                     # Just show as current (disabled)
                     navigation_button(
                         display_label,
+                        icon_name=None,  # Disable auto-icon since we're using our own
                         key=f"workflow_current_{step_id}",
                         full_width=True,
                         button_type="primary",
@@ -65,6 +68,7 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                 # Future step - use ghost Carbon button but disabled
                 navigation_button(
                     display_label,
+                    icon_name=None,  # Disable auto-icon since we're using our own
                     key=f"workflow_future_{step_id}",
                     full_width=True,
                     button_type="ghost",
