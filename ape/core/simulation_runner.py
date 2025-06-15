@@ -104,8 +104,6 @@ class SimulationRunner:
             
             with open(protocol_path, 'w') as f:
                 yaml.dump(protocol_dict, f, default_flow_style=False, sort_keys=False)
-                    
-            print(f"✅ Saved full protocol specification to {protocol_path}")
         except Exception as e:
             print(f"Warning: Could not save full protocol spec: {e}")
             
@@ -116,7 +114,6 @@ class SimulationRunner:
                 import json
                 with open(audit_log_path, 'w') as f:
                     json.dump(self.v2_runner.audit_log, f, indent=2)
-                print(f"✅ Saved audit log with {len(self.v2_runner.audit_log)} events")
             except Exception as e:
                 print(f"Warning: Could not save audit log: {e}")
         
