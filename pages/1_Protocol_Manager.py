@@ -498,23 +498,7 @@ try:
         st.markdown("---")
         st.caption("This temporary protocol expires in 1 hour")
     
-    # Consistent button bar at bottom
-    st.markdown("---")
-    clicked = consistent_button_bar(
-        left_buttons=[],
-        right_buttons=[
-            ("Quick Start", "quick_continue", "Use this protocol with default settings")
-        ],
-        primary_action=("Setup Simulation", "setup_sim", "Configure simulation parameters")
-    )
-    
-    # Handle button clicks
-    if clicked.get("quick_continue"):
-        # Set a flag for quick start mode
-        st.session_state.quick_start_mode = True
-        st.switch_page("pages/2_Simulations.py")
-    elif clicked.get("setup_sim"):
-        st.switch_page("pages/2_Simulations.py")
+    # Navigation is handled by the workflow indicator at the top
     
 except Exception as e:
     st.error(f"Error loading protocol: {e}")

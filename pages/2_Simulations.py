@@ -98,13 +98,6 @@ if 'preset_initialized' not in st.session_state:
     st.session_state.preset_duration = 3
     st.session_state.recruitment_mode = "Fixed Total"
 
-# Check if we're in quick start mode from Protocol Manager
-if st.session_state.get('quick_start_mode', False):
-    # Use default preset
-    st.session_state.preset_patients = 500
-    st.session_state.preset_duration = 3.0
-    st.session_state.recruitment_mode = "Fixed Total"
-    st.session_state.quick_start_mode = False  # Reset flag
 
 # Define presets for Quick Start box
 presets = {
