@@ -129,7 +129,7 @@ def render_recruitment_parameters() -> Dict[str, Any]:
         with seed_col2:
             # Add some vertical spacing to align with the input
             st.write("")  # Empty space
-            if st.button("🎲", key="randomize_seed", help="Generate random seed"):
+            if st.button("Random", key="randomize_seed", help="Generate random seed"):
                 import random
                 st.session_state.seed = random.randint(0, 999999)
                 st.rerun()
