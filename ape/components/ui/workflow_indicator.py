@@ -68,29 +68,18 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                     )
             else:
                 # Future step - check if it should be enabled
-                # Protocol is always accessible
-                if step_id == "protocol":
+                # Protocol and Simulation are always accessible
+                if step_id in ["protocol", "simulation"]:
                     if navigation_button(
                         display_label,
                         icon_name=None,  # Disable auto-icon since we're using our own
                         key=f"workflow_{step_id}",
                         full_width=True,
-                        help_text="Browse and select protocols",
+                        help_text="Browse and select protocols" if step_id == "protocol" else "Run or load simulations",
                         button_type="secondary"
                     ):
                         st.switch_page(page)
-                # Simulation button is enabled if we have a protocol loaded
-                elif step_id == "simulation" and (current_step == "protocol" or st.session_state.get('current_protocol')):
-                    if navigation_button(
-                        display_label,
-                        icon_name=None,  # Disable auto-icon since we're using our own
-                        key=f"workflow_{step_id}",
-                        full_width=True,
-                        help_text="Configure and run simulation",
-                        button_type="secondary"
-                    ):
-                        st.switch_page(page)
-                # Analysis button is enabled if we have results
+                # Analysis button is only enabled if we have results
                 elif step_id == "analysis" and has_results:
                     if navigation_button(
                         display_label,
@@ -102,7 +91,7 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                     ):
                         st.switch_page(page)
                 else:
-                    # Disabled future step
+                    # Disabled future step (only Analysis without results)
                     navigation_button(
                         display_label,
                         icon_name=None,  # Disable auto-icon since we're using our own
