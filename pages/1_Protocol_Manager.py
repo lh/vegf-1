@@ -840,7 +840,7 @@ try:
         
         # Actual UK data shows Beta distribution
         if mean == 70:  # Default protocol value
-            st.info("⚠️ UK data: mean=58.4 letters, only 20.4% above 70 letters (NICE threshold)")
+            st.info("⚠️ UK data: mean=58.4 letters at first treatment (not 70). Note: All patients qualified with ≤70 letters at funding decision, but 20.4% measured >70 at treatment start due to measurement variability.")
             
             # Create histogram-like representation of actual UK data
             # Based on the categories from the analysis
@@ -876,7 +876,9 @@ try:
             y_beta_raw = stats.beta.pdf((x_beta - loc) / scale, alpha, beta) / scale
             
             # Apply "treatment threshold effect" - reduce density above 70
-            # This models patients delaying presentation until they drop below threshold
+            # This models measurement variability between funding decision and first treatment
+            # Some patients qualify at ≤70 but measure >70 at treatment start due to:
+            # - Measurement variability, regression to mean, time delays
             threshold_effect = np.where(x_beta > 70, 0.4, 1.0)  # 60% reduction above 70
             y_beta = y_beta_raw * threshold_effect
             
@@ -943,15 +945,20 @@ try:
                 - Good (71-85): 20.2%
                 - Excellent (86-100): 0.2%
                 
-                **Key finding:** Only 20.4% present above NICE threshold (70 letters)
-                - 51.6% cluster just below threshold
-                - Treatment eligibility drives presentation timing
+                **Key finding:** Only 20.4% measure >70 at first treatment
+                - But all qualified with ≤70 at funding decision
+                - 51.6% cluster in 51-70 range
                 
-                **Best theoretical fit:** Beta + threshold effect
-                - Beta(α=3.5, β=2.0) with 60% reduction above 70
-                - Models treatment eligibility behavior
-                - Patients often wait until vision drops below 70
-                - Captures both natural progression + healthcare system effect
+                **Why some measure >70 at treatment:**
+                - Measurement variability (±5 letters typical)
+                - Regression to the mean
+                - Time delay between funding & treatment
+                - Possible measurement bias at funding
+                
+                **Best fit:** Beta + threshold effect
+                - Natural disease: Beta(α=3.5, β=2.0) 
+                - 60% reduction above 70 (funding filter)
+                - Captures both biology + healthcare system
                 """)
     
     with tab5:
