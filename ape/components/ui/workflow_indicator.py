@@ -28,7 +28,7 @@ def workflow_progress_indicator(current_step: str) -> None:
             if idx < current_idx:
                 # Completed step - clickable
                 if st.button(
-                    f"✅ {label}",
+                    label,
                     key=f"workflow_{step_id}",
                     use_container_width=True,
                     help="Click to go back"
