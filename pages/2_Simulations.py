@@ -55,20 +55,22 @@ from ape.components.simulation_ui_v2 import (
     calculate_runtime_estimate_v2
 )
 
-# Check if protocol is loaded first
+# Load default protocol if none selected
 if not st.session_state.get('current_protocol'):
-    # Show workflow progress first
-    workflow_progress_indicator("simulation")
+    # Load the default Eylea protocol
+    protocol_dir = Path(__file__).parent.parent / "protocols" / "v2"
+    default_protocol = protocol_dir / "eylea.yaml"
     
-    st.info("Select a protocol first to run a simulation.")
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if navigation_button("Go to Protocol Manager", key="nav_protocol_missing", 
-                           full_width=True, is_primary_action=True):
-            st.switch_page("pages/1_Protocol_Manager.py")
-    st.stop()
+    if default_protocol.exists():
+        spec = ProtocolSpecification.from_yaml(default_protocol)
+        st.session_state.current_protocol = {
+            'name': spec.name,
+            'version': spec.version,
+            'path': str(default_protocol),
+            'spec': spec
+        }
 
-# Protocol is loaded, get info
+# Get protocol info
 protocol_info = st.session_state.current_protocol
 
 # We'll define the actual run_simulation function later, but need a placeholder for now
