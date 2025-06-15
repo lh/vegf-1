@@ -333,16 +333,20 @@ if st.session_state.get('simulation_running', False):
         def update_progress():
             """Update progress bar smoothly based on estimated time."""
             while not progress_stop_event.is_set() and not simulation_complete:
-                elapsed = time.time() - start_time
-                # Progress from 10% to 85% during simulation
-                progress = min(0.85, 0.10 + (elapsed / estimated_runtime) * 0.75)
-                progress_bar.progress(progress)
-                
-                # Update status text with time
-                if elapsed < 60:
-                    status_text.caption(f"Running... {elapsed:.0f}s")
-                else:
-                    status_text.caption(f"Running... {elapsed/60:.1f}m")
+                try:
+                    elapsed = time.time() - start_time
+                    # Progress from 10% to 85% during simulation
+                    progress = min(0.85, 0.10 + (elapsed / estimated_runtime) * 0.75)
+                    progress_bar.progress(progress)
+                    
+                    # Update status text with time
+                    if elapsed < 60:
+                        status_text.caption(f"Running... {elapsed:.0f}s")
+                    else:
+                        status_text.caption(f"Running... {elapsed/60:.1f}m")
+                except:
+                    # Session context may be gone - exit gracefully
+                    break
                 
                 time.sleep(0.1)  # Update every 100ms
         
@@ -382,6 +386,9 @@ if st.session_state.get('simulation_running', False):
         # Stop the progress thread
         simulation_complete = True
         progress_stop_event.set()
+        
+        # Wait for thread to finish (with timeout to avoid hanging)
+        progress_thread.join(timeout=1.0)
         
         sim_end_time = datetime.now()
         runtime = (sim_end_time - sim_start_time).total_seconds()
@@ -463,7 +470,10 @@ if st.session_state.get('simulation_running', False):
     except Exception as e:
         # Stop progress thread if running
         if 'progress_stop_event' in locals():
+            simulation_complete = True
             progress_stop_event.set()
+            if 'progress_thread' in locals():
+                progress_thread.join(timeout=1.0)
         
         # Show error in progress bar
         progress_bar.progress(0)
