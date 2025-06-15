@@ -56,6 +56,10 @@ def render_recruitment_parameters() -> Dict[str, Any]:
         else:
             display_total = calculated_total
             
+        def on_total_change():
+            st.session_state.last_edited_field = 'total'
+            st.session_state.n_patients = st.session_state.total_input
+            
         n_patients = st.number_input(
             "Total Patients",
             min_value=10,
@@ -63,13 +67,9 @@ def render_recruitment_parameters() -> Dict[str, Any]:
             value=display_total,
             step=1,
             help="Total number of patients to recruit",
-            key="total_input"
+            key="total_input",
+            on_change=on_total_change
         )
-        
-        # Check if total was just edited
-        if n_patients != display_total:
-            st.session_state.last_edited_field = 'total'
-            st.session_state.n_patients = n_patients
             
     with col2:
         # Show rate - track if it was edited
@@ -81,6 +81,10 @@ def render_recruitment_parameters() -> Dict[str, Any]:
         # Ensure display rate meets minimum constraint
         display_rate_clamped = max(1.0, round(display_rate, 1))
         
+        def on_rate_change():
+            st.session_state.last_edited_field = 'rate'
+            st.session_state.recruitment_rate = st.session_state.rate_input
+            
         recruitment_rate = st.number_input(
             "Monthly Rate",
             min_value=1.0,
@@ -88,15 +92,14 @@ def render_recruitment_parameters() -> Dict[str, Any]:
             value=display_rate_clamped,
             step=1.0,
             help="Patients to recruit per month (minimum of 1)",
-            key="rate_input"
+            key="rate_input",
+            on_change=on_rate_change
         )
-        
-        # Check if rate was just edited
-        if recruitment_rate != display_rate_clamped:
-            st.session_state.last_edited_field = 'rate'
-            st.session_state.recruitment_rate = recruitment_rate
             
     with col3:
+        def on_duration_change():
+            st.session_state.duration_years = st.session_state.duration_input
+            
         duration_years = st.number_input(
             "Years",
             min_value=1,
@@ -104,9 +107,9 @@ def render_recruitment_parameters() -> Dict[str, Any]:
             value=int(stored_duration),
             step=1,
             help="Simulation duration in years",
-            key="duration_input"
+            key="duration_input",
+            on_change=on_duration_change
         )
-        st.session_state.duration_years = duration_years
     
     with col4:
         seed = st.number_input(
@@ -121,22 +124,22 @@ def render_recruitment_parameters() -> Dict[str, Any]:
     
     # Build recruitment parameters based on which field is primary
     recruitment_params = {
-        'duration_years': duration_years,
-        'seed': seed
+        'duration_years': st.session_state.get('duration_years', stored_duration),
+        'seed': st.session_state.get('seed', 42)
     }
     
     if st.session_state.last_edited_field == 'total':
         # Total is primary - Fixed Total mode
         recruitment_params['mode'] = 'Fixed Total'
-        recruitment_params['n_patients'] = n_patients
+        recruitment_params['n_patients'] = st.session_state.get('n_patients', stored_total)
         recruitment_params['engine_type'] = st.session_state.get('engine_type', 'abs')
     else:
         # Rate is primary - Constant Rate mode
         recruitment_params['mode'] = 'Constant Rate'
-        recruitment_params['recruitment_rate'] = recruitment_rate
+        recruitment_params['recruitment_rate'] = st.session_state.get('recruitment_rate', stored_rate)
         recruitment_params['rate_unit'] = 'per month'
-        recruitment_params['expected_total'] = int(recruitment_rate * duration_years * 12)
-        recruitment_params['rate_per_day'] = recruitment_rate / 30.44
+        recruitment_params['expected_total'] = int(st.session_state.get('recruitment_rate', stored_rate) * recruitment_params['duration_years'] * 12)
+        recruitment_params['rate_per_day'] = st.session_state.get('recruitment_rate', stored_rate) / 30.44
         recruitment_params['engine_type'] = st.session_state.get('engine_type', 'abs')
     
     # Clean up preset duration after using it
