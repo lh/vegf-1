@@ -281,7 +281,7 @@ def render_recent_simulations():
     results_dir = ResultsFactory.DEFAULT_RESULTS_DIR
     if results_dir.exists():
         sim_dirs = sorted([d for d in results_dir.iterdir() if d.is_dir()], 
-                         key=lambda x: x.stat().st_mtime, reverse=True)[:10]  # Show last 10 by modification time
+                         key=lambda x: x.stat().st_mtime, reverse=True)[:20]  # Show last 20 by modification time
         
         if sim_dirs:
             # Create a list of simulations with metadata
@@ -350,7 +350,7 @@ def render_simulation_card(sim: Dict[str, Any]):
         
         # Imported badge (if applicable)
         if is_imported:
-            st.caption("🔵 **IMPORTED**")
+            st.caption("**IMPORTED**")
         
         if ape_button(
             "Select" if not is_selected else "Selected ✓",

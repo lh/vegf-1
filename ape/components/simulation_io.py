@@ -74,8 +74,6 @@ def handle_import(uploaded_file) -> bool:
             # Load the imported simulation
             if load_simulation_results(sim_id):
                 st.success("Simulation imported successfully!")
-                # Force a rerun to show the imported simulation
-                st.rerun()
                 return True
             else:
                 st.error("Failed to load imported simulation")
@@ -96,15 +94,22 @@ def render_manage_section():
     """Render the manage section UI (1/4 width)"""
     # Import section first
     st.markdown("**Import**")
+    
+    # Use a unique key that changes after import to clear the file uploader
+    import_key = f"import_uploader_{st.session_state.get('import_count', 0)}"
+    
     uploaded_file = st.file_uploader(
         "Import simulation",
         type=['zip'],
         label_visibility="collapsed",
-        help="Import a simulation package (.zip)"
+        help="Import a simulation package (.zip)",
+        key=import_key
     )
     
     if uploaded_file is not None:
         if handle_import(uploaded_file):
+            # Increment import count to change the key and clear the uploader
+            st.session_state.import_count = st.session_state.get('import_count', 0) + 1
             st.rerun()
     
     # Export section - only show if simulation is selected
