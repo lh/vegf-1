@@ -27,10 +27,8 @@ def quick_start_box(presets: Dict[str, Dict[str, Any]], default_preset: str = "m
                 is_default = key == default_preset
                 button_style = "primary" if is_default else "secondary"
                 
-                # Add recommendation badge
+                # Use label as is
                 label = preset['label']
-                if is_default:
-                    label = f"{label}\n(Recommended)"
                 
                 from ape.utils.carbon_button_helpers import navigation_button
                 if navigation_button(

@@ -106,28 +106,28 @@ if st.session_state.get('quick_start_mode', False):
 # Define presets for Quick Start box
 presets = {
     'small': {
-        'label': 'Small Trial',
+        'label': 'Small',
         'description': 'Quick test run',
         'patients': 100,
         'duration': 2.0,
         'runtime': '< 1 second'
     },
-    'medium': {
-        'label': 'Medium Trial',
+    'default': {
+        'label': 'Default',
         'description': 'Standard analysis',
         'patients': 500,
         'duration': 3.0,
         'runtime': '~3 seconds'
     },
     'large': {
-        'label': 'Large Trial',
+        'label': 'Large',
         'description': 'Comprehensive study',
         'patients': 2000,
         'duration': 5.0,
         'runtime': '~10 seconds'
     },
-    'realworld': {
-        'label': 'Real-World',
+    'rate': {
+        'label': 'Rate',
         'description': 'Continuous recruitment',
         'patients': '20/week',
         'duration': 5.0,
@@ -136,11 +136,11 @@ presets = {
 }
 
 # Show Quick Start box
-selected_preset = quick_start_box(presets, default_preset='medium')
+selected_preset = quick_start_box(presets, default_preset='default')
 
 # Handle preset selection
 if selected_preset:
-    if selected_preset == 'realworld':
+    if selected_preset == 'rate':
         st.session_state.recruitment_rate = 20.0
         st.session_state.rate_unit = "per week"
         st.session_state.preset_duration = 5.0
