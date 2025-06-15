@@ -228,33 +228,13 @@ with workflow_placeholder.container():
 # Now populate the action bar with the remaining buttons
 has_results = st.session_state.get('current_sim_id') is not None
 with action_bar_placeholder.container():
-    col1, col2, col3 = st.columns([5, 1, 1])
-    
-    with col2:
-        if has_results:
+    if has_results:
+        col1, col2 = st.columns([6, 1])
+        with col2:
             if navigation_button("View Analysis", key="view_analysis_top", 
                                help_text="Analyze simulation results", 
                                full_width=True, button_type="secondary"):
                 st.switch_page("pages/3_Analysis.py")
-    
-    with col3:
-        if st.session_state.get('show_manage', False):
-            if navigation_button("Close", key="close_manage", help_text="Close manage panel", 
-                               full_width=True, button_type="ghost"):
-                st.session_state.show_manage = False
-                st.rerun()
-        else:
-            if navigation_button("Manage", key="show_manage", help_text="Import/export simulations", 
-                               full_width=True, button_type="ghost"):
-                st.session_state.show_manage = True
-                st.rerun()
-
-# Show manage panel if toggled
-if st.session_state.get('show_manage', False):
-    # Make the manage section 1/4 width by using columns
-    manage_cols = st.columns([3, 1])  # 3:1 ratio gives us the rightmost quarter
-    with manage_cols[1]:
-        render_manage_section()
 
 # Check if we should be running a simulation (after rerun)
 if st.session_state.get('simulation_running', False):
@@ -385,6 +365,31 @@ if st.session_state.get('simulation_running', False):
         st.session_state.simulation_running = False
         st.error(f"Simulation failed: {str(e)}")
         st.exception(e)
+
+# Import/Export Section
+st.markdown("---")
+col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+with col4:
+    # Toggle button for manage panel
+    if st.session_state.get('show_manage', False):
+        if navigation_button("Close Import/Export", key="close_manage", 
+                           help_text="Close import/export panel", 
+                           full_width=True, button_type="ghost"):
+            st.session_state.show_manage = False
+            st.rerun()
+    else:
+        if navigation_button("Import/Export", key="show_manage", 
+                           help_text="Import or export simulations", 
+                           full_width=True, button_type="secondary"):
+            st.session_state.show_manage = True
+            st.rerun()
+
+# Show manage panel if toggled
+if st.session_state.get('show_manage', False):
+    # Make the manage section 1/4 width by using columns
+    manage_cols = st.columns([3, 1])  # 3:1 ratio gives us the rightmost quarter
+    with manage_cols[1]:
+        render_manage_section()
 
 # Section 1: Recent Simulations List
 st.markdown("---")
