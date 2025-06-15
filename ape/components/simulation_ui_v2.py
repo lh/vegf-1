@@ -112,15 +112,27 @@ def render_recruitment_parameters() -> Dict[str, Any]:
         )
     
     with col4:
-        seed = st.number_input(
-            "Random Seed",
-            min_value=0,
-            max_value=999999,
-            value=st.session_state.get('seed', 42),
-            help="For reproducible results",
-            key="seed_input"
-        )
-        st.session_state.seed = seed
+        # Create two sub-columns for seed input and randomize button
+        seed_col1, seed_col2 = st.columns([5, 1])
+        
+        with seed_col1:
+            seed = st.number_input(
+                "Random Seed",
+                min_value=0,
+                max_value=999999,
+                value=st.session_state.get('seed', 42),
+                help="For reproducible results",
+                key="seed_input"
+            )
+            st.session_state.seed = seed
+        
+        with seed_col2:
+            # Add some vertical spacing to align with the input
+            st.write("")  # Empty space
+            if st.button("🎲", key="randomize_seed", help="Generate random seed"):
+                import random
+                st.session_state.seed = random.randint(0, 999999)
+                st.rerun()
     
     # Build recruitment parameters based on which field is primary
     recruitment_params = {
