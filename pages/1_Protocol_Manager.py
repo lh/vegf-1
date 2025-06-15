@@ -501,9 +501,7 @@ try:
     # Consistent button bar at bottom
     st.markdown("---")
     clicked = consistent_button_bar(
-        left_buttons=[
-            ("Home", "back_home", "Return to home page")
-        ],
+        left_buttons=[],
         right_buttons=[
             ("Quick Start", "quick_continue", "Use this protocol with default settings")
         ],
@@ -511,9 +509,7 @@ try:
     )
     
     # Handle button clicks
-    if clicked.get("back_home"):
-        st.switch_page("APE.py")
-    elif clicked.get("quick_continue"):
+    if clicked.get("quick_continue"):
         # Set a flag for quick start mode
         st.session_state.quick_start_mode = True
         st.switch_page("pages/2_Simulations.py")
