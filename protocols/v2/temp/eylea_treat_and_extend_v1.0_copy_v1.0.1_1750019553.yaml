@@ -1,7 +1,7 @@
 name: eylea_treat_and_extend_v1.0 Copy
 version: 1.0.1
 created_date: '2025-06-15'
-author: Your Name
+author: Luke
 description: Copy of eylea_treat_and_extend_v1.0
 protocol_type: treat_and_extend
 min_interval_days: 28

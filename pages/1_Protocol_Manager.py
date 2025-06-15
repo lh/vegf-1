@@ -134,8 +134,13 @@ if selected_file:
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    # Empty for now
-    st.empty()
+    # Edit button (only for temporary protocols)
+    if selected_file and selected_file.parent == TEMP_DIR:
+        if ape_button("Edit", key="edit_btn", full_width=True):
+            st.session_state.edit_mode = not st.session_state.get('edit_mode', False)
+    else:
+        # For default protocols, show a disabled ghost button
+        ape_button("Edit", key="edit_btn_disabled", full_width=True, disabled=True)
 
 with col2:
     # Create a copy with a new name
@@ -316,6 +321,9 @@ if st.session_state.get('show_duplicate', False):
                     # Validate the new file can be loaded
                     test_spec = ProtocolSpecification.from_yaml(save_path)
                     
+                    # Select the newly created duplicate
+                    st.session_state.selected_protocol_name = save_path.stem
+                    
                     # Set success flag and clear creating flag
                     st.session_state.duplicate_success = True
                     st.session_state.creating_duplicate = False
@@ -378,14 +386,167 @@ try:
     # Main content header
     st.header(f"{spec.name} v{spec.version}")
     
+    # Show edit mode controls if in edit mode
+    if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
+        st.warning("**Edit Mode** - Make changes below and save when ready")
+        save_col, cancel_col, _, _ = st.columns(4)
+        with save_col:
+            if ape_button("Save Changes", key="save_changes", is_primary_action=True, full_width=True):
+                try:
+                    # Load the current YAML data
+                    with open(selected_file) as f:
+                        data = yaml.safe_load(f)
+                    
+                    # Update metadata if edited
+                    if 'edit_author' in st.session_state:
+                        data['author'] = st.session_state.edit_author
+                    if 'edit_description' in st.session_state:
+                        data['description'] = st.session_state.edit_description
+                    
+                    # Update timing parameters if edited
+                    if 'edit_min_interval' in st.session_state and st.session_state.edit_min_interval.isdigit():
+                        data['min_interval_days'] = int(st.session_state.edit_min_interval)
+                    if 'edit_max_interval' in st.session_state and st.session_state.edit_max_interval.isdigit():
+                        data['max_interval_days'] = int(st.session_state.edit_max_interval)
+                    if 'edit_extension' in st.session_state and st.session_state.edit_extension.isdigit():
+                        data['extension_days'] = int(st.session_state.edit_extension)
+                    if 'edit_shortening' in st.session_state and st.session_state.edit_shortening.isdigit():
+                        data['shortening_days'] = int(st.session_state.edit_shortening)
+                    
+                    # Update disease transitions if edited
+                    states = ['NAIVE', 'STABLE', 'ACTIVE', 'HIGHLY_ACTIVE']
+                    for from_state in states:
+                        for to_state in states:
+                            key = f'edit_trans_{from_state}_{to_state}'
+                            if key in st.session_state:
+                                try:
+                                    value = float(st.session_state[key])
+                                    # Ensure transitions TO NAIVE from other states remain 0
+                                    if to_state == 'NAIVE' and from_state != 'NAIVE':
+                                        value = 0.0
+                                    data['disease_transitions'][from_state][to_state] = value
+                                except:
+                                    pass  # Skip invalid values
+                    
+                    # Update treatment effect multipliers if edited
+                    for from_state in states:
+                        for to_state in states:
+                            key = f'edit_mult_{from_state}_{to_state}'
+                            if key in st.session_state:
+                                try:
+                                    value = float(st.session_state[key])
+                                    # Initialize structure if needed
+                                    if from_state not in data.get('treatment_effect_on_transitions', {}):
+                                        data.setdefault('treatment_effect_on_transitions', {})[from_state] = {'multipliers': {}}
+                                    data['treatment_effect_on_transitions'][from_state]['multipliers'][to_state] = value
+                                except:
+                                    pass  # Skip invalid values
+                    
+                    # Update vision model parameters if edited
+                    for state in states:
+                        for treatment in ['treated', 'untreated']:
+                            scenario = f"{state.lower()}_{treatment}"
+                            mean_key = f'edit_vision_{scenario}_mean'
+                            std_key = f'edit_vision_{scenario}_std'
+                            
+                            if mean_key in st.session_state:
+                                try:
+                                    data['vision_change_model'][scenario]['mean'] = float(st.session_state[mean_key])
+                                except:
+                                    pass
+                            
+                            if std_key in st.session_state:
+                                try:
+                                    data['vision_change_model'][scenario]['std'] = float(st.session_state[std_key])
+                                except:
+                                    pass
+                    
+                    # Update population parameters if edited
+                    if 'edit_pop_mean' in st.session_state:
+                        try:
+                            data['baseline_vision']['mean'] = float(st.session_state.edit_pop_mean)
+                        except:
+                            pass
+                    if 'edit_pop_std' in st.session_state:
+                        try:
+                            data['baseline_vision']['std'] = float(st.session_state.edit_pop_std)
+                        except:
+                            pass
+                    if 'edit_pop_min' in st.session_state and st.session_state.edit_pop_min.isdigit():
+                        data['baseline_vision']['min'] = int(st.session_state.edit_pop_min)
+                    if 'edit_pop_max' in st.session_state and st.session_state.edit_pop_max.isdigit():
+                        data['baseline_vision']['max'] = int(st.session_state.edit_pop_max)
+                    
+                    # Update discontinuation rules if edited
+                    if 'edit_disc_pv_thresh' in st.session_state and st.session_state.edit_disc_pv_thresh.isdigit():
+                        data['discontinuation_rules']['poor_vision_threshold'] = int(st.session_state.edit_disc_pv_thresh)
+                    if 'edit_disc_pv_prob' in st.session_state:
+                        try:
+                            data['discontinuation_rules']['poor_vision_probability'] = float(st.session_state.edit_disc_pv_prob)
+                        except:
+                            pass
+                    if 'edit_disc_hi_thresh' in st.session_state and st.session_state.edit_disc_hi_thresh.isdigit():
+                        data['discontinuation_rules']['high_injection_count'] = int(st.session_state.edit_disc_hi_thresh)
+                    if 'edit_disc_hi_prob' in st.session_state:
+                        try:
+                            data['discontinuation_rules']['high_injection_probability'] = float(st.session_state.edit_disc_hi_prob)
+                        except:
+                            pass
+                    if 'edit_disc_lt_thresh' in st.session_state and st.session_state.edit_disc_lt_thresh.isdigit():
+                        data['discontinuation_rules']['long_treatment_months'] = int(st.session_state.edit_disc_lt_thresh)
+                    if 'edit_disc_lt_prob' in st.session_state:
+                        try:
+                            data['discontinuation_rules']['long_treatment_probability'] = float(st.session_state.edit_disc_lt_prob)
+                        except:
+                            pass
+                    if 'edit_disc_types' in st.session_state:
+                        # Parse discontinuation types from text area (one per line)
+                        types = [t.strip() for t in st.session_state.edit_disc_types.split('\n') if t.strip()]
+                        if types:
+                            data['discontinuation_rules']['discontinuation_types'] = types
+                    
+                    # Update modified date
+                    data['modified_date'] = datetime.now().strftime("%Y-%m-%d")
+                    
+                    # Write back to file
+                    with open(selected_file, 'w') as f:
+                        yaml.dump(data, f, sort_keys=False, default_flow_style=False)
+                    
+                    st.success("Changes saved!")
+                    st.session_state.edit_mode = False
+                    
+                    # Clear edit fields from session state
+                    for key in list(st.session_state.keys()):
+                        if key.startswith('edit_'):
+                            del st.session_state[key]
+                    
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Failed to save changes: {e}")
+        with cancel_col:
+            if ape_button("Cancel", key="cancel_edit", full_width=True):
+                st.session_state.edit_mode = False
+                st.rerun()
+    
     # Compact metadata display
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.caption(f"**Author:** {spec.author} • **Type:** {spec.protocol_type}")
-        st.caption(f"**Description:** {spec.description}")
-    with col2:
-        st.caption(f"Created: {spec.created_date}")
-        st.caption(f"Checksum: {spec.checksum[:8]}...")
+    if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
+        # Editable metadata
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            new_author = st.text_input("Author", value=spec.author, key="edit_author")
+            new_description = st.text_area("Description", value=spec.description, key="edit_description", height=70)
+        with col2:
+            st.caption(f"Created: {spec.created_date}")
+            st.caption(f"Checksum: {spec.checksum[:8]}...")
+    else:
+        # Read-only display
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.caption(f"**Author:** {spec.author} • **Type:** {spec.protocol_type}")
+            st.caption(f"**Description:** {spec.description}")
+        with col2:
+            st.caption(f"Created: {spec.created_date}")
+            st.caption(f"Checksum: {spec.checksum[:8]}...")
     
     # Protocol parameters tabs
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -398,61 +559,268 @@ try:
     
     with tab1:
         st.subheader("Treatment Timing Parameters")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Min Interval", f"{spec.min_interval_days} days ({spec.min_interval_days/7:.1f} weeks)")
-            st.metric("Extension", f"{spec.extension_days} days ({spec.extension_days/7:.1f} weeks)")
-        with col2:
-            st.metric("Max Interval", f"{spec.max_interval_days} days ({spec.max_interval_days/7:.1f} weeks)")
-            st.metric("Shortening", f"{spec.shortening_days} days ({spec.shortening_days/7:.1f} weeks)")
+        if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
+            # Editable parameters
+            col1, col2 = st.columns(2)
+            with col1:
+                min_interval = st.text_input("Min Interval (days)", value=str(spec.min_interval_days), key="edit_min_interval")
+                st.caption(f"= {int(min_interval)/7:.1f} weeks" if min_interval.isdigit() else "Invalid")
+                extension = st.text_input("Extension (days)", value=str(spec.extension_days), key="edit_extension")
+                st.caption(f"= {int(extension)/7:.1f} weeks" if extension.isdigit() else "Invalid")
+            with col2:
+                max_interval = st.text_input("Max Interval (days)", value=str(spec.max_interval_days), key="edit_max_interval")
+                st.caption(f"= {int(max_interval)/7:.1f} weeks" if max_interval.isdigit() else "Invalid")
+                shortening = st.text_input("Shortening (days)", value=str(spec.shortening_days), key="edit_shortening")
+                st.caption(f"= {int(shortening)/7:.1f} weeks" if shortening.isdigit() else "Invalid")
+        else:
+            # Read-only display
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Min Interval", f"{spec.min_interval_days} days ({spec.min_interval_days/7:.1f} weeks)")
+                st.metric("Extension", f"{spec.extension_days} days ({spec.extension_days/7:.1f} weeks)")
+            with col2:
+                st.metric("Max Interval", f"{spec.max_interval_days} days ({spec.max_interval_days/7:.1f} weeks)")
+                st.metric("Shortening", f"{spec.shortening_days} days ({spec.shortening_days/7:.1f} weeks)")
     
     with tab2:
         st.subheader("Disease State Transitions")
         
-        # Display transition matrix
-        import pandas as pd
-        states = ['NAIVE', 'STABLE', 'ACTIVE', 'HIGHLY_ACTIVE']
-        matrix_data = []
-        for from_state in states:
-            row = []
-            for to_state in states:
-                prob = spec.disease_transitions[from_state][to_state]
-                row.append(f"{prob:.2f}")
-            matrix_data.append(row)
+        if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
+            # Editable transition matrix
+            import pandas as pd
+            states = ['NAIVE', 'STABLE', 'ACTIVE', 'HIGHLY_ACTIVE']
             
-        df = pd.DataFrame(matrix_data, index=states, columns=states)
-        st.dataframe(df, use_container_width=True)
+            st.caption("Edit transition probabilities (0.0 to 1.0). Rows must sum to 1.0.")
+            st.caption("⚠️ Transitions TO NAIVE from other states are not allowed (always 0).")
+            
+            # Create editable inputs in a grid
+            for i, from_state in enumerate(states):
+                cols = st.columns([1.5] + [1]*4)  # Label column + 4 state columns
+                with cols[0]:
+                    st.markdown(f"**From {from_state}:**")
+                
+                row_sum = 0.0
+                for j, to_state in enumerate(states):
+                    with cols[j+1]:
+                        current_val = spec.disease_transitions[from_state][to_state]
+                        
+                        # Block editing transitions TO NAIVE from other states
+                        if to_state == 'NAIVE' and from_state != 'NAIVE':
+                            st.text_input(
+                                to_state,
+                                value="0.00",
+                                key=f"edit_trans_{from_state}_{to_state}",
+                                disabled=True,
+                                label_visibility="visible"
+                            )
+                        else:
+                            val = st.text_input(
+                                to_state,
+                                value=f"{current_val:.2f}",
+                                key=f"edit_trans_{from_state}_{to_state}",
+                                label_visibility="visible"
+                            )
+                            try:
+                                row_sum += float(val)
+                            except:
+                                pass
+                
+                # Show row sum validation
+                if abs(row_sum - 1.0) > 0.01:
+                    st.error(f"Row sum: {row_sum:.2f} (must equal 1.0)")
+                else:
+                    st.success(f"Row sum: {row_sum:.2f} ✓")
+        else:
+            # Read-only display
+            import pandas as pd
+            states = ['NAIVE', 'STABLE', 'ACTIVE', 'HIGHLY_ACTIVE']
+            matrix_data = []
+            for from_state in states:
+                row = []
+                for to_state in states:
+                    prob = spec.disease_transitions[from_state][to_state]
+                    row.append(f"{prob:.2f}")
+                matrix_data.append(row)
+                
+            df = pd.DataFrame(matrix_data, index=states, columns=states)
+            st.dataframe(df, use_container_width=True)
         
         # Treatment effect
         st.subheader("Treatment Effect Multipliers")
-        st.json(spec.treatment_effect_on_transitions)
+        
+        # Add explainer
+        with st.expander("ℹ️ How treatment multipliers work"):
+            st.markdown("""
+            Treatment multipliers modify disease state transitions when a patient receives treatment:
+            
+            - **Multiplier > 1.0**: Makes transition MORE likely (e.g., 2.0 = doubles the chance)
+            - **Multiplier < 1.0**: Makes transition LESS likely (e.g., 0.5 = halves the chance)  
+            - **Multiplier = 1.0**: No effect (same as untreated)
+            
+            **Example:** If ACTIVE→STABLE has 10% base probability and multiplier 2.0:
+            - Without treatment: 10% chance
+            - With treatment: 10% × 2.0 = 20% chance
+            
+            Typically, multipliers that improve vision are > 1.0, while those that worsen vision are < 1.0.
+            
+            **⚠️ Important:** Transitions occur **per visit**, not monthly. This means:
+            - Patients with 4-week intervals: ~13 transition opportunities/year
+            - Patients with 16-week intervals: ~3 transition opportunities/year
+            
+            This creates a challenge: the same transition probabilities shouldn't apply equally to both cases,
+            as the underlying biological progression happens continuously, not just at visits.
+            """)
+        
+        if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
+            # Editable treatment effect multipliers
+            st.caption("Treatment multiplies transition probabilities. Empty = no effect (1.0)")
+            
+            for from_state in states:
+                with st.expander(f"Treatment effect from {from_state}"):
+                    multipliers = spec.treatment_effect_on_transitions.get(from_state, {}).get('multipliers', {})
+                    
+                    if not multipliers:
+                        st.info(f"No treatment effects defined for {from_state} state")
+                    else:
+                        for to_state, multiplier in multipliers.items():
+                            col1, col2 = st.columns([2, 1])
+                            with col1:
+                                st.text(f"{from_state} → {to_state}")
+                            with col2:
+                                st.text_input(
+                                    "Multiplier",
+                                    value=f"{multiplier:.2f}",
+                                    key=f"edit_mult_{from_state}_{to_state}",
+                                    label_visibility="collapsed"
+                                )
+        else:
+            # Read-only display in a cleaner format
+            for from_state in states:
+                multipliers = spec.treatment_effect_on_transitions.get(from_state, {}).get('multipliers', {})
+                if multipliers:
+                    st.markdown(f"**{from_state}:**")
+                    for to_state, multiplier in multipliers.items():
+                        st.caption(f"  • {from_state} → {to_state}: ×{multiplier}")
+                else:
+                    st.caption(f"**{from_state}:** No treatment effects")
     
     with tab3:
         st.subheader("Vision Change Model")
         
-        # Create a table of vision changes
-        vision_data = []
-        for scenario, params in sorted(spec.vision_change_model.items()):
-            state, treatment = scenario.rsplit('_', 1)
-            vision_data.append({
-                'State': state.upper(),
-                'Treatment': treatment.capitalize(),
-                'Mean Change': params['mean'],
-                'Std Dev': params['std']
-            })
+        if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
+            # Editable vision change parameters in table format
+            st.caption("Monthly vision change (ETDRS letters). Negative = vision loss, Positive = vision gain")
             
-        vision_df = pd.DataFrame(vision_data)
-        st.dataframe(vision_df, use_container_width=True, hide_index=True)
+            # Create table-like layout
+            # Header row
+            header_cols = st.columns([1.5, 2, 2])
+            with header_cols[0]:
+                st.markdown("**State**")
+            with header_cols[1]:
+                st.markdown("**Untreated**")
+                subcols = st.columns(2)
+                with subcols[0]:
+                    st.caption("Mean")
+                with subcols[1]:
+                    st.caption("Std Dev")
+            with header_cols[2]:
+                st.markdown("**Treated**")
+                subcols = st.columns(2)
+                with subcols[0]:
+                    st.caption("Mean")
+                with subcols[1]:
+                    st.caption("Std Dev")
+            
+            # Data rows
+            for state in states:
+                row_cols = st.columns([1.5, 2, 2])
+                
+                with row_cols[0]:
+                    st.markdown(f"**{state}**")
+                
+                # Untreated values
+                with row_cols[1]:
+                    scenario = f"{state.lower()}_untreated"
+                    if scenario in spec.vision_change_model:
+                        params = spec.vision_change_model[scenario]
+                        subcols = st.columns(2)
+                        with subcols[0]:
+                            st.text_input(
+                                "Mean",
+                                value=f"{params['mean']:.2f}",
+                                key=f"edit_vision_{scenario}_mean",
+                                label_visibility="collapsed"
+                            )
+                        with subcols[1]:
+                            st.text_input(
+                                "Std Dev",
+                                value=f"{params['std']:.2f}",
+                                key=f"edit_vision_{scenario}_std",
+                                label_visibility="collapsed"
+                            )
+                
+                # Treated values
+                with row_cols[2]:
+                    scenario = f"{state.lower()}_treated"
+                    if scenario in spec.vision_change_model:
+                        params = spec.vision_change_model[scenario]
+                        subcols = st.columns(2)
+                        with subcols[0]:
+                            st.text_input(
+                                "Mean",
+                                value=f"{params['mean']:.2f}",
+                                key=f"edit_vision_{scenario}_mean",
+                                label_visibility="collapsed"
+                            )
+                        with subcols[1]:
+                            st.text_input(
+                                "Std Dev",
+                                value=f"{params['std']:.2f}",
+                                key=f"edit_vision_{scenario}_std",
+                                label_visibility="collapsed"
+                            )
+        else:
+            # Read-only display
+            # Create a table of vision changes
+            vision_data = []
+            for scenario, params in sorted(spec.vision_change_model.items()):
+                state, treatment = scenario.rsplit('_', 1)
+                vision_data.append({
+                    'State': state.upper(),
+                    'Treatment': treatment.capitalize(),
+                    'Mean Change': params['mean'],
+                    'Std Dev': params['std']
+                })
+                
+            vision_df = pd.DataFrame(vision_data)
+            st.dataframe(vision_df, use_container_width=True, hide_index=True)
     
     with tab4:
         st.subheader("Patient Population")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Baseline Vision Mean", f"{spec.baseline_vision_mean} letters")
-            st.metric("Baseline Vision Std", f"{spec.baseline_vision_std} letters")
-        with col2:
-            st.metric("Vision Range Min", f"{spec.baseline_vision_min} letters")
-            st.metric("Vision Range Max", f"{spec.baseline_vision_max} letters")
+        
+        if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
+            # Editable population parameters
+            st.caption("Baseline vision distribution parameters (ETDRS letters)")
+            col1, col2 = st.columns(2)
+            with col1:
+                mean_val = st.text_input("Mean", value=str(spec.baseline_vision_mean), key="edit_pop_mean")
+                st.caption(f"Average baseline vision" if mean_val.replace('.','').isdigit() else "Invalid")
+                std_val = st.text_input("Standard Deviation", value=str(spec.baseline_vision_std), key="edit_pop_std")
+                st.caption(f"Vision variability" if std_val.replace('.','').isdigit() else "Invalid")
+            with col2:
+                min_val = st.text_input("Minimum", value=str(spec.baseline_vision_min), key="edit_pop_min")
+                st.caption(f"Worst allowed vision" if min_val.isdigit() else "Invalid")
+                max_val = st.text_input("Maximum", value=str(spec.baseline_vision_max), key="edit_pop_max")
+                st.caption(f"Best allowed vision" if max_val.isdigit() else "Invalid")
+        else:
+            # Read-only display
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Baseline Vision Mean", f"{spec.baseline_vision_mean} letters")
+                st.metric("Baseline Vision Std", f"{spec.baseline_vision_std} letters")
+            with col2:
+                st.metric("Vision Range Min", f"{spec.baseline_vision_min} letters")
+                st.metric("Vision Range Max", f"{spec.baseline_vision_max} letters")
             
         # Show distribution
         import numpy as np
@@ -481,24 +849,56 @@ try:
         
         rules = spec.discontinuation_rules
         
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.markdown("**Poor Vision**")
-            st.metric("Threshold", f"< {rules['poor_vision_threshold']} letters")
-            st.metric("Probability", f"{rules['poor_vision_probability']*100:.0f}% per visit")
+        if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
+            # Editable discontinuation rules
+            st.caption("Conditions that trigger treatment discontinuation")
             
-        with col2:
-            st.markdown("**High Injection Count**")
-            st.metric("Threshold", f"> {rules['high_injection_count']} injections")
-            st.metric("Probability", f"{rules['high_injection_probability']*100:.0f}% per visit")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.markdown("**Poor Vision**")
+                pv_thresh = st.text_input("Threshold (letters)", value=str(rules['poor_vision_threshold']), key="edit_disc_pv_thresh")
+                st.caption(f"< {pv_thresh} letters" if pv_thresh.isdigit() else "Invalid")
+                pv_prob = st.text_input("Probability", value=f"{rules['poor_vision_probability']:.2f}", key="edit_disc_pv_prob")
+                st.caption(f"{float(pv_prob)*100:.0f}% per visit" if pv_prob.replace('.','').isdigit() else "Invalid")
+                
+            with col2:
+                st.markdown("**High Injection Count**")
+                hi_thresh = st.text_input("Threshold (count)", value=str(rules['high_injection_count']), key="edit_disc_hi_thresh")
+                st.caption(f"> {hi_thresh} injections" if hi_thresh.isdigit() else "Invalid")
+                hi_prob = st.text_input("Probability", value=f"{rules['high_injection_probability']:.2f}", key="edit_disc_hi_prob")
+                st.caption(f"{float(hi_prob)*100:.0f}% per visit" if hi_prob.replace('.','').isdigit() else "Invalid")
+                
+            with col3:
+                st.markdown("**Long Treatment**")
+                lt_thresh = st.text_input("Threshold (months)", value=str(rules['long_treatment_months']), key="edit_disc_lt_thresh")
+                st.caption(f"> {lt_thresh} months" if lt_thresh.isdigit() else "Invalid")
+                lt_prob = st.text_input("Probability", value=f"{rules['long_treatment_probability']:.2f}", key="edit_disc_lt_prob")
+                st.caption(f"{float(lt_prob)*100:.0f}% per visit" if lt_prob.replace('.','').isdigit() else "Invalid")
             
-        with col3:
-            st.markdown("**Long Treatment**")
-            st.metric("Threshold", f"> {rules['long_treatment_months']} months")
-            st.metric("Probability", f"{rules['long_treatment_probability']*100:.0f}% per visit")
-        
-        if 'discontinuation_types' in rules:
-            st.markdown("**Discontinuation Types:** " + ", ".join(rules['discontinuation_types']))
+            if 'discontinuation_types' in rules:
+                st.markdown("**Discontinuation Types**")
+                disc_types = st.text_area("Types (one per line)", value="\n".join(rules['discontinuation_types']), key="edit_disc_types", height=100)
+                st.caption("Enter discontinuation types, one per line")
+        else:
+            # Read-only display
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.markdown("**Poor Vision**")
+                st.metric("Threshold", f"< {rules['poor_vision_threshold']} letters")
+                st.metric("Probability", f"{rules['poor_vision_probability']*100:.0f}% per visit")
+                
+            with col2:
+                st.markdown("**High Injection Count**")
+                st.metric("Threshold", f"> {rules['high_injection_count']} injections")
+                st.metric("Probability", f"{rules['high_injection_probability']*100:.0f}% per visit")
+                
+            with col3:
+                st.markdown("**Long Treatment**")
+                st.metric("Threshold", f"> {rules['long_treatment_months']} months")
+                st.metric("Probability", f"{rules['long_treatment_probability']*100:.0f}% per visit")
+            
+            if 'discontinuation_types' in rules:
+                st.markdown("**Discontinuation Types:** " + ", ".join(rules['discontinuation_types']))
     
     # Subtle reminder for temp protocols
     if selected_file.parent == TEMP_DIR:

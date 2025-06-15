@@ -27,6 +27,7 @@ ICON_MAP = {
     'download': CarbonIcons.DOWNLOAD,
     'copy': CarbonIcons.COPY,
     'duplicate': CarbonIcons.COPY,
+    'edit': CarbonIcons.EDIT,
     'play': CarbonIcons.PLAY,
     'run': CarbonIcons.PLAY,
     'close': CarbonIcons.CLOSE,
