@@ -376,13 +376,11 @@ with col4:
                            help_text="Close import/export panel", 
                            full_width=True, button_type="ghost"):
             st.session_state.show_manage = False
-            st.rerun()
     else:
         if navigation_button("Import/Export", key="show_manage", 
                            help_text="Import or export simulations", 
                            full_width=True, button_type="secondary"):
             st.session_state.show_manage = True
-            st.rerun()
 
 # Show manage panel if toggled
 if st.session_state.get('show_manage', False):
