@@ -5,12 +5,14 @@ from typing import List, Optional, Tuple
 from ape.utils.carbon_button_helpers import navigation_button
 
 
-def workflow_progress_indicator(current_step: str, on_current_action: callable = None) -> None:
+def workflow_progress_indicator(current_step: str, on_current_action: callable = None, 
+                              has_results: bool = False) -> None:
     """Display a workflow progress indicator showing the current step.
     
     Args:
         current_step: The current step identifier ('home', 'protocol', 'simulation', 'analysis')
         on_current_action: Callback function to execute when current step button is clicked
+        has_results: Whether simulation results are available (enables Analysis navigation)
     """
     steps = [
         ('home', 'Home', 'APE.py', None),  # No icon
@@ -65,15 +67,28 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                         disabled=True
                     )
             else:
-                # Future step - use ghost Carbon button but disabled
-                navigation_button(
-                    display_label,
-                    icon_name=None,  # Disable auto-icon since we're using our own
-                    key=f"workflow_future_{step_id}",
-                    full_width=True,
-                    button_type="ghost",
-                    disabled=True
-                )
+                # Future step - check if it should be enabled
+                # Analysis button is enabled if we have results
+                if step_id == "analysis" and has_results:
+                    if navigation_button(
+                        display_label,
+                        icon_name=None,  # Disable auto-icon since we're using our own
+                        key=f"workflow_{step_id}",
+                        full_width=True,
+                        help_text="View analysis results",
+                        button_type="secondary"
+                    ):
+                        st.switch_page(page)
+                else:
+                    # Disabled future step
+                    navigation_button(
+                        display_label,
+                        icon_name=None,  # Disable auto-icon since we're using our own
+                        key=f"workflow_future_{step_id}",
+                        full_width=True,
+                        button_type="ghost",
+                        disabled=True
+                    )
     
     # Add a subtle line below
     st.markdown("---")

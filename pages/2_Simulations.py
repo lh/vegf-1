@@ -55,9 +55,6 @@ simulation_action_callback = None
 # Add placeholder for workflow indicator (will be populated after parameters are defined)
 workflow_placeholder = st.empty()
 
-# Add placeholder for action bar (will be populated after parameters are defined)
-action_bar_placeholder = st.empty()
-
 # Show memory usage in sidebar
 monitor = MemoryMonitor()
 monitor.display_in_sidebar()
@@ -222,19 +219,10 @@ def run_simulation():
     st.rerun()
 
 # Now populate the workflow indicator with the action callback
-with workflow_placeholder.container():
-    workflow_progress_indicator("simulation", on_current_action=run_simulation)
-
-# Now populate the action bar with the remaining buttons
 has_results = st.session_state.get('current_sim_id') is not None
-with action_bar_placeholder.container():
-    if has_results:
-        col1, col2 = st.columns([6, 1])
-        with col2:
-            if navigation_button("View Analysis", key="view_analysis_top", 
-                               help_text="Analyze simulation results", 
-                               full_width=True, button_type="secondary"):
-                st.switch_page("pages/3_Analysis.py")
+with workflow_placeholder.container():
+    workflow_progress_indicator("simulation", on_current_action=run_simulation, has_results=has_results)
+
 
 # Check if we should be running a simulation (after rerun)
 if st.session_state.get('simulation_running', False):
