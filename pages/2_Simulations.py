@@ -30,7 +30,7 @@ handle_page_startup("simulations")
 
 # Add parent for utils import
 from ape.utils.carbon_button_helpers import (
-    top_navigation_home_button, ape_button,
+    ape_button,
     navigation_button
 )
 

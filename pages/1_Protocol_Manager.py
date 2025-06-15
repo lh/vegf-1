@@ -166,19 +166,14 @@ st.markdown("""
 
 # Add parent for utils import
 from ape.utils.carbon_button_helpers import (
-    top_navigation_home_button, ape_button, delete_button,
+    ape_button, delete_button,
     navigation_button
 )
 
 
-# Top navigation
-col1, col2, col3 = st.columns([1, 6, 1])
-with col1:
-    if top_navigation_home_button():
-        st.switch_page("APE.py")
-with col2:
-    st.title("Protocol Manager")
-    st.markdown("Browse, view, and validate treatment protocol specifications.")
+# Page title
+st.title("Protocol Manager")
+st.markdown("Browse, view, and validate treatment protocol specifications.")
 
 # Protocol directory - use parent directory path
 PROTOCOL_DIR = Path(__file__).parent.parent / "protocols" / "v2"
