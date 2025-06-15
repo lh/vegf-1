@@ -7,6 +7,10 @@ from pathlib import Path
 from datetime import datetime
 import time
 import threading
+import logging
+
+# Suppress Streamlit thread context warnings
+logging.getLogger('streamlit.runtime.scriptrunner_utils.script_run_context').setLevel(logging.ERROR)
 
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
 from ape.core.simulation_runner import SimulationRunner
@@ -332,15 +336,19 @@ if st.session_state.get('simulation_running', False):
         
         def update_progress():
             """Update progress bar smoothly based on estimated time."""
-            from streamlit.runtime.scriptrunner import get_script_run_ctx
+            import streamlit.runtime.scriptrunner as scriptrunner
             
             while not progress_stop_event.is_set() and not simulation_complete:
-                # Check if we still have a valid Streamlit context
-                if get_script_run_ctx() is None:
-                    # No context - exit gracefully without errors
-                    break
+                # Double-check we still have context before any Streamlit operations
+                ctx = scriptrunner.get_script_run_ctx()
+                if ctx is None:
+                    # No context - exit silently
+                    return
                     
                 try:
+                    # Add the context to this thread
+                    scriptrunner.add_script_run_ctx(threading.current_thread(), ctx)
+                    
                     elapsed = time.time() - start_time
                     # Progress from 10% to 85% during simulation
                     progress = min(0.85, 0.10 + (elapsed / estimated_runtime) * 0.75)
@@ -351,9 +359,15 @@ if st.session_state.get('simulation_running', False):
                         status_text.caption(f"Running... {elapsed:.0f}s")
                     else:
                         status_text.caption(f"Running... {elapsed/60:.1f}m")
-                except:
-                    # Any other error - exit gracefully
-                    break
+                except Exception:
+                    # Any error including context issues - exit silently
+                    return
+                finally:
+                    # Clean up context
+                    try:
+                        scriptrunner.add_script_run_ctx(threading.current_thread(), None)
+                    except:
+                        pass
                 
                 time.sleep(0.1)  # Update every 100ms
         
