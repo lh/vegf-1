@@ -677,22 +677,45 @@ For support, please refer to APE documentation.
             # 2. Extract original memorable name (if available)
             original_memorable_name = metadata_row.get('memorable_name', '')
             
-            # Generate a new memorable name for the imported simulation
-            try:
-                from haikunator import Haikunator
-                haikunator = Haikunator()
-                
-                # Generate unique name - add "imported" adjective to make it clear
-                max_attempts = 10
-                for _ in range(max_attempts):
-                    new_memorable_name = haikunator.haikunate(token_length=0, delimiter='-')
-                    # Prefix with "imported" to distinguish from original simulations
-                    new_memorable_name = f"imported-{new_memorable_name}"
-                    break
-                    
-            except ImportError:
-                # Fallback to using original name with imported prefix
-                new_memorable_name = f"imported-{original_memorable_name}" if original_memorable_name else "imported-sim"
+            # Always add imported- prefix to distinguish imported simulations
+            # But also check for name clashes and add numeric suffix if needed
+            from ape.core.results.factory import ResultsFactory
+            
+            # Get all existing memorable names
+            existing_names = set()
+            if ResultsFactory.DEFAULT_RESULTS_DIR.exists():
+                for sim_dir in ResultsFactory.DEFAULT_RESULTS_DIR.iterdir():
+                    if sim_dir.is_dir():
+                        metadata_path = sim_dir / "metadata.json"
+                        if metadata_path.exists():
+                            try:
+                                with open(metadata_path) as f:
+                                    existing_metadata = json.load(f)
+                                    if 'memorable_name' in existing_metadata:
+                                        existing_names.add(existing_metadata['memorable_name'])
+                            except:
+                                pass
+            
+            # Base name for the imported simulation
+            if original_memorable_name:
+                # Preserve original name but add imported- prefix
+                base_name = f"imported-{original_memorable_name}"
+            else:
+                # No original name - generate a new one with imported- prefix
+                try:
+                    from haikunator import Haikunator
+                    haikunator = Haikunator()
+                    base_name = f"imported-{haikunator.haikunate(token_length=0, delimiter='-')}"
+                except ImportError:
+                    # Fallback if haikunator not available
+                    base_name = "imported-simulation"
+            
+            # Check for name clashes and add suffix if needed
+            new_memorable_name = base_name
+            suffix = 1
+            while new_memorable_name in existing_names:
+                new_memorable_name = f"{base_name}-{suffix}"
+                suffix += 1
             
             # Parse original sim_id to extract timestamp and duration
             original_sim_id = metadata_row['sim_id']

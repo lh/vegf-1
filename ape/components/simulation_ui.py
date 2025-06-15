@@ -295,14 +295,15 @@ def render_recent_simulations():
                             metadata = json.load(f)
                         
                         # Extract key info
+                        memorable_name = metadata.get('memorable_name', '')
                         sim_info = {
                             'id': sim_dir.name,
                             'timestamp': metadata.get('timestamp', 'Unknown'),
                             'patients': metadata.get('n_patients', 0),
                             'duration': metadata.get('duration_years', 0),
                             'protocol': metadata.get('protocol_name', 'Unknown'),
-                            'is_imported': sim_dir.name.startswith('imported_'),
-                            'memorable_name': metadata.get('memorable_name', '')
+                            'is_imported': memorable_name.startswith('imported-') if memorable_name else False,
+                            'memorable_name': memorable_name
                         }
                         simulations.append(sim_info)
                 except:
@@ -329,38 +330,27 @@ def render_simulation_card(sim: Dict[str, Any]):
     """Render a single simulation card"""
     # Card styling
     is_selected = st.session_state.get('current_sim_id') == sim['id']
-    is_imported = sim['is_imported'] or sim['id'] in st.session_state.get('imported_simulations', set())
+    # Check if simulation is imported based on memorable_name prefix
+    is_imported = sim['is_imported']  # This is already determined from memorable_name in the metadata
     
-    # Use Streamlit native components instead of HTML for imported simulations
-    # to avoid any rendering issues
+    # Use Streamlit native components for all simulations for consistent rendering
     with st.container():
+        # Protocol name
+        st.markdown(f"**{sim['protocol']}**")
+        
+        # Memorable name (if available)
+        if sim.get('memorable_name'):
+            st.caption(f"_{sim['memorable_name']}_")
+        
+        # Simulation details
+        st.caption(f"{sim['patients']:,} patients • {sim['duration']} years")
+        
+        # Timestamp
+        st.caption(format_timestamp(sim['timestamp']))
+        
+        # Imported badge (if applicable)
         if is_imported:
-            # Special styling for imported simulations using native Streamlit
-            st.markdown(f"**{sim['protocol']}**")
-            if sim.get('memorable_name'):
-                st.caption(f"_{sim['memorable_name']}_")
-            st.caption(f"{sim['patients']:,} patients • {sim['duration']} years")
-            st.caption(format_timestamp(sim['timestamp']))
             st.caption("🔵 **IMPORTED**")
-        else:
-            # Regular HTML rendering for non-imported simulations
-            card_style = "border: 2px solid #0F62FE;" if is_selected else "border: 1px solid #ddd;"
-            
-            memorable_name = str(sim.get('memorable_name', ''))
-            memorable_display = f'<p style="margin: 0; font-size: 0.95rem; color: #0F62FE; font-style: italic;">{memorable_name}</p>' if memorable_name else ""
-            
-            st.markdown(f"""
-            <div style="padding: 1rem; {card_style} border-radius: 8px; margin-bottom: 1rem;">
-                <h5 style="margin: 0 0 0.5rem 0;">{sim['protocol']}</h5>
-                {memorable_display}
-                <p style="margin: 0; font-size: 0.9rem; color: #666;">
-                    {sim['patients']:,} patients • {sim['duration']} years
-                </p>
-                <p style="margin: 0; font-size: 0.8rem; color: #999;">
-                    {format_timestamp(sim['timestamp'])}
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
         
         if ape_button(
             "Select" if not is_selected else "Selected ✓",
