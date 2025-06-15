@@ -81,15 +81,27 @@ The protocol files define discontinuation types (planned, adverse, ineffective) 
 
 ### Baseline Vision Distribution
 Current protocols assume normal distribution for baseline vision, but UK data (2,029 patients) shows:
-- **Actual mean**: 58.36 letters (not 70)
-- **Best fit**: Beta distribution (not normal)
+- **Actual mean**: 58.36 letters (not 70) at first treatment
+- **Best fit**: Beta distribution (not normal) with threshold effect
 - **Negative skew**: -0.72 due to NICE treatment threshold at 70 letters
 - **51.6% of patients** present in the 51-70 letter range
+- **20.4% measure >70** at first treatment despite all qualifying ≤70 at funding
+
+Key insight: The baseline vision data is from **first treatment**, not funding decision:
+- All patients qualified with ≤70 letters for funding
+- Measurement variability (±5 letters) causes some to measure >70 at treatment
+- Regression to mean effects
+- Time delays between funding and treatment
+- Possible measurement bias at funding assessment
 
 Should update:
 1. Protocol baseline vision parameters to reflect actual UK data
-2. Sampling method to use Beta distribution instead of truncated normal
+2. Implement Beta distribution with threshold effect:
+   - Natural disease progression: Beta(α=3.5, β=2.0) on [5,98]
+   - 60% reduction in density above 70 (funding filter effect)
+   - Add measurement noise to model funding→treatment variability
 3. Default mean from 70 to 58.36 letters
+4. Consider modeling the funding decision → first treatment process explicitly
 
 ---
 
