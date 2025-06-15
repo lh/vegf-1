@@ -95,7 +95,7 @@ with st.sidebar:
 if 'preset_initialized' not in st.session_state:
     st.session_state.preset_initialized = True
     st.session_state.preset_patients = 500
-    st.session_state.preset_duration = 3.0
+    st.session_state.preset_duration = 3
     st.session_state.recruitment_mode = "Fixed Total"
 
 # Check if we're in quick start mode from Protocol Manager
@@ -162,7 +162,7 @@ if selected_preset:
     if selected_preset == 'rate':
         st.session_state.recruitment_rate = 80.0
         st.session_state.rate_unit = "per month"
-        st.session_state.preset_duration = 5.0
+        st.session_state.preset_duration = 5
         st.session_state.recruitment_mode = "Constant Rate"
     else:
         preset = presets[selected_preset]

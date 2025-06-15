@@ -99,11 +99,10 @@ def render_recruitment_parameters() -> Dict[str, Any]:
     with col3:
         duration_years = st.number_input(
             "Years",
-            min_value=0.5,
-            max_value=20.0,
-            value=stored_duration,
-            step=0.5,
-            format="%.1f",
+            min_value=1,
+            max_value=20,
+            value=int(stored_duration),
+            step=1,
             help="Simulation duration in years",
             key="duration_input"
         )
@@ -183,7 +182,7 @@ def render_preset_buttons_v2():
         if st.button("Small Trial", key="preset_small_v2", use_container_width=True,
                      help="100 patients over 2 years"):
             st.session_state.preset_patients = 100
-            st.session_state.preset_duration = 2.0
+            st.session_state.preset_duration = 2
             st.session_state.recruitment_mode = "Fixed Total"
             st.rerun()
     
@@ -191,7 +190,7 @@ def render_preset_buttons_v2():
         if st.button("Medium Trial", key="preset_medium_v2", use_container_width=True,
                      help="500 patients over 3 years"):
             st.session_state.preset_patients = 500
-            st.session_state.preset_duration = 3.0
+            st.session_state.preset_duration = 3
             st.session_state.recruitment_mode = "Fixed Total"
             st.rerun()
     
@@ -199,7 +198,7 @@ def render_preset_buttons_v2():
         if st.button("Large Trial", key="preset_large_v2", use_container_width=True,
                      help="2000 patients over 5 years"):
             st.session_state.preset_patients = 2000
-            st.session_state.preset_duration = 5.0
+            st.session_state.preset_duration = 5
             st.session_state.recruitment_mode = "Fixed Total"
             st.rerun()
     
