@@ -2,6 +2,7 @@
 
 import streamlit as st
 from typing import List, Optional, Tuple
+from ape.utils.carbon_button_helpers import navigation_button
 
 
 def workflow_progress_indicator(current_step: str) -> None:
@@ -26,46 +27,32 @@ def workflow_progress_indicator(current_step: str) -> None:
     for idx, (col, (step_id, label, page)) in enumerate(zip(cols, steps)):
         with col:
             if idx < current_idx:
-                # Completed step - clickable
-                if st.button(
+                # Completed step - clickable with ghost Carbon button
+                if navigation_button(
                     label,
                     key=f"workflow_{step_id}",
-                    use_container_width=True,
-                    help="Click to go back"
+                    full_width=True,
+                    help_text="Click to go back",
+                    button_type="ghost"
                 ):
                     st.switch_page(page)
             elif idx == current_idx:
-                # Current step - highlighted but not clickable
-                st.markdown(
-                    f"""
-                    <div style="
-                        background-color: #0066CC;
-                        color: white;
-                        padding: 0.5rem;
-                        border-radius: 0.25rem;
-                        text-align: center;
-                        font-weight: bold;
-                    ">
-                        {label}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+                # Current step - use primary Carbon button (but disabled)
+                navigation_button(
+                    label,
+                    key=f"workflow_current_{step_id}",
+                    full_width=True,
+                    button_type="primary",
+                    disabled=True
                 )
             else:
-                # Future step - grayed out
-                st.markdown(
-                    f"""
-                    <div style="
-                        background-color: #f0f0f0;
-                        color: #999;
-                        padding: 0.5rem;
-                        border-radius: 0.25rem;
-                        text-align: center;
-                    ">
-                        {label}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+                # Future step - use ghost Carbon button but disabled
+                navigation_button(
+                    label,
+                    key=f"workflow_future_{step_id}",
+                    full_width=True,
+                    button_type="ghost",
+                    disabled=True
                 )
     
     # Add a subtle line below
