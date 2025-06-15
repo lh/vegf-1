@@ -3,6 +3,7 @@
 import streamlit as st
 from typing import Tuple, Dict, Any
 import numpy as np
+from ape.utils.carbon_button_helpers import ape_button
 
 def render_recruitment_parameters() -> Dict[str, Any]:
     """
@@ -121,15 +122,15 @@ def render_recruitment_parameters() -> Dict[str, Any]:
                 min_value=0,
                 max_value=999999,
                 value=st.session_state.get('seed', 42),
-                help="For reproducible results",
+                help="For reproducible results - click the small button to randomise",
                 key="seed_input"
             )
             st.session_state.seed = seed
         
         with seed_col2:
-            # Add spacing to align button with input - matches label height
-            st.markdown("<div style='height: 21px;'></div>", unsafe_allow_html=True)
-            if st.button("⟳", key="randomize_seed", help="Generate random seed", use_container_width=True):
+            # Use precise 26px spacing to match number_input label height
+            st.markdown('<div style="height: 26px"></div>', unsafe_allow_html=True)
+            if st.button("", key="randomize_seed", help="Generate random seed"):
                 import random
                 st.session_state.seed = random.randint(0, 999999)
                 st.rerun()
