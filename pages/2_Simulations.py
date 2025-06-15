@@ -370,13 +370,12 @@ if st.session_state.get('simulation_running', False):
 st.markdown("---")
 col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
 with col4:
-    # Use a regular Streamlit button for now to avoid Carbon button issues
-    if st.session_state.get('show_manage', False):
-        if st.button("Close Import/Export", key="close_manage", use_container_width=True):
-            st.session_state.show_manage = False
-    else:
-        if st.button("Import/Export", key="show_manage", use_container_width=True):
-            st.session_state.show_manage = True
+    # Toggle button for manage panel - just like in main, no rerun
+    if ape_button("Import/Export", 
+                  key="toggle_import_export",
+                  full_width=True,
+                  icon="save"):
+        st.session_state.show_manage = not st.session_state.get('show_manage', False)
 
 # Show manage panel if toggled
 if st.session_state.get('show_manage', False):

@@ -94,7 +94,7 @@ def render_manage_section():
     """Render the manage section UI (1/4 width)"""
     # Upload section first
     uploaded_file = st.file_uploader(
-        "",
+        "Upload",
         type=['zip'],
         label_visibility="collapsed",
         help="Upload a simulation package (.zip)"
