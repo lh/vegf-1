@@ -96,12 +96,13 @@ if not protocol_files:
 if temp_files:
     st.info("Temporary protocols are cleared hourly. Download any you want to keep.")
 
-# Protocol Management Bar
+# Protocol selection and management
+st.subheader("Select Protocol")
+
+# Main layout with selectbox and action buttons
 col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
 
 with col1:
-    st.subheader("Select Protocol")
-    
     # Format function to show default vs temp
     def format_protocol(file):
         name = file.stem
@@ -109,7 +110,7 @@ with col1:
             return f"{name} (temporary)"
         else:
             return f"{name}"
-    
+
     # Try to maintain selection across reruns
     if 'selected_protocol_name' in st.session_state:
         # Find the file that matches the stored name
@@ -120,7 +121,7 @@ with col1:
                 break
     else:
         default_index = 0
-    
+
     selected_file = st.selectbox(
         "Available Protocols",
         protocol_files,
@@ -129,18 +130,37 @@ with col1:
         index=default_index,
         key="protocol_selector"
     )
-    
+
     # Store the selection for persistence
     if selected_file:
         st.session_state.selected_protocol_name = selected_file.stem
 
 with col2:
-    # Single Manage button for upload/download (using save/floppy disk icon)
-    if ape_button("Manage", key="manage_btn", icon="save", full_width=True):
+    if ape_button("Import/Export", 
+                  key="toggle_import_export",
+                  full_width=True,
+                  icon="save"):
         st.session_state.show_manage = not st.session_state.get('show_manage', False)
-    
-    if st.session_state.get('show_manage', False):
-        with st.container():
+
+with col3:
+    # Create a copy with a new name
+    if ape_button("Duplicate", key="duplicate_btn", icon="copy", full_width=True):
+        st.session_state.show_duplicate = not st.session_state.get('show_duplicate', False)
+
+with col4:
+    # Delete protocol (only temporary ones)
+    if selected_file and selected_file.parent == TEMP_DIR:
+        if delete_button(key="delete_btn", full_width=True):
+            st.session_state.show_delete = not st.session_state.get('show_delete', False)
+    else:
+        # For default protocols, just leave an empty space
+        st.empty()
+
+# Show manage panel if toggled
+if st.session_state.get('show_manage', False):
+    # Make the manage section 1/4 width by using columns
+    manage_cols = st.columns([3, 1])  # 3:1 ratio gives us the rightmost quarter
+    with manage_cols[1]:
             # Upload section
             uploaded_file = st.file_uploader(
                 "",
@@ -229,18 +249,13 @@ with col2:
                 except:
                     pass  # If spec can't be loaded, just don't show download
 
-with col3:
-    # Create a copy with a new name
-    if ape_button("Duplicate", key="duplicate_btn", icon="copy", full_width=True):
-        st.session_state.show_duplicate = not st.session_state.get('show_duplicate', False)
-    
-    # Use session state to control popover visibility
-    if st.session_state.get('duplicate_success', False):
-        st.success("Duplicate created successfully!")
-        # Clear the flag after showing
-        st.session_state.duplicate_success = False
-    
-    if st.session_state.get('show_duplicate', False):
+# Handle duplicate dialog
+if st.session_state.get('duplicate_success', False):
+    st.success("Duplicate created successfully!")
+    # Clear the flag after showing
+    st.session_state.duplicate_success = False
+
+if st.session_state.get('show_duplicate', False):
         with st.expander("Duplicate Protocol", expanded=True):
             st.info("Create a copy of this protocol with a new name")
             
@@ -308,13 +323,8 @@ with col3:
                     # Clear the flag on error too
                     st.session_state.creating_duplicate = False
 
-with col4:
-    # Delete protocol (only temporary ones)
-    if selected_file and selected_file.parent == TEMP_DIR:
-        if delete_button(key="delete_btn", full_width=True):
-            st.session_state.show_delete = not st.session_state.get('show_delete', False)
-        
-        if st.session_state.get('show_delete', False):
+# Handle delete dialog
+if st.session_state.get('show_delete', False):
             with st.expander("Delete Protocol", expanded=True):
                 # Check if file still exists
                 if not selected_file.exists():
@@ -348,9 +358,6 @@ with col4:
                             st.rerun()
                         except Exception as e:
                             st.error(f"Failed to delete: {e}")
-    else:
-        # For default protocols, just leave an empty space
-        st.empty()
 
 # Import simulation package section
 st.markdown("---")
