@@ -103,8 +103,14 @@ Should update:
 3. Default mean from 70 to 58.36 letters
 4. Consider modeling the funding decision → first treatment process explicitly
 
+### UI/UX Improvements
+- **Tab persistence**: When clicking Edit/Save in Protocol Manager, the page resets to first tab
+  - Streamlit limitation: no native tab state persistence
+  - Consider workarounds: query parameters, custom JavaScript, or wait for Streamlit feature
+  - Low priority but affects user experience during protocol editing
+
 ---
 
 **Created**: 2025-06-15  
 **Status**: To be addressed  
-**Priority**: High - affects simulation validity
+**Priority**: High - affects simulation validity (except UI items which are low priority)
