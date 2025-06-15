@@ -78,7 +78,7 @@ if 'run_simulation_action' not in st.session_state:
 
 # Show workflow progress at the top with the action callback
 has_results = st.session_state.get('current_sim_id') is not None
-workflow_progress_indicator("simulation", on_current_action=st.session_state.run_simulation_action, has_results=has_results)
+workflow_progress_indicator("simulation", on_current_action=st.session_state.get('run_simulation_action'), has_results=has_results)
 
 # Don't display protocol separately - it will be shown in the quick start box
 
