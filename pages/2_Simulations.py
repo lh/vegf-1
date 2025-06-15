@@ -94,14 +94,18 @@ if not st.session_state.get('current_protocol'):
 protocol_info = st.session_state.current_protocol
 st.caption(f"Protocol: **{protocol_info['name']}** v{protocol_info['version']}")
 
-# Check if we're in quick start mode
-if st.session_state.get('quick_start_mode', False):
-    # Automatically select Medium Trial preset
+# Check if we're in quick start mode or if no preset has been selected yet
+if st.session_state.get('quick_start_mode', False) or (
+    'preset_patients' not in st.session_state and 
+    'recruitment_rate' not in st.session_state
+):
+    # Automatically select Default preset
     st.session_state.preset_patients = 500
     st.session_state.preset_duration = 3.0
     st.session_state.recruitment_mode = "Fixed Total"
-    st.session_state.quick_start_mode = False  # Reset flag
-    st.rerun()
+    if 'quick_start_mode' in st.session_state:
+        st.session_state.quick_start_mode = False  # Reset flag
+    # Don't rerun - just set the defaults
 
 # Define presets for Quick Start box
 presets = {
