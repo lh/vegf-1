@@ -90,10 +90,6 @@ with st.sidebar:
         st.session_state['check_memory_limits'] = True
         st.info("Memory limits enforced (Streamlit Cloud)")
     
-    # Debug info in expander
-    with st.expander("Environment Info", expanded=False):
-        st.text(f"Environment: {'Cloud' if is_streamlit_cloud() else 'Local'}")
-        st.text(f"Memory checking: {'On' if st.session_state.get('check_memory_limits', should_check_memory_limits()) else 'Off'}")
 
 # Initialize with default preset if this is the first time on the page
 if 'preset_initialized' not in st.session_state:
