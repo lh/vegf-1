@@ -156,7 +156,7 @@ if selected_preset:
         st.session_state.preset_patients = preset['patients']
         st.session_state.preset_duration = preset['duration']
         st.session_state.recruitment_mode = "Fixed Total"
-    st.rerun()
+    # No st.rerun() - let Streamlit handle it naturally!
 
 # Get parameters - always need them for running simulation
 engine_type, recruitment_params, seed = render_enhanced_parameter_inputs()
