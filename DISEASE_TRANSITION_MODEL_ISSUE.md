@@ -79,6 +79,18 @@ The protocol files define discontinuation types (planned, adverse, ineffective) 
   - Ineffective treatment might trigger protocol changes
   - Planned discontinuations might allow retreatment after a period
 
+### Baseline Vision Distribution
+Current protocols assume normal distribution for baseline vision, but UK data (2,029 patients) shows:
+- **Actual mean**: 58.36 letters (not 70)
+- **Best fit**: Beta distribution (not normal)
+- **Negative skew**: -0.72 due to NICE treatment threshold at 70 letters
+- **51.6% of patients** present in the 51-70 letter range
+
+Should update:
+1. Protocol baseline vision parameters to reflect actual UK data
+2. Sampling method to use Beta distribution instead of truncated normal
+3. Default mean from 70 to 58.36 letters
+
 ---
 
 **Created**: 2025-06-15  

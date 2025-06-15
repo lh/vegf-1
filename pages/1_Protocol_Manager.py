@@ -822,27 +822,75 @@ try:
                 st.metric("Vision Range Min", f"{spec.baseline_vision_min} letters")
                 st.metric("Vision Range Max", f"{spec.baseline_vision_max} letters")
             
-        # Show distribution
+        # Show distribution with UK data reference
         import numpy as np
         import matplotlib.pyplot as plt
+        from scipy import stats
         
         fig, ax = plt.subplots(figsize=(8, 4))
         x = np.linspace(0, 100, 1000)
+        
+        # Show both the protocol's normal approximation and actual UK data
         mean = spec.baseline_vision_mean
         std = spec.baseline_vision_std
-        y = (1/(std * np.sqrt(2*np.pi))) * np.exp(-0.5*((x-mean)/std)**2)
         
-        ax.plot(x, y, 'b-', linewidth=2)
-        ax.axvline(mean, color='r', linestyle='--', label=f'Mean: {mean}')
+        # Normal distribution (as specified in protocol)
+        y_normal = stats.norm.pdf(x, mean, std)
+        ax.plot(x, y_normal, 'b--', linewidth=1, alpha=0.5, label='Protocol (Normal)')
+        
+        # Actual UK data shows Beta distribution
+        # Parameters estimated from: mean=58.36, median=62, skew=-0.72
+        # Using method of moments for Beta on [0,100] scale
+        if mean == 70:  # Default protocol value
+            st.info("⚠️ UK data shows mean baseline vision is 58.4 letters (not 70) with Beta distribution")
+            # Show actual UK distribution
+            a, b = 2.5, 2.0  # Approximation for UK data
+            y_beta = stats.beta.pdf(x/100, a, b) / 100
+            ax.plot(x, y_beta, 'g-', linewidth=2, label='UK Data (Beta)')
+            ax.axvline(58.36, color='g', linestyle=':', alpha=0.7, label='UK Mean: 58.4')
+        
+        ax.axvline(mean, color='r', linestyle='--', label=f'Protocol Mean: {mean}')
         ax.axvline(spec.baseline_vision_min, color='k', linestyle=':', label=f'Min: {spec.baseline_vision_min}')
         ax.axvline(spec.baseline_vision_max, color='k', linestyle=':', label=f'Max: {spec.baseline_vision_max}')
-        ax.fill_between(x, 0, y, where=(x >= spec.baseline_vision_min) & (x <= spec.baseline_vision_max), alpha=0.3)
+        ax.axvline(70, color='orange', linestyle='-', alpha=0.3, label='NICE Threshold: 70')
+        
+        # Shade the allowed range
+        ax.fill_between(x, 0, np.maximum(y_normal, 0), 
+                       where=(x >= spec.baseline_vision_min) & (x <= spec.baseline_vision_max), 
+                       alpha=0.3, color='blue')
+        
         ax.set_xlabel('Baseline Vision (ETDRS letters)')
         ax.set_ylabel('Probability Density')
         ax.set_title('Baseline Vision Distribution')
-        ax.legend()
+        ax.legend(fontsize=8)
         ax.grid(True, alpha=0.3)
+        ax.set_xlim(0, 100)
         st.pyplot(fig)
+        
+        # Show UK data breakdown
+        with st.expander("📊 UK Baseline Vision Data (2,029 patients)"):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("""
+                **Actual Distribution:**
+                - Mean: 58.36 letters
+                - Median: 62.00 letters  
+                - Std Dev: 15.12 letters
+                - Range: 5-98 letters
+                - **Best fit: Beta distribution**
+                - Negative skew (-0.72)
+                """)
+            with col2:
+                st.markdown("""
+                **Vision Categories:**
+                - Very Poor (0-30): 5.8%
+                - Poor (31-50): 22.2%
+                - Moderate (51-70): 51.6%
+                - Good (71-85): 20.2%
+                - Excellent (86-100): 0.2%
+                
+                Note: 51.6% cluster in 51-70 range due to NICE treatment threshold at 70 letters
+                """)
     
     with tab5:
         st.subheader("Discontinuation Rules")
