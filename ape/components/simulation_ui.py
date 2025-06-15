@@ -256,12 +256,32 @@ def render_control_buttons(has_results: bool) -> Tuple[bool, bool, bool, bool]:
 
 def render_recent_simulations():
     """Render the recent simulations section"""
-    st.header("Recent")
+    # Create header with Import/Export button on the right
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.header("Recent")
+    with col2:
+        # Import button aligned with header
+        st.write("")  # Spacer to align with header
+        from ape.utils.carbon_button_helpers import ape_button
+        if ape_button("Import/Export", 
+                      key="toggle_import_export",
+                      full_width=True,
+                      icon="save"):
+            st.session_state.show_manage = not st.session_state.get('show_manage', False)
+    
+    # Show manage panel if toggled
+    if st.session_state.get('show_manage', False):
+        # Make the manage section 1/4 width by using columns
+        manage_cols = st.columns([3, 1])  # 3:1 ratio gives us the rightmost quarter
+        with manage_cols[1]:
+            from ape.components.simulation_io import render_manage_section
+            render_manage_section()
 
     results_dir = ResultsFactory.DEFAULT_RESULTS_DIR
     if results_dir.exists():
         sim_dirs = sorted([d for d in results_dir.iterdir() if d.is_dir()], 
-                         key=lambda x: x.name, reverse=True)[:10]  # Show last 10
+                         key=lambda x: x.stat().st_mtime, reverse=True)[:10]  # Show last 10 by modification time
         
         if sim_dirs:
             # Create a list of simulations with metadata
@@ -311,28 +331,36 @@ def render_simulation_card(sim: Dict[str, Any]):
     is_selected = st.session_state.get('current_sim_id') == sim['id']
     is_imported = sim['is_imported'] or sim['id'] in st.session_state.get('imported_simulations', set())
     
-    # Create card with conditional styling
-    card_style = "border: 2px solid #0F62FE;" if is_selected else "border: 1px solid #ddd;"
-    if is_imported:
-        card_style += " background-color: #f0f7ff;"
-    
+    # Use Streamlit native components instead of HTML for imported simulations
+    # to avoid any rendering issues
     with st.container():
-        # Display memorable name if available
-        memorable_display = f'<p style="margin: 0; font-size: 0.95rem; color: #0F62FE; font-style: italic;">{sim["memorable_name"]}</p>' if sim.get("memorable_name") else ""
-        
-        st.markdown(f"""
-        <div style="padding: 1rem; {card_style} border-radius: 8px; margin-bottom: 1rem;">
-            <h5 style="margin: 0 0 0.5rem 0;">{sim['protocol']}</h5>
-            {memorable_display}
-            <p style="margin: 0; font-size: 0.9rem; color: #666;">
-                {sim['patients']:,} patients • {sim['duration']} years
-            </p>
-            <p style="margin: 0; font-size: 0.8rem; color: #999;">
-                {format_timestamp(sim['timestamp'])}
-            </p>
-            {f'<span style="background: #0F62FE; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">IMPORTED</span>' if is_imported else ''}
-        </div>
-        """, unsafe_allow_html=True)
+        if is_imported:
+            # Special styling for imported simulations using native Streamlit
+            st.markdown(f"**{sim['protocol']}**")
+            if sim.get('memorable_name'):
+                st.caption(f"_{sim['memorable_name']}_")
+            st.caption(f"{sim['patients']:,} patients • {sim['duration']} years")
+            st.caption(format_timestamp(sim['timestamp']))
+            st.caption("🔵 **IMPORTED**")
+        else:
+            # Regular HTML rendering for non-imported simulations
+            card_style = "border: 2px solid #0F62FE;" if is_selected else "border: 1px solid #ddd;"
+            
+            memorable_name = str(sim.get('memorable_name', ''))
+            memorable_display = f'<p style="margin: 0; font-size: 0.95rem; color: #0F62FE; font-style: italic;">{memorable_name}</p>' if memorable_name else ""
+            
+            st.markdown(f"""
+            <div style="padding: 1rem; {card_style} border-radius: 8px; margin-bottom: 1rem;">
+                <h5 style="margin: 0 0 0.5rem 0;">{sim['protocol']}</h5>
+                {memorable_display}
+                <p style="margin: 0; font-size: 0.9rem; color: #666;">
+                    {sim['patients']:,} patients • {sim['duration']} years
+                </p>
+                <p style="margin: 0; font-size: 0.8rem; color: #999;">
+                    {format_timestamp(sim['timestamp'])}
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
         
         if ape_button(
             "Select" if not is_selected else "Selected ✓",

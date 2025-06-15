@@ -66,6 +66,11 @@ def handle_import(uploaded_file) -> bool:
             metadata_dict = imported_results.metadata.to_dict()
             registry.register_simulation(sim_id, metadata_dict, size_mb)
             
+            # Touch the directory to update its modification time
+            # This ensures it appears at the top of the "Recent" list
+            import os
+            os.utime(sim_path, None)  # Updates access and modification time to current time
+            
             # Load the imported simulation
             if load_simulation_results(sim_id):
                 # Mark as imported
@@ -92,20 +97,22 @@ def handle_import(uploaded_file) -> bool:
 
 def render_manage_section():
     """Render the manage section UI (1/4 width)"""
-    # Upload section first
+    # Import section first
+    st.markdown("**Import**")
     uploaded_file = st.file_uploader(
-        "Upload",
+        "Import simulation",
         type=['zip'],
         label_visibility="collapsed",
-        help="Upload a simulation package (.zip)"
+        help="Import a simulation package (.zip)"
     )
     
     if uploaded_file is not None:
         if handle_import(uploaded_file):
             st.rerun()
     
-    # Download section - only show if simulation is selected
+    # Export section - only show if simulation is selected
     if st.session_state.get('current_sim_id'):
+        st.markdown("**Export**")
         sim_id = st.session_state.get('current_sim_id')
         # Check if simulation exists
         results_path = ResultsFactory.DEFAULT_RESULTS_DIR / sim_id
@@ -122,14 +129,14 @@ def render_manage_section():
             
             st.markdown(f"<small style='color: #666;'>Current: {display_text}</small>", unsafe_allow_html=True)
             
-            # Carbon-styled download button
+            # Export button
             package_data = create_export_package(sim_id)
             if package_data:
                 st.download_button(
-                    label="Download",
+                    label="Export",
                     data=package_data,
                     file_name=f"APE_{sim_id}.zip",
                     mime="application/zip",
                     use_container_width=True,
-                    help="Download simulation as portable package"
+                    help="Export simulation as portable package"
                 )

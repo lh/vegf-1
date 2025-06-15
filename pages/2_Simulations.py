@@ -5,6 +5,8 @@ Simulations - Run new simulations and manage existing ones.
 import streamlit as st
 from pathlib import Path
 from datetime import datetime
+import time
+import threading
 
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
 from ape.core.simulation_runner import SimulationRunner
@@ -49,14 +51,20 @@ from ape.components.simulation_ui_v2 import (
     calculate_runtime_estimate_v2
 )
 
-# Define callback for simulation action (will be properly set after parameters are defined)
-simulation_action_callback = None
+# Check if protocol is loaded first - do this early to avoid unnecessary rendering
+if not st.session_state.get('current_protocol'):
+    st.info("Select a protocol first to run a simulation.")
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if navigation_button("Go to Protocol Manager", key="nav_protocol_missing", 
+                           full_width=True, is_primary_action=True):
+            st.switch_page("pages/1_Protocol_Manager.py")
+    st.stop()
 
-# Add placeholder for workflow indicator (will be populated after parameters are defined)
-workflow_placeholder = st.empty()
+# Protocol is loaded, get info
+protocol_info = st.session_state.current_protocol
 
-# Add placeholder for progress bar right below workflow
-progress_placeholder = st.empty()
+# Don't display protocol separately - it will be shown in the quick start box
 
 # Show memory usage in sidebar
 monitor = MemoryMonitor()
@@ -82,20 +90,6 @@ with st.sidebar:
     with st.expander("Environment Info", expanded=False):
         st.text(f"Environment: {'Cloud' if is_streamlit_cloud() else 'Local'}")
         st.text(f"Memory checking: {'On' if st.session_state.get('check_memory_limits', should_check_memory_limits()) else 'Off'}")
-
-# Check if protocol is loaded first
-if not st.session_state.get('current_protocol'):
-    st.info("Select a protocol first to run a simulation.")
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if navigation_button("Go to Protocol Manager", key="nav_protocol_missing", 
-                           full_width=True, is_primary_action=True):
-            st.switch_page("pages/1_Protocol_Manager.py")
-    st.stop()
-
-# Display current protocol (subtle)
-protocol_info = st.session_state.current_protocol
-st.caption(f"Protocol: **{protocol_info['name']}** v{protocol_info['version']}")
 
 # Initialize with default preset if this is the first time on the page
 if 'preset_initialized' not in st.session_state:
@@ -138,20 +132,36 @@ presets = {
     'rate': {
         'label': 'Rate',
         'description': 'Continuous recruitment',
-        'patients': '20/week',
+        'patients': '80/month',
         'duration': 5.0,
         'runtime': '~10 seconds'
     }
 }
 
-# Show Quick Start box
-selected_preset = quick_start_box(presets, default_preset='default')
+# Create engine selector widget function
+def engine_selector():
+    """Engine selector without label"""
+    engine_type = st.selectbox(
+        "Engine",
+        ["abs", "des"],
+        format_func=lambda x: {"abs": "Agent-Based", "des": "Discrete Event"}[x],
+        index=0,
+        label_visibility="collapsed",
+        help="Simulation engine: Agent-Based (ABS) or Discrete Event (DES)"
+    )
+    st.session_state.engine_type = engine_type
+    return engine_type
+
+# Show Quick Start box with protocol name as title and engine selector
+selected_preset = quick_start_box(presets, default_preset='default', 
+                                 title=f"{protocol_info['name']} v{protocol_info['version']}",
+                                 engine_widget=engine_selector)
 
 # Handle preset selection
 if selected_preset:
     if selected_preset == 'rate':
-        st.session_state.recruitment_rate = 20.0
-        st.session_state.rate_unit = "per week"
+        st.session_state.recruitment_rate = 80.0
+        st.session_state.rate_unit = "per month"
         st.session_state.preset_duration = 5.0
         st.session_state.recruitment_mode = "Constant Rate"
     else:
@@ -187,23 +197,85 @@ def run_simulation():
     
     st.rerun()
 
-# Now populate the workflow indicator with the action callback
+# Render the workflow indicator with the action callback
 has_results = st.session_state.get('current_sim_id') is not None
-with workflow_placeholder.container():
-    workflow_progress_indicator("simulation", on_current_action=run_simulation, has_results=has_results)
+workflow_progress_indicator("simulation", on_current_action=run_simulation, has_results=has_results)
 
+# Initialize runtime history if not present
+if 'runtime_history' not in st.session_state:
+    st.session_state.runtime_history = []
+
+# Initialize last completion time if not present
+if 'last_completion_time' not in st.session_state:
+    st.session_state.last_completion_time = None
+
+# Create progress area that's always visible
+with st.container():
+    progress_col, status_col = st.columns([4, 1])
+    with progress_col:
+        # Show full progress bar if we've completed a simulation
+        if st.session_state.last_completion_time:
+            progress_bar = st.progress(1.0)
+        else:
+            progress_bar = st.progress(0)
+    with status_col:
+        status_text = st.empty()
+        if st.session_state.last_completion_time:
+            status_text.caption(f"Completed in {st.session_state.last_completion_time:.1f}s")
+        else:
+            status_text.caption("")
+
+def estimate_runtime(n_patients: int, duration_years: float, engine_type: str) -> float:
+    """
+    Estimate runtime based on historical data from this session.
+    Returns estimated seconds.
+    """
+    # Calculate complexity score (patient-years)
+    complexity = n_patients * duration_years
+    
+    # Check if we have any history
+    if st.session_state.runtime_history:
+        # Calculate average time per patient-year from history
+        total_complexity = 0
+        total_time = 0
+        
+        for entry in st.session_state.runtime_history:
+            entry_complexity = entry['n_patients'] * entry['duration_years']
+            # Give more weight to similar engine types
+            weight = 2.0 if entry['engine_type'] == engine_type else 1.0
+            total_complexity += entry_complexity * weight
+            total_time += entry['runtime'] * weight
+        
+        if total_complexity > 0:
+            time_per_complexity = total_time / total_complexity
+            estimated_time = complexity * time_per_complexity
+            
+            # Add some padding for safety (10% extra)
+            return estimated_time * 1.1
+    
+    # Default pessimistic estimate if no history
+    # Rough estimate: 1 second per 1000 patient-years
+    return max(2.0, (complexity / 1000) * 1.5)
+
+def update_runtime_history(n_patients: int, duration_years: float, engine_type: str, runtime: float):
+    """Update the runtime history with a new data point."""
+    # Keep last 10 simulations
+    st.session_state.runtime_history.append({
+        'n_patients': n_patients,
+        'duration_years': duration_years,
+        'engine_type': engine_type,
+        'runtime': runtime
+    })
+    
+    # Keep only last 10 entries
+    if len(st.session_state.runtime_history) > 10:
+        st.session_state.runtime_history = st.session_state.runtime_history[-10:]
 
 # Check if we should be running a simulation (after rerun)
 if st.session_state.get('simulation_running', False):
-    # Create subtle progress indicator in the placeholder
-    with progress_placeholder.container():
-        # Create a more subtle progress display
-        col1, col2 = st.columns([4, 1])
-        with col1:
-            progress_bar = st.progress(0)
-        with col2:
-            status_text = st.empty()
-            status_text.caption("Initializing...")
+    # Update progress bar that's already visible
+    progress_bar.progress(0)
+    status_text.caption("Initializing...")
     
     # Retrieve recruitment parameters
     recruitment_params = st.session_state.get('recruitment_params', {
@@ -214,21 +286,34 @@ if st.session_state.get('simulation_running', False):
         'seed': seed
     })
     
+    # Get runtime estimate
+    estimated_runtime = estimate_runtime(
+        recruitment_params.get('n_patients', n_patients),
+        recruitment_params['duration_years'],
+        recruitment_params['engine_type']
+    )
+    
+    # Variables for smooth progress
+    simulation_complete = False
+    actual_runtime = 0
+    
     try:
-        # Load protocol spec
-        progress_bar.progress(10)
+        # Quick setup phase (0-10%)
+        progress_bar.progress(2)
         status_text.caption("Loading protocol...")
         spec = ProtocolSpecification.from_yaml(Path(protocol_info['path']))
         
-        # Create simulation runner
-        progress_bar.progress(20)
-        status_text.caption("Preparing...")
+        progress_bar.progress(5)
+        status_text.caption("Initializing...")
         runner = SimulationRunner(spec)
         
         # Check memory feasibility (optional)
         if st.session_state.get('check_memory_limits', True):
             monitor = MemoryMonitor()
-            is_feasible, warning = monitor.check_simulation_feasibility(n_patients, duration_years)
+            is_feasible, warning = monitor.check_simulation_feasibility(
+                recruitment_params.get('n_patients', n_patients), 
+                recruitment_params['duration_years']
+            )
             if warning:
                 with st.expander("Memory Check", expanded=not is_feasible):
                     if is_feasible:
@@ -238,10 +323,36 @@ if st.session_state.get('simulation_running', False):
                         if not st.checkbox("Run anyway (may cause errors)"):
                             st.stop()
         
-        # Run simulation
-        progress_bar.progress(30)
-        status_text.caption(f"Running {engine_type.upper()}...")
-        start_time = datetime.now()
+        progress_bar.progress(10)
+        status_text.caption(f"Running {recruitment_params['engine_type'].upper()}...")
+        
+        # Start smooth progress updater in a separate thread
+        start_time = time.time()
+        progress_stop_event = threading.Event()
+        
+        def update_progress():
+            """Update progress bar smoothly based on estimated time."""
+            while not progress_stop_event.is_set() and not simulation_complete:
+                elapsed = time.time() - start_time
+                # Progress from 10% to 85% during simulation
+                progress = min(0.85, 0.10 + (elapsed / estimated_runtime) * 0.75)
+                progress_bar.progress(progress)
+                
+                # Update status text with time
+                if elapsed < 60:
+                    status_text.caption(f"Running... {elapsed:.0f}s")
+                else:
+                    status_text.caption(f"Running... {elapsed/60:.1f}m")
+                
+                time.sleep(0.1)  # Update every 100ms
+        
+        # Start progress thread
+        progress_thread = threading.Thread(target=update_progress)
+        progress_thread.daemon = True
+        progress_thread.start()
+        
+        # Run the actual simulation
+        sim_start_time = datetime.now()
         
         # Extract values for the run
         if recruitment_params['mode'] == 'Fixed Total':
@@ -268,20 +379,33 @@ if st.session_state.get('simulation_running', False):
                 patient_arrival_rate=recruitment_params['recruitment_rate']
             )
         
-        end_time = datetime.now()
-        runtime = (end_time - start_time).total_seconds()
+        # Stop the progress thread
+        simulation_complete = True
+        progress_stop_event.set()
         
-        progress_bar.progress(90)
-        status_text.caption("Processing...")
+        sim_end_time = datetime.now()
+        runtime = (sim_end_time - sim_start_time).total_seconds()
+        
+        # Update runtime history with actual time
+        update_runtime_history(
+            recruitment_params.get('n_patients', n_patients),
+            recruitment_params['duration_years'],
+            recruitment_params['engine_type'],
+            runtime
+        )
+        
+        # Now show actual progress for post-processing
+        progress_bar.progress(85)
+        status_text.caption("Processing results...")
         
         # Pre-compute treatment patterns for better UI performance
         from ape.components.treatment_patterns.precompute import precompute_treatment_patterns
-        progress_bar.progress(92)
-        status_text.caption("Preparing visuals...")
+        progress_bar.progress(90)
+        status_text.caption("Preparing visualizations...")
         precompute_treatment_patterns(results, show_progress=False)
         
         progress_bar.progress(95)
-        status_text.caption("Saving...")
+        status_text.caption("Saving data...")
         
         # Build simulation data
         simulation_data = {
@@ -323,10 +447,12 @@ if st.session_state.get('simulation_running', False):
         # Clear simulation running state
         st.session_state.simulation_running = False
         
-        # Clear the progress bar after a moment
-        import time
-        time.sleep(0.5)
-        progress_placeholder.empty()
+        # Keep progress bar at 100% to show completion
+        progress_bar.progress(100)
+        status_text.caption(f"Completed in {runtime:.1f}s")
+        
+        # Store completion time for persistent display
+        st.session_state.last_completion_time = runtime
         
         # Simple success message
         st.success(f"Simulation completed in {runtime:.1f} seconds")
@@ -335,30 +461,17 @@ if st.session_state.get('simulation_running', False):
         st.rerun()
         
     except Exception as e:
-        # Clear progress display
-        progress_placeholder.empty()
+        # Stop progress thread if running
+        if 'progress_stop_event' in locals():
+            progress_stop_event.set()
+        
+        # Show error in progress bar
+        progress_bar.progress(0)
+        status_text.caption("Failed")
         # Clear simulation running state on error
         st.session_state.simulation_running = False
         st.error(f"Simulation failed: {str(e)}")
         st.exception(e)
-
-# Import/Export Section
-st.markdown("---")
-col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
-with col4:
-    # Toggle button for manage panel - just like in main, no rerun
-    if ape_button("Import/Export", 
-                  key="toggle_import_export",
-                  full_width=True,
-                  icon="save"):
-        st.session_state.show_manage = not st.session_state.get('show_manage', False)
-
-# Show manage panel if toggled
-if st.session_state.get('show_manage', False):
-    # Make the manage section 1/4 width by using columns
-    manage_cols = st.columns([3, 1])  # 3:1 ratio gives us the rightmost quarter
-    with manage_cols[1]:
-        render_manage_section()
 
 # Section 1: Recent Simulations List
 st.markdown("---")

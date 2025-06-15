@@ -1,8 +1,9 @@
 [theme]
-primaryColor = "#FF5A5F"
-backgroundColor = "#F0F2F6"
-secondaryBackgroundColor = "#FFFFFF"
-textColor = "#262730"
+# Option 3: Softer Contrast
+primaryColor = "#7DE1DF"  # Teal to match Carbon button highlight
+backgroundColor = "#FFFFFF"  # Pure white background
+secondaryBackgroundColor = "#F4F4F4"  # Very light gray (Carbon gray 10)
+textColor = "#161616"  # Very dark gray (Carbon gray 100)
 font = "sans serif"
 
 [server]
