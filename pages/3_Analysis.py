@@ -40,13 +40,12 @@ from ape.utils.carbon_button_helpers import top_navigation_home_button, ape_butt
 from ape.utils.state_helpers import get_active_simulation
 from ape.components.treatment_patterns.enhanced_tab import render_enhanced_treatment_patterns_tab
 
-# Top navigation
-col1, col2, col3 = st.columns([1, 6, 1])
-with col1:
-    if top_navigation_home_button():
-        st.switch_page("APE.py")
-with col2:
-    st.title("Analysis")
+# Import workflow indicator
+from ape.components.ui.workflow_indicator import workflow_progress_indicator
+
+# Show workflow progress - Analysis is current page
+has_results = st.session_state.get('current_sim_id') is not None
+workflow_progress_indicator("analysis", has_results=has_results)
 
 # Initialize visualization mode selector - required!
 current_mode = init_visualization_mode()
