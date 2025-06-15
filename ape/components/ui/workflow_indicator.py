@@ -17,7 +17,7 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
     steps = [
         ('home', 'Home', 'APE.py', None),  # No icon
         ('protocol', 'Protocol', 'pages/1_Protocol_Manager.py', None),
-        ('simulation', 'Simulation', 'pages/2_Simulations.py', '▶'),  # Play icon
+        ('simulation', 'Simulation', 'pages/2_Simulations.py', None),  # Removed play icon
         ('analysis', 'Analysis', 'pages/3_Analysis.py', None)
     ]
     
@@ -164,7 +164,7 @@ def consistent_button_bar(
                     label, key, help_text = primary_action
                     from ape.utils.carbon_button_helpers import navigation_button
                     clicked[key] = navigation_button(
-                        f"{label} →",
+                        label,
                         key=key,
                         help_text=help_text,
                         full_width=True,

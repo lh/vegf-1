@@ -14,7 +14,7 @@ from ape.utils.startup_redirect import handle_page_startup
 
 st.set_page_config(
     page_title="Protocol Manager", 
-    page_icon="🦍", 
+    page_icon="📋", 
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -28,138 +28,18 @@ from ape.components.ui.workflow_indicator import workflow_progress_indicator, co
 # Show workflow progress
 workflow_progress_indicator("protocol")
 
-# Style Streamlit native buttons to be less obtrusive
+# Minimal CSS for clean interface
 st.markdown("""
 <style>
-    /* Remove red text from ALL Streamlit buttons */
-    .stButton > button p {
-        color: inherit !important;
-    }
-    
-    /* Remove red active/focus states from all buttons */
-    .stButton > button:active,
-    .stButton > button:focus,
-    .stDownloadButton > button:active,
-    .stDownloadButton > button:focus,
-    .stFileUploader > div > div > button:active,
-    .stFileUploader > div > div > button:focus {
-        color: #009688 !important;  /* Teal color */
-        border-color: #009688 !important;
-        outline: none !important;
-        box-shadow: 0 0 0 0.2rem rgba(0, 150, 136, 0.25) !important;
-    }
-    
-    /* Also override any red text that might appear */
-    .stButton > button:active p,
-    .stButton > button:focus p,
-    .stDownloadButton > button:active p,
-    .stDownloadButton > button:focus p,
-    .stFileUploader > div > div > button:active p,
-    .stFileUploader > div > div > button:focus p {
-        color: #009688 !important;  /* Teal color */
-    }
-    
-    /* Make file uploader button minimal */
-    .stFileUploader > div > div > button {
-        background-color: transparent !important;
-        border: 1px solid #ddd !important;
-        color: #666 !important;
-        padding: 0.5rem 1rem !important;
-        font-size: 0.875rem !important;
-    }
-    
-    .stFileUploader > div > div > button:hover {
-        background-color: #f0f0f0 !important;
-        border-color: #999 !important;
-    }
-    
-    /* Make download button minimal */
-    .stDownloadButton > button {
-        background-color: transparent !important;
-        border: 1px solid #ddd !important;
-        color: #666 !important;
-        padding: 0.5rem 1rem !important;
-        font-size: 0.875rem !important;
-    }
-    
-    .stDownloadButton > button:hover {
-        background-color: #f0f0f0 !important;
-        border-color: #999 !important;
-    }
-    
-    /* Additional styling for file uploader text */
-    .stFileUploader label {
-        font-size: 0.875rem !important;
-        color: #666 !important;
-    }
-    
-    /* Make everything in expanders more compact */
-    .streamlit-expanderContent {
-        padding: 0.5rem 1rem !important;
-    }
-    
-    .streamlit-expanderContent .stMarkdown {
-        margin-bottom: 0.5rem !important;
-    }
-    
-    .streamlit-expanderContent .stButton {
-        margin: 0.25rem 0 !important;
-    }
-    
-    /* Make download button even smaller */
-    .streamlit-expanderContent .stDownloadButton > button {
-        padding: 0.25rem 0.75rem !important;
-        font-size: 0.75rem !important;
-        min-height: unset !important;
-    }
-    
-    /* Compact file uploader in expander */
-    .streamlit-expanderContent .stFileUploader {
-        margin-bottom: 0.5rem !important;
-    }
-    
-    .streamlit-expanderContent .stFileUploader > div > div > button {
-        padding: 0.25rem 0.75rem !important;
-        font-size: 0.75rem !important;
-        min-height: unset !important;
-    }
-    
-    /* Reduce caption spacing */
-    .streamlit-expanderContent .stCaption {
-        margin-top: 0.25rem !important;
-        margin-bottom: 0.25rem !important;
-    }
-    
-    /* Make expander headers more compact */
-    .streamlit-expanderHeader {
-        font-size: 0.875rem !important;
-        padding: 0.5rem !important;
-    }
-    
-    /* Reduce overall spacing in Manage section */
-    div[data-testid="column"]:has(.streamlit-expander) .stMarkdown {
-        margin-bottom: 0.25rem !important;
-    }
-    
     /* Hide "Drag and drop file here" text */
     .stFileUploader > div > div > small {
         display: none !important;
     }
     
-    /* Make the file uploader section even more compact */
-    .stFileUploader > div {
-        gap: 0.25rem !important;
-    }
-    
-    /* Remove borders from file uploader drop zone */
+    /* Clean file uploader drop zone */
     .stFileUploader [data-testid="stFileUploadDropzone"] {
-        border: none !important;
-        background-color: #f8f8f8 !important;
-    }
-    
-    /* Add some spacing between upload and download sections */
-    .stFileUploader {
-        margin-bottom: 1rem !important;
+        border: 1px dashed #ddd !important;
+        background-color: transparent !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -255,7 +135,6 @@ with col1:
         st.session_state.selected_protocol_name = selected_file.stem
 
 with col2:
-    st.subheader(" ")  # Invisible subheader for alignment
     # Single Manage button for upload/download (using save/floppy disk icon)
     if ape_button("Manage", key="manage_btn", icon="save", full_width=True):
         st.session_state.show_manage = not st.session_state.get('show_manage', False)
@@ -351,7 +230,6 @@ with col2:
                     pass  # If spec can't be loaded, just don't show download
 
 with col3:
-    st.subheader(" ")  # Invisible subheader for alignment
     # Create a copy with a new name
     if ape_button("Duplicate", key="duplicate_btn", icon="copy", full_width=True):
         st.session_state.show_duplicate = not st.session_state.get('show_duplicate', False)
@@ -431,7 +309,6 @@ with col3:
                     st.session_state.creating_duplicate = False
 
 with col4:
-    st.subheader(" ")  # Invisible subheader for alignment
     # Delete protocol (only temporary ones)
     if selected_file and selected_file.parent == TEMP_DIR:
         if delete_button(key="delete_btn", full_width=True):
@@ -625,10 +502,10 @@ try:
     st.markdown("---")
     clicked = consistent_button_bar(
         left_buttons=[
-            ("← Home", "back_home", "Return to home page")
+            ("Home", "back_home", "Return to home page")
         ],
         right_buttons=[
-            ("Use Default & Continue", "quick_continue", "Use this protocol with default settings")
+            ("Quick Start", "quick_continue", "Use this protocol with default settings")
         ],
         primary_action=("Setup Simulation", "setup_sim", "Configure simulation parameters")
     )
