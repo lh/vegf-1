@@ -500,8 +500,8 @@ try:
                         except:
                             pass
                     if 'edit_disc_types' in st.session_state:
-                        # Parse discontinuation types from text area (one per line)
-                        types = [t.strip() for t in st.session_state.edit_disc_types.split('\n') if t.strip()]
+                        # Parse discontinuation types from comma-separated input
+                        types = [t.strip() for t in st.session_state.edit_disc_types.split(',') if t.strip()]
                         if types:
                             data['discontinuation_rules']['discontinuation_types'] = types
                     
@@ -850,35 +850,57 @@ try:
         rules = spec.discontinuation_rules
         
         if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
-            # Editable discontinuation rules
-            st.caption("Conditions that trigger treatment discontinuation")
-            
+            # Editable discontinuation rules matching metric style
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.markdown("**Poor Vision**")
-                pv_thresh = st.text_input("Threshold (letters)", value=str(rules['poor_vision_threshold']), key="edit_disc_pv_thresh")
-                st.caption(f"< {pv_thresh} letters" if pv_thresh.isdigit() else "Invalid")
-                pv_prob = st.text_input("Probability", value=f"{rules['poor_vision_probability']:.2f}", key="edit_disc_pv_prob")
-                st.caption(f"{float(pv_prob)*100:.0f}% per visit" if pv_prob.replace('.','').isdigit() else "Invalid")
+                # Threshold input styled like metric
+                st.caption("Threshold")
+                pv_thresh = st.text_input("Threshold", value=str(rules['poor_vision_threshold']), key="edit_disc_pv_thresh", label_visibility="collapsed")
+                st.caption(f"< {pv_thresh} letters" if pv_thresh.isdigit() else "Invalid threshold")
+                
+                # Probability input styled like metric  
+                st.caption("Probability")
+                pv_prob = st.text_input("Probability", value=f"{rules['poor_vision_probability']:.2f}", key="edit_disc_pv_prob", label_visibility="collapsed")
+                try:
+                    st.caption(f"{float(pv_prob)*100:.0f}% per visit")
+                except:
+                    st.caption("Invalid probability")
                 
             with col2:
                 st.markdown("**High Injection Count**")
-                hi_thresh = st.text_input("Threshold (count)", value=str(rules['high_injection_count']), key="edit_disc_hi_thresh")
-                st.caption(f"> {hi_thresh} injections" if hi_thresh.isdigit() else "Invalid")
-                hi_prob = st.text_input("Probability", value=f"{rules['high_injection_probability']:.2f}", key="edit_disc_hi_prob")
-                st.caption(f"{float(hi_prob)*100:.0f}% per visit" if hi_prob.replace('.','').isdigit() else "Invalid")
+                # Threshold input styled like metric
+                st.caption("Threshold")
+                hi_thresh = st.text_input("Threshold", value=str(rules['high_injection_count']), key="edit_disc_hi_thresh", label_visibility="collapsed")
+                st.caption(f"> {hi_thresh} injections" if hi_thresh.isdigit() else "Invalid threshold")
+                
+                # Probability input styled like metric
+                st.caption("Probability")  
+                hi_prob = st.text_input("Probability", value=f"{rules['high_injection_probability']:.2f}", key="edit_disc_hi_prob", label_visibility="collapsed")
+                try:
+                    st.caption(f"{float(hi_prob)*100:.0f}% per visit")
+                except:
+                    st.caption("Invalid probability")
                 
             with col3:
                 st.markdown("**Long Treatment**")
-                lt_thresh = st.text_input("Threshold (months)", value=str(rules['long_treatment_months']), key="edit_disc_lt_thresh")
-                st.caption(f"> {lt_thresh} months" if lt_thresh.isdigit() else "Invalid")
-                lt_prob = st.text_input("Probability", value=f"{rules['long_treatment_probability']:.2f}", key="edit_disc_lt_prob")
-                st.caption(f"{float(lt_prob)*100:.0f}% per visit" if lt_prob.replace('.','').isdigit() else "Invalid")
+                # Threshold input styled like metric
+                st.caption("Threshold")
+                lt_thresh = st.text_input("Threshold", value=str(rules['long_treatment_months']), key="edit_disc_lt_thresh", label_visibility="collapsed")
+                st.caption(f"> {lt_thresh} months" if lt_thresh.isdigit() else "Invalid threshold")
+                
+                # Probability input styled like metric
+                st.caption("Probability")
+                lt_prob = st.text_input("Probability", value=f"{rules['long_treatment_probability']:.2f}", key="edit_disc_lt_prob", label_visibility="collapsed")
+                try:
+                    st.caption(f"{float(lt_prob)*100:.0f}% per visit")
+                except:
+                    st.caption("Invalid probability")
             
             if 'discontinuation_types' in rules:
                 st.markdown("**Discontinuation Types**")
-                disc_types = st.text_area("Types (one per line)", value="\n".join(rules['discontinuation_types']), key="edit_disc_types", height=100)
-                st.caption("Enter discontinuation types, one per line")
+                disc_types = st.text_input("Types (comma-separated)", value=", ".join(rules['discontinuation_types']), key="edit_disc_types")
+                st.caption("Enter discontinuation types separated by commas")
         else:
             # Read-only display
             col1, col2, col3 = st.columns(3)

@@ -68,6 +68,17 @@ All existing protocol files would need updating:
 3. Create migration tool for existing protocols
 4. Validate against real-world outcomes
 
+## Other Issues to Address
+
+### Discontinuation Types
+The protocol files define discontinuation types (planned, adverse, ineffective) but these are not currently used in the simulation logic:
+- All discontinuations are marked as "planned" regardless of the actual reason
+- The discontinuation_types field in protocols is not referenced by the simulation engine
+- Consider implementing different behaviors for different discontinuation types:
+  - Adverse events might prevent retreatment
+  - Ineffective treatment might trigger protocol changes
+  - Planned discontinuations might allow retreatment after a period
+
 ---
 
 **Created**: 2025-06-15  
