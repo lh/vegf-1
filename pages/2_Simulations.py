@@ -80,12 +80,8 @@ with st.sidebar:
         st.text(f"Environment: {'Cloud' if is_streamlit_cloud() else 'Local'}")
         st.text(f"Memory checking: {'On' if st.session_state.get('check_memory_limits', should_check_memory_limits()) else 'Off'}")
 
-# Page title
-st.title("Simulations")
-
 # Check if protocol is loaded first
 if not st.session_state.get('current_protocol'):
-    st.header("New")
     st.info("Select a protocol first to run a simulation.")
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -93,9 +89,6 @@ if not st.session_state.get('current_protocol'):
                            full_width=True, is_primary_action=True):
             st.switch_page("pages/1_Protocol_Manager.py")
     st.stop()
-
-# Section 3: Run New Simulation
-st.header("Simulation Setup")
 
 # Display current protocol (subtle)
 protocol_info = st.session_state.current_protocol
@@ -159,41 +152,8 @@ if selected_preset:
         st.session_state.recruitment_mode = "Fixed Total"
     st.rerun()
 
-# Get parameters - either from presets or advanced settings
-if 'preset_patients' in st.session_state or 'recruitment_rate' in st.session_state:
-    # Using preset values - show simplified view
-    if st.session_state.get('recruitment_mode') == "Constant Rate":
-        st.info(f"**Constant Rate Mode**: {st.session_state.recruitment_rate} patients{st.session_state.rate_unit} for {st.session_state.preset_duration} years")
-        engine_type = "abs"  # Default
-        recruitment_params = {
-            'mode': 'Constant Rate',
-            'recruitment_rate': st.session_state.recruitment_rate,
-            'rate_unit': st.session_state.rate_unit,
-            'duration_years': st.session_state.preset_duration,
-            'engine_type': engine_type,
-            'seed': 42  # Default seed
-        }
-    else:
-        st.info(f"**Fixed Total Mode**: {st.session_state.preset_patients} patients over {st.session_state.preset_duration} years")
-        engine_type = "abs"  # Default
-        recruitment_params = {
-            'mode': 'Fixed Total',
-            'n_patients': st.session_state.preset_patients,
-            'duration_years': st.session_state.preset_duration,
-            'engine_type': engine_type,
-            'seed': 42  # Default seed
-        }
-    seed = 42
-    
-    # Advanced settings in expandable section
-    with st.expander("Customize Settings", expanded=False):
-        # Get all parameters including recruitment mode
-        engine_type, recruitment_params, seed = render_enhanced_parameter_inputs()
-else:
-    # No preset selected - show full advanced settings
-    with st.expander("Advanced Settings", expanded=True):
-        # Get all parameters including recruitment mode
-        engine_type, recruitment_params, seed = render_enhanced_parameter_inputs()
+# Get parameters - always need them for running simulation
+engine_type, recruitment_params, seed = render_enhanced_parameter_inputs()
 
 # Extract values for compatibility with rest of code
 if recruitment_params['mode'] == 'Fixed Total':

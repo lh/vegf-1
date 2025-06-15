@@ -5,7 +5,7 @@ from typing import Optional, Dict, Any
 
 
 def quick_start_box(presets: Dict[str, Dict[str, Any]], default_preset: str = "medium") -> Optional[str]:
-    """Display a prominent Quick Start box with preset options.
+    """Display a compact Quick Start section with preset options.
     
     Args:
         presets: Dictionary of preset configurations
@@ -14,29 +14,14 @@ def quick_start_box(presets: Dict[str, Dict[str, Any]], default_preset: str = "m
     Returns:
         Selected preset key or None
     """
-    # Create a highlighted container
-    with st.container():
-        st.markdown(
-            """
-            <div style="
-                background-color: #f0f8ff;
-                border: 2px solid #0066CC;
-                border-radius: 0.5rem;
-                padding: 1.5rem;
-                margin-bottom: 1rem;
-            ">
-                <h3 style="margin-top: 0; color: #0066CC;">Quick Start</h3>
-                <p style="margin-bottom: 1rem;">Choose a preset configuration to get started quickly:</p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-        
-        # Create columns for preset buttons inside the box
-        preset_cols = st.columns(len(presets))
-        selected_preset = None
-        
-        for col, (key, preset) in zip(preset_cols, presets.items()):
+    # Simple header without box
+    st.markdown("**Quick Start**")
+    
+    # Create columns for preset buttons
+    preset_cols = st.columns(len(presets))
+    selected_preset = None
+    
+    for col, (key, preset) in zip(preset_cols, presets.items()):
             with col:
                 # Highlight the recommended option
                 is_default = key == default_preset
@@ -57,20 +42,10 @@ def quick_start_box(presets: Dict[str, Dict[str, Any]], default_preset: str = "m
                 ):
                     selected_preset = key
                     
-                # Show key stats below button
-                st.caption(f"**{preset['patients']}** patients")
-                st.caption(f"**{preset['duration']}** years")
+                # Show key stats below button in one line
+                stats = f"{preset['patients']} patients • {preset['duration']} years"
                 if 'runtime' in preset:
-                    st.caption(f"~{preset['runtime']} runtime")
-        
-        # Add note about custom configuration
-        st.markdown(
-            """
-            <p style="text-align: center; color: #666; margin-top: 1rem; margin-bottom: 0;">
-                Need different settings? Customize below or use Advanced Settings
-            </p>
-            """,
-            unsafe_allow_html=True
-        )
+                    stats += f" • {preset['runtime']}"
+                st.caption(stats)
     
     return selected_preset
