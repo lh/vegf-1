@@ -22,8 +22,12 @@ from ape.utils.startup_redirect import initialize_session_state, check_deploymen
 # Initialize session state and check for crash recovery
 initialize_session_state()
 
-# Import Carbon button helpers
+# Import UI components
+from ape.components.ui.workflow_indicator import workflow_progress_indicator
 from ape.utils.carbon_button_helpers import navigation_button
+
+# Show workflow progress - home page is current step
+workflow_progress_indicator("home")
 
 # Main page with logo
 logo_col, title_col = st.columns([1, 4])
@@ -61,42 +65,6 @@ with col2:
     """)
 
 # No longer need custom styling - Carbon buttons handle it
-
-# Navigation cards
-st.subheader("Navigation")
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    if navigation_button(
-        "Protocol Manager",
-        key="nav_protocol",
-        help_text="Browse, view, and validate treatment protocols",
-        full_width=True
-    ):
-        st.switch_page("pages/1_Protocol_Manager.py")
-
-with col2:
-    # Simulations button is always enabled (can manage existing ones)
-    if navigation_button(
-        "Simulations",
-        key="nav_simulation",
-        help_text="Run new simulations or manage existing ones",
-        full_width=True
-    ):
-        st.switch_page("pages/2_Simulations.py")
-
-with col3:
-    # Disable Analysis if no simulation results are available
-    analysis_disabled = st.session_state.simulation_results is None
-    if navigation_button(
-        "Analysis",
-        key="nav_analysis",
-        help_text="Visualize and compare simulation results",
-        full_width=True,
-        disabled=analysis_disabled,
-        button_type="ghost" if analysis_disabled else "secondary"
-    ):
-        st.switch_page("pages/3_Analysis.py")
 
 # Quick status line (optional - much more subtle)
 if st.session_state.current_protocol or st.session_state.simulation_results:
