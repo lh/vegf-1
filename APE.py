@@ -29,7 +29,7 @@ from ape.utils.carbon_button_helpers import navigation_button
 # Show workflow progress - home page is current step
 # Check if we have simulation results to enable Analysis button
 has_results = st.session_state.get('simulation_results') is not None or st.session_state.get('current_sim_id') is not None
-workflow_progress_indicator("home", has_results=has_results)
+workflow_progress_indicator("home", has_results=has_results, show_logo=False)
 
 # Main page with logo
 logo_col, title_col = st.columns([1, 4])

@@ -3,17 +3,27 @@
 import streamlit as st
 from typing import List, Optional, Tuple
 from ape.utils.carbon_button_helpers import navigation_button
+from ape.components.ui.ape_logo import display_ape_logo
 
 
 def workflow_progress_indicator(current_step: str, on_current_action: callable = None, 
-                              has_results: bool = False) -> None:
+                              has_results: bool = False, show_logo: bool = True) -> None:
     """Display a workflow progress indicator showing the current step.
     
     Args:
         current_step: The current step identifier ('home', 'protocol', 'simulation', 'analysis')
         on_current_action: Callback function to execute when current step button is clicked
         has_results: Whether simulation results are available (enables Analysis navigation)
+        show_logo: Whether to show a small ape logo (default True, set False for home page)
     """
+    # Display a small ape logo (except on home page which already has one)
+    if show_logo:
+        # Check if simulation is running (for closed eyes ape)
+        if current_step == "simulation" and st.session_state.get('simulation_running', False):
+            display_ape_logo(specific_logo="closed_eyes_ape.svg", width=35)
+        else:
+            display_ape_logo(width=35)
+    
     steps = [
         ('home', 'Home', 'APE.py', None),  # No icon
         ('protocol', 'Protocol', 'pages/1_Protocol_Manager.py', None),
