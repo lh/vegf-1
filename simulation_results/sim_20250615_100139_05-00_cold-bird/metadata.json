@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250615_100139_05-00_cold-bird",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 5214,
+  "duration_years": 5.0,
+  "seed": 42,
+  "timestamp": "2025-06-15T10:01:39.859375+01:00",
+  "runtime_seconds": 0.8325479030609131,
+  "storage_type": "parquet",
+  "memorable_name": "cold-bird"
+}

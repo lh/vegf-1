@@ -1,0 +1,13 @@
+{
+  "sim_id": "sim_20250615_100519_05-00_restless-cherry",
+  "protocol_name": "Eylea Treat and Extend",
+  "protocol_version": "1.0",
+  "engine_type": "abs",
+  "n_patients": 5214,
+  "duration_years": 5.0,
+  "seed": 42,
+  "timestamp": "2025-06-15T10:05:19.376516+01:00",
+  "runtime_seconds": 0.6914067268371582,
+  "storage_type": "parquet",
+  "memorable_name": "restless-cherry"
+}

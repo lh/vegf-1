@@ -55,6 +55,9 @@ simulation_action_callback = None
 # Add placeholder for workflow indicator (will be populated after parameters are defined)
 workflow_placeholder = st.empty()
 
+# Add placeholder for progress bar right below workflow
+progress_placeholder = st.empty()
+
 # Show memory usage in sidebar
 monitor = MemoryMonitor()
 monitor.display_in_sidebar()
@@ -192,9 +195,15 @@ with workflow_placeholder.container():
 
 # Check if we should be running a simulation (after rerun)
 if st.session_state.get('simulation_running', False):
-    # Create progress indicators
-    progress_bar = st.progress(0, text="Initializing simulation...")
-    status_text = st.empty()
+    # Create subtle progress indicator in the placeholder
+    with progress_placeholder.container():
+        # Create a more subtle progress display
+        col1, col2 = st.columns([4, 1])
+        with col1:
+            progress_bar = st.progress(0)
+        with col2:
+            status_text = st.empty()
+            status_text.caption("Initializing...")
     
     # Retrieve recruitment parameters
     recruitment_params = st.session_state.get('recruitment_params', {
@@ -207,11 +216,13 @@ if st.session_state.get('simulation_running', False):
     
     try:
         # Load protocol spec
-        progress_bar.progress(10, text="Loading protocol specification...")
+        progress_bar.progress(10)
+        status_text.caption("Loading protocol...")
         spec = ProtocolSpecification.from_yaml(Path(protocol_info['path']))
         
         # Create simulation runner
-        progress_bar.progress(20, text="Creating simulation runner...")
+        progress_bar.progress(20)
+        status_text.caption("Preparing...")
         runner = SimulationRunner(spec)
         
         # Check memory feasibility (optional)
@@ -228,7 +239,8 @@ if st.session_state.get('simulation_running', False):
                             st.stop()
         
         # Run simulation
-        progress_bar.progress(30, text=f"Running {engine_type.upper()} simulation...")
+        progress_bar.progress(30)
+        status_text.caption(f"Running {engine_type.upper()}...")
         start_time = datetime.now()
         
         # Extract values for the run
@@ -259,14 +271,17 @@ if st.session_state.get('simulation_running', False):
         end_time = datetime.now()
         runtime = (end_time - start_time).total_seconds()
         
-        progress_bar.progress(90, text="Processing results...")
+        progress_bar.progress(90)
+        status_text.caption("Processing...")
         
         # Pre-compute treatment patterns for better UI performance
         from ape.components.treatment_patterns.precompute import precompute_treatment_patterns
-        progress_bar.progress(92, text="Pre-computing visualizations...")
+        progress_bar.progress(92)
+        status_text.caption("Preparing visuals...")
         precompute_treatment_patterns(results, show_progress=False)
         
-        progress_bar.progress(95, text="Saving results...")
+        progress_bar.progress(95)
+        status_text.caption("Saving...")
         
         # Build simulation data
         simulation_data = {
@@ -302,10 +317,16 @@ if st.session_state.get('simulation_running', False):
         # Clear preset values after successful simulation
         clear_preset_values()
         
-        progress_bar.progress(100, text="Simulation complete!")
+        progress_bar.progress(100)
+        status_text.caption("Complete!")
         
         # Clear simulation running state
         st.session_state.simulation_running = False
+        
+        # Clear the progress bar after a moment
+        import time
+        time.sleep(0.5)
+        progress_placeholder.empty()
         
         # Simple success message
         st.success(f"Simulation completed in {runtime:.1f} seconds")
@@ -314,7 +335,8 @@ if st.session_state.get('simulation_running', False):
         st.rerun()
         
     except Exception as e:
-        progress_bar.empty()
+        # Clear progress display
+        progress_placeholder.empty()
         # Clear simulation running state on error
         st.session_state.simulation_running = False
         st.error(f"Simulation failed: {str(e)}")
