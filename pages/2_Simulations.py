@@ -370,16 +370,12 @@ if st.session_state.get('simulation_running', False):
 st.markdown("---")
 col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
 with col4:
-    # Toggle button for manage panel
+    # Use a regular Streamlit button for now to avoid Carbon button issues
     if st.session_state.get('show_manage', False):
-        if navigation_button("Close Import/Export", key="close_manage", 
-                           help_text="Close import/export panel", 
-                           full_width=True, button_type="ghost"):
+        if st.button("Close Import/Export", key="close_manage", use_container_width=True):
             st.session_state.show_manage = False
     else:
-        if navigation_button("Import/Export", key="show_manage", 
-                           help_text="Import or export simulations", 
-                           full_width=True, button_type="secondary"):
+        if st.button("Import/Export", key="show_manage", use_container_width=True):
             st.session_state.show_manage = True
 
 # Show manage panel if toggled
