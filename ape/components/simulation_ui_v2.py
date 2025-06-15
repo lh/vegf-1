@@ -127,8 +127,8 @@ def render_recruitment_parameters() -> Dict[str, Any]:
             st.session_state.seed = seed
         
         with seed_col2:
-            # Add invisible label to align button with input
-            st.write("&nbsp;", unsafe_allow_html=True)  # Non-breaking space as label
+            # Add spacing to align button with input - matches label height
+            st.markdown("<div style='height: 21px;'></div>", unsafe_allow_html=True)
             if st.button("⟳", key="randomize_seed", help="Generate random seed", use_container_width=True):
                 import random
                 st.session_state.seed = random.randint(0, 999999)
