@@ -883,7 +883,7 @@ try:
             y_beta = y_beta_raw * threshold_effect
             
             # Renormalize to maintain probability distribution
-            area_under_curve = np.trapz(y_beta, x_beta)
+            area_under_curve = np.trapezoid(y_beta, x_beta)
             y_beta = y_beta / area_under_curve
             
             ax.plot(x_beta, y_beta, 'orange', linewidth=2, linestyle='-', 
@@ -895,7 +895,7 @@ try:
             
             # Calculate actual percentage above 70 in truncated distribution
             idx_70 = np.argmin(np.abs(x_beta - 70))
-            pct_above_70 = np.trapz(y_beta[idx_70:], x_beta[idx_70:]) * 100
+            pct_above_70 = np.trapezoid(y_beta[idx_70:], x_beta[idx_70:]) * 100
             
             # Add text annotation
             ax.text(72, max(y_beta) * 0.8, 
