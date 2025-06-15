@@ -100,9 +100,6 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                         button_type="ghost",
                         disabled=True
                     )
-    
-    # Add a subtle line below
-    st.markdown("---")
 
 
 def consistent_button_bar(

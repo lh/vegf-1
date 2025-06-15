@@ -51,9 +51,7 @@ from ape.utils.carbon_button_helpers import (
 )
 
 
-# Page title
-st.title("Protocol Manager")
-st.markdown("Browse, view, and validate treatment protocol specifications.")
+# Remove redundant title - page name is sufficient
 
 # Protocol directory - use parent directory path
 PROTOCOL_DIR = Path(__file__).parent.parent / "protocols" / "v2"
@@ -96,158 +94,163 @@ if not protocol_files:
 if temp_files:
     st.info("Temporary protocols are cleared hourly. Download any you want to keep.")
 
-# Protocol selection and management
+# Protocol selection
 st.subheader("Select Protocol")
 
-# Main layout with selectbox and action buttons
-col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
+# Format function to show default vs temp
+def format_protocol(file):
+    name = file.stem
+    if file.parent == TEMP_DIR:
+        return f"{name} (temporary)"
+    else:
+        return f"{name}"
+
+# Try to maintain selection across reruns
+if 'selected_protocol_name' in st.session_state:
+    # Find the file that matches the stored name
+    default_index = 0
+    for i, file in enumerate(protocol_files):
+        if file.stem == st.session_state.selected_protocol_name:
+            default_index = i
+            break
+else:
+    default_index = 0
+
+# Select protocol on its own line
+selected_file = st.selectbox(
+    "Available Protocols",
+    protocol_files,
+    format_func=format_protocol,
+    label_visibility="collapsed",
+    index=default_index,
+    key="protocol_selector"
+)
+
+# Store the selection for persistence
+if selected_file:
+    st.session_state.selected_protocol_name = selected_file.stem
+
+# Action buttons in 4 equal columns
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    # Format function to show default vs temp
-    def format_protocol(file):
-        name = file.stem
-        if file.parent == TEMP_DIR:
-            return f"{name} (temporary)"
-        else:
-            return f"{name}"
-
-    # Try to maintain selection across reruns
-    if 'selected_protocol_name' in st.session_state:
-        # Find the file that matches the stored name
-        default_index = 0
-        for i, file in enumerate(protocol_files):
-            if file.stem == st.session_state.selected_protocol_name:
-                default_index = i
-                break
-    else:
-        default_index = 0
-
-    selected_file = st.selectbox(
-        "Available Protocols",
-        protocol_files,
-        format_func=format_protocol,
-        label_visibility="collapsed",
-        index=default_index,
-        key="protocol_selector"
-    )
-
-    # Store the selection for persistence
-    if selected_file:
-        st.session_state.selected_protocol_name = selected_file.stem
+    # Empty for now
+    st.empty()
 
 with col2:
+    # Create a copy with a new name
+    if ape_button("Duplicate", key="duplicate_btn", icon="copy", full_width=True):
+        st.session_state.show_duplicate = not st.session_state.get('show_duplicate', False)
+
+with col3:
+    # Delete protocol (only temporary ones)
+    if selected_file and selected_file.parent == TEMP_DIR:
+        if delete_button(key="delete_btn", full_width=True):
+            st.session_state.show_delete = not st.session_state.get('show_delete', False)
+    else:
+        # For default protocols, show a disabled ghost button
+        delete_button(key="delete_btn_disabled", full_width=True, disabled=True)
+
+with col4:
     if ape_button("Import/Export", 
                   key="toggle_import_export",
                   full_width=True,
                   icon="save"):
         st.session_state.show_manage = not st.session_state.get('show_manage', False)
 
-with col3:
-    # Create a copy with a new name
-    if ape_button("Duplicate", key="duplicate_btn", icon="copy", full_width=True):
-        st.session_state.show_duplicate = not st.session_state.get('show_duplicate', False)
-
-with col4:
-    # Delete protocol (only temporary ones)
-    if selected_file and selected_file.parent == TEMP_DIR:
-        if delete_button(key="delete_btn", full_width=True):
-            st.session_state.show_delete = not st.session_state.get('show_delete', False)
-    else:
-        # For default protocols, just leave an empty space
-        st.empty()
-
 # Show manage panel if toggled
 if st.session_state.get('show_manage', False):
-    # Make the manage section 1/4 width by using columns
-    manage_cols = st.columns([3, 1])  # 3:1 ratio gives us the rightmost quarter
-    with manage_cols[1]:
-            # Upload section
-            uploaded_file = st.file_uploader(
-                "",
-                type=['yaml', 'yml'],
-                label_visibility="collapsed"
-            )
-            
-            if uploaded_file is not None:
+    # Create columns with the panel in the 4th column
+    panel_col1, panel_col2, panel_col3, panel_col4 = st.columns(4)
+    with panel_col4:
+        # Upload section
+        st.markdown("**Import**")
+        uploaded_file = st.file_uploader(
+            "",
+            type=['yaml', 'yml'],
+            label_visibility="collapsed"
+        )
+        
+        if uploaded_file is not None:
+            try:
+                # Check protocol count limit
+                if len(protocol_files) >= MAX_PROTOCOLS:
+                    raise ValueError(f"Protocol limit reached ({MAX_PROTOCOLS} files). Please delete some protocols first.")
+
+                # Check file size
+                file_size = len(uploaded_file.getvalue())
+                if file_size > MAX_FILE_SIZE:
+                    raise ValueError(f"File too large. Maximum size is {MAX_FILE_SIZE//1024}KB")
+
+                # Validate filename
+                filename = uploaded_file.name
+                if not filename.endswith(('.yaml', '.yml')):
+                    raise ValueError("Only YAML files are allowed")
+
+                # Sanitize filename (remove path traversal attempts)
+                safe_filename = Path(filename).name
+                if '..' in safe_filename or '/' in safe_filename:
+                    raise ValueError("Invalid filename")
+
+                # First, validate the YAML can be loaded safely
+                content = uploaded_file.read()
+                uploaded_file.seek(0)  # Reset for later use
+
+                # Try to parse YAML safely
                 try:
-                    # Check protocol count limit
-                    if len(protocol_files) >= MAX_PROTOCOLS:
-                        raise ValueError(f"Protocol limit reached ({MAX_PROTOCOLS} files). Please delete some protocols first.")
-                    
-                    # Check file size
-                    file_size = len(uploaded_file.getvalue())
-                    if file_size > MAX_FILE_SIZE:
-                        raise ValueError(f"File too large. Maximum size is {MAX_FILE_SIZE//1024}KB")
-                    
-                    # Validate filename
-                    filename = uploaded_file.name
-                    if not filename.endswith(('.yaml', '.yml')):
-                        raise ValueError("Only YAML files are allowed")
-                    
-                    # Sanitize filename (remove path traversal attempts)
-                    safe_filename = Path(filename).name
-                    if '..' in safe_filename or '/' in safe_filename:
-                        raise ValueError("Invalid filename")
-                    
-                    # First, validate the YAML can be loaded safely
-                    content = uploaded_file.read()
-                    uploaded_file.seek(0)  # Reset for later use
-                    
-                    # Try to parse YAML safely
-                    try:
-                        test_data = yaml.safe_load(content)
-                        if not isinstance(test_data, dict):
-                            raise ValueError("Invalid protocol format")
-                    except yaml.YAMLError as e:
-                        raise ValueError(f"Invalid YAML: {e}")
-                    
-                    # Try to load as ProtocolSpecification to validate structure
-                    validation_path = TEMP_DIR / f"validating_{safe_filename}"
-                    with open(validation_path, 'wb') as f:
-                        f.write(uploaded_file.getbuffer())
-                    
-                    try:
-                        # This will validate all required fields
-                        test_spec = ProtocolSpecification.from_yaml(validation_path)
-                        
-                        # Save with timestamp to avoid collisions
-                        base_name = safe_filename.rsplit('.', 1)[0]
-                        timestamp = int(time.time())
-                        final_filename = f"{base_name}_{timestamp}.yaml"
-                        final_path = TEMP_DIR / final_filename
-                        
-                        validation_path.rename(final_path)
-                        
-                        st.success(f"Uploaded and validated: {safe_filename}")
-                        st.session_state.show_upload = False  # Close the expander
-                        st.rerun()
-                    except Exception as e:
-                        # Clean up temp file on validation failure
-                        validation_path.unlink(missing_ok=True)
-                        raise ValueError(f"Invalid protocol: {e}")
-                    
+                    test_data = yaml.safe_load(content)
+                    if not isinstance(test_data, dict):
+                        raise ValueError("Invalid protocol format")
+                except yaml.YAMLError as e:
+                    raise ValueError(f"Invalid YAML: {e}")
+
+                # Try to load as ProtocolSpecification to validate structure
+                validation_path = TEMP_DIR / f"validating_{safe_filename}"
+                with open(validation_path, 'wb') as f:
+                    f.write(uploaded_file.getbuffer())
+
+                try:
+                    # This will validate all required fields
+                    test_spec = ProtocolSpecification.from_yaml(validation_path)
+
+                    # Save with timestamp to avoid collisions
+                    base_name = safe_filename.rsplit('.', 1)[0]
+                    timestamp = int(time.time())
+                    final_filename = f"{base_name}_{timestamp}.yaml"
+                    final_path = TEMP_DIR / final_filename
+
+                    validation_path.rename(final_path)
+
+                    st.success(f"Uploaded and validated: {safe_filename}")
+                    st.session_state.show_upload = False  # Close the expander
+                    st.rerun()
                 except Exception as e:
-                    st.error(f"Failed to upload: {e}")
-            
-            # Download section - only show if a protocol is loaded
-            if 'current_protocol' in st.session_state and st.session_state.current_protocol:
-                try:
-                    # Get the spec from the selected file
-                    spec = ProtocolSpecification.from_yaml(selected_file)
-                    yaml_str = yaml.dump(spec.to_yaml_dict(), default_flow_style=False, sort_keys=False)
-                    
-                    if selected_file.parent == TEMP_DIR:
-                        st.markdown("<small style='color: #FFA500;'>⚠️ Temporary protocol - download to keep it!</small>", unsafe_allow_html=True)
-                    
-                    st.download_button(
-                        label="Download",
-                        data=yaml_str,
-                        file_name=f"{spec.name.lower().replace(' ', '_')}_v{spec.version}.yaml",
-                        mime="text/yaml",
-                        use_container_width=True
-                    )
-                except:
-                    pass  # If spec can't be loaded, just don't show download
+                    # Clean up temp file on validation failure
+                    validation_path.unlink(missing_ok=True)
+                    raise ValueError(f"Invalid protocol: {e}")
+                
+            except Exception as e:
+                st.error(f"Failed to upload: {e}")
+        
+        # Download section - only show if a protocol is loaded
+        if 'current_protocol' in st.session_state and st.session_state.current_protocol:
+            try:
+                # Get the spec from the selected file
+                spec = ProtocolSpecification.from_yaml(selected_file)
+                yaml_str = yaml.dump(spec.to_yaml_dict(), default_flow_style=False, sort_keys=False)
+
+                if selected_file.parent == TEMP_DIR:
+                    st.markdown("<small style='color: #FFA500;'>⚠️ Temporary protocol - download to keep it!</small>", unsafe_allow_html=True)
+
+                st.download_button(
+                    label="Download",
+                    data=yaml_str,
+                    file_name=f"{spec.name.lower().replace(' ', '_')}_v{spec.version}.yaml",
+                    mime="text/yaml",
+                    use_container_width=True
+                )
+            except:
+                pass  # If spec can't be loaded, just don't show download
 
 # Handle duplicate dialog
 if st.session_state.get('duplicate_success', False):
@@ -359,10 +362,7 @@ if st.session_state.get('show_delete', False):
                         except Exception as e:
                             st.error(f"Failed to delete: {e}")
 
-# Import simulation package section
-st.markdown("---")
 # Import functionality removed - now in Simulations page
-st.markdown("---")
 
 # Load selected protocol
 try:
@@ -378,11 +378,11 @@ try:
     # Main content header
     st.header(f"{spec.name} v{spec.version}")
     
+    # Compact metadata display
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.markdown(f"**Author:** {spec.author}")
-        st.markdown(f"**Description:** {spec.description}")
-        st.markdown(f"**Protocol Type:** {spec.protocol_type}")
+        st.caption(f"**Author:** {spec.author} • **Type:** {spec.protocol_type}")
+        st.caption(f"**Description:** {spec.description}")
     with col2:
         st.caption(f"Created: {spec.created_date}")
         st.caption(f"Checksum: {spec.checksum[:8]}...")

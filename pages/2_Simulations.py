@@ -28,7 +28,7 @@ st.set_page_config(
     page_title="Simulations", 
     page_icon="🦍", 
     layout="wide",
-    initial_sidebar_state="expanded"  # Show sidebar for memory monitoring
+    initial_sidebar_state="collapsed"  # Start with sidebar hidden
 )
 
 # Check for startup redirect
@@ -55,8 +55,11 @@ from ape.components.simulation_ui_v2 import (
     calculate_runtime_estimate_v2
 )
 
-# Check if protocol is loaded first - do this early to avoid unnecessary rendering
+# Check if protocol is loaded first
 if not st.session_state.get('current_protocol'):
+    # Show workflow progress first
+    workflow_progress_indicator("simulation")
+    
     st.info("Select a protocol first to run a simulation.")
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -67,6 +70,15 @@ if not st.session_state.get('current_protocol'):
 
 # Protocol is loaded, get info
 protocol_info = st.session_state.current_protocol
+
+# We'll define the actual run_simulation function later, but need a placeholder for now
+# This will be updated after we have the recruitment parameters
+if 'run_simulation_action' not in st.session_state:
+    st.session_state.run_simulation_action = lambda: st.warning("Please wait for parameters to load...")
+
+# Show workflow progress at the top with the action callback
+has_results = st.session_state.get('current_sim_id') is not None
+workflow_progress_indicator("simulation", on_current_action=st.session_state.run_simulation_action, has_results=has_results)
 
 # Don't display protocol separately - it will be shown in the quick start box
 
@@ -190,9 +202,8 @@ def run_simulation():
     
     st.rerun()
 
-# Render the workflow indicator with the action callback
-has_results = st.session_state.get('current_sim_id') is not None
-workflow_progress_indicator("simulation", on_current_action=run_simulation, has_results=has_results)
+# Update the callback in session state so the workflow button uses it
+st.session_state.run_simulation_action = run_simulation
 
 # Initialize runtime history if not present
 if 'runtime_history' not in st.session_state:
