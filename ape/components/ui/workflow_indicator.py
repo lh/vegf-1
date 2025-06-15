@@ -11,10 +11,10 @@ def workflow_progress_indicator(current_step: str) -> None:
         current_step: The current step identifier ('home', 'protocol', 'simulation', 'analysis')
     """
     steps = [
-        ('home', '🏠 Home', 'APE.py'),
-        ('protocol', '📋 Protocol', 'pages/1_Protocol_Manager.py'),
-        ('simulation', '🚀 Simulation', 'pages/2_Simulations.py'),
-        ('analysis', '📊 Analysis', 'pages/3_Analysis.py')
+        ('home', 'Home', 'APE.py'),
+        ('protocol', 'Protocol', 'pages/1_Protocol_Manager.py'),
+        ('simulation', 'Simulation', 'pages/2_Simulations.py'),
+        ('analysis', 'Analysis', 'pages/3_Analysis.py')
     ]
     
     # Find current step index

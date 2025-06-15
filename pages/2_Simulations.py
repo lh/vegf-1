@@ -34,6 +34,10 @@ from ape.utils.carbon_button_helpers import (
     navigation_button
 )
 
+# Import UI components
+from ape.components.ui.workflow_indicator import workflow_progress_indicator, consistent_button_bar
+from ape.components.ui.quick_start_box import quick_start_box
+
 # Import our new component modules
 from ape.components.simulation_io import create_export_package, handle_import, render_manage_section
 from ape.components.simulation_ui import (
@@ -45,13 +49,16 @@ from ape.components.simulation_ui_v2 import (
     calculate_runtime_estimate_v2
 )
 
+# Show workflow progress first
+workflow_progress_indicator("simulation")
+
 # Show memory usage in sidebar
 monitor = MemoryMonitor()
 monitor.display_in_sidebar()
 
 # Memory limit toggle in sidebar (only show if running locally)
 with st.sidebar:
-    st.markdown("### ⚙️ Settings")
+    st.markdown("### Settings")
     
     # Only show toggle if running locally
     if not is_streamlit_cloud():
@@ -63,26 +70,15 @@ with st.sidebar:
     else:
         # Always check on Streamlit Cloud
         st.session_state['check_memory_limits'] = True
-        st.info("📊 Memory limits enforced (Streamlit Cloud)")
+        st.info("Memory limits enforced (Streamlit Cloud)")
     
     # Debug info in expander
     with st.expander("Environment Info", expanded=False):
-        st.text(f"Environment: {'☁️ Cloud' if is_streamlit_cloud() else '💻 Local'}")
-        st.text(f"Memory checking: {'✅ On' if st.session_state.get('check_memory_limits', should_check_memory_limits()) else '❌ Off'}")
+        st.text(f"Environment: {'Cloud' if is_streamlit_cloud() else 'Local'}")
+        st.text(f"Memory checking: {'On' if st.session_state.get('check_memory_limits', should_check_memory_limits()) else 'Off'}")
 
-# Top navigation
-col1, col2, col3 = st.columns([1, 6, 1])
-with col1:
-    if top_navigation_home_button():
-        st.switch_page("APE.py")
-with col2:
-    st.title("Simulations")
-with col3:
-    # Display ape logo - closed eyes if simulation is running
-    if st.session_state.get('simulation_running', False):
-        st.image("assets/closed_eyes_ape.svg", width=80)
-    else:
-        st.image("assets/ape_logo.svg", width=80)
+# Page title
+st.title("Simulations")
 
 # Check if protocol is loaded first
 if not st.session_state.get('current_protocol'):
@@ -96,56 +92,118 @@ if not st.session_state.get('current_protocol'):
     st.stop()
 
 # Section 3: Run New Simulation
-st.header("New")
+st.header("Simulation Setup")
 
 # Display current protocol (subtle)
 protocol_info = st.session_state.current_protocol
 st.caption(f"Protocol: **{protocol_info['name']}** v{protocol_info['version']}")
 
-# Use v2 UI components for Phase 4 implementation
-use_v2_ui = True  # Feature flag - set to True to enable new recruitment modes
+# Check if we're in quick start mode
+if st.session_state.get('quick_start_mode', False):
+    # Automatically select Medium Trial preset
+    st.session_state.preset_patients = 500
+    st.session_state.preset_duration = 3.0
+    st.session_state.recruitment_mode = "Fixed Total"
+    st.session_state.quick_start_mode = False  # Reset flag
+    st.rerun()
 
-if use_v2_ui:
-    # V2: Enhanced UI with recruitment modes
-    render_preset_buttons_v2()
-    
-    # Get all parameters including recruitment mode
-    engine_type, recruitment_params, seed = render_enhanced_parameter_inputs()
-    
-    # Extract values for compatibility with rest of code
-    if recruitment_params['mode'] == 'Fixed Total':
-        n_patients = recruitment_params['n_patients']
-        duration_years = recruitment_params['duration_years']
+# Define presets for Quick Start box
+presets = {
+    'small': {
+        'label': 'Small Trial',
+        'description': 'Quick test run',
+        'patients': 100,
+        'duration': 2.0,
+        'runtime': '< 1 second'
+    },
+    'medium': {
+        'label': 'Medium Trial',
+        'description': 'Standard analysis',
+        'patients': 500,
+        'duration': 3.0,
+        'runtime': '~3 seconds'
+    },
+    'large': {
+        'label': 'Large Trial',
+        'description': 'Comprehensive study',
+        'patients': 2000,
+        'duration': 5.0,
+        'runtime': '~10 seconds'
+    },
+    'realworld': {
+        'label': 'Real-World',
+        'description': 'Continuous recruitment',
+        'patients': '20/week',
+        'duration': 5.0,
+        'runtime': '~10 seconds'
+    }
+}
+
+# Show Quick Start box
+selected_preset = quick_start_box(presets, default_preset='medium')
+
+# Handle preset selection
+if selected_preset:
+    if selected_preset == 'realworld':
+        st.session_state.recruitment_rate = 20.0
+        st.session_state.rate_unit = "per week"
+        st.session_state.preset_duration = 5.0
+        st.session_state.recruitment_mode = "Constant Rate"
     else:
-        # For constant rate mode, use expected total
-        n_patients = recruitment_params.get('expected_total', 1000)
-        duration_years = recruitment_params['duration_years']
+        preset = presets[selected_preset]
+        st.session_state.preset_patients = preset['patients']
+        st.session_state.preset_duration = preset['duration']
+        st.session_state.recruitment_mode = "Fixed Total"
+    st.rerun()
+
+# Get parameters - either from presets or advanced settings
+if 'preset_patients' in st.session_state or 'recruitment_rate' in st.session_state:
+    # Using preset values - show simplified view
+    if st.session_state.get('recruitment_mode') == "Constant Rate":
+        st.info(f"**Constant Rate Mode**: {st.session_state.recruitment_rate} patients{st.session_state.rate_unit} for {st.session_state.preset_duration} years")
+        engine_type = "abs"  # Default
+        recruitment_params = {
+            'mode': 'Constant Rate',
+            'recruitment_rate': st.session_state.recruitment_rate,
+            'rate_unit': st.session_state.rate_unit,
+            'duration_years': st.session_state.preset_duration,
+            'engine_type': engine_type,
+            'seed': 42  # Default seed
+        }
+    else:
+        st.info(f"**Fixed Total Mode**: {st.session_state.preset_patients} patients over {st.session_state.preset_duration} years")
+        engine_type = "abs"  # Default
+        recruitment_params = {
+            'mode': 'Fixed Total',
+            'n_patients': st.session_state.preset_patients,
+            'duration_years': st.session_state.preset_duration,
+            'engine_type': engine_type,
+            'seed': 42  # Default seed
+        }
+    seed = 42
     
-    # Runtime estimate using v2 calculator
-    runtime_estimate = calculate_runtime_estimate_v2(recruitment_params)
-    st.caption(f"Estimated runtime: {runtime_estimate}")
+    # Advanced settings in expandable section
+    with st.expander("Customize Settings", expanded=False):
+        # Get all parameters including recruitment mode
+        engine_type, recruitment_params, seed = render_enhanced_parameter_inputs()
 else:
-    # V1: Original UI (kept for fallback)
-    render_preset_buttons()
-    engine_type, n_patients, duration_years, seed = render_parameter_inputs()
-    render_runtime_estimate(n_patients, duration_years)
+    # No preset selected - show full advanced settings
+    with st.expander("Advanced Settings", expanded=True):
+        # Get all parameters including recruitment mode
+        engine_type, recruitment_params, seed = render_enhanced_parameter_inputs()
 
-# Section 4: Action buttons (Control Panel)
-st.markdown("---")
+# Extract values for compatibility with rest of code
+if recruitment_params['mode'] == 'Fixed Total':
+    n_patients = recruitment_params['n_patients']
+    duration_years = recruitment_params['duration_years']
+else:
+    # For constant rate mode, use expected total
+    n_patients = recruitment_params.get('expected_total', 1000)
+    duration_years = recruitment_params['duration_years']
 
-# Control buttons
-has_results = st.session_state.get('current_sim_id') is not None
-run_clicked, view_analysis_clicked, protocol_clicked, manage_clicked = render_control_buttons(has_results)
-
-# Handle button clicks
-if view_analysis_clicked and has_results:
-    st.switch_page("pages/3_Analysis.py")
-
-if protocol_clicked:
-    st.switch_page("pages/1_Protocol_Manager.py")
-
-if manage_clicked:
-    st.session_state.show_manage = not st.session_state.get('show_manage', False)
+# Runtime estimate using v2 calculator
+runtime_estimate = calculate_runtime_estimate_v2(recruitment_params)
+st.caption(f"Estimated runtime: {runtime_estimate}")
 
 # Show manage panel if toggled
 if st.session_state.get('show_manage', False):
@@ -154,23 +212,43 @@ if st.session_state.get('show_manage', False):
     with manage_cols[1]:
         render_manage_section()
 
+# Section 4: Action buttons (Control Panel) using consistent button bar
+st.markdown("---")
+has_results = st.session_state.get('current_sim_id') is not None
+
+# Create button bar with appropriate options
+left_buttons = [("← Back to Protocol", "back_protocol", "Change protocol selection")]
+right_buttons = []
+
+if has_results:
+    right_buttons.append(("View Analysis", "view_analysis", "Analyze simulation results"))
+
+right_buttons.append(("Manage", "manage", "Import/export simulations"))
+
+clicked = consistent_button_bar(
+    left_buttons=left_buttons,
+    right_buttons=right_buttons,
+    primary_action=("Run Simulation", "run_sim", "Start the simulation")
+)
+
+# Handle button clicks
+if clicked.get("back_protocol"):
+    st.switch_page("pages/1_Protocol_Manager.py")
+
+if clicked.get("view_analysis") and has_results:
+    st.switch_page("pages/3_Analysis.py")
+
+if clicked.get("manage"):
+    st.session_state.show_manage = not st.session_state.get('show_manage', False)
+    st.rerun()
+
 # Handle Run Simulation click
-if run_clicked:
+if clicked.get("run_sim"):
     # Set simulation running state to show closed eyes ape
     st.session_state.simulation_running = True
     
     # Store parameters for the simulation run
-    if use_v2_ui:
-        st.session_state.recruitment_params = recruitment_params
-    else:
-        # Convert old-style parameters to recruitment params format
-        st.session_state.recruitment_params = {
-            'mode': 'Fixed Total',
-            'n_patients': n_patients,
-            'duration_years': duration_years,
-            'engine_type': engine_type,
-            'seed': seed
-        }
+    st.session_state.recruitment_params = recruitment_params
     
     st.rerun()
 
@@ -203,7 +281,7 @@ if st.session_state.get('simulation_running', False):
             monitor = MemoryMonitor()
             is_feasible, warning = monitor.check_simulation_feasibility(n_patients, duration_years)
             if warning:
-                with st.expander("💾 Memory Check", expanded=not is_feasible):
+                with st.expander("Memory Check", expanded=not is_feasible):
                     if is_feasible:
                         st.warning(warning)
                     else:

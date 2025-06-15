@@ -25,7 +25,7 @@ def quick_start_box(presets: Dict[str, Dict[str, Any]], default_preset: str = "m
                 padding: 1.5rem;
                 margin-bottom: 1rem;
             ">
-                <h3 style="margin-top: 0; color: #0066CC;">🚀 Quick Start</h3>
+                <h3 style="margin-top: 0; color: #0066CC;">Quick Start</h3>
                 <p style="margin-bottom: 1rem;">Choose a preset configuration to get started quickly:</p>
             </div>
             """,
@@ -45,7 +45,7 @@ def quick_start_box(presets: Dict[str, Dict[str, Any]], default_preset: str = "m
                 # Add recommendation badge
                 label = preset['label']
                 if is_default:
-                    label = f"⭐ {label}\n(Recommended)"
+                    label = f"{label}\n(Recommended)"
                 
                 from ape.utils.carbon_button_helpers import navigation_button
                 if navigation_button(
@@ -67,7 +67,7 @@ def quick_start_box(presets: Dict[str, Dict[str, Any]], default_preset: str = "m
         st.markdown(
             """
             <p style="text-align: center; color: #666; margin-top: 1rem; margin-bottom: 0;">
-                Need different settings? Customize below or use Advanced Settings ⚙️
+                Need different settings? Customize below or use Advanced Settings
             </p>
             """,
             unsafe_allow_html=True
