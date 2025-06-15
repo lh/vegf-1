@@ -509,3 +509,14 @@ if st.session_state.get('simulation_running', False):
 # Section 1: Recent Simulations List
 st.markdown("---")
 render_recent_simulations()
+
+# Add a little ape at the bottom as a fun surprise
+# Show closed eyes ape if simulation is running
+st.markdown("---")
+col1, col2, col3 = st.columns([1, 1, 1])
+with col2:
+    from ape.components.ui.ape_logo import display_ape_logo
+    if st.session_state.get('simulation_running', False):
+        display_ape_logo(specific_logo="closed_eyes_ape.svg", width=50)
+    else:
+        display_ape_logo(width=50)

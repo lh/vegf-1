@@ -845,3 +845,16 @@ with tab8:
         st.info("No audit trail available for this session.")
     
     # Export functionality removed - now in Simulations page
+
+# Add a little ape at the bottom as a fun surprise
+# Maybe thoughtful ape for analysis page?
+st.markdown("---")
+col1, col2, col3 = st.columns([1, 1, 1])
+with col2:
+    from ape.components.ui.ape_logo import display_ape_logo
+    # Sometimes show thoughtful ape on analysis page
+    import random
+    if random.random() < 0.3:  # 30% chance of thoughtful ape
+        display_ape_logo(specific_logo="thoughtful_ape.svg", width=50)
+    else:
+        display_ape_logo(width=50)

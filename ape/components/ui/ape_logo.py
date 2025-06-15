@@ -20,15 +20,13 @@ def get_available_ape_logos() -> List[str]:
 
 def display_ape_logo(
     specific_logo: Optional[str] = None,
-    width: int = 40,
-    position: str = "top-right"
+    width: int = 40
 ) -> None:
     """Display an ape logo on the page.
     
     Args:
         specific_logo: Specific logo filename to use, or None for random
         width: Width in pixels for the logo
-        position: Where to position the logo (currently only top-right supported)
     """
     # Get logo path
     if specific_logo:
@@ -42,49 +40,11 @@ def display_ape_logo(
     
     if not logo_path.exists():
         # Fallback to emoji if file not found
-        st.markdown(
-            f'<div style="position: fixed; top: 10px; right: 10px; font-size: {width}px; z-index: 999;">🦍</div>',
-            unsafe_allow_html=True
-        )
+        st.markdown(f"🦍")
         return
     
-    # Read the SVG file
-    with open(logo_path, 'r') as f:
-        svg_content = f.read()
-    
-    # Create a unique ID for this instance
-    unique_id = f"ape-logo-{hash(logo_file)}_{random.randint(1000, 9999)}"
-    
-    # Display the logo in a fixed position
-    if position == "top-right":
-        st.markdown(
-            f"""
-            <div id="{unique_id}" style="
-                position: fixed;
-                top: 10px;
-                right: 10px;
-                width: {width}px;
-                height: {width}px;
-                z-index: 999;
-                opacity: 0.8;
-                transition: opacity 0.2s;
-            ">
-                <div style="width: 100%; height: 100%;">
-                    {svg_content}
-                </div>
-            </div>
-            <style>
-                #{unique_id}:hover {{
-                    opacity: 1;
-                }}
-                #{unique_id} svg {{
-                    width: 100%;
-                    height: 100%;
-                }}
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
+    # Display the logo simply using st.image
+    st.image(str(logo_path), width=width)
 
 
 def get_page_specific_logo(page_name: str) -> Optional[str]:

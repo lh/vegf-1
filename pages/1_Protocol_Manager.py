@@ -1049,3 +1049,10 @@ try:
 except Exception as e:
     st.error(f"Error loading protocol: {e}")
     st.exception(e)
+
+# Add a little ape at the bottom as a fun surprise
+st.markdown("---")
+col1, col2, col3 = st.columns([1, 1, 1])
+with col2:
+    from ape.components.ui.ape_logo import display_ape_logo
+    display_ape_logo(width=50)
