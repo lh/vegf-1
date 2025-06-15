@@ -49,8 +49,11 @@ from ape.components.simulation_ui_v2 import (
     calculate_runtime_estimate_v2
 )
 
-# Show workflow progress first
-workflow_progress_indicator("simulation")
+# Define callback for simulation action (will be properly set after parameters are defined)
+simulation_action_callback = None
+
+# Add placeholder for workflow indicator (will be populated after parameters are defined)
+workflow_placeholder = st.empty()
 
 # Add placeholder for action bar (will be populated after parameters are defined)
 action_bar_placeholder = st.empty()
@@ -208,10 +211,24 @@ else:
 runtime_estimate = calculate_runtime_estimate_v2(recruitment_params)
 st.caption(f"Estimated runtime: {runtime_estimate}")
 
-# Now populate the action bar with the defined parameters
+# Define the simulation action callback
+def run_simulation():
+    # Set simulation running state to show closed eyes ape
+    st.session_state.simulation_running = True
+    
+    # Store parameters for the simulation run
+    st.session_state.recruitment_params = recruitment_params
+    
+    st.rerun()
+
+# Now populate the workflow indicator with the action callback
+with workflow_placeholder.container():
+    workflow_progress_indicator("simulation", on_current_action=run_simulation)
+
+# Now populate the action bar with the remaining buttons
 has_results = st.session_state.get('current_sim_id') is not None
 with action_bar_placeholder.container():
-    col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
+    col1, col2, col3 = st.columns([5, 1, 1])
     
     with col2:
         if has_results:
@@ -231,18 +248,6 @@ with action_bar_placeholder.container():
                                full_width=True, button_type="ghost"):
                 st.session_state.show_manage = True
                 st.rerun()
-                
-    with col4:
-        if navigation_button("Run Simulation →", key="run_sim_top", 
-                           help_text="Start the simulation", 
-                           full_width=True, button_type="primary"):
-            # Set simulation running state to show closed eyes ape
-            st.session_state.simulation_running = True
-            
-            # Store parameters for the simulation run
-            st.session_state.recruitment_params = recruitment_params
-            
-            st.rerun()
 
 # Show manage panel if toggled
 if st.session_state.get('show_manage', False):
