@@ -57,6 +57,9 @@ class TimeBasedProtocolSpecification:
     source_file: str
     load_timestamp: str
     
+    # Optional parameter files
+    demographics_parameters_file: Optional[str] = None
+    
     # Model configuration (with defaults)
     model_type: str = "time_based"
     transition_model: str = "fortnightly"  # How disease states transition
@@ -139,6 +142,7 @@ class TimeBasedProtocolSpecification:
             treatment_effect_file=data['treatment_effect_file'],
             vision_parameters_file=data['vision_parameters_file'],
             discontinuation_parameters_file=data['discontinuation_parameters_file'],
+            demographics_parameters_file=data.get('demographics_parameters_file'),
             source_file=str(filepath.absolute()),
             load_timestamp=datetime.now().isoformat(),
             checksum=checksum
@@ -168,6 +172,16 @@ class TimeBasedProtocolSpecification:
         with open(param_path) as f:
             return yaml.safe_load(f)
     
+    def load_demographics_parameters(self) -> Optional[Dict[str, Any]]:
+        """Load demographics parameters from file if available."""
+        if not self.demographics_parameters_file:
+            return None
+        param_path = Path(self.source_file).parent / self.demographics_parameters_file
+        if param_path.exists():
+            with open(param_path) as f:
+                return yaml.safe_load(f)
+        return None
+    
     def to_audit_log(self) -> Dict[str, Any]:
         """Generate audit log entry."""
         return {
@@ -181,7 +195,8 @@ class TimeBasedProtocolSpecification:
                 'disease_transitions': self.disease_transitions_file,
                 'treatment_effects': self.treatment_effect_file,
                 'vision': self.vision_parameters_file,
-                'discontinuation': self.discontinuation_parameters_file
+                'discontinuation': self.discontinuation_parameters_file,
+                'demographics': self.demographics_parameters_file
             }
         }
     
@@ -212,5 +227,6 @@ class TimeBasedProtocolSpecification:
             'disease_transitions_file': self.disease_transitions_file,
             'treatment_effect_file': self.treatment_effect_file,
             'vision_parameters_file': self.vision_parameters_file,
-            'discontinuation_parameters_file': self.discontinuation_parameters_file
+            'discontinuation_parameters_file': self.discontinuation_parameters_file,
+            'demographics_parameters_file': self.demographics_parameters_file
         }

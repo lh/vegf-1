@@ -50,6 +50,9 @@ class ABSEngineTimeBasedWithSpecs(ABSEngineTimeBased):
         # Load discontinuation parameters if available
         self._load_discontinuation_parameters()
         
+        # Load demographics parameters if available
+        self._load_demographics_parameters()
+        
         # Call parent init
         super().__init__(
             disease_model=disease_model,
@@ -90,6 +93,20 @@ class ABSEngineTimeBasedWithSpecs(ABSEngineTimeBased):
         else:
             # Use default parameters
             self.discontinuation_params = self._get_default_discontinuation_params()
+    
+    def _load_demographics_parameters(self):
+        """Load demographics parameters from protocol spec or parameter files."""
+        if hasattr(self.protocol_spec, 'demographics_parameters_file') and self.protocol_spec.demographics_parameters_file:
+            # Load from external file
+            params_path = Path(self.protocol_spec.source_file).parent / self.protocol_spec.demographics_parameters_file
+            if params_path.exists():
+                with open(params_path) as f:
+                    self.demographics_params = yaml.safe_load(f)
+            else:
+                self.demographics_params = None
+        else:
+            # No demographics parameters
+            self.demographics_params = None
     
     def _sample_baseline_vision(self) -> int:
         """Sample baseline vision from protocol specification."""

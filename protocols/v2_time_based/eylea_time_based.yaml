@@ -31,6 +31,7 @@ disease_transitions_file: "parameters/disease_transitions.yaml"
 treatment_effect_file: "parameters/treatment_effect.yaml"
 vision_parameters_file: "parameters/vision.yaml"
 discontinuation_parameters_file: "parameters/discontinuation.yaml"
+demographics_parameters_file: "parameters/demographics.yaml"
 
 # Baseline vision (same as standard protocols)
 baseline_vision:

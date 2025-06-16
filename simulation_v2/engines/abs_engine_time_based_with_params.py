@@ -15,8 +15,12 @@ from datetime import datetime, timedelta
 from typing import Dict, Optional, Any
 from dataclasses import dataclass
 
+import yaml
+from pathlib import Path
 from simulation_v2.engines.abs_engine_time_based_with_specs import ABSEngineTimeBasedWithSpecs
 from simulation_v2.core.patient import Patient
+from simulation_v2.core.discontinuation_checker import DiscontinuationChecker
+from simulation_v2.core.disease_model import DiseaseState
 
 
 @dataclass
@@ -40,6 +44,33 @@ class ABSEngineTimeBasedWithParams(ABSEngineTimeBasedWithSpecs):
         """Initialize with vision state tracking."""
         super().__init__(*args, **kwargs)
         self.patient_vision_states: Dict[str, PatientVisionState] = {}
+        
+        # Initialize discontinuation checker if we have the parameters
+        self.discontinuation_checker = None
+        if hasattr(self, 'discontinuation_params') and self.discontinuation_params:
+            self.discontinuation_checker = DiscontinuationChecker(self.discontinuation_params)
+        
+        # Load demographics parameters
+        self._load_demographics_parameters()
+    
+    def _load_demographics_parameters(self):
+        """Load demographics parameters from parameter files."""
+        # Try protocol-specific path first
+        if hasattr(self, 'protocol_spec') and hasattr(self.protocol_spec, 'demographics_parameters_file'):
+            params_path = Path(self.protocol_spec.source_file).parent / self.protocol_spec.demographics_parameters_file
+            if params_path.exists():
+                with open(params_path) as f:
+                    self.demographics_params = yaml.safe_load(f)
+                return
+        
+        # Fallback to default location
+        default_path = Path(__file__).parent.parent.parent / 'protocols' / 'v2_time_based' / 'parameters' / 'demographics.yaml'
+        if default_path.exists():
+            with open(default_path) as f:
+                self.demographics_params = yaml.safe_load(f)
+        else:
+            # No demographics parameters available
+            self.demographics_params = None
     
     def _initialize_patient_vision(self, patient_id: str, patient: Patient, enrollment_date: datetime):
         """
@@ -272,13 +303,39 @@ class ABSEngineTimeBasedWithParams(ABSEngineTimeBasedWithSpecs):
             min(measurement_params['max_measurable_vision'], measured_vision)
         )
         
-        # Check discontinuation
-        should_discontinue = self._check_vision_discontinuation(patient.id, measured_vision)
-        
-        if should_discontinue:
-            patient.is_discontinued = True
-            patient.discontinuation_date = visit_date
-            patient.discontinuation_reason = 'poor_vision'
+        # Check discontinuation using comprehensive checker
+        if self.discontinuation_checker:
+            # Calculate patient age if birth date is available
+            patient_age = None
+            if patient.birth_date:
+                patient_age = (visit_date - patient.birth_date).days // 365
+            elif patient.age_years is not None:
+                # Age at enrollment + time in study
+                years_in_study = (visit_date - patient.enrollment_date).days / 365.25
+                patient_age = int(patient.age_years + years_in_study)
+            
+            # Check all discontinuation reasons
+            disc_result = self.discontinuation_checker.check_discontinuation(
+                patient=patient,
+                current_date=visit_date,
+                measured_vision=measured_vision,
+                patient_age=patient_age
+            )
+            
+            if disc_result.should_discontinue:
+                patient.is_discontinued = True
+                patient.discontinuation_date = visit_date
+                patient.discontinuation_reason = disc_result.reason
+                return False  # Don't treat if discontinuing
+        else:
+            # Fallback to simple vision check
+            should_discontinue = self._check_vision_discontinuation(patient.id, measured_vision)
+            
+            if should_discontinue:
+                patient.is_discontinued = True
+                patient.discontinuation_date = visit_date
+                patient.discontinuation_reason = 'poor_vision'
+                return False  # Don't treat if discontinuing
         
         # Record visit
         visit_record = {
@@ -286,16 +343,20 @@ class ABSEngineTimeBasedWithParams(ABSEngineTimeBasedWithSpecs):
             'disease_state': patient.current_state,
             'vision': measured_vision,
             'actual_vision': actual_vision,
-            'treatment_given': should_treat and not should_discontinue,
+            'treatment_given': should_treat and not patient.is_discontinued,
             'days_since_last_injection': patient.days_since_last_injection_at(visit_date),
-            'is_improving': self.patient_vision_states[patient.id].is_improving
+            'is_improving': self.patient_vision_states[patient.id].is_improving,
+            'is_discontinuation_visit': patient.is_discontinued and patient.discontinuation_date == visit_date
         }
         
         # Update patient state
         patient.visit_history.append(visit_record)
         patient.current_vision = measured_vision
         
-        if should_treat and not should_discontinue:
+        # Update tracking counters after recording visit
+        self._update_patient_tracking(patient, patient.current_state, measured_vision)
+        
+        if should_treat and not patient.is_discontinued:
             patient.injection_count += 1
             patient._last_injection_date = visit_date
             return True
@@ -323,30 +384,62 @@ class ABSEngineTimeBasedWithParams(ABSEngineTimeBasedWithSpecs):
         
         return False
     
-    def run(self, duration_years: float, start_date: Optional[datetime] = None) -> 'SimulationResults':
+    def _create_patient(self, patient_id: str, enrollment_date: datetime) -> Patient:
         """
-        Override run to initialize vision states for new patients.
+        Create patient with age initialization and vision tracking.
+        
+        Override to add age sampling and vision state initialization.
         """
-        # Let parent class handle start_date default
-        # ABSEngine already defaults to datetime(2024, 1, 1)
+        # Create base patient
+        patient = super()._create_patient(patient_id, enrollment_date)
         
-        # Call parent run but intercept patient creation
-        # Store original create patient method
-        original_create = self._create_patient
+        # Sample and set patient age from demographics
+        if self.demographics_params:
+            age_dist = self.demographics_params.get('demographics_parameters', {}).get('age_distribution', {})
+            mean_age = age_dist.get('mean', 77.5)
+            std_age = age_dist.get('std', 8.2)
+            min_age = age_dist.get('min', 50)
+            max_age = age_dist.get('max', 95)
+            
+            # Sample age from normal distribution, bounded
+            age = random.gauss(mean_age, std_age)
+            age = max(min_age, min(max_age, age))
+            patient.age_years = int(age)
+            
+            # Calculate birth date from age at enrollment
+            patient.birth_date = enrollment_date - timedelta(days=int(age * 365.25))
         
-        def create_with_vision(patient_id: str, enrollment_date: datetime) -> Patient:
-            patient = original_create(patient_id, enrollment_date)
-            self._initialize_patient_vision(patient_id, patient, enrollment_date)
-            return patient
+        # Initialize vision tracking
+        self._initialize_patient_vision(patient_id, patient, enrollment_date)
         
-        # Temporarily replace method
-        self._create_patient = create_with_vision
+        return patient
+    
+    def _update_patient_tracking(self, patient: Patient, current_state: DiseaseState, measured_vision: int):
+        """
+        Update patient tracking counters for discontinuation logic.
         
-        try:
-            # Run simulation using parent's run method
-            results = super().run(duration_years, start_date)
-        finally:
-            # Restore original method
-            self._create_patient = original_create
+        Args:
+            patient: Patient to update
+            current_state: Current disease state
+            measured_vision: Current measured vision
+        """
+        # Track consecutive stable visits
+        if current_state == DiseaseState.STABLE:
+            patient.consecutive_stable_visits = getattr(patient, 'consecutive_stable_visits', 0) + 1
+        else:
+            patient.consecutive_stable_visits = 0
         
-        return results
+        # Track visits without improvement
+        if len(patient.visit_history) > 1:
+            previous_vision = patient.visit_history[-2]['vision']
+            if measured_vision <= previous_vision:
+                patient.visits_without_improvement = getattr(patient, 'visits_without_improvement', 0) + 1
+            else:
+                patient.visits_without_improvement = 0
+        
+        # Track visits with significant loss (handled in discontinuation checker)
+        # Initialize if not present
+        if not hasattr(patient, 'visits_with_significant_loss'):
+            patient.visits_with_significant_loss = 0
+        if not hasattr(patient, 'consecutive_poor_vision_visits'):
+            patient.consecutive_poor_vision_visits = 0
