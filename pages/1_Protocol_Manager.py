@@ -8,6 +8,7 @@ import yaml
 import json
 from datetime import datetime
 import re
+import pandas as pd
 
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
 from ape.utils.startup_redirect import handle_page_startup
@@ -541,6 +542,36 @@ try:
                         if types:
                             data['discontinuation_rules']['discontinuation_types'] = types
                     
+                    # For time-based protocols, save parameter file changes
+                    if protocol_type == "time_based" and 'tb_param_changes' in st.session_state:
+                        protocol_dir = Path(spec.source_file).parent
+                        
+                        # Save each modified parameter file
+                        for param_type, param_data in st.session_state.tb_param_changes.items():
+                            if param_type == 'transitions':
+                                param_path = protocol_dir / spec.disease_transitions_file
+                            elif param_type == 'effects':
+                                param_path = protocol_dir / spec.treatment_effect_file
+                            elif param_type == 'vision':
+                                param_path = protocol_dir / spec.vision_parameters_file
+                            elif param_type == 'discontinuation':
+                                param_path = protocol_dir / spec.discontinuation_parameters_file
+                            else:
+                                continue
+                            
+                            # Backup original
+                            if param_path.exists():
+                                import shutil
+                                backup_path = param_path.with_suffix('.yaml.bak')
+                                shutil.copy2(param_path, backup_path)
+                            
+                            # Save changes
+                            with open(param_path, 'w') as f:
+                                yaml.dump(param_data, f, default_flow_style=False, sort_keys=False)
+                        
+                        # Clear parameter changes from session state
+                        del st.session_state['tb_param_changes']
+                    
                     # Update modified date
                     data['modified_date'] = datetime.now().strftime("%Y-%m-%d")
                     
@@ -660,28 +691,324 @@ try:
                 st.metric("Vision Range Max", f"{spec.baseline_vision_max} letters")
         
         with tab4:
-            st.subheader("Parameter Files")
-            st.caption("Time-based models use external parameter files for detailed configuration:")
+            st.subheader("Parameters")
             
-            # List parameter files
-            param_files = [
-                ("Disease Transitions", spec.disease_transitions_file),
-                ("Treatment Effects", spec.treatment_effect_file),
-                ("Vision Parameters", spec.vision_parameters_file),
-                ("Discontinuation", spec.discontinuation_parameters_file)
-            ]
+            # Create sub-tabs for different parameter types
+            param_tabs = st.tabs(["Disease Transitions", "Treatment Effects", "Vision", "Discontinuation"])
             
-            if hasattr(spec, 'demographics_parameters_file') and spec.demographics_parameters_file:
-                param_files.append(("Demographics", spec.demographics_parameters_file))
+            # Load parameter files
+            protocol_dir = Path(spec.source_file).parent
             
-            for name, file_path in param_files:
-                col1, col2 = st.columns([1, 3])
-                with col1:
-                    st.markdown(f"**{name}:**")
-                with col2:
-                    st.code(file_path, language=None)
+            # Disease Transitions sub-tab
+            with param_tabs[0]:
+                transitions_path = protocol_dir / spec.disease_transitions_file
+                if transitions_path.exists():
+                    with open(transitions_path) as f:
+                        trans_data = yaml.safe_load(f)
+                    
+                    transitions = trans_data.get('fortnightly_transitions', {})
+                    states = list(transitions.keys())
+                    
+                    if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
+                        st.info("Edit fortnightly (14-day) transition probabilities")
+                        st.warning("⚠️ Rows must sum to 1.0")
+                        
+                        # Track if changes were made
+                        changes_made = False
+                        
+                        for from_state in states:
+                            st.markdown(f"**From {from_state}:**")
+                            cols = st.columns(len(states))
+                            
+                            row_sum = 0.0
+                            new_values = {}
+                            
+                            for i, to_state in enumerate(states):
+                                with cols[i]:
+                                    current_val = transitions[from_state][to_state]
+                                    
+                                    if to_state == 'NAIVE' and from_state != 'NAIVE':
+                                        st.text_input(
+                                            to_state,
+                                            value="0.0000",
+                                            disabled=True,
+                                            key=f"tb_trans_{from_state}_{to_state}"
+                                        )
+                                        new_values[to_state] = 0.0
+                                    else:
+                                        val_str = st.text_input(
+                                            to_state,
+                                            value=f"{current_val:.4f}",
+                                            key=f"tb_trans_{from_state}_{to_state}"
+                                        )
+                                        try:
+                                            val = float(val_str)
+                                            new_values[to_state] = val
+                                            row_sum += val
+                                            if abs(val - current_val) > 0.0001:
+                                                changes_made = True
+                                        except:
+                                            new_values[to_state] = current_val
+                                            row_sum += current_val
+                            
+                            # Show row sum validation
+                            if abs(row_sum - 1.0) > 0.0001:
+                                st.error(f"Row sum: {row_sum:.4f} (must equal 1.0)")
+                            else:
+                                st.success(f"Row sum: {row_sum:.4f} ✓")
+                                # Update values if valid
+                                transitions[from_state] = new_values
+                        
+                        # Store changes in session state
+                        if changes_made:
+                            if 'tb_param_changes' not in st.session_state:
+                                st.session_state.tb_param_changes = {}
+                            st.session_state.tb_param_changes['transitions'] = trans_data
+                    else:
+                        # Read-only display
+                        matrix = []
+                        for from_state in states:
+                            row = [transitions[from_state][to_state] for to_state in states]
+                            matrix.append(row)
+                        
+                        df = pd.DataFrame(matrix, index=states, columns=states)
+                        st.dataframe(df.style.format("{:.4f}"), use_container_width=True)
             
-            st.info("These parameter files contain the detailed model configuration and can be edited separately.")
+            # Treatment Effects sub-tab
+            with param_tabs[1]:
+                effects_path = protocol_dir / spec.treatment_effect_file
+                if effects_path.exists():
+                    with open(effects_path) as f:
+                        effects_data = yaml.safe_load(f)
+                    
+                    if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
+                        st.info("Edit treatment effect parameters")
+                        
+                        # Efficacy decay
+                        st.markdown("### Treatment Efficacy Decay")
+                        decay = effects_data.get('treatment_efficacy_decay', {})
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            half_life = st.text_input(
+                                "Half-life (days)",
+                                value=str(decay.get('half_life_days', 84)),
+                                key="tb_half_life"
+                            )
+                            try:
+                                decay['half_life_days'] = int(half_life)
+                            except:
+                                pass
+                        
+                        with col2:
+                            min_eff = st.text_input(
+                                "Minimum efficacy",
+                                value=f"{decay.get('min_efficacy', 0.1):.2f}",
+                                key="tb_min_efficacy"
+                            )
+                            try:
+                                decay['min_efficacy'] = float(min_eff)
+                            except:
+                                pass
+                        
+                        effects_data['treatment_efficacy_decay'] = decay
+                        
+                        # Multipliers
+                        st.markdown("### State Transition Multipliers")
+                        st.caption("How treatment modifies transition probabilities (1.0 = no effect)")
+                        
+                        multipliers = effects_data.get('treatment_multipliers', {})
+                        
+                        for state in ['STABLE', 'ACTIVE', 'HIGHLY_ACTIVE']:
+                            if state in multipliers:
+                                st.markdown(f"**From {state}:**")
+                                mults = multipliers[state].get('multipliers', {})
+                                
+                                cols = st.columns(len(mults))
+                                for i, (trans, mult) in enumerate(mults.items()):
+                                    with cols[i % len(cols)]:
+                                        new_mult = st.text_input(
+                                            trans.replace('_to_', ' → '),
+                                            value=f"{mult:.2f}",
+                                            key=f"tb_mult_{state}_{trans}"
+                                        )
+                                        try:
+                                            mults[trans] = float(new_mult)
+                                        except:
+                                            pass
+                        
+                        # Store changes
+                        if 'tb_param_changes' not in st.session_state:
+                            st.session_state.tb_param_changes = {}
+                        st.session_state.tb_param_changes['effects'] = effects_data
+                    else:
+                        # Read-only display
+                        decay = effects_data.get('treatment_efficacy_decay', {})
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Half-life", f"{decay.get('half_life_days', 84)} days")
+                        with col2:
+                            st.metric("Decay Model", decay.get('decay_model', 'exponential'))
+                        with col3:
+                            st.metric("Min Efficacy", f"{decay.get('min_efficacy', 0.1):.0%}")
+                        
+                        st.markdown("**Treatment Multipliers:**")
+                        mult_data = []
+                        for state, info in effects_data.get('treatment_multipliers', {}).items():
+                            for trans, mult in info.get('multipliers', {}).items():
+                                mult_data.append({
+                                    'From': state,
+                                    'Transition': trans.replace('_to_', ' → '),
+                                    'Multiplier': f"×{mult:.2f}"
+                                })
+                        if mult_data:
+                            df = pd.DataFrame(mult_data)
+                            st.dataframe(df, use_container_width=True, hide_index=True)
+            
+            # Vision Parameters sub-tab
+            with param_tabs[2]:
+                vision_path = protocol_dir / spec.vision_parameters_file
+                if vision_path.exists():
+                    with open(vision_path) as f:
+                        vision_data = yaml.safe_load(f)
+                    
+                    if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
+                        st.info("Edit vision model parameters")
+                        
+                        # Key parameters only - not overwhelming
+                        st.markdown("### Vision Ceilings")
+                        ceilings = vision_data.get('vision_ceilings', {})
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            factor = st.text_input(
+                                "Baseline ceiling factor",
+                                value=f"{ceilings.get('baseline_ceiling_factor', 1.2):.2f}",
+                                key="tb_ceiling_factor",
+                                help="Max vision = baseline × factor"
+                            )
+                            try:
+                                ceilings['baseline_ceiling_factor'] = float(factor)
+                            except:
+                                pass
+                        
+                        with col2:
+                            abs_ceiling = st.text_input(
+                                "Absolute ceiling",
+                                value=str(ceilings.get('absolute_ceiling_default', 85)),
+                                key="tb_abs_ceiling"
+                            )
+                            try:
+                                ceilings['absolute_ceiling_default'] = int(abs_ceiling)
+                            except:
+                                pass
+                        
+                        vision_data['vision_ceilings'] = ceilings
+                        
+                        # Store changes
+                        if 'tb_param_changes' not in st.session_state:
+                            st.session_state.tb_param_changes = {}
+                        st.session_state.tb_param_changes['vision'] = vision_data
+                    else:
+                        # Read-only summary
+                        measurement = vision_data.get('vision_measurement', {})
+                        ceilings = vision_data.get('vision_ceilings', {})
+                        hemorrhage = vision_data.get('hemorrhage_risk', {})
+                        
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Vision Range", 
+                                     f"{measurement.get('min_measurable_vision', 0)}-{measurement.get('max_measurable_vision', 100)}")
+                        with col2:
+                            st.metric("Ceiling Factor", 
+                                     f"×{ceilings.get('baseline_ceiling_factor', 1.2)}")
+                        with col3:
+                            st.metric("Hemorrhage Risk", 
+                                     f"{hemorrhage.get('base_risk_active', 0.01)*100:.1f}% / fortnight")
+            
+            # Discontinuation sub-tab
+            with param_tabs[3]:
+                disc_path = protocol_dir / spec.discontinuation_parameters_file
+                if disc_path.exists():
+                    with open(disc_path) as f:
+                        disc_data = yaml.safe_load(f)
+                    
+                    if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
+                        st.info("Edit discontinuation parameters")
+                        
+                        params = disc_data.get('discontinuation_parameters', {})
+                        
+                        # Poor vision
+                        st.markdown("### Poor Vision")
+                        pv = params.get('poor_vision', {})
+                        
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            thresh = st.text_input(
+                                "Vision threshold",
+                                value=str(pv.get('vision_threshold', 20)),
+                                key="tb_pv_threshold"
+                            )
+                            try:
+                                pv['vision_threshold'] = int(thresh)
+                            except:
+                                pass
+                        
+                        with col2:
+                            grace = st.text_input(
+                                "Grace period (visits)",
+                                value=str(pv.get('grace_period_visits', 2)),
+                                key="tb_pv_grace"
+                            )
+                            try:
+                                pv['grace_period_visits'] = int(grace)
+                            except:
+                                pass
+                        
+                        with col3:
+                            prob = st.text_input(
+                                "Probability",
+                                value=f"{pv.get('discontinuation_probability', 0.8):.2f}",
+                                key="tb_pv_prob"
+                            )
+                            try:
+                                pv['discontinuation_probability'] = float(prob)
+                            except:
+                                pass
+                        
+                        params['poor_vision'] = pv
+                        disc_data['discontinuation_parameters'] = params
+                        
+                        # Store changes
+                        if 'tb_param_changes' not in st.session_state:
+                            st.session_state.tb_param_changes = {}
+                        st.session_state.tb_param_changes['discontinuation'] = disc_data
+                    else:
+                        # Read-only summary
+                        params = disc_data.get('discontinuation_parameters', {})
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            if 'poor_vision' in params:
+                                pv = params['poor_vision']
+                                st.metric("Poor Vision Threshold", 
+                                         f"< {pv.get('vision_threshold', 20)} letters")
+                            
+                            if 'deterioration' in params:
+                                det = params['deterioration']
+                                st.metric("Deterioration Threshold", 
+                                         f"{det.get('vision_loss_threshold', -10)} letters")
+                        
+                        with col2:
+                            if 'attrition' in params:
+                                attr = params['attrition']
+                                st.metric("Base Attrition", 
+                                         f"{attr.get('base_probability_per_visit', 0.005)*100:.1f}%/visit")
+                            
+                            if 'administrative' in params:
+                                admin = params['administrative']
+                                st.metric("Admin Errors", 
+                                         f"{admin.get('probability_per_visit', 0.005)*100:.1f}%/visit")
     
     # Only show disease transitions tab for standard protocols
     elif protocol_type != "time_based":
