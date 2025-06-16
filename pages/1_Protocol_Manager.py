@@ -1123,6 +1123,83 @@ try:
                     with col2:
                         st.metric("Vision Range Min", f"{spec.baseline_vision_min} letters")
                         st.metric("Vision Range Max", f"{spec.baseline_vision_max} letters")
+                
+                # Show the actual protocol distribution
+                st.subheader("Baseline Vision Distribution")
+                
+                # Determine what distribution is being used
+                if hasattr(spec, 'baseline_vision_distribution') and spec.baseline_vision_distribution:
+                    dist_config = spec.baseline_vision_distribution
+                    dist_type = dist_config.get('type', 'normal')
+                else:
+                    dist_type = 'normal'
+                    dist_config = {
+                        'type': 'normal',
+                        'mean': spec.baseline_vision_mean,
+                        'std': spec.baseline_vision_std,
+                        'min': spec.baseline_vision_min,
+                        'max': spec.baseline_vision_max
+                    }
+                
+                # Create the distribution visualization
+                from simulation_v2.models.baseline_vision_distributions import DistributionFactory
+                
+                try:
+                    # Create the actual distribution
+                    distribution = DistributionFactory.create_distribution(dist_config)
+                    
+                    import numpy as np
+                    import matplotlib.pyplot as plt
+                    from scipy import stats
+                    
+                    fig, ax = plt.subplots(figsize=(8, 4))
+                    x = np.linspace(0, 100, 1000)
+                    
+                    # Plot the actual distribution being used
+                    if dist_type == 'normal':
+                        y = stats.norm.pdf(x, dist_config['mean'], dist_config['std'])
+                        ax.plot(x, y, 'b-', linewidth=2, label=f"Normal(μ={dist_config['mean']}, σ={dist_config['std']})")
+                        ax.fill_between(x, 0, y, 
+                                       where=(x >= dist_config['min']) & (x <= dist_config['max']), 
+                                       alpha=0.3, color='blue')
+                        ax.axvline(dist_config['min'], color='k', linestyle=':', alpha=0.5, label=f"Min: {dist_config['min']}")
+                        ax.axvline(dist_config['max'], color='k', linestyle=':', alpha=0.5, label=f"Max: {dist_config['max']}")
+                        
+                    elif dist_type == 'beta_with_threshold':
+                        # Use the actual distribution object for accurate plotting
+                        ax.plot(distribution.x_values, distribution.pdf, 'orange', linewidth=2, 
+                               label=distribution.get_description())
+                        ax.axvline(dist_config['threshold'], color='red', linestyle='--', alpha=0.5, 
+                                  label=f"Threshold: {dist_config['threshold']}")
+                        
+                        # Calculate and show statistics
+                        stats_dict = distribution.get_statistics()
+                        ax.text(0.02, 0.95, f"Mean: {stats_dict['mean']:.1f}\nStd: {stats_dict['std']:.1f}\n% > 70: {stats_dict['pct_above_70']:.1f}%", 
+                               transform=ax.transAxes, verticalalignment='top',
+                               bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+                        
+                    elif dist_type == 'uniform':
+                        y = np.zeros_like(x)
+                        mask = (x >= dist_config['min']) & (x <= dist_config['max'])
+                        y[mask] = 1.0 / (dist_config['max'] - dist_config['min'])
+                        ax.plot(x, y, 'g-', linewidth=2, label=f"Uniform[{dist_config['min']}, {dist_config['max']}]")
+                        ax.fill_between(x, 0, y, where=mask, alpha=0.3, color='green')
+                    
+                    # Add NICE threshold reference
+                    ax.axvline(70, color='orange', linestyle='-', alpha=0.3, label='NICE Threshold: 70')
+                    
+                    ax.set_xlabel('Baseline Vision (ETDRS letters)')
+                    ax.set_ylabel('Probability Density')
+                    ax.set_title(f'Protocol Baseline Vision Distribution ({dist_type.replace("_", " ").title()})')
+                    ax.set_xlim(0, 100)
+                    ax.set_ylim(bottom=0)
+                    ax.legend()
+                    ax.grid(True, alpha=0.3)
+                    
+                    st.pyplot(fig)
+                    
+                except Exception as e:
+                    st.error(f"Error creating distribution visualization: {str(e)}")
         
         with tab4:
             st.subheader("Parameters")
@@ -1807,82 +1884,80 @@ try:
                         st.metric("Vision Range Max", f"{spec.baseline_vision_max} letters")
                 
                     # Show the actual protocol distribution
-                    if not st.session_state.get('edit_mode', False):
-                        st.subheader("Baseline Vision Distribution")
+                    st.subheader("Baseline Vision Distribution")
+                    # Determine what distribution is being used
+                    if hasattr(spec, 'baseline_vision_distribution') and spec.baseline_vision_distribution:
+                        dist_config = spec.baseline_vision_distribution
+                        dist_type = dist_config.get('type', 'normal')
+                    else:
+                        dist_type = 'normal'
+                        dist_config = {
+                            'type': 'normal',
+                            'mean': spec.baseline_vision_mean,
+                            'std': spec.baseline_vision_std,
+                            'min': spec.baseline_vision_min,
+                            'max': spec.baseline_vision_max
+                        }
                     
-                        # Determine what distribution is being used
-                        if hasattr(spec, 'baseline_vision_distribution') and spec.baseline_vision_distribution:
-                            dist_config = spec.baseline_vision_distribution
-                            dist_type = dist_config.get('type', 'normal')
-                        else:
-                            dist_type = 'normal'
-                            dist_config = {
-                                'type': 'normal',
-                                'mean': spec.baseline_vision_mean,
-                                'std': spec.baseline_vision_std,
-                                'min': spec.baseline_vision_min,
-                                'max': spec.baseline_vision_max
-                            }
+                    # Create the distribution visualization
+                    from simulation_v2.models.baseline_vision_distributions import DistributionFactory
                     
-                        # Create the distribution visualization
-                        from simulation_v2.models.baseline_vision_distributions import DistributionFactory
-                    
-                        try:
-                            # Create the actual distribution
-                            distribution = DistributionFactory.create_distribution(dist_config)
+                    try:
+                        # Create the actual distribution
+                        distribution = DistributionFactory.create_distribution(dist_config)
                         
-                            import numpy as np
-                            import matplotlib.pyplot as plt
-                            from scipy import stats
+                        import numpy as np
+                        import matplotlib.pyplot as plt
+                        from scipy import stats
                         
-                            fig, ax = plt.subplots(figsize=(8, 4))
-                            x = np.linspace(0, 100, 1000)
+                        fig, ax = plt.subplots(figsize=(8, 4))
+                        x = np.linspace(0, 100, 1000)
                         
-                            # Plot the actual distribution being used
-                            if dist_type == 'normal':
-                                y = stats.norm.pdf(x, dist_config['mean'], dist_config['std'])
-                                ax.plot(x, y, 'b-', linewidth=2, label=f"Normal(μ={dist_config['mean']}, σ={dist_config['std']})")
-                                ax.fill_between(x, 0, y, 
-                                               where=(x >= dist_config['min']) & (x <= dist_config['max']), 
-                                               alpha=0.3, color='blue')
-                                ax.axvline(dist_config['min'], color='k', linestyle=':', alpha=0.5, label=f"Min: {dist_config['min']}")
-                                ax.axvline(dist_config['max'], color='k', linestyle=':', alpha=0.5, label=f"Max: {dist_config['max']}")
+                        # Plot the actual distribution being used
+                        if dist_type == 'normal':
+                            y = stats.norm.pdf(x, dist_config['mean'], dist_config['std'])
+                            ax.plot(x, y, 'b-', linewidth=2, label=f"Normal(μ={dist_config['mean']}, σ={dist_config['std']})")
+                            ax.fill_between(x, 0, y, 
+                                           where=(x >= dist_config['min']) & (x <= dist_config['max']), 
+                                           alpha=0.3, color='blue')
+                            ax.axvline(dist_config['min'], color='k', linestyle=':', alpha=0.5, label=f"Min: {dist_config['min']}")
+                            ax.axvline(dist_config['max'], color='k', linestyle=':', alpha=0.5, label=f"Max: {dist_config['max']}")
                             
-                            elif dist_type == 'beta_with_threshold':
-                                # Use the actual distribution object for accurate plotting
-                                ax.plot(distribution.x_values, distribution.pdf, 'orange', linewidth=2, 
-                                       label=distribution.get_description())
-                                ax.axvline(dist_config['threshold'], color='red', linestyle='--', alpha=0.5, 
-                                          label=f"Threshold: {dist_config['threshold']}")
+                        elif dist_type == 'beta_with_threshold':
+                            # Use the actual distribution object for accurate plotting
+                            ax.plot(distribution.x_values, distribution.pdf, 'orange', linewidth=2, 
+                                   label=distribution.get_description())
+                            ax.axvline(dist_config['threshold'], color='red', linestyle='--', alpha=0.5, 
+                                      label=f"Threshold: {dist_config['threshold']}")
                             
-                                # Calculate and show statistics
-                                stats_dict = distribution.get_statistics()
-                                ax.text(0.02, 0.95, f"Mean: {stats_dict['mean']:.1f}\nStd: {stats_dict['std']:.1f}\n% > 70: {stats_dict['pct_above_70']:.1f}%", 
-                                       transform=ax.transAxes, verticalalignment='top',
-                                       bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+                            # Calculate and show statistics
+                            stats_dict = distribution.get_statistics()
+                            ax.text(0.02, 0.95, f"Mean: {stats_dict['mean']:.1f}\nStd: {stats_dict['std']:.1f}\n% > 70: {stats_dict['pct_above_70']:.1f}%", 
+                                   transform=ax.transAxes, verticalalignment='top',
+                                   bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
                             
-                            elif dist_type == 'uniform':
-                                y = np.zeros_like(x)
-                                mask = (x >= dist_config['min']) & (x <= dist_config['max'])
-                                y[mask] = 1.0 / (dist_config['max'] - dist_config['min'])
-                                ax.plot(x, y, 'g-', linewidth=2, label=f"Uniform[{dist_config['min']}, {dist_config['max']}]")
-                                ax.fill_between(x, 0, y, where=mask, alpha=0.3, color='green')
+                        elif dist_type == 'uniform':
+                            y = np.zeros_like(x)
+                            mask = (x >= dist_config['min']) & (x <= dist_config['max'])
+                            y[mask] = 1.0 / (dist_config['max'] - dist_config['min'])
+                            ax.plot(x, y, 'g-', linewidth=2, label=f"Uniform[{dist_config['min']}, {dist_config['max']}]")
+                            ax.fill_between(x, 0, y, where=mask, alpha=0.3, color='green')
                         
-                            # Add NICE threshold reference
-                            ax.axvline(70, color='orange', linestyle='-', alpha=0.3, label='NICE Threshold: 70')
+                        # Add NICE threshold reference
+                        ax.axvline(70, color='orange', linestyle='-', alpha=0.3, label='NICE Threshold: 70')
                         
-                            ax.set_xlabel('Baseline Vision (ETDRS letters)')
-                            ax.set_ylabel('Probability Density')
-                            ax.set_title(f'Protocol Baseline Vision Distribution ({dist_type.replace("_", " ").title()})')
-                            ax.set_xlim(0, 100)
-                            ax.set_ylim(bottom=0)
-                            ax.legend()
-                            ax.grid(True, alpha=0.3)
+                        ax.set_xlabel('Baseline Vision (ETDRS letters)')
+                        ax.set_ylabel('Probability Density')
+                        ax.set_title(f'Protocol Baseline Vision Distribution ({dist_type.replace("_", " ").title()})')
+                        ax.set_xlim(0, 100)
+                        ax.set_ylim(bottom=0)
+                        ax.legend()
+                        ax.grid(True, alpha=0.3)
                         
-                            st.pyplot(fig)
+                        st.pyplot(fig)
                         
-                        except Exception as e:
-                            st.error(f"Error creating distribution visualization: {str(e)}")
+                    except Exception as e:
+                        st.error(f"Error creating distribution visualization: {str(e)}")
                 
                     # Show UK data breakdown
                     with st.expander("UK Baseline Vision Data (2,029 patients)"):
