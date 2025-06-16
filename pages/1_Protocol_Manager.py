@@ -339,7 +339,11 @@ if st.session_state.get('show_duplicate', False):
                         yaml.dump(data, f, sort_keys=False, default_flow_style=False)
                     
                     # Validate the new file can be loaded
-                    test_spec = ProtocolSpecification.from_yaml(save_path)
+                    if protocol_type == "time_based":
+                        from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSpecification
+                        test_spec = TimeBasedProtocolSpecification.from_yaml(save_path)
+                    else:
+                        test_spec = ProtocolSpecification.from_yaml(save_path)
                     
                     # Select the newly created duplicate
                     st.session_state.selected_protocol_name = save_path.stem
