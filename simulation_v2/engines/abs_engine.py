@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from simulation_v2.core.patient import Patient
 from simulation_v2.core.disease_model import DiseaseModel
 from simulation_v2.core.protocol import Protocol
+from simulation_v2.models.baseline_vision_distributions import DistributionFactory, BaselineVisionDistribution
 
 
 @dataclass
@@ -56,7 +57,8 @@ class ABSEngine:
         n_patients: int = None,
         patient_arrival_rate: Optional[float] = None,
         seed: Optional[int] = None,
-        visit_metadata_enhancer: Optional[Callable] = None
+        visit_metadata_enhancer: Optional[Callable] = None,
+        baseline_vision_distribution: Optional[BaselineVisionDistribution] = None
     ):
         """
         Initialize ABS engine.
@@ -68,12 +70,20 @@ class ABSEngine:
             patient_arrival_rate: Patients per week (for Constant Rate Mode)
             seed: Random seed for reproducibility
             visit_metadata_enhancer: Optional function to enhance visit metadata
+            baseline_vision_distribution: Optional distribution for baseline vision
             
         Note: Either n_patients or patient_arrival_rate must be specified, not both.
         """
         self.disease_model = disease_model
         self.protocol = protocol
         self.visit_metadata_enhancer = visit_metadata_enhancer
+        
+        # Set baseline vision distribution (default to normal if not specified)
+        if baseline_vision_distribution is None:
+            from simulation_v2.models.baseline_vision_distributions import NormalDistribution
+            self.baseline_vision_distribution = NormalDistribution()
+        else:
+            self.baseline_vision_distribution = baseline_vision_distribution
         
         # Validate recruitment mode
         if (n_patients is None) == (patient_arrival_rate is None):
@@ -95,15 +105,11 @@ class ABSEngine:
             
     def _sample_baseline_vision(self) -> int:
         """
-        Sample baseline vision from realistic distribution.
+        Sample baseline vision from the configured distribution.
         
         Returns vision in ETDRS letters (0-100).
-        Typical AMD patients present with vision around 60-75 letters.
         """
-        # Normal distribution centered at 70 with std of 10
-        # Bounded between 20 and 90 for realistic range
-        vision = int(random.gauss(70, 10))
-        return max(20, min(90, vision))
+        return self.baseline_vision_distribution.sample()
         
     def _generate_arrival_schedule(self, start_date: datetime, end_date: datetime) -> List[Tuple[datetime, str]]:
         """

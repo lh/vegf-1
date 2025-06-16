@@ -53,6 +53,9 @@ class ProtocolSpecification:
     load_timestamp: str
     checksum: str  # For verification
     
+    # Optional: Advanced baseline vision distribution
+    baseline_vision_distribution: Optional[Dict[str, Any]] = None
+    
     @classmethod
     def from_yaml(cls, filepath: Path) -> 'ProtocolSpecification':
         """
@@ -124,6 +127,7 @@ class ProtocolSpecification:
             baseline_vision_std=baseline['std'],
             baseline_vision_min=baseline['min'],
             baseline_vision_max=baseline['max'],
+            baseline_vision_distribution=data.get('baseline_vision_distribution'),
             discontinuation_rules=data['discontinuation_rules'],
             source_file=str(filepath.absolute()),
             load_timestamp=datetime.now().isoformat(),
@@ -170,6 +174,7 @@ class ProtocolSpecification:
                 'min': self.baseline_vision_min,
                 'max': self.baseline_vision_max
             },
+            'baseline_vision_distribution': self.baseline_vision_distribution,
             'discontinuation_rules': self.discontinuation_rules
         }
     

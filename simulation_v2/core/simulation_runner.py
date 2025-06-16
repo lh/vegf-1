@@ -18,6 +18,7 @@ from simulation_v2.core.patient import Patient
 from simulation_v2.engines.abs_engine import ABSEngine, SimulationResults
 from simulation_v2.engines.des_engine import DESEngine
 from simulation_v2.engines.abs_engine_time_based_with_specs import ABSEngineTimeBasedWithSpecs
+from simulation_v2.models.baseline_vision_distributions import DistributionFactory
 from simulation_v2.serialization.parquet_writer import serialize_patient_visits
 
 
@@ -191,24 +192,19 @@ class ABSEngineWithSpecs(ABSEngine):
         """Initialize with protocol spec for parameters."""
         self.protocol_spec = protocol_spec
         
+        # Create baseline vision distribution from spec
+        baseline_vision_distribution = DistributionFactory.create_from_protocol_spec(protocol_spec)
+        
         # Call parent init with n_patients (Fixed Total Mode)
         super().__init__(
             disease_model=disease_model,
             protocol=protocol,
             n_patients=n_patients,
-            seed=seed
+            seed=seed,
+            baseline_vision_distribution=baseline_vision_distribution
         )
-            
-    def _sample_baseline_vision(self) -> int:
-        """Sample baseline vision from protocol specification."""
-        vision = int(random.gauss(
-            self.protocol_spec.baseline_vision_mean,
-            self.protocol_spec.baseline_vision_std
-        ))
-        return max(
-            self.protocol_spec.baseline_vision_min,
-            min(self.protocol_spec.baseline_vision_max, vision)
-        )
+        
+    # Note: _sample_baseline_vision is now handled by parent class using baseline_vision_distribution
         
     def _calculate_vision_change(
         self, 
@@ -270,24 +266,19 @@ class DESEngineWithSpecs(DESEngine):
         """Initialize with protocol spec for parameters."""
         self.protocol_spec = protocol_spec
         
+        # Create baseline vision distribution from spec
+        baseline_vision_distribution = DistributionFactory.create_from_protocol_spec(protocol_spec)
+        
         # Initialize parent with n_patients (Fixed Total Mode)
         super().__init__(
             disease_model=disease_model,
             protocol=protocol,
             n_patients=n_patients,
-            seed=seed
+            seed=seed,
+            baseline_vision_distribution=baseline_vision_distribution
         )
         
-    def _sample_baseline_vision(self) -> int:
-        """Sample baseline vision from protocol specification."""
-        vision = int(random.gauss(
-            self.protocol_spec.baseline_vision_mean,
-            self.protocol_spec.baseline_vision_std
-        ))
-        return max(
-            self.protocol_spec.baseline_vision_min,
-            min(self.protocol_spec.baseline_vision_max, vision)
-        )
+    # Note: _sample_baseline_vision is now handled by parent class using baseline_vision_distribution
         
     def _calculate_vision_change(
         self, 
