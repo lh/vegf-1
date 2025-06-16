@@ -1,0 +1,87 @@
+# Time-Based Vision Model Parameters
+# All parameters are explicit and configurable
+
+vision_decline_fortnightly:
+  # Mean and std dev for fortnightly vision change by state and treatment
+  NAIVE:
+    untreated: {mean: -1.2, std: 0.5}
+    treated: {mean: -0.8, std: 0.4}
+  STABLE:
+    untreated: {mean: -0.3, std: 0.2}
+    treated: {mean: -0.1, std: 0.1}
+  ACTIVE:
+    untreated: {mean: -1.5, std: 0.6}
+    treated: {mean: -0.4, std: 0.3}
+  HIGHLY_ACTIVE:
+    untreated: {mean: -2.0, std: 0.8}
+    treated: {mean: -0.6, std: 0.4}
+
+vision_improvement:
+  # Probability of improvement when eligible
+  improvement_probability:
+    STABLE: 0.3
+    ACTIVE: 0.4
+    HIGHLY_ACTIVE: 0.2
+  
+  # Fortnightly improvement rate when improving
+  improvement_rate:
+    STABLE: {mean: 0.5, std: 0.2}
+    ACTIVE: {mean: 0.8, std: 0.3}
+    HIGHLY_ACTIVE: {mean: 0.6, std: 0.3}
+  
+  # Improvement window parameters
+  max_improvement_duration_fortnights: 6  # 3 months
+  max_treatments_for_improvement: 5
+  treatment_gap_for_improvement_days: 84
+  min_treatment_effect_for_improvement: 0.5
+
+vision_ceilings:
+  # Individual ceiling as factor of baseline
+  baseline_ceiling_factor: 1.1
+  
+  # Absolute maximums by baseline range
+  absolute_ceiling_default: 85
+  absolute_ceiling_high_baseline: 95  # If baseline > 80
+  absolute_ceiling_low_baseline: 75   # If baseline < 50
+  high_baseline_threshold: 80
+  low_baseline_threshold: 50
+
+treatment_effect_decay:
+  # Days for each phase of treatment effect
+  full_effect_duration_days: 56      # 8 weeks
+  gradual_decline_end_days: 84      # 12 weeks
+  faster_decline_end_days: 112      # 16 weeks
+  
+  # Effect levels at phase transitions
+  effect_at_gradual_start: 1.0
+  effect_at_faster_start: 0.5
+  effect_at_minimal_start: 0.25
+  minimal_decay_rate_per_day: 0.0022  # Reaches ~0 at 32 weeks
+
+hemorrhage_risk:
+  # Risk per fortnight by time since treatment
+  risk_treated_fortnightly: 0.001        # Within 12 weeks
+  risk_medium_gap_fortnightly: 0.005     # 12-24 weeks
+  risk_long_gap_fortnightly: 0.01        # Beyond 24 weeks
+  
+  # Risk thresholds
+  treated_threshold_days: 84
+  medium_gap_threshold_days: 168
+  
+  # Risk multipliers
+  highly_active_multiplier: 2.0
+  
+  # Vision loss from hemorrhage
+  hemorrhage_loss_min: 10
+  hemorrhage_loss_max: 30
+
+vision_measurement:
+  # Measurement noise parameters
+  measurement_noise_std: 2.5  # 95% within ±5 letters
+  min_measurable_vision: 0
+  max_measurable_vision: 100
+
+vision_floor_discontinuation:
+  vision_threshold: 20
+  discontinuation_probability: 0.8
+  grace_period_visits: 2
