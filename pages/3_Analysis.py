@@ -824,7 +824,10 @@ with tab8:
                     st.write(f"**Duration:** {event['duration_years']} years")
                     st.write(f"**Seed:** {event['seed']}")
                     st.write(f"**Protocol:** {event['protocol_name']} v{event['protocol_version']}")
-                    st.code(f"Checksum: {event['protocol_checksum']}")
+                    if 'protocol_checksum' in event:
+                        st.code(f"Checksum: {event['protocol_checksum']}")
+                    if 'model_type' in event:
+                        st.write(f"**Model Type:** {event['model_type']}")
                 elif event['event'] == 'simulation_complete':
                     st.write(f"**Total Injections:** {StyleConstants.format_count(event['total_injections'])}")
                     st.write(f"**Mean Final Vision:** {StyleConstants.format_vision(event['final_vision_mean'])}")
