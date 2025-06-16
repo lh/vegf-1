@@ -1806,121 +1806,121 @@ try:
                     st.metric("Vision Range Min", f"{spec.baseline_vision_min} letters")
                     st.metric("Vision Range Max", f"{spec.baseline_vision_max} letters")
             
-        # Show the actual protocol distribution
-        if not st.session_state.get('edit_mode', False):
-            st.subheader("Baseline Vision Distribution")
-            
-            # Determine what distribution is being used
-            if hasattr(spec, 'baseline_vision_distribution') and spec.baseline_vision_distribution:
-                dist_config = spec.baseline_vision_distribution
-                dist_type = dist_config.get('type', 'normal')
-            else:
-                dist_type = 'normal'
-                dist_config = {
-                    'type': 'normal',
-                    'mean': spec.baseline_vision_mean,
-                    'std': spec.baseline_vision_std,
-                    'min': spec.baseline_vision_min,
-                    'max': spec.baseline_vision_max
-                }
-            
-            # Create the distribution visualization
-            from simulation_v2.models.baseline_vision_distributions import DistributionFactory
-            
-            try:
-                # Create the actual distribution
-                distribution = DistributionFactory.create_distribution(dist_config)
+                # Show the actual protocol distribution
+                if not st.session_state.get('edit_mode', False):
+                    st.subheader("Baseline Vision Distribution")
                 
-                import numpy as np
-                import matplotlib.pyplot as plt
-                from scipy import stats
+                    # Determine what distribution is being used
+                    if hasattr(spec, 'baseline_vision_distribution') and spec.baseline_vision_distribution:
+                        dist_config = spec.baseline_vision_distribution
+                        dist_type = dist_config.get('type', 'normal')
+                    else:
+                        dist_type = 'normal'
+                        dist_config = {
+                            'type': 'normal',
+                            'mean': spec.baseline_vision_mean,
+                            'std': spec.baseline_vision_std,
+                            'min': spec.baseline_vision_min,
+                            'max': spec.baseline_vision_max
+                        }
                 
-                fig, ax = plt.subplots(figsize=(8, 4))
-                x = np.linspace(0, 100, 1000)
+                    # Create the distribution visualization
+                    from simulation_v2.models.baseline_vision_distributions import DistributionFactory
                 
-                # Plot the actual distribution being used
-                if dist_type == 'normal':
-                    y = stats.norm.pdf(x, dist_config['mean'], dist_config['std'])
-                    ax.plot(x, y, 'b-', linewidth=2, label=f"Normal(μ={dist_config['mean']}, σ={dist_config['std']})")
-                    ax.fill_between(x, 0, y, 
-                                   where=(x >= dist_config['min']) & (x <= dist_config['max']), 
-                                   alpha=0.3, color='blue')
-                    ax.axvline(dist_config['min'], color='k', linestyle=':', alpha=0.5, label=f"Min: {dist_config['min']}")
-                    ax.axvline(dist_config['max'], color='k', linestyle=':', alpha=0.5, label=f"Max: {dist_config['max']}")
+                    try:
+                        # Create the actual distribution
+                        distribution = DistributionFactory.create_distribution(dist_config)
                     
-                elif dist_type == 'beta_with_threshold':
-                    # Use the actual distribution object for accurate plotting
-                    ax.plot(distribution.x_values, distribution.pdf, 'orange', linewidth=2, 
-                           label=distribution.get_description())
-                    ax.axvline(dist_config['threshold'], color='red', linestyle='--', alpha=0.5, 
-                              label=f"Threshold: {dist_config['threshold']}")
+                        import numpy as np
+                        import matplotlib.pyplot as plt
+                        from scipy import stats
                     
-                    # Calculate and show statistics
-                    stats_dict = distribution.get_statistics()
-                    ax.text(0.02, 0.95, f"Mean: {stats_dict['mean']:.1f}\nStd: {stats_dict['std']:.1f}\n% > 70: {stats_dict['pct_above_70']:.1f}%", 
-                           transform=ax.transAxes, verticalalignment='top',
-                           bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+                        fig, ax = plt.subplots(figsize=(8, 4))
+                        x = np.linspace(0, 100, 1000)
                     
-                elif dist_type == 'uniform':
-                    y = np.zeros_like(x)
-                    mask = (x >= dist_config['min']) & (x <= dist_config['max'])
-                    y[mask] = 1.0 / (dist_config['max'] - dist_config['min'])
-                    ax.plot(x, y, 'g-', linewidth=2, label=f"Uniform[{dist_config['min']}, {dist_config['max']}]")
-                    ax.fill_between(x, 0, y, where=mask, alpha=0.3, color='green')
-                
-                # Add NICE threshold reference
-                ax.axvline(70, color='orange', linestyle='-', alpha=0.3, label='NICE Threshold: 70')
-                
-                ax.set_xlabel('Baseline Vision (ETDRS letters)')
-                ax.set_ylabel('Probability Density')
-                ax.set_title(f'Protocol Baseline Vision Distribution ({dist_type.replace("_", " ").title()})')
-                ax.set_xlim(0, 100)
-                ax.set_ylim(bottom=0)
-                ax.legend()
-                ax.grid(True, alpha=0.3)
-                
-                st.pyplot(fig)
-                
-            except Exception as e:
-                st.error(f"Error creating distribution visualization: {str(e)}")
-        
-        # Show UK data breakdown
-        with st.expander("UK Baseline Vision Data (2,029 patients)"):
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown("""
-                **Actual Distribution:**
-                - Mean: 58.36 letters
-                - Median: 62.00 letters  
-                - Std Dev: 15.12 letters
-                - Range: 5-98 letters
-                - **Best fit: Beta distribution**
-                - Negative skew (-0.72)
-                """)
-            with col2:
-                st.markdown("""
-                **Vision Categories:**
-                - Very Poor (0-30): 5.8%
-                - Poor (31-50): 22.2%
-                - Moderate (51-70): 51.6%
-                - Good (71-85): 20.2%
-                - Excellent (86-100): 0.2%
-                
-                **Key finding:** Only 20.4% measure >70 at first treatment
-                - But all qualified with ≤70 at funding decision
-                - 51.6% cluster in 51-70 range
-                
-                **Why some measure >70 at treatment:**
-                - Measurement variability (±5 letters typical)
-                - Regression to the mean
-                - Time delay between funding & treatment
-                - Possible measurement bias at funding
-                
-                **Best fit:** Beta + threshold effect
-                - Natural disease: Beta(α=3.5, β=2.0) 
-                - 60% reduction above 70 (funding filter)
-                - Captures both biology + healthcare system
-                """)
+                        # Plot the actual distribution being used
+                        if dist_type == 'normal':
+                            y = stats.norm.pdf(x, dist_config['mean'], dist_config['std'])
+                            ax.plot(x, y, 'b-', linewidth=2, label=f"Normal(μ={dist_config['mean']}, σ={dist_config['std']})")
+                            ax.fill_between(x, 0, y, 
+                                           where=(x >= dist_config['min']) & (x <= dist_config['max']), 
+                                           alpha=0.3, color='blue')
+                            ax.axvline(dist_config['min'], color='k', linestyle=':', alpha=0.5, label=f"Min: {dist_config['min']}")
+                            ax.axvline(dist_config['max'], color='k', linestyle=':', alpha=0.5, label=f"Max: {dist_config['max']}")
+                        
+                        elif dist_type == 'beta_with_threshold':
+                            # Use the actual distribution object for accurate plotting
+                            ax.plot(distribution.x_values, distribution.pdf, 'orange', linewidth=2, 
+                                   label=distribution.get_description())
+                            ax.axvline(dist_config['threshold'], color='red', linestyle='--', alpha=0.5, 
+                                      label=f"Threshold: {dist_config['threshold']}")
+                        
+                            # Calculate and show statistics
+                            stats_dict = distribution.get_statistics()
+                            ax.text(0.02, 0.95, f"Mean: {stats_dict['mean']:.1f}\nStd: {stats_dict['std']:.1f}\n% > 70: {stats_dict['pct_above_70']:.1f}%", 
+                                   transform=ax.transAxes, verticalalignment='top',
+                                   bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+                        
+                        elif dist_type == 'uniform':
+                            y = np.zeros_like(x)
+                            mask = (x >= dist_config['min']) & (x <= dist_config['max'])
+                            y[mask] = 1.0 / (dist_config['max'] - dist_config['min'])
+                            ax.plot(x, y, 'g-', linewidth=2, label=f"Uniform[{dist_config['min']}, {dist_config['max']}]")
+                            ax.fill_between(x, 0, y, where=mask, alpha=0.3, color='green')
+                    
+                        # Add NICE threshold reference
+                        ax.axvline(70, color='orange', linestyle='-', alpha=0.3, label='NICE Threshold: 70')
+                    
+                        ax.set_xlabel('Baseline Vision (ETDRS letters)')
+                        ax.set_ylabel('Probability Density')
+                        ax.set_title(f'Protocol Baseline Vision Distribution ({dist_type.replace("_", " ").title()})')
+                        ax.set_xlim(0, 100)
+                        ax.set_ylim(bottom=0)
+                        ax.legend()
+                        ax.grid(True, alpha=0.3)
+                    
+                        st.pyplot(fig)
+                    
+                    except Exception as e:
+                        st.error(f"Error creating distribution visualization: {str(e)}")
+            
+                # Show UK data breakdown
+                with st.expander("UK Baseline Vision Data (2,029 patients)"):
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.markdown("""
+                        **Actual Distribution:**
+                        - Mean: 58.36 letters
+                        - Median: 62.00 letters  
+                        - Std Dev: 15.12 letters
+                        - Range: 5-98 letters
+                        - **Best fit: Beta distribution**
+                        - Negative skew (-0.72)
+                        """)
+                    with col2:
+                        st.markdown("""
+                        **Vision Categories:**
+                        - Very Poor (0-30): 5.8%
+                        - Poor (31-50): 22.2%
+                        - Moderate (51-70): 51.6%
+                        - Good (71-85): 20.2%
+                        - Excellent (86-100): 0.2%
+                    
+                        **Key finding:** Only 20.4% measure >70 at first treatment
+                        - But all qualified with ≤70 at funding decision
+                        - 51.6% cluster in 51-70 range
+                    
+                        **Why some measure >70 at treatment:**
+                        - Measurement variability (±5 letters typical)
+                        - Regression to the mean
+                        - Time delay between funding & treatment
+                        - Possible measurement bias at funding
+                    
+                        **Best fit:** Beta + threshold effect
+                        - Natural disease: Beta(α=3.5, β=2.0) 
+                        - 60% reduction above 70 (funding filter)
+                        - Captures both biology + healthcare system
+                        """)
     
     # Discontinuation tab - only for standard protocols (tab5)
     if protocol_type != "time_based":

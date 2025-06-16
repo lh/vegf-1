@@ -22,7 +22,7 @@ baseline_vision:
   mean: 58
   std: 15
   min: 20
-  max: 85
+  max: 82
 disease_transitions:
   NAIVE:
     NAIVE: 0.0
@@ -94,9 +94,9 @@ discontinuation_rules:
 baseline_vision_distribution:
   type: beta_with_threshold
   alpha: 3.5
-  beta: 2.0
+  beta: 1.7
   min: 20
-  max: 85
+  max: 82
   threshold: 70
   threshold_reduction: 0.6
 modified_date: '2025-06-16'
