@@ -12,6 +12,9 @@ import pandas as pd
 
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
 from ape.utils.startup_redirect import handle_page_startup
+from simulation_v2.models.baseline_vision_distributions import (
+    NormalDistribution, BetaWithThresholdDistribution, UniformDistribution
+)
 
 st.set_page_config(
     page_title="Protocol Manager", 
@@ -50,6 +53,105 @@ from ape.utils.carbon_button_helpers import (
     ape_button, delete_button,
     navigation_button
 )
+
+
+def draw_baseline_vision_distribution(dist_type, params, session_prefix="edit"):
+    """
+    Draw the baseline vision distribution based on current parameters.
+    
+    Args:
+        dist_type: Type of distribution ('normal', 'beta_with_threshold', 'uniform')
+        params: Dictionary of parameters for the distribution
+        session_prefix: Prefix for session state keys ('edit' or 'tb_edit')
+    """
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from scipy import stats
+    
+    fig, ax = plt.subplots(figsize=(8, 4))
+    x = np.linspace(0, 100, 1000)
+    
+    try:
+        if dist_type == "normal":
+            # Get parameters from session state or defaults
+            mean = float(st.session_state.get(f'{session_prefix}_pop_mean', params.get('mean', 70)))
+            std = float(st.session_state.get(f'{session_prefix}_pop_std', params.get('std', 10)))
+            min_val = int(st.session_state.get(f'{session_prefix}_pop_min', params.get('min', 20)))
+            max_val = int(st.session_state.get(f'{session_prefix}_pop_max', params.get('max', 90)))
+            
+            # Create distribution
+            dist = NormalDistribution(mean=mean, std=std, min_value=min_val, max_value=max_val)
+            
+            # Plot PDF
+            y = stats.norm.pdf(x, mean, std)
+            ax.plot(x, y, 'b-', linewidth=2, label=f'Normal(μ={mean:.0f}, σ={std:.0f})')
+            
+            # Shade allowed range
+            ax.fill_between(x, 0, y, where=(x >= min_val) & (x <= max_val), 
+                           alpha=0.3, color='blue', label=f'Range: [{min_val}, {max_val}]')
+            
+        elif dist_type == "beta_with_threshold":
+            # Get parameters from session state or defaults
+            alpha = float(st.session_state.get(f'{session_prefix}_beta_alpha', params.get('alpha', 3.5)))
+            beta = float(st.session_state.get(f'{session_prefix}_beta_beta', params.get('beta', 2.0)))
+            min_val = int(st.session_state.get(f'{session_prefix}_beta_min', params.get('min', 5)))
+            max_val = int(st.session_state.get(f'{session_prefix}_beta_max', params.get('max', 98)))
+            threshold = int(st.session_state.get(f'{session_prefix}_beta_threshold', params.get('threshold', 70)))
+            reduction = float(st.session_state.get(f'{session_prefix}_beta_reduction', params.get('threshold_reduction', 0.6)))
+            
+            # Create distribution
+            dist = BetaWithThresholdDistribution(
+                alpha=alpha, beta=beta, min_value=min_val, max_value=max_val,
+                threshold=threshold, threshold_reduction=reduction
+            )
+            
+            # Plot using the distribution's internal PDF
+            ax.plot(dist.x_values, dist.pdf, 'orange', linewidth=2, 
+                   label=f'Beta(α={alpha:.1f}, β={beta:.1f}) + threshold')
+            
+            # Show threshold
+            ax.axvline(threshold, color='red', linestyle='--', alpha=0.5, 
+                      label=f'Threshold: {threshold}')
+            
+            # Calculate and show statistics
+            samples = [dist.sample() for _ in range(5000)]
+            mean_val = np.mean(samples)
+            pct_above_70 = sum(s > 70 for s in samples) / len(samples) * 100
+            
+            ax.text(0.02, 0.95, f'Mean: {mean_val:.1f}\n% > 70: {pct_above_70:.1f}%', 
+                   transform=ax.transAxes, verticalalignment='top',
+                   bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+            
+        elif dist_type == "uniform":
+            # Get parameters from session state or defaults
+            min_val = int(st.session_state.get(f'{session_prefix}_uniform_min', params.get('min', 20)))
+            max_val = int(st.session_state.get(f'{session_prefix}_uniform_max', params.get('max', 90)))
+            
+            # Create distribution
+            dist = UniformDistribution(min_value=min_val, max_value=max_val)
+            
+            # Plot uniform distribution
+            y = np.zeros_like(x)
+            mask = (x >= min_val) & (x <= max_val)
+            y[mask] = 1.0 / (max_val - min_val)
+            ax.plot(x, y, 'g-', linewidth=2, label=f'Uniform[{min_val}, {max_val}]')
+            ax.fill_between(x, 0, y, where=mask, alpha=0.3, color='green')
+            
+    except (ValueError, TypeError) as e:
+        # If parameters are invalid, show error message
+        ax.text(0.5, 0.5, f'Invalid parameters:\n{str(e)}', 
+               transform=ax.transAxes, ha='center', va='center',
+               bbox=dict(boxstyle='round', facecolor='red', alpha=0.3))
+    
+    ax.set_xlabel('Baseline Vision (ETDRS letters)')
+    ax.set_ylabel('Probability Density')
+    ax.set_title('Baseline Vision Distribution Preview')
+    ax.set_xlim(0, 100)
+    ax.set_ylim(bottom=0)
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    
+    return fig
 
 
 # Remove redundant title - page name is sufficient
@@ -967,6 +1069,20 @@ try:
                     with col2:
                         max_val = st.text_input("Maximum", value=str(spec.baseline_vision_max), key="tb_edit_uniform_max")
                         st.caption("Maximum vision")
+                
+                # Show live preview of the distribution
+                st.subheader("Distribution Preview")
+                params = {
+                    'mean': spec.baseline_vision_mean,
+                    'std': spec.baseline_vision_std,
+                    'min': spec.baseline_vision_min,
+                    'max': spec.baseline_vision_max
+                }
+                if current_dist and isinstance(current_dist, dict):
+                    params.update(current_dist)
+                
+                fig = draw_baseline_vision_distribution(dist_type, params, session_prefix="tb_edit")
+                st.pyplot(fig)
             else:
                 # Read-only display
                 # Check if using advanced distribution
@@ -1635,6 +1751,20 @@ try:
                 with col2:
                     max_val = st.text_input("Maximum", value=str(spec.baseline_vision_max), key="edit_uniform_max")
                     st.caption("Maximum vision")
+            
+            # Show live preview of the distribution
+            st.subheader("Distribution Preview")
+            params = {
+                'mean': spec.baseline_vision_mean,
+                'std': spec.baseline_vision_std,
+                'min': spec.baseline_vision_min,
+                'max': spec.baseline_vision_max
+            }
+            if current_dist and isinstance(current_dist, dict):
+                params.update(current_dist)
+            
+            fig = draw_baseline_vision_distribution(dist_type, params, session_prefix="edit")
+            st.pyplot(fig)
         else:
             # Read-only display
             # Check if using advanced distribution
@@ -1676,106 +1806,83 @@ try:
                     st.metric("Vision Range Min", f"{spec.baseline_vision_min} letters")
                     st.metric("Vision Range Max", f"{spec.baseline_vision_max} letters")
             
-        # Show distribution with UK data reference
-        import numpy as np
-        import matplotlib.pyplot as plt
-        from scipy import stats
-        
-        fig, ax = plt.subplots(figsize=(8, 4))
-        x = np.linspace(0, 100, 1000)
-        
-        # Show both the protocol's normal approximation and actual UK data
-        mean = spec.baseline_vision_mean
-        std = spec.baseline_vision_std
-        
-        # Normal distribution (as specified in protocol)
-        y_normal = stats.norm.pdf(x, mean, std)
-        ax.plot(x, y_normal, 'b--', linewidth=1, alpha=0.5, label='Protocol (Normal)')
-        
-        # Actual UK data shows Beta distribution
-        if mean == 70:  # Default protocol value
-            st.info("UK data: mean=58.4 letters at first treatment (not 70). Note: All patients qualified with ≤70 letters at funding decision, but 20.4% measured >70 at treatment start due to measurement variability.")
+        # Show the actual protocol distribution
+        if not st.session_state.get('edit_mode', False):
+            st.subheader("Baseline Vision Distribution")
             
-            # Create histogram-like representation of actual UK data
-            # Based on the categories from the analysis
-            uk_bins = [0, 30, 50, 70, 85, 100]
-            uk_percentages = [5.8, 22.2, 51.6, 20.2, 0.2]  # Percentages in each bin
-            uk_densities = []
+            # Determine what distribution is being used
+            if hasattr(spec, 'baseline_vision_distribution') and spec.baseline_vision_distribution:
+                dist_config = spec.baseline_vision_distribution
+                dist_type = dist_config.get('type', 'normal')
+            else:
+                dist_type = 'normal'
+                dist_config = {
+                    'type': 'normal',
+                    'mean': spec.baseline_vision_mean,
+                    'std': spec.baseline_vision_std,
+                    'min': spec.baseline_vision_min,
+                    'max': spec.baseline_vision_max
+                }
             
-            # Convert percentages to density for each bin
-            for i in range(len(uk_percentages)):
-                bin_width = uk_bins[i+1] - uk_bins[i]
-                density = uk_percentages[i] / 100.0 / bin_width
-                uk_densities.append(density)
+            # Create the distribution visualization
+            from simulation_v2.models.baseline_vision_distributions import DistributionFactory
             
-            # Plot as step function
-            for i in range(len(uk_bins)-1):
-                ax.fill_between([uk_bins[i], uk_bins[i+1]], 0, uk_densities[i], 
-                               alpha=0.3, color='green', edgecolor='green', linewidth=2)
-                ax.plot([uk_bins[i], uk_bins[i+1]], [uk_densities[i], uk_densities[i]], 
-                       'g-', linewidth=2)
-            
-            ax.plot([], [], 'g-', linewidth=2, label='UK Data (actual)')
-            
-            # Fit and show theoretical Beta distribution with treatment threshold effect
-            # Using percentile matching: 25th=50, 50th=62, 75th=70, mean=58.36
-            # For Beta on [5,98] range (actual data range)
-            loc, scale = 5, 93  # min=5, range=93
-            
-            # Solve for alpha, beta parameters - adjusted for stronger clustering below 70
-            alpha, beta = 3.5, 2.0
-            
-            # Generate theoretical Beta curve
-            x_beta = np.linspace(5, 98, 500)
-            y_beta_raw = stats.beta.pdf((x_beta - loc) / scale, alpha, beta) / scale
-            
-            # Apply "treatment threshold effect" - reduce density above 70
-            # This models measurement variability between funding decision and first treatment
-            # Some patients qualify at ≤70 but measure >70 at treatment start due to:
-            # - Measurement variability, regression to mean, time delays
-            threshold_effect = np.where(x_beta > 70, 0.4, 1.0)  # 60% reduction above 70
-            y_beta = y_beta_raw * threshold_effect
-            
-            # Renormalize to maintain probability distribution
-            area_under_curve = np.trapezoid(y_beta, x_beta)
-            y_beta = y_beta / area_under_curve
-            
-            ax.plot(x_beta, y_beta, 'orange', linewidth=2, linestyle='-', 
-                   label='Beta + threshold effect', alpha=0.8)
-            
-            # Show the unconstrained Beta for comparison
-            ax.plot(x_beta, y_beta_raw, 'orange', linewidth=1, linestyle=':', 
-                   alpha=0.5, label='Beta (no threshold)')
-            
-            # Calculate actual percentage above 70 in truncated distribution
-            idx_70 = np.argmin(np.abs(x_beta - 70))
-            pct_above_70 = np.trapezoid(y_beta[idx_70:], x_beta[idx_70:]) * 100
-            
-            # Add text annotation
-            ax.text(72, max(y_beta) * 0.8, 
-                   f'{pct_above_70:.1f}% > 70\n(actual: 20.4%)', 
-                   fontsize=9, bbox=dict(boxstyle="round,pad=0.3", facecolor="yellow", alpha=0.3))
-            
-            ax.axvline(58.36, color='g', linestyle=':', alpha=0.7, label='UK Mean: 58.4')
-            ax.axvline(62, color='g', linestyle='--', alpha=0.5, label='UK Median: 62')
-        
-        ax.axvline(mean, color='r', linestyle='--', label=f'Protocol Mean: {mean}')
-        ax.axvline(spec.baseline_vision_min, color='k', linestyle=':', label=f'Min: {spec.baseline_vision_min}')
-        ax.axvline(spec.baseline_vision_max, color='k', linestyle=':', label=f'Max: {spec.baseline_vision_max}')
-        ax.axvline(70, color='orange', linestyle='-', alpha=0.3, label='NICE Threshold: 70')
-        
-        # Shade the allowed range
-        ax.fill_between(x, 0, np.maximum(y_normal, 0), 
-                       where=(x >= spec.baseline_vision_min) & (x <= spec.baseline_vision_max), 
-                       alpha=0.3, color='blue')
-        
-        ax.set_xlabel('Baseline Vision (ETDRS letters)')
-        ax.set_ylabel('Probability Density')
-        ax.set_title('Baseline Vision Distribution')
-        ax.legend(fontsize=8)
-        ax.grid(True, alpha=0.3)
-        ax.set_xlim(0, 100)
-        st.pyplot(fig)
+            try:
+                # Create the actual distribution
+                distribution = DistributionFactory.create_distribution(dist_config)
+                
+                import numpy as np
+                import matplotlib.pyplot as plt
+                from scipy import stats
+                
+                fig, ax = plt.subplots(figsize=(8, 4))
+                x = np.linspace(0, 100, 1000)
+                
+                # Plot the actual distribution being used
+                if dist_type == 'normal':
+                    y = stats.norm.pdf(x, dist_config['mean'], dist_config['std'])
+                    ax.plot(x, y, 'b-', linewidth=2, label=f"Normal(μ={dist_config['mean']}, σ={dist_config['std']})")
+                    ax.fill_between(x, 0, y, 
+                                   where=(x >= dist_config['min']) & (x <= dist_config['max']), 
+                                   alpha=0.3, color='blue')
+                    ax.axvline(dist_config['min'], color='k', linestyle=':', alpha=0.5, label=f"Min: {dist_config['min']}")
+                    ax.axvline(dist_config['max'], color='k', linestyle=':', alpha=0.5, label=f"Max: {dist_config['max']}")
+                    
+                elif dist_type == 'beta_with_threshold':
+                    # Use the actual distribution object for accurate plotting
+                    ax.plot(distribution.x_values, distribution.pdf, 'orange', linewidth=2, 
+                           label=distribution.get_description())
+                    ax.axvline(dist_config['threshold'], color='red', linestyle='--', alpha=0.5, 
+                              label=f"Threshold: {dist_config['threshold']}")
+                    
+                    # Calculate and show statistics
+                    stats_dict = distribution.get_statistics()
+                    ax.text(0.02, 0.95, f"Mean: {stats_dict['mean']:.1f}\nStd: {stats_dict['std']:.1f}\n% > 70: {stats_dict['pct_above_70']:.1f}%", 
+                           transform=ax.transAxes, verticalalignment='top',
+                           bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+                    
+                elif dist_type == 'uniform':
+                    y = np.zeros_like(x)
+                    mask = (x >= dist_config['min']) & (x <= dist_config['max'])
+                    y[mask] = 1.0 / (dist_config['max'] - dist_config['min'])
+                    ax.plot(x, y, 'g-', linewidth=2, label=f"Uniform[{dist_config['min']}, {dist_config['max']}]")
+                    ax.fill_between(x, 0, y, where=mask, alpha=0.3, color='green')
+                
+                # Add NICE threshold reference
+                ax.axvline(70, color='orange', linestyle='-', alpha=0.3, label='NICE Threshold: 70')
+                
+                ax.set_xlabel('Baseline Vision (ETDRS letters)')
+                ax.set_ylabel('Probability Density')
+                ax.set_title(f'Protocol Baseline Vision Distribution ({dist_type.replace("_", " ").title()})')
+                ax.set_xlim(0, 100)
+                ax.set_ylim(bottom=0)
+                ax.legend()
+                ax.grid(True, alpha=0.3)
+                
+                st.pyplot(fig)
+                
+            except Exception as e:
+                st.error(f"Error creating distribution visualization: {str(e)}")
         
         # Show UK data breakdown
         with st.expander("UK Baseline Vision Data (2,029 patients)"):
