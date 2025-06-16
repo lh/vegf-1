@@ -5,7 +5,7 @@ Tracks individual patient state, treatment history, and outcomes.
 Part of the FOV (Four Option Version) internal model.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Any, Callable
 from .disease_model import DiseaseState
 
@@ -60,6 +60,13 @@ class Patient:
         self.pre_discontinuation_vision: Optional[float] = None
         self.first_visit_date: Optional[datetime] = None
         self.current_interval_days: int = 28  # Default 4 weeks
+        
+        # Extended discontinuation tracking for all reasons
+        self.visits_without_improvement = 0
+        self.visits_with_significant_loss = 0
+        self.age_years: Optional[int] = None  # Patient age for mortality calculations
+        self.birth_date: Optional[datetime] = None  # Alternative to age tracking
+        self.sex: Optional[str] = None  # Patient sex ('male' or 'female')
         
         # Retreatment tracking
         self.retreatment_count = 0
@@ -192,3 +199,58 @@ class Patient:
         self.is_discontinued = False
         self.retreatment_count += 1
         self.retreatment_dates.append(date)
+        
+    def calculate_recent_injection_rate(self, reference_date: datetime, lookback_months: int = 12) -> Optional[float]:
+        """
+        Calculate the recent injection rate (injections per year) based on treatment history.
+        
+        Args:
+            reference_date: Date to calculate from
+            lookback_months: Number of months to look back (default: 12)
+            
+        Returns:
+            Injections per year rate, or None if insufficient data
+        """
+        if not self.visit_history:
+            return None
+            
+        # Calculate lookback start date
+        lookback_days = lookback_months * 30.44  # Average days per month
+        lookback_start = reference_date - timedelta(days=lookback_days)
+        
+        # Count injections in the lookback period
+        injection_count = 0
+        earliest_visit_in_period = None
+        latest_visit_in_period = None
+        
+        for visit in self.visit_history:
+            visit_date = visit['date']
+            if lookback_start <= visit_date <= reference_date:
+                if visit['treatment_given']:
+                    injection_count += 1
+                    
+                # Track date range
+                if earliest_visit_in_period is None or visit_date < earliest_visit_in_period:
+                    earliest_visit_in_period = visit_date
+                if latest_visit_in_period is None or visit_date > latest_visit_in_period:
+                    latest_visit_in_period = visit_date
+        
+        # Need at least one visit in the period
+        if earliest_visit_in_period is None:
+            return None
+            
+        # Calculate actual time span
+        if earliest_visit_in_period == latest_visit_in_period:
+            # Only one visit in period, can't calculate rate
+            return None
+            
+        time_span_days = (latest_visit_in_period - earliest_visit_in_period).days
+        if time_span_days <= 0:
+            return None
+            
+        # Convert to years and calculate rate
+        time_span_years = time_span_days / 365.25
+        if time_span_years > 0:
+            return injection_count / time_span_years
+        
+        return None

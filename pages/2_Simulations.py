@@ -160,8 +160,9 @@ def engine_selector():
     return engine_type
 
 # Show Quick Start box with protocol name as title and engine selector
+model_indicator = " [TIME-BASED]" if protocol_info.get('type') == 'time_based' else ""
 selected_preset = quick_start_box(presets, default_preset='default', 
-                                 title=f"{protocol_info['name']} v{protocol_info['version']}",
+                                 title=f"{protocol_info['name']} v{protocol_info['version']}{model_indicator}",
                                  engine_widget=engine_selector)
 
 # Handle preset selection
@@ -307,7 +308,13 @@ if st.session_state.get('simulation_running', False):
         # Quick setup phase (0-10%)
         progress_bar.progress(2)
         status_text.caption("Loading protocol...")
-        spec = ProtocolSpecification.from_yaml(Path(protocol_info['path']))
+        
+        # Load correct protocol type
+        if protocol_info.get('type') == 'time_based':
+            from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSpecification
+            spec = TimeBasedProtocolSpecification.from_yaml(Path(protocol_info['path']))
+        else:
+            spec = ProtocolSpecification.from_yaml(Path(protocol_info['path']))
         
         progress_bar.progress(5)
         status_text.caption("Initializing...")

@@ -108,18 +108,18 @@ discontinuation_categories:
   # Planned discontinuations (existing)
   stable_disease:
     criteria: [as defined]
-    
+
   # Unplanned external (COVID-like)
   external_short_gap:
     probability: 0.094
     duration: 90-180 days
     va_impact: -5.9 letters
-    
+
   external_long_gap:
     probability: 0.025
     duration: 180-365 days
     va_impact: -8.1 letters
-    
+
   # Clinical misunderstanding (new category)
   inappropriate_clinical:
     probability: 0.013
@@ -128,12 +128,12 @@ discontinuation_categories:
         when: va > 70
         probability: 0.316 * 0.013
         va_impact: -12.6 letters
-        
+
       course_complete:
         when: months_on_treatment ~12
         probability: 0.142 * 0.013
         va_impact: -14.2 letters
-        
+
       good_enough:
         when: va 50-70 & months < 10
         probability: 0.184 * 0.013

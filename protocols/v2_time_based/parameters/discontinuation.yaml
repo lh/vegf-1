@@ -1,0 +1,85 @@
+# Discontinuation Parameters for Time-Based Model
+# All checks happen at visits only
+
+discontinuation_parameters:
+  # 1. Death - natural mortality
+  death:
+    base_annual_mortality: 0.02        # 2% per year base rate
+    age_adjustment_per_decade: 1.5     # 50% increase per decade over 70
+    disease_mortality_multiplier:
+      STABLE: 1.0
+      ACTIVE: 1.1
+      HIGHLY_ACTIVE: 1.2
+  
+  # 2. Attrition - loss to follow-up
+  attrition:
+    base_probability_per_visit: 0.01   # 1% per visit baseline
+    
+    # Time-based adjustments
+    time_adjustment:
+      months_0_12: 1.0     # First year
+      months_12_24: 1.2    # Second year - 20% higher
+      months_24_plus: 1.5  # After 2 years - 50% higher
+    
+    # Treatment burden adjustments
+    injection_burden_adjustment:
+      injections_per_year_0_6: 1.0    # Low burden
+      injections_per_year_6_12: 1.2   # Medium burden
+      injections_per_year_12_plus: 1.5  # High burden
+  
+  # 3. Administrative error
+  administrative:
+    probability_per_visit: 0.005  # 0.5% constant rate
+  
+  # 4. Treatment decision (clinical judgment)
+  treatment_decision:
+    # Stop if stable too long
+    stable_disease_visits_threshold: 6      # After 6 consecutive stable visits
+    stable_discontinuation_probability: 0.2 # 20% chance to stop
+    
+    # Stop if no improvement
+    no_improvement_visits_threshold: 4      # After 4 visits without improvement
+    no_improvement_probability: 0.15        # 15% chance to stop
+    
+    # Minimum treatments before considering
+    min_treatments_before_decision: 3
+  
+  # 5. Continued deterioration
+  deterioration:
+    vision_loss_threshold: -10        # Lost 10+ letters from baseline
+    visits_with_loss_threshold: 3     # Over 3 consecutive visits
+    discontinuation_probability: 0.7  # 70% chance to stop
+  
+  # 6. Poor vision (vision floor)
+  poor_vision:
+    vision_threshold: 20              # Below 20 letters
+    discontinuation_probability: 0.8  # 80% chance
+    grace_period_visits: 2           # Allow 2 visits below threshold
+    
+    # Alternative thresholds (for sensitivity analysis)
+    alternative_thresholds:
+      conservative: 10   # More aggressive treatment
+      standard: 20       # Current guidelines
+      restrictive: 25    # Earlier stopping
+
+# Priority order for discontinuation reasons
+# First matching reason is recorded
+discontinuation_priority:
+  1: death
+  2: poor_vision      # Clinical priority
+  3: deterioration    # Clinical judgment
+  4: treatment_decision
+  5: attrition
+  6: administrative
+
+# Tracking requirements
+# Additional patient state needed for discontinuation logic
+required_patient_tracking:
+  - age_or_birth_date
+  - baseline_vision
+  - consecutive_stable_visits
+  - visits_without_improvement
+  - visits_with_significant_loss
+  - visits_below_vision_threshold
+  - first_treatment_date
+  - injection_dates

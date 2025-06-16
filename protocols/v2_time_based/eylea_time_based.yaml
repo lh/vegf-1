@@ -1,0 +1,77 @@
+# Eylea Time-Based Protocol Specification
+# Uses fortnightly disease progression model
+
+# Metadata
+name: "Eylea Time-Based"
+version: "1.0"
+created_date: "2025-06-16"
+author: "Luke Herbert with Claude Code"
+description: "Eylea (aflibercept) protocol with time-based disease progression"
+
+# Model type indicator
+model_type: "time_based"
+transition_model: "fortnightly"
+update_interval_days: 14
+
+# Protocol parameters
+protocol_type: "treat_and_extend"
+
+# Loading dose phase
+loading_dose_injections: 3  # Number of initial injections
+loading_dose_interval_days: 28  # Monthly (4 weeks)
+
+# Treat-and-extend phase (after loading)
+min_interval_days: 28
+max_interval_days: 112  
+extension_days: 14
+shortening_days: 14
+
+# Reference to parameter files (relative to this file)
+disease_transitions_file: "parameters/disease_transitions.yaml"
+treatment_effect_file: "parameters/treatment_effect.yaml"
+vision_parameters_file: "parameters/vision.yaml"
+discontinuation_parameters_file: "parameters/discontinuation.yaml"
+demographics_parameters_file: "parameters/demographics.yaml"
+
+# Baseline vision (same as standard protocols)
+baseline_vision:
+  mean: 65
+  std: 10
+  min: 20
+  max: 90
+
+# These are placeholders for compatibility - actual values come from parameter files
+disease_transitions:
+  NAIVE: {NAIVE: 0.0, STABLE: 0.3, ACTIVE: 0.6, HIGHLY_ACTIVE: 0.1}
+  STABLE: {NAIVE: 0.0, STABLE: 0.975, ACTIVE: 0.025, HIGHLY_ACTIVE: 0.0}
+  ACTIVE: {NAIVE: 0.0, STABLE: 0.05, ACTIVE: 0.90, HIGHLY_ACTIVE: 0.05}
+  HIGHLY_ACTIVE: {NAIVE: 0.0, STABLE: 0.01, ACTIVE: 0.04, HIGHLY_ACTIVE: 0.95}
+
+# Placeholder vision change model for compatibility
+vision_change_model:
+  naive_treated: {mean: 0.0, std: 1.0}
+  naive_untreated: {mean: -1.0, std: 1.0}
+  stable_treated: {mean: 1.0, std: 1.0}
+  stable_untreated: {mean: -0.5, std: 1.0}
+  active_treated: {mean: -1.0, std: 2.0}
+  active_untreated: {mean: -3.0, std: 2.0}
+  highly_active_treated: {mean: -2.0, std: 2.0}
+  highly_active_untreated: {mean: -5.0, std: 3.0}
+
+# Placeholder treatment effect for compatibility
+treatment_effect_on_transitions:
+  STABLE:
+    multipliers: {STABLE: 1.1, ACTIVE: 0.9}
+  ACTIVE:
+    multipliers: {STABLE: 2.0, ACTIVE: 0.8, HIGHLY_ACTIVE: 0.5}
+  HIGHLY_ACTIVE:
+    multipliers: {STABLE: 2.0, ACTIVE: 1.5, HIGHLY_ACTIVE: 0.75}
+
+# Placeholder discontinuation rules for compatibility
+discontinuation_rules:
+  poor_vision_threshold: 20
+  poor_vision_probability: 0.8
+  high_injection_count: 50
+  high_injection_probability: 0.02
+  long_treatment_months: 60
+  long_treatment_probability: 0.05

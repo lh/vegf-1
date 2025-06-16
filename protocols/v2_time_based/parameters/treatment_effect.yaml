@@ -1,0 +1,41 @@
+# Treatment Effect Parameters for Time-Based Model
+
+# Treatment efficacy decay parameters
+treatment_decay:
+  # Full effect duration (days)
+  full_effect_duration_days: 56      # 8 weeks
+  
+  # Half-life for exponential decay after full effect period
+  half_life_days: 56                 # Effect drops to 50% at 16 weeks
+  
+  # Minimum residual effect
+  minimum_effect: 0.0                # No effect after long periods
+
+# Treatment effect multipliers by disease state
+# These modify transition probabilities when treatment is effective
+treatment_multipliers:
+  STABLE:
+    multipliers:
+      STABLE: 1.1      # 10% more likely to stay stable
+      ACTIVE: 0.9      # 10% less likely to progress
+      HIGHLY_ACTIVE: 0.0  # Should not transition directly
+  
+  ACTIVE:
+    multipliers:
+      STABLE: 2.0      # 2x more likely to improve to stable
+      ACTIVE: 0.8      # 20% less likely to stay active
+      HIGHLY_ACTIVE: 0.5  # 50% less likely to worsen
+  
+  HIGHLY_ACTIVE:
+    multipliers:
+      STABLE: 2.0      # 2x more likely to improve dramatically
+      ACTIVE: 1.5      # 50% more likely to improve to active
+      HIGHLY_ACTIVE: 0.75  # 25% less likely to stay highly active
+
+# Treatment response modifiers
+treatment_response:
+  # Probability of being a treatment responder
+  responder_probability: 0.7   # 70% of patients respond to treatment
+  
+  # Non-responder effect reduction
+  non_responder_effect: 0.3    # Non-responders get 30% of effect

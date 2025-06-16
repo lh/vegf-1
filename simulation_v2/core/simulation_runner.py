@@ -12,10 +12,12 @@ import random
 
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
 from simulation_v2.core.disease_model import DiseaseModel
+from simulation_v2.core.disease_model_time_based import DiseaseModelTimeBased
 from simulation_v2.core.protocol import StandardProtocol
 from simulation_v2.core.patient import Patient
 from simulation_v2.engines.abs_engine import ABSEngine, SimulationResults
 from simulation_v2.engines.des_engine import DESEngine
+from simulation_v2.engines.abs_engine_time_based_with_specs import ABSEngineTimeBasedWithSpecs
 from simulation_v2.serialization.parquet_writer import serialize_patient_visits
 
 
@@ -77,12 +79,28 @@ class SimulationRunner:
             'protocol_checksum': self.spec.checksum
         })
         
+        # Check if this is a time-based model
+        is_time_based = False
+        if hasattr(self.spec, 'model_type'):
+            is_time_based = self.spec.model_type == 'time_based'
+        elif hasattr(self.spec, 'transition_model'):
+            is_time_based = self.spec.transition_model == 'fortnightly'
+        
         # Create components from spec (NO DEFAULTS)
-        disease_model = DiseaseModel(
-            transition_probabilities=self.spec.disease_transitions,
-            treatment_effect_multipliers=self.spec.treatment_effect_on_transitions,
-            seed=seed
-        )
+        if is_time_based:
+            # Create time-based disease model
+            params_dir = Path(self.spec.source_file).parent / 'parameters'
+            disease_model = DiseaseModelTimeBased.from_parameter_files(
+                params_dir=params_dir,
+                seed=seed
+            )
+        else:
+            # Create standard per-visit model
+            disease_model = DiseaseModel(
+                transition_probabilities=self.spec.disease_transitions,
+                treatment_effect_multipliers=self.spec.treatment_effect_on_transitions,
+                seed=seed
+            )
         
         protocol = StandardProtocol(
             min_interval_days=self.spec.min_interval_days,
@@ -93,21 +111,33 @@ class SimulationRunner:
         
         # Create appropriate engine
         if engine_type.lower() == 'abs':
-            engine = ABSEngineWithSpecs(
-                disease_model=disease_model,
-                protocol=protocol,
-                protocol_spec=self.spec,
-                n_patients=n_patients,
-                seed=seed
-            )
+            if is_time_based:
+                engine = ABSEngineTimeBasedWithSpecs(
+                    disease_model=disease_model,
+                    protocol=protocol,
+                    protocol_spec=self.spec,
+                    n_patients=n_patients,
+                    seed=seed
+                )
+            else:
+                engine = ABSEngineWithSpecs(
+                    disease_model=disease_model,
+                    protocol=protocol,
+                    protocol_spec=self.spec,
+                    n_patients=n_patients,
+                    seed=seed
+                )
         elif engine_type.lower() == 'des':
-            engine = DESEngineWithSpecs(
-                disease_model=disease_model,
-                protocol=protocol,
-                protocol_spec=self.spec,
-                n_patients=n_patients,
-                seed=seed
-            )
+            if is_time_based:
+                raise NotImplementedError("DES engine not yet implemented for time-based models")
+            else:
+                engine = DESEngineWithSpecs(
+                    disease_model=disease_model,
+                    protocol=protocol,
+                    protocol_spec=self.spec,
+                    n_patients=n_patients,
+                    seed=seed
+                )
         else:
             raise ValueError(f"Unknown engine type: {engine_type}")
             
