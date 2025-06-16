@@ -106,6 +106,10 @@ class TimeBasedSimulationRunner:
                 shortening_days=self.spec.shortening_days
             )
         
+        # Create baseline vision distribution from spec
+        from simulation_v2.models.baseline_vision_distributions import DistributionFactory
+        baseline_vision_distribution = DistributionFactory.create_from_protocol_spec(self.spec)
+        
         # Create time-based ABS engine with full parameter support
         # Use ABSEngineTimeBasedWithParams which removes all hardcoded values
         engine = ABSEngineTimeBasedWithParams(
@@ -113,7 +117,8 @@ class TimeBasedSimulationRunner:
             protocol=protocol,
             protocol_spec=self.spec,
             n_patients=n_patients,
-            seed=seed
+            seed=seed,
+            baseline_vision_distribution=baseline_vision_distribution
         )
         
         # Run simulation

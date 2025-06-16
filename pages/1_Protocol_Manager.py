@@ -265,7 +265,7 @@ if st.session_state.get('show_manage', False):
                 yaml_str = yaml.dump(spec.to_yaml_dict(), default_flow_style=False, sort_keys=False)
 
                 if selected_file.parent == TEMP_DIR:
-                    st.markdown("<small style='color: #FFA500;'>⚠️ Temporary protocol - download to keep it!</small>", unsafe_allow_html=True)
+                    st.markdown("<small style='color: #FFA500;'>Temporary protocol - download to keep it!</small>", unsafe_allow_html=True)
 
                 st.download_button(
                     label="Download",
@@ -503,20 +503,117 @@ try:
                                     pass
                     
                     # Update population parameters if edited
-                    if 'edit_pop_mean' in st.session_state:
-                        try:
-                            data['baseline_vision']['mean'] = float(st.session_state.edit_pop_mean)
-                        except:
-                            pass
-                    if 'edit_pop_std' in st.session_state:
-                        try:
-                            data['baseline_vision']['std'] = float(st.session_state.edit_pop_std)
-                        except:
-                            pass
-                    if 'edit_pop_min' in st.session_state and st.session_state.edit_pop_min.isdigit():
-                        data['baseline_vision']['min'] = int(st.session_state.edit_pop_min)
-                    if 'edit_pop_max' in st.session_state and st.session_state.edit_pop_max.isdigit():
-                        data['baseline_vision']['max'] = int(st.session_state.edit_pop_max)
+                    if 'edit_dist_type' in st.session_state:
+                        dist_type = st.session_state.edit_dist_type
+                        
+                        if dist_type == "normal":
+                            # Update normal distribution parameters
+                            if 'edit_pop_mean' in st.session_state:
+                                try:
+                                    data['baseline_vision']['mean'] = float(st.session_state.edit_pop_mean)
+                                except:
+                                    pass
+                            if 'edit_pop_std' in st.session_state:
+                                try:
+                                    data['baseline_vision']['std'] = float(st.session_state.edit_pop_std)
+                                except:
+                                    pass
+                            if 'edit_pop_min' in st.session_state and st.session_state.edit_pop_min.isdigit():
+                                data['baseline_vision']['min'] = int(st.session_state.edit_pop_min)
+                            if 'edit_pop_max' in st.session_state and st.session_state.edit_pop_max.isdigit():
+                                data['baseline_vision']['max'] = int(st.session_state.edit_pop_max)
+                            
+                            # Remove baseline_vision_distribution if switching to normal
+                            if 'baseline_vision_distribution' in data:
+                                del data['baseline_vision_distribution']
+                                
+                        elif dist_type == "beta_with_threshold":
+                            # Create/update beta distribution
+                            beta_dist = {
+                                'type': 'beta_with_threshold'
+                            }
+                            
+                            if 'edit_beta_alpha' in st.session_state:
+                                try:
+                                    beta_dist['alpha'] = float(st.session_state.edit_beta_alpha)
+                                except:
+                                    beta_dist['alpha'] = 3.5
+                            
+                            if 'edit_beta_beta' in st.session_state:
+                                try:
+                                    beta_dist['beta'] = float(st.session_state.edit_beta_beta)
+                                except:
+                                    beta_dist['beta'] = 2.0
+                                    
+                            if 'edit_beta_min' in st.session_state:
+                                try:
+                                    beta_dist['min'] = int(st.session_state.edit_beta_min)
+                                except:
+                                    beta_dist['min'] = 5
+                                    
+                            if 'edit_beta_max' in st.session_state:
+                                try:
+                                    beta_dist['max'] = int(st.session_state.edit_beta_max)
+                                except:
+                                    beta_dist['max'] = 98
+                                    
+                            if 'edit_beta_threshold' in st.session_state:
+                                try:
+                                    beta_dist['threshold'] = int(st.session_state.edit_beta_threshold)
+                                except:
+                                    beta_dist['threshold'] = 70
+                                    
+                            if 'edit_beta_reduction' in st.session_state:
+                                try:
+                                    beta_dist['threshold_reduction'] = float(st.session_state.edit_beta_reduction)
+                                except:
+                                    beta_dist['threshold_reduction'] = 0.6
+                            
+                            data['baseline_vision_distribution'] = beta_dist
+                            
+                            # Update baseline_vision to match beta expectations
+                            data['baseline_vision']['mean'] = 58
+                            data['baseline_vision']['std'] = 15
+                            data['baseline_vision']['min'] = beta_dist.get('min', 5)
+                            data['baseline_vision']['max'] = beta_dist.get('max', 98)
+                            
+                        elif dist_type == "uniform":
+                            # Create/update uniform distribution
+                            uniform_dist = {
+                                'type': 'uniform'
+                            }
+                            
+                            if 'edit_uniform_min' in st.session_state:
+                                try:
+                                    uniform_dist['min'] = int(st.session_state.edit_uniform_min)
+                                    data['baseline_vision']['min'] = uniform_dist['min']
+                                except:
+                                    pass
+                                    
+                            if 'edit_uniform_max' in st.session_state:
+                                try:
+                                    uniform_dist['max'] = int(st.session_state.edit_uniform_max)
+                                    data['baseline_vision']['max'] = uniform_dist['max']
+                                except:
+                                    pass
+                            
+                            data['baseline_vision_distribution'] = uniform_dist
+                    else:
+                        # Legacy update for protocols without distribution type
+                        if 'edit_pop_mean' in st.session_state:
+                            try:
+                                data['baseline_vision']['mean'] = float(st.session_state.edit_pop_mean)
+                            except:
+                                pass
+                        if 'edit_pop_std' in st.session_state:
+                            try:
+                                data['baseline_vision']['std'] = float(st.session_state.edit_pop_std)
+                            except:
+                                pass
+                        if 'edit_pop_min' in st.session_state and st.session_state.edit_pop_min.isdigit():
+                            data['baseline_vision']['min'] = int(st.session_state.edit_pop_min)
+                        if 'edit_pop_max' in st.session_state and st.session_state.edit_pop_max.isdigit():
+                            data['baseline_vision']['max'] = int(st.session_state.edit_pop_max)
                     
                     # Update discontinuation rules if edited
                     if 'edit_disc_pv_thresh' in st.session_state and st.session_state.edit_disc_pv_thresh.isdigit():
@@ -547,34 +644,133 @@ try:
                             data['discontinuation_rules']['discontinuation_types'] = types
                     
                     # For time-based protocols, save parameter file changes
-                    if protocol_type == "time_based" and 'tb_param_changes' in st.session_state:
-                        protocol_dir = Path(spec.source_file).parent
-                        
-                        # Save each modified parameter file
-                        for param_type, param_data in st.session_state.tb_param_changes.items():
-                            if param_type == 'transitions':
-                                param_path = protocol_dir / spec.disease_transitions_file
-                            elif param_type == 'effects':
-                                param_path = protocol_dir / spec.treatment_effect_file
-                            elif param_type == 'vision':
-                                param_path = protocol_dir / spec.vision_parameters_file
-                            elif param_type == 'discontinuation':
-                                param_path = protocol_dir / spec.discontinuation_parameters_file
-                            else:
-                                continue
+                    if protocol_type == "time_based":
+                        # Handle baseline vision distribution updates
+                        if 'tb_edit_dist_type' in st.session_state:
+                            dist_type = st.session_state.tb_edit_dist_type
                             
-                            # Backup original
-                            if param_path.exists():
-                                import shutil
-                                backup_path = param_path.with_suffix('.yaml.bak')
-                                shutil.copy2(param_path, backup_path)
-                            
-                            # Save changes
-                            with open(param_path, 'w') as f:
-                                yaml.dump(param_data, f, default_flow_style=False, sort_keys=False)
+                            if dist_type == "normal":
+                                # Update normal distribution parameters
+                                if 'tb_edit_pop_mean' in st.session_state:
+                                    try:
+                                        data['baseline_vision']['mean'] = float(st.session_state.tb_edit_pop_mean)
+                                    except:
+                                        pass
+                                if 'tb_edit_pop_std' in st.session_state:
+                                    try:
+                                        data['baseline_vision']['std'] = float(st.session_state.tb_edit_pop_std)
+                                    except:
+                                        pass
+                                if 'tb_edit_pop_min' in st.session_state and st.session_state.tb_edit_pop_min.isdigit():
+                                    data['baseline_vision']['min'] = int(st.session_state.tb_edit_pop_min)
+                                if 'tb_edit_pop_max' in st.session_state and st.session_state.tb_edit_pop_max.isdigit():
+                                    data['baseline_vision']['max'] = int(st.session_state.tb_edit_pop_max)
+                                
+                                # Remove baseline_vision_distribution if switching to normal
+                                if 'baseline_vision_distribution' in data:
+                                    del data['baseline_vision_distribution']
+                                    
+                            elif dist_type == "beta_with_threshold":
+                                # Create/update beta distribution
+                                beta_dist = {
+                                    'type': 'beta_with_threshold'
+                                }
+                                
+                                if 'tb_edit_beta_alpha' in st.session_state:
+                                    try:
+                                        beta_dist['alpha'] = float(st.session_state.tb_edit_beta_alpha)
+                                    except:
+                                        beta_dist['alpha'] = 3.5
+                                
+                                if 'tb_edit_beta_beta' in st.session_state:
+                                    try:
+                                        beta_dist['beta'] = float(st.session_state.tb_edit_beta_beta)
+                                    except:
+                                        beta_dist['beta'] = 2.0
+                                        
+                                if 'tb_edit_beta_min' in st.session_state:
+                                    try:
+                                        beta_dist['min'] = int(st.session_state.tb_edit_beta_min)
+                                    except:
+                                        beta_dist['min'] = 5
+                                        
+                                if 'tb_edit_beta_max' in st.session_state:
+                                    try:
+                                        beta_dist['max'] = int(st.session_state.tb_edit_beta_max)
+                                    except:
+                                        beta_dist['max'] = 98
+                                        
+                                if 'tb_edit_beta_threshold' in st.session_state:
+                                    try:
+                                        beta_dist['threshold'] = int(st.session_state.tb_edit_beta_threshold)
+                                    except:
+                                        beta_dist['threshold'] = 70
+                                        
+                                if 'tb_edit_beta_reduction' in st.session_state:
+                                    try:
+                                        beta_dist['threshold_reduction'] = float(st.session_state.tb_edit_beta_reduction)
+                                    except:
+                                        beta_dist['threshold_reduction'] = 0.6
+                                
+                                data['baseline_vision_distribution'] = beta_dist
+                                
+                                # Update baseline_vision to match beta expectations
+                                data['baseline_vision']['mean'] = 58
+                                data['baseline_vision']['std'] = 15
+                                data['baseline_vision']['min'] = beta_dist.get('min', 5)
+                                data['baseline_vision']['max'] = beta_dist.get('max', 98)
+                                
+                            elif dist_type == "uniform":
+                                # Create/update uniform distribution
+                                uniform_dist = {
+                                    'type': 'uniform'
+                                }
+                                
+                                if 'tb_edit_uniform_min' in st.session_state:
+                                    try:
+                                        uniform_dist['min'] = int(st.session_state.tb_edit_uniform_min)
+                                        data['baseline_vision']['min'] = uniform_dist['min']
+                                    except:
+                                        pass
+                                        
+                                if 'tb_edit_uniform_max' in st.session_state:
+                                    try:
+                                        uniform_dist['max'] = int(st.session_state.tb_edit_uniform_max)
+                                        data['baseline_vision']['max'] = uniform_dist['max']
+                                    except:
+                                        pass
+                                
+                                data['baseline_vision_distribution'] = uniform_dist
                         
-                        # Clear parameter changes from session state
-                        del st.session_state['tb_param_changes']
+                        # Handle parameter file changes
+                        if 'tb_param_changes' in st.session_state:
+                            protocol_dir = Path(spec.source_file).parent
+                            
+                            # Save each modified parameter file
+                            for param_type, param_data in st.session_state.tb_param_changes.items():
+                                if param_type == 'transitions':
+                                    param_path = protocol_dir / spec.disease_transitions_file
+                                elif param_type == 'effects':
+                                    param_path = protocol_dir / spec.treatment_effect_file
+                                elif param_type == 'vision':
+                                    param_path = protocol_dir / spec.vision_parameters_file
+                                elif param_type == 'discontinuation':
+                                    param_path = protocol_dir / spec.discontinuation_parameters_file
+                                else:
+                                    continue
+                                
+                                # Backup original
+                                if param_path.exists():
+                                    import shutil
+                                    backup_path = param_path.with_suffix('.yaml.bak')
+                                    shutil.copy2(param_path, backup_path)
+                                
+                                # Save changes
+                                with open(param_path, 'w') as f:
+                                    yaml.dump(param_data, f, default_flow_style=False, sort_keys=False)
+                            
+                            # Clear parameter changes from session state
+                            del st.session_state['tb_param_changes']
                     
                     # Update modified date
                     data['modified_date'] = datetime.now().strftime("%Y-%m-%d")
@@ -601,7 +797,7 @@ try:
     
     # Show model type indicator for time-based protocols
     if protocol_type == "time_based":
-        st.info("🕐 **Time-Based Model**: Disease progression updates every 14 days, independent of visit schedule")
+        st.info("**Time-Based Model**: Disease progression updates every 14 days, independent of visit schedule")
     
     # Compact metadata display
     if st.session_state.get('edit_mode', False) and protocol_type == "temp":
@@ -669,7 +865,7 @@ try:
     if protocol_type == "time_based":
         with tab2:
             st.subheader("Model Type")
-            st.info("🕐 **Time-Based Disease Progression Model**")
+            st.info("**Time-Based Disease Progression Model**")
             
             col1, col2 = st.columns(2)
             with col1:
@@ -685,14 +881,132 @@ try:
         
         with tab3:
             st.subheader("Patient Population")
-            # Same as standard protocol population display
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("Baseline Vision Mean", f"{spec.baseline_vision_mean} letters")
-                st.metric("Baseline Vision Std", f"{spec.baseline_vision_std} letters")
-            with col2:
-                st.metric("Vision Range Min", f"{spec.baseline_vision_min} letters")
-                st.metric("Vision Range Max", f"{spec.baseline_vision_max} letters")
+            
+            if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
+                # Distribution type selector for time-based protocols
+                st.caption("Choose baseline vision distribution type")
+                
+                # Get current distribution type
+                current_dist = getattr(spec, 'baseline_vision_distribution', None)
+                if current_dist and isinstance(current_dist, dict):
+                    current_type = current_dist.get('type', 'normal')
+                else:
+                    current_type = 'normal'
+                
+                dist_type = st.selectbox(
+                    "Distribution Type",
+                    ["normal", "beta_with_threshold", "uniform"],
+                    index=["normal", "beta_with_threshold", "uniform"].index(current_type),
+                    key="tb_edit_dist_type",
+                    help="Normal: Standard clinical trial distribution\nBeta with threshold: UK real-world data\nUniform: For testing"
+                )
+                
+                if dist_type == "normal":
+                    # Editable normal distribution parameters
+                    st.caption("Normal distribution parameters (ETDRS letters)")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        mean_val = st.text_input("Mean", value=str(spec.baseline_vision_mean), key="tb_edit_pop_mean")
+                        st.caption(f"Average baseline vision" if mean_val.replace('.','').isdigit() else "Invalid")
+                        std_val = st.text_input("Standard Deviation", value=str(spec.baseline_vision_std), key="tb_edit_pop_std")
+                        st.caption(f"Vision variability" if std_val.replace('.','').isdigit() else "Invalid")
+                    with col2:
+                        min_val = st.text_input("Minimum", value=str(spec.baseline_vision_min), key="tb_edit_pop_min")
+                        st.caption(f"Worst allowed vision" if min_val.isdigit() else "Invalid")
+                        max_val = st.text_input("Maximum", value=str(spec.baseline_vision_max), key="tb_edit_pop_max")
+                        st.caption(f"Best allowed vision" if max_val.isdigit() else "Invalid")
+                        
+                elif dist_type == "beta_with_threshold":
+                    # Editable beta distribution parameters
+                    st.caption("Beta distribution with threshold effect (UK real-world)")
+                    
+                    # Default values
+                    defaults = {
+                        'alpha': 3.5,
+                        'beta': 2.0,
+                        'min': 5,
+                        'max': 98,
+                        'threshold': 70,
+                        'threshold_reduction': 0.6
+                    }
+                    
+                    # Get current values if they exist
+                    if current_dist and current_dist.get('type') == 'beta_with_threshold':
+                        for key in defaults:
+                            if key in current_dist:
+                                defaults[key] = current_dist[key]
+                    
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        alpha_val = st.text_input("Alpha", value=str(defaults['alpha']), key="tb_edit_beta_alpha")
+                        st.caption("Shape parameter α")
+                        min_val = st.text_input("Min", value=str(defaults['min']), key="tb_edit_beta_min")
+                        st.caption("Minimum vision")
+                        
+                    with col2:
+                        beta_val = st.text_input("Beta", value=str(defaults['beta']), key="tb_edit_beta_beta")
+                        st.caption("Shape parameter β")
+                        max_val = st.text_input("Max", value=str(defaults['max']), key="tb_edit_beta_max")
+                        st.caption("Maximum vision")
+                        
+                    with col3:
+                        threshold_val = st.text_input("Threshold", value=str(defaults['threshold']), key="tb_edit_beta_threshold")
+                        st.caption("NICE funding threshold")
+                        reduction_val = st.text_input("Reduction", value=str(defaults['threshold_reduction']), key="tb_edit_beta_reduction")
+                        st.caption("Reduction above threshold")
+                    
+                    st.info("Based on UK real-world data: mean=58.4, ~20.4% > 70 letters")
+                    
+                elif dist_type == "uniform":
+                    # Editable uniform distribution parameters
+                    st.caption("Uniform distribution parameters (for testing)")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        min_val = st.text_input("Minimum", value=str(spec.baseline_vision_min), key="tb_edit_uniform_min")
+                        st.caption("Minimum vision")
+                    with col2:
+                        max_val = st.text_input("Maximum", value=str(spec.baseline_vision_max), key="tb_edit_uniform_max")
+                        st.caption("Maximum vision")
+            else:
+                # Read-only display
+                # Check if using advanced distribution
+                if hasattr(spec, 'baseline_vision_distribution') and spec.baseline_vision_distribution:
+                    dist = spec.baseline_vision_distribution
+                    dist_type = dist.get('type', 'normal')
+                    
+                    if dist_type == 'beta_with_threshold':
+                        st.info("**Using Beta Distribution with Threshold Effect** (UK Real-World Data)")
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Distribution", "Beta + Threshold")
+                            st.metric("Alpha (α)", dist.get('alpha', 3.5))
+                            st.metric("Beta (β)", dist.get('beta', 2.0))
+                        with col2:
+                            st.metric("Range", f"{dist.get('min', 5)}-{dist.get('max', 98)}")
+                            st.metric("Threshold", f"{dist.get('threshold', 70)} letters")
+                            st.metric("Reduction", f"{dist.get('threshold_reduction', 0.6)*100:.0f}%")
+                        with col3:
+                            st.metric("Expected Mean", "~58.4 letters")
+                            st.metric("Expected % >70", "~20.4%")
+                            st.metric("Expected Std", "~15.1 letters")
+                    elif dist_type == 'uniform':
+                        st.info("**Using Uniform Distribution** (For Testing)")
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.metric("Distribution", "Uniform")
+                            st.metric("Minimum", f"{dist.get('min', 20)} letters")
+                        with col2:
+                            st.metric("Maximum", f"{dist.get('max', 90)} letters")
+                            st.metric("Expected Mean", f"{(dist.get('min', 20) + dist.get('max', 90))/2:.0f} letters")
+                else:
+                    # Standard normal distribution
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric("Baseline Vision Mean", f"{spec.baseline_vision_mean} letters")
+                        st.metric("Baseline Vision Std", f"{spec.baseline_vision_std} letters")
+                    with col2:
+                        st.metric("Vision Range Min", f"{spec.baseline_vision_min} letters")
+                        st.metric("Vision Range Max", f"{spec.baseline_vision_max} letters")
         
         with tab4:
             st.subheader("Parameters")
@@ -715,7 +1029,7 @@ try:
                     
                     if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
                         st.info("Edit fortnightly (14-day) transition probabilities")
-                        st.warning("⚠️ Rows must sum to 1.0")
+                        st.warning("Rows must sum to 1.0")
                         
                         # Track if changes were made
                         changes_made = False
@@ -1025,7 +1339,7 @@ try:
                 states = ['NAIVE', 'STABLE', 'ACTIVE', 'HIGHLY_ACTIVE']
                 
                 st.caption("Edit transition probabilities (0.0 to 1.0). Rows must sum to 1.0.")
-                st.caption("⚠️ Transitions TO NAIVE from other states are not allowed (always 0).")
+                st.caption("Transitions TO NAIVE from other states are not allowed (always 0).")
                 
                 # Create editable inputs in a grid
                 for i, from_state in enumerate(states):
@@ -1083,7 +1397,7 @@ try:
         st.subheader("Treatment Effect Multipliers")
         
         # Add explainer
-        with st.expander("ℹ️ How treatment multipliers work"):
+        with st.expander("How treatment multipliers work"):
             st.markdown("""
             Treatment multipliers modify disease state transitions when a patient receives treatment:
             
@@ -1097,7 +1411,7 @@ try:
             
             Typically, multipliers that improve vision are > 1.0, while those that worsen vision are < 1.0.
             
-            **⚠️ Important:** Transitions occur **per visit**, not monthly. This means:
+            **Important:** Transitions occur **per visit**, not monthly. This means:
             - Patients with 4-week intervals: ~13 transition opportunities/year
             - Patients with 16-week intervals: ~3 transition opportunities/year
             
@@ -1237,28 +1551,130 @@ try:
             st.subheader("Patient Population")
         
         if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
-            # Editable population parameters
-            st.caption("Baseline vision distribution parameters (ETDRS letters)")
-            col1, col2 = st.columns(2)
-            with col1:
-                mean_val = st.text_input("Mean", value=str(spec.baseline_vision_mean), key="edit_pop_mean")
-                st.caption(f"Average baseline vision" if mean_val.replace('.','').isdigit() else "Invalid")
-                std_val = st.text_input("Standard Deviation", value=str(spec.baseline_vision_std), key="edit_pop_std")
-                st.caption(f"Vision variability" if std_val.replace('.','').isdigit() else "Invalid")
-            with col2:
-                min_val = st.text_input("Minimum", value=str(spec.baseline_vision_min), key="edit_pop_min")
-                st.caption(f"Worst allowed vision" if min_val.isdigit() else "Invalid")
-                max_val = st.text_input("Maximum", value=str(spec.baseline_vision_max), key="edit_pop_max")
-                st.caption(f"Best allowed vision" if max_val.isdigit() else "Invalid")
+            # Distribution type selector
+            st.caption("Choose baseline vision distribution type")
+            
+            # Get current distribution type
+            current_dist = getattr(spec, 'baseline_vision_distribution', None)
+            if current_dist and isinstance(current_dist, dict):
+                current_type = current_dist.get('type', 'normal')
+            else:
+                current_type = 'normal'
+            
+            dist_type = st.selectbox(
+                "Distribution Type",
+                ["normal", "beta_with_threshold", "uniform"],
+                index=["normal", "beta_with_threshold", "uniform"].index(current_type),
+                key="edit_dist_type",
+                help="Normal: Standard clinical trial distribution\nBeta with threshold: UK real-world data\nUniform: For testing"
+            )
+            
+            if dist_type == "normal":
+                # Editable normal distribution parameters
+                st.caption("Normal distribution parameters (ETDRS letters)")
+                col1, col2 = st.columns(2)
+                with col1:
+                    mean_val = st.text_input("Mean", value=str(spec.baseline_vision_mean), key="edit_pop_mean")
+                    st.caption(f"Average baseline vision" if mean_val.replace('.','').isdigit() else "Invalid")
+                    std_val = st.text_input("Standard Deviation", value=str(spec.baseline_vision_std), key="edit_pop_std")
+                    st.caption(f"Vision variability" if std_val.replace('.','').isdigit() else "Invalid")
+                with col2:
+                    min_val = st.text_input("Minimum", value=str(spec.baseline_vision_min), key="edit_pop_min")
+                    st.caption(f"Worst allowed vision" if min_val.isdigit() else "Invalid")
+                    max_val = st.text_input("Maximum", value=str(spec.baseline_vision_max), key="edit_pop_max")
+                    st.caption(f"Best allowed vision" if max_val.isdigit() else "Invalid")
+                    
+            elif dist_type == "beta_with_threshold":
+                # Editable beta distribution parameters
+                st.caption("Beta distribution with threshold effect (UK real-world)")
+                
+                # Default values
+                defaults = {
+                    'alpha': 3.5,
+                    'beta': 2.0,
+                    'min': 5,
+                    'max': 98,
+                    'threshold': 70,
+                    'threshold_reduction': 0.6
+                }
+                
+                # Get current values if they exist
+                if current_dist and current_dist.get('type') == 'beta_with_threshold':
+                    for key in defaults:
+                        if key in current_dist:
+                            defaults[key] = current_dist[key]
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    alpha_val = st.text_input("Alpha", value=str(defaults['alpha']), key="edit_beta_alpha")
+                    st.caption("Shape parameter α")
+                    min_val = st.text_input("Min", value=str(defaults['min']), key="edit_beta_min")
+                    st.caption("Minimum vision")
+                    
+                with col2:
+                    beta_val = st.text_input("Beta", value=str(defaults['beta']), key="edit_beta_beta")
+                    st.caption("Shape parameter β")
+                    max_val = st.text_input("Max", value=str(defaults['max']), key="edit_beta_max")
+                    st.caption("Maximum vision")
+                    
+                with col3:
+                    threshold_val = st.text_input("Threshold", value=str(defaults['threshold']), key="edit_beta_threshold")
+                    st.caption("NICE funding threshold")
+                    reduction_val = st.text_input("Reduction", value=str(defaults['threshold_reduction']), key="edit_beta_reduction")
+                    st.caption("Reduction above threshold")
+                
+                st.info("Based on UK real-world data: mean=58.4, ~20.4% > 70 letters")
+                
+            elif dist_type == "uniform":
+                # Editable uniform distribution parameters
+                st.caption("Uniform distribution parameters (for testing)")
+                col1, col2 = st.columns(2)
+                with col1:
+                    min_val = st.text_input("Minimum", value=str(spec.baseline_vision_min), key="edit_uniform_min")
+                    st.caption("Minimum vision")
+                with col2:
+                    max_val = st.text_input("Maximum", value=str(spec.baseline_vision_max), key="edit_uniform_max")
+                    st.caption("Maximum vision")
         else:
             # Read-only display
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("Baseline Vision Mean", f"{spec.baseline_vision_mean} letters")
-                st.metric("Baseline Vision Std", f"{spec.baseline_vision_std} letters")
-            with col2:
-                st.metric("Vision Range Min", f"{spec.baseline_vision_min} letters")
-                st.metric("Vision Range Max", f"{spec.baseline_vision_max} letters")
+            # Check if using advanced distribution
+            if hasattr(spec, 'baseline_vision_distribution') and spec.baseline_vision_distribution:
+                dist = spec.baseline_vision_distribution
+                dist_type = dist.get('type', 'normal')
+                
+                if dist_type == 'beta_with_threshold':
+                    st.info("**Using Beta Distribution with Threshold Effect** (UK Real-World Data)")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Distribution", "Beta + Threshold")
+                        st.metric("Alpha (α)", dist.get('alpha', 3.5))
+                        st.metric("Beta (β)", dist.get('beta', 2.0))
+                    with col2:
+                        st.metric("Range", f"{dist.get('min', 5)}-{dist.get('max', 98)}")
+                        st.metric("Threshold", f"{dist.get('threshold', 70)} letters")
+                        st.metric("Reduction", f"{dist.get('threshold_reduction', 0.6)*100:.0f}%")
+                    with col3:
+                        st.metric("Expected Mean", "~58.4 letters")
+                        st.metric("Expected % >70", "~20.4%")
+                        st.metric("Expected Std", "~15.1 letters")
+                elif dist_type == 'uniform':
+                    st.info("**Using Uniform Distribution** (For Testing)")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric("Distribution", "Uniform")
+                        st.metric("Minimum", f"{dist.get('min', 20)} letters")
+                    with col2:
+                        st.metric("Maximum", f"{dist.get('max', 90)} letters")
+                        st.metric("Expected Mean", f"{(dist.get('min', 20) + dist.get('max', 90))/2:.0f} letters")
+            else:
+                # Standard normal distribution
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Baseline Vision Mean", f"{spec.baseline_vision_mean} letters")
+                    st.metric("Baseline Vision Std", f"{spec.baseline_vision_std} letters")
+                with col2:
+                    st.metric("Vision Range Min", f"{spec.baseline_vision_min} letters")
+                    st.metric("Vision Range Max", f"{spec.baseline_vision_max} letters")
             
         # Show distribution with UK data reference
         import numpy as np
@@ -1278,7 +1694,7 @@ try:
         
         # Actual UK data shows Beta distribution
         if mean == 70:  # Default protocol value
-            st.info("⚠️ UK data: mean=58.4 letters at first treatment (not 70). Note: All patients qualified with ≤70 letters at funding decision, but 20.4% measured >70 at treatment start due to measurement variability.")
+            st.info("UK data: mean=58.4 letters at first treatment (not 70). Note: All patients qualified with ≤70 letters at funding decision, but 20.4% measured >70 at treatment start due to measurement variability.")
             
             # Create histogram-like representation of actual UK data
             # Based on the categories from the analysis
@@ -1362,7 +1778,7 @@ try:
         st.pyplot(fig)
         
         # Show UK data breakdown
-        with st.expander("📊 UK Baseline Vision Data (2,029 patients)"):
+        with st.expander("UK Baseline Vision Data (2,029 patients)"):
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown("""

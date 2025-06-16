@@ -10,7 +10,7 @@ Key differences from standard ABS:
 import random
 import numpy as np
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 
 from simulation_v2.core.patient import Patient
@@ -32,7 +32,8 @@ class ABSEngineTimeBased(ABSEngine):
         disease_model: DiseaseModelTimeBased,
         protocol: Protocol,
         n_patients: int,
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
+        baseline_vision_distribution: Optional[Any] = None
     ):
         """
         Initialize time-based ABS engine.
@@ -51,7 +52,8 @@ class ABSEngineTimeBased(ABSEngine):
             disease_model=disease_model,  # Pass for compatibility
             protocol=protocol,
             n_patients=n_patients,
-            seed=seed
+            seed=seed,
+            baseline_vision_distribution=baseline_vision_distribution
         )
         
         # Track actual vision values (not just measured)

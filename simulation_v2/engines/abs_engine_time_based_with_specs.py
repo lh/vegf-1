@@ -30,7 +30,8 @@ class ABSEngineTimeBasedWithSpecs(ABSEngineTimeBased):
         protocol: StandardProtocol,
         protocol_spec: TimeBasedProtocolSpecification,
         n_patients: int,
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
+        baseline_vision_distribution: Optional[Any] = None
     ):
         """
         Initialize with protocol specification.
@@ -58,7 +59,8 @@ class ABSEngineTimeBasedWithSpecs(ABSEngineTimeBased):
             disease_model=disease_model,
             protocol=protocol,
             n_patients=n_patients,
-            seed=seed
+            seed=seed,
+            baseline_vision_distribution=baseline_vision_distribution
         )
     
     def _load_vision_parameters(self):

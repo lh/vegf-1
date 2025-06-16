@@ -72,6 +72,9 @@ class TimeBasedProtocolSpecification:
     # Protocol checksum for verification
     checksum: str = ""
     
+    # Optional: Advanced baseline vision distribution
+    baseline_vision_distribution: Optional[Dict[str, Any]] = None
+    
     @classmethod
     def from_yaml(cls, filepath: Path) -> 'TimeBasedProtocolSpecification':
         """
@@ -138,6 +141,7 @@ class TimeBasedProtocolSpecification:
             baseline_vision_std=baseline['std'],
             baseline_vision_min=baseline['min'],
             baseline_vision_max=baseline['max'],
+            baseline_vision_distribution=data.get('baseline_vision_distribution'),
             disease_transitions_file=data['disease_transitions_file'],
             treatment_effect_file=data['treatment_effect_file'],
             vision_parameters_file=data['vision_parameters_file'],
@@ -224,6 +228,7 @@ class TimeBasedProtocolSpecification:
                 'min': self.baseline_vision_min,
                 'max': self.baseline_vision_max
             },
+            'baseline_vision_distribution': self.baseline_vision_distribution,
             'disease_transitions_file': self.disease_transitions_file,
             'treatment_effect_file': self.treatment_effect_file,
             'vision_parameters_file': self.vision_parameters_file,

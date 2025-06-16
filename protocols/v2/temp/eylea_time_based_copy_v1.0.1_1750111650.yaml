@@ -1,8 +1,8 @@
-name: eylea_time_based_copy_v1.0.1_1750098466 Copy
+name: eylea_time_based Copy
 version: 1.0.1
 created_date: '2025-06-16'
 author: Your Name
-description: Copy of eylea_time_based_copy_v1.0.1_1750098466
+description: Copy of eylea_time_based
 model_type: time_based
 transition_model: fortnightly
 update_interval_days: 14
@@ -10,7 +10,7 @@ protocol_type: treat_and_extend
 loading_dose_injections: 3
 loading_dose_interval_days: 28
 min_interval_days: 28
-max_interval_days: 111
+max_interval_days: 112
 extension_days: 14
 shortening_days: 14
 disease_transitions_file: parameters/disease_transitions.yaml
@@ -19,10 +19,10 @@ vision_parameters_file: parameters/vision.yaml
 discontinuation_parameters_file: parameters/discontinuation.yaml
 demographics_parameters_file: parameters/demographics.yaml
 baseline_vision:
-  mean: 65.0
-  std: 10.0
+  mean: 58
+  std: 15
   min: 20
-  max: 90
+  max: 85
 disease_transitions:
   NAIVE:
     NAIVE: 0.0
@@ -46,7 +46,7 @@ disease_transitions:
     HIGHLY_ACTIVE: 0.95
 vision_change_model:
   naive_treated:
-    mean: 3.0
+    mean: 0.0
     std: 1.0
   naive_untreated:
     mean: -1.0
@@ -91,4 +91,12 @@ discontinuation_rules:
   high_injection_probability: 0.02
   long_treatment_months: 60
   long_treatment_probability: 0.05
+baseline_vision_distribution:
+  type: beta_with_threshold
+  alpha: 3.5
+  beta: 2.0
+  min: 20
+  max: 85
+  threshold: 70
+  threshold_reduction: 0.6
 modified_date: '2025-06-16'
