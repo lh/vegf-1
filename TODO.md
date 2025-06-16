@@ -57,9 +57,44 @@ This document summarizes key technical debt items and modeling improvements iden
 - Update protocols with appropriate values
 - Ensure consistent time-based modeling throughout
 
+## Medium Priority - Analysis Features
+
+### 5. Cost Analysis Implementation
+**Issue**: No cost tracking or economic analysis in simulations.
+
+**Impact**: Cannot evaluate cost-effectiveness or budget impact.
+
+**Required Changes**:
+- Add cost parameters to protocols (injection costs, visit costs, monitoring costs)
+- Track cumulative costs per patient
+- Implement cost analysis visualizations
+- Add cost-effectiveness metrics (cost per QALY, etc.)
+
+### 6. Weekly Clinic Load Analysis
+**Issue**: Current analysis shows patient states over time but not weekly clinic workload.
+
+**Impact**: Cannot plan clinic capacity or staffing requirements.
+
+**Required Changes**:
+- Calculate visits per week from patient histories
+- Create weekly workload visualization
+- Show peak/average clinic loads
+- Break down by visit types (injection, monitoring, etc.)
+
+### 7. Simulation Comparison Features
+**Issue**: Cannot compare results between different simulation runs.
+
+**Impact**: Difficult to evaluate protocol changes or parameter sensitivity.
+
+**Required Changes**:
+- Add simulation selection for comparison
+- Create side-by-side visualizations
+- Implement difference calculations
+- Add statistical comparisons between runs
+
 ## Low Priority - UI/UX Improvements
 
-### 5. Protocol Manager Tab Persistence
+### 8. Protocol Manager Tab Persistence
 **Issue**: Edit/Save operations reset view to first tab.
 
 **Impact**: Minor user annoyance when editing protocols.
@@ -76,7 +111,10 @@ This document summarizes key technical debt items and modeling improvements iden
 1. **Phase 1**: Time-based transitions (highest impact on validity)
 2. **Phase 2**: Baseline vision distribution (affects all simulations)
 3. **Phase 3**: Discontinuation types (enables new analyses)
-4. **Phase 4**: UI improvements (quality of life)
+4. **Phase 4**: Cost analysis (economic evaluation)
+5. **Phase 5**: Weekly clinic load (operational planning)
+6. **Phase 6**: Simulation comparisons (analysis enhancement)
+7. **Phase 7**: UI improvements (quality of life)
 
 ## Key Files to Review
 
@@ -95,5 +133,5 @@ When implementing these changes:
 4. Document the scientific rationale for all changes
 
 ---
-**Last Updated**: 2025-06-15
+**Last Updated**: 2025-06-16
 **Next Review**: When starting Phase 1 implementation
