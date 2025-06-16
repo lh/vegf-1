@@ -35,10 +35,6 @@ class TimeBasedProtocolSpecification:
     # Treatment protocol parameters
     protocol_type: str  # "treat_and_extend", etc.
     
-    # Loading dose parameters (optional)
-    loading_dose_injections: Optional[int] = None
-    loading_dose_interval_days: Optional[int] = None
-    
     # Treat-and-extend parameters
     min_interval_days: int
     max_interval_days: int
@@ -64,6 +60,10 @@ class TimeBasedProtocolSpecification:
     # Model configuration (with defaults)
     model_type: str = "time_based"
     update_interval_days: int = 14  # Fortnightly
+    
+    # Loading dose parameters (optional)
+    loading_dose_injections: Optional[int] = None
+    loading_dose_interval_days: Optional[int] = None
     
     # Protocol checksum for verification
     checksum: str = ""

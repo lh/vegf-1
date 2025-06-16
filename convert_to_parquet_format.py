@@ -185,7 +185,7 @@ def main():
     print("🔄 Converting time-based simulation to correct parquet format...\n")
     
     # Convert time-based simulation (generate new memorable name)
-    time_based_id = convert_simulation_to_parquet("20250616-124007-sim-200p-2y-time_based")
+    time_based_id = convert_simulation_to_parquet("20250616-130647-sim-200p-2y-time_based")
     
     print("\n🎉 Conversion complete!")
     print(f"\nYou can now visualize the time-based simulation:")
