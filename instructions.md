@@ -1,9 +1,14 @@
-# Active Instructions - Hybrid Repository Refactoring
+# Active Instructions
 
 **IMPORTANT**: This is the primary instruction file. Always check this file at the start of each session.
 
-## 🚨 Current Active Task: Hybrid Repository Refactoring
-**Status**: Phase 1 In Progress  
+## 🚨 Current Active Task: Time-Based Disease Model Implementation
+**Status**: Implementation Starting  
+**Branch**: feature/time-based-disease-model  
+**Instructions**: See TIME_BASED_IMPLEMENTATION_INSTRUCTIONS.md
+
+### Previous Task: Hybrid Repository Refactoring ✅
+**Status**: COMPLETE (Phases 1-5 done, deployment testing pending)  
 **Branch**: main  
 **Backup**: main-backup-20250114  
 
