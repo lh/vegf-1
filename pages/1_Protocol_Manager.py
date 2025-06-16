@@ -1665,262 +1665,262 @@ try:
     if protocol_type != "time_based":
         with tab4:
             st.subheader("Patient Population")
-        
-        if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
-            # Distribution type selector
-            st.caption("Choose baseline vision distribution type")
             
-            # Get current distribution type
-            current_dist = getattr(spec, 'baseline_vision_distribution', None)
-            if current_dist and isinstance(current_dist, dict):
-                current_type = current_dist.get('type', 'normal')
-            else:
-                current_type = 'normal'
-            
-            dist_type = st.selectbox(
-                "Distribution Type",
-                ["normal", "beta_with_threshold", "uniform"],
-                index=["normal", "beta_with_threshold", "uniform"].index(current_type),
-                key="edit_dist_type",
-                help="Normal: Standard clinical trial distribution\nBeta with threshold: UK real-world data\nUniform: For testing"
-            )
-            
-            if dist_type == "normal":
-                # Editable normal distribution parameters
-                st.caption("Normal distribution parameters (ETDRS letters)")
-                col1, col2 = st.columns(2)
-                with col1:
-                    mean_val = st.text_input("Mean", value=str(spec.baseline_vision_mean), key="edit_pop_mean")
-                    st.caption(f"Average baseline vision" if mean_val.replace('.','').isdigit() else "Invalid")
-                    std_val = st.text_input("Standard Deviation", value=str(spec.baseline_vision_std), key="edit_pop_std")
-                    st.caption(f"Vision variability" if std_val.replace('.','').isdigit() else "Invalid")
-                with col2:
-                    min_val = st.text_input("Minimum", value=str(spec.baseline_vision_min), key="edit_pop_min")
-                    st.caption(f"Worst allowed vision" if min_val.isdigit() else "Invalid")
-                    max_val = st.text_input("Maximum", value=str(spec.baseline_vision_max), key="edit_pop_max")
-                    st.caption(f"Best allowed vision" if max_val.isdigit() else "Invalid")
+            if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
+                # Distribution type selector
+                st.caption("Choose baseline vision distribution type")
+                
+                # Get current distribution type
+                current_dist = getattr(spec, 'baseline_vision_distribution', None)
+                if current_dist and isinstance(current_dist, dict):
+                    current_type = current_dist.get('type', 'normal')
+                else:
+                    current_type = 'normal'
+                
+                dist_type = st.selectbox(
+                    "Distribution Type",
+                    ["normal", "beta_with_threshold", "uniform"],
+                    index=["normal", "beta_with_threshold", "uniform"].index(current_type),
+                    key="edit_dist_type",
+                    help="Normal: Standard clinical trial distribution\nBeta with threshold: UK real-world data\nUniform: For testing"
+                )
+                
+                if dist_type == "normal":
+                    # Editable normal distribution parameters
+                    st.caption("Normal distribution parameters (ETDRS letters)")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        mean_val = st.text_input("Mean", value=str(spec.baseline_vision_mean), key="edit_pop_mean")
+                        st.caption(f"Average baseline vision" if mean_val.replace('.','').isdigit() else "Invalid")
+                        std_val = st.text_input("Standard Deviation", value=str(spec.baseline_vision_std), key="edit_pop_std")
+                        st.caption(f"Vision variability" if std_val.replace('.','').isdigit() else "Invalid")
+                    with col2:
+                        min_val = st.text_input("Minimum", value=str(spec.baseline_vision_min), key="edit_pop_min")
+                        st.caption(f"Worst allowed vision" if min_val.isdigit() else "Invalid")
+                        max_val = st.text_input("Maximum", value=str(spec.baseline_vision_max), key="edit_pop_max")
+                        st.caption(f"Best allowed vision" if max_val.isdigit() else "Invalid")
+                        
+                elif dist_type == "beta_with_threshold":
+                    # Editable beta distribution parameters
+                    st.caption("Beta distribution with threshold effect (UK real-world)")
                     
-            elif dist_type == "beta_with_threshold":
-                # Editable beta distribution parameters
-                st.caption("Beta distribution with threshold effect (UK real-world)")
-                
-                # Default values
-                defaults = {
-                    'alpha': 3.5,
-                    'beta': 2.0,
-                    'min': 5,
-                    'max': 98,
-                    'threshold': 70,
-                    'threshold_reduction': 0.6
-                }
-                
-                # Get current values if they exist
-                if current_dist and current_dist.get('type') == 'beta_with_threshold':
-                    for key in defaults:
-                        if key in current_dist:
-                            defaults[key] = current_dist[key]
-                
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    alpha_val = st.text_input("Alpha", value=str(defaults['alpha']), key="edit_beta_alpha")
-                    st.caption("Shape parameter α")
-                    min_val = st.text_input("Min", value=str(defaults['min']), key="edit_beta_min")
-                    st.caption("Minimum vision")
+                    # Default values
+                    defaults = {
+                        'alpha': 3.5,
+                        'beta': 2.0,
+                        'min': 5,
+                        'max': 98,
+                        'threshold': 70,
+                        'threshold_reduction': 0.6
+                    }
                     
-                with col2:
-                    beta_val = st.text_input("Beta", value=str(defaults['beta']), key="edit_beta_beta")
-                    st.caption("Shape parameter β")
-                    max_val = st.text_input("Max", value=str(defaults['max']), key="edit_beta_max")
-                    st.caption("Maximum vision")
+                    # Get current values if they exist
+                    if current_dist and current_dist.get('type') == 'beta_with_threshold':
+                        for key in defaults:
+                            if key in current_dist:
+                                defaults[key] = current_dist[key]
                     
-                with col3:
-                    threshold_val = st.text_input("Threshold", value=str(defaults['threshold']), key="edit_beta_threshold")
-                    st.caption("NICE funding threshold")
-                    reduction_val = st.text_input("Reduction", value=str(defaults['threshold_reduction']), key="edit_beta_reduction")
-                    st.caption("Reduction above threshold")
-                
-                st.info("Based on UK real-world data: mean=58.4, ~20.4% > 70 letters")
-                
-            elif dist_type == "uniform":
-                # Editable uniform distribution parameters
-                st.caption("Uniform distribution parameters (for testing)")
-                col1, col2 = st.columns(2)
-                with col1:
-                    min_val = st.text_input("Minimum", value=str(spec.baseline_vision_min), key="edit_uniform_min")
-                    st.caption("Minimum vision")
-                with col2:
-                    max_val = st.text_input("Maximum", value=str(spec.baseline_vision_max), key="edit_uniform_max")
-                    st.caption("Maximum vision")
-            
-            # Show live preview of the distribution
-            st.subheader("Distribution Preview")
-            params = {
-                'mean': spec.baseline_vision_mean,
-                'std': spec.baseline_vision_std,
-                'min': spec.baseline_vision_min,
-                'max': spec.baseline_vision_max
-            }
-            if current_dist and isinstance(current_dist, dict):
-                params.update(current_dist)
-            
-            fig = draw_baseline_vision_distribution(dist_type, params, session_prefix="edit")
-            st.pyplot(fig)
-        else:
-            # Read-only display
-            # Check if using advanced distribution
-            if hasattr(spec, 'baseline_vision_distribution') and spec.baseline_vision_distribution:
-                dist = spec.baseline_vision_distribution
-                dist_type = dist.get('type', 'normal')
-                
-                if dist_type == 'beta_with_threshold':
-                    st.info("**Using Beta Distribution with Threshold Effect** (UK Real-World Data)")
                     col1, col2, col3 = st.columns(3)
                     with col1:
-                        st.metric("Distribution", "Beta + Threshold")
-                        st.metric("Alpha (α)", dist.get('alpha', 3.5))
-                        st.metric("Beta (β)", dist.get('beta', 2.0))
+                        alpha_val = st.text_input("Alpha", value=str(defaults['alpha']), key="edit_beta_alpha")
+                        st.caption("Shape parameter α")
+                        min_val = st.text_input("Min", value=str(defaults['min']), key="edit_beta_min")
+                        st.caption("Minimum vision")
+                        
                     with col2:
-                        st.metric("Range", f"{dist.get('min', 5)}-{dist.get('max', 98)}")
-                        st.metric("Threshold", f"{dist.get('threshold', 70)} letters")
-                        st.metric("Reduction", f"{dist.get('threshold_reduction', 0.6)*100:.0f}%")
+                        beta_val = st.text_input("Beta", value=str(defaults['beta']), key="edit_beta_beta")
+                        st.caption("Shape parameter β")
+                        max_val = st.text_input("Max", value=str(defaults['max']), key="edit_beta_max")
+                        st.caption("Maximum vision")
+                        
                     with col3:
-                        st.metric("Expected Mean", "~58.4 letters")
-                        st.metric("Expected % >70", "~20.4%")
-                        st.metric("Expected Std", "~15.1 letters")
-                elif dist_type == 'uniform':
-                    st.info("**Using Uniform Distribution** (For Testing)")
+                        threshold_val = st.text_input("Threshold", value=str(defaults['threshold']), key="edit_beta_threshold")
+                        st.caption("NICE funding threshold")
+                        reduction_val = st.text_input("Reduction", value=str(defaults['threshold_reduction']), key="edit_beta_reduction")
+                        st.caption("Reduction above threshold")
+                    
+                    st.info("Based on UK real-world data: mean=58.4, ~20.4% > 70 letters")
+                    
+                elif dist_type == "uniform":
+                    # Editable uniform distribution parameters
+                    st.caption("Uniform distribution parameters (for testing)")
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.metric("Distribution", "Uniform")
-                        st.metric("Minimum", f"{dist.get('min', 20)} letters")
+                        min_val = st.text_input("Minimum", value=str(spec.baseline_vision_min), key="edit_uniform_min")
+                        st.caption("Minimum vision")
                     with col2:
-                        st.metric("Maximum", f"{dist.get('max', 90)} letters")
-                        st.metric("Expected Mean", f"{(dist.get('min', 20) + dist.get('max', 90))/2:.0f} letters")
+                        max_val = st.text_input("Maximum", value=str(spec.baseline_vision_max), key="edit_uniform_max")
+                        st.caption("Maximum vision")
+                
+                # Show live preview of the distribution
+                st.subheader("Distribution Preview")
+                params = {
+                    'mean': spec.baseline_vision_mean,
+                    'std': spec.baseline_vision_std,
+                    'min': spec.baseline_vision_min,
+                    'max': spec.baseline_vision_max
+                }
+                if current_dist and isinstance(current_dist, dict):
+                    params.update(current_dist)
+                
+                fig = draw_baseline_vision_distribution(dist_type, params, session_prefix="edit")
+                st.pyplot(fig)
             else:
-                # Standard normal distribution
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Baseline Vision Mean", f"{spec.baseline_vision_mean} letters")
-                    st.metric("Baseline Vision Std", f"{spec.baseline_vision_std} letters")
-                with col2:
-                    st.metric("Vision Range Min", f"{spec.baseline_vision_min} letters")
-                    st.metric("Vision Range Max", f"{spec.baseline_vision_max} letters")
-            
-                # Show the actual protocol distribution
-                if not st.session_state.get('edit_mode', False):
-                    st.subheader("Baseline Vision Distribution")
-                
-                    # Determine what distribution is being used
-                    if hasattr(spec, 'baseline_vision_distribution') and spec.baseline_vision_distribution:
-                        dist_config = spec.baseline_vision_distribution
-                        dist_type = dist_config.get('type', 'normal')
-                    else:
-                        dist_type = 'normal'
-                        dist_config = {
-                            'type': 'normal',
-                            'mean': spec.baseline_vision_mean,
-                            'std': spec.baseline_vision_std,
-                            'min': spec.baseline_vision_min,
-                            'max': spec.baseline_vision_max
-                        }
-                
-                    # Create the distribution visualization
-                    from simulation_v2.models.baseline_vision_distributions import DistributionFactory
-                
-                    try:
-                        # Create the actual distribution
-                        distribution = DistributionFactory.create_distribution(dist_config)
+                # Read-only display
+                # Check if using advanced distribution
+                if hasattr(spec, 'baseline_vision_distribution') and spec.baseline_vision_distribution:
+                    dist = spec.baseline_vision_distribution
+                    dist_type = dist.get('type', 'normal')
                     
-                        import numpy as np
-                        import matplotlib.pyplot as plt
-                        from scipy import stats
-                    
-                        fig, ax = plt.subplots(figsize=(8, 4))
-                        x = np.linspace(0, 100, 1000)
-                    
-                        # Plot the actual distribution being used
-                        if dist_type == 'normal':
-                            y = stats.norm.pdf(x, dist_config['mean'], dist_config['std'])
-                            ax.plot(x, y, 'b-', linewidth=2, label=f"Normal(μ={dist_config['mean']}, σ={dist_config['std']})")
-                            ax.fill_between(x, 0, y, 
-                                           where=(x >= dist_config['min']) & (x <= dist_config['max']), 
-                                           alpha=0.3, color='blue')
-                            ax.axvline(dist_config['min'], color='k', linestyle=':', alpha=0.5, label=f"Min: {dist_config['min']}")
-                            ax.axvline(dist_config['max'], color='k', linestyle=':', alpha=0.5, label=f"Max: {dist_config['max']}")
-                        
-                        elif dist_type == 'beta_with_threshold':
-                            # Use the actual distribution object for accurate plotting
-                            ax.plot(distribution.x_values, distribution.pdf, 'orange', linewidth=2, 
-                                   label=distribution.get_description())
-                            ax.axvline(dist_config['threshold'], color='red', linestyle='--', alpha=0.5, 
-                                      label=f"Threshold: {dist_config['threshold']}")
-                        
-                            # Calculate and show statistics
-                            stats_dict = distribution.get_statistics()
-                            ax.text(0.02, 0.95, f"Mean: {stats_dict['mean']:.1f}\nStd: {stats_dict['std']:.1f}\n% > 70: {stats_dict['pct_above_70']:.1f}%", 
-                                   transform=ax.transAxes, verticalalignment='top',
-                                   bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-                        
-                        elif dist_type == 'uniform':
-                            y = np.zeros_like(x)
-                            mask = (x >= dist_config['min']) & (x <= dist_config['max'])
-                            y[mask] = 1.0 / (dist_config['max'] - dist_config['min'])
-                            ax.plot(x, y, 'g-', linewidth=2, label=f"Uniform[{dist_config['min']}, {dist_config['max']}]")
-                            ax.fill_between(x, 0, y, where=mask, alpha=0.3, color='green')
-                    
-                        # Add NICE threshold reference
-                        ax.axvline(70, color='orange', linestyle='-', alpha=0.3, label='NICE Threshold: 70')
-                    
-                        ax.set_xlabel('Baseline Vision (ETDRS letters)')
-                        ax.set_ylabel('Probability Density')
-                        ax.set_title(f'Protocol Baseline Vision Distribution ({dist_type.replace("_", " ").title()})')
-                        ax.set_xlim(0, 100)
-                        ax.set_ylim(bottom=0)
-                        ax.legend()
-                        ax.grid(True, alpha=0.3)
-                    
-                        st.pyplot(fig)
-                    
-                    except Exception as e:
-                        st.error(f"Error creating distribution visualization: {str(e)}")
-            
-                # Show UK data breakdown
-                with st.expander("UK Baseline Vision Data (2,029 patients)"):
+                    if dist_type == 'beta_with_threshold':
+                        st.info("**Using Beta Distribution with Threshold Effect** (UK Real-World Data)")
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("Distribution", "Beta + Threshold")
+                            st.metric("Alpha (α)", dist.get('alpha', 3.5))
+                            st.metric("Beta (β)", dist.get('beta', 2.0))
+                        with col2:
+                            st.metric("Range", f"{dist.get('min', 5)}-{dist.get('max', 98)}")
+                            st.metric("Threshold", f"{dist.get('threshold', 70)} letters")
+                            st.metric("Reduction", f"{dist.get('threshold_reduction', 0.6)*100:.0f}%")
+                        with col3:
+                            st.metric("Expected Mean", "~58.4 letters")
+                            st.metric("Expected % >70", "~20.4%")
+                            st.metric("Expected Std", "~15.1 letters")
+                    elif dist_type == 'uniform':
+                        st.info("**Using Uniform Distribution** (For Testing)")
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.metric("Distribution", "Uniform")
+                            st.metric("Minimum", f"{dist.get('min', 20)} letters")
+                        with col2:
+                            st.metric("Maximum", f"{dist.get('max', 90)} letters")
+                            st.metric("Expected Mean", f"{(dist.get('min', 20) + dist.get('max', 90))/2:.0f} letters")
+                else:
+                    # Standard normal distribution
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.markdown("""
-                        **Actual Distribution:**
-                        - Mean: 58.36 letters
-                        - Median: 62.00 letters  
-                        - Std Dev: 15.12 letters
-                        - Range: 5-98 letters
-                        - **Best fit: Beta distribution**
-                        - Negative skew (-0.72)
-                        """)
+                        st.metric("Baseline Vision Mean", f"{spec.baseline_vision_mean} letters")
+                        st.metric("Baseline Vision Std", f"{spec.baseline_vision_std} letters")
                     with col2:
-                        st.markdown("""
-                        **Vision Categories:**
-                        - Very Poor (0-30): 5.8%
-                        - Poor (31-50): 22.2%
-                        - Moderate (51-70): 51.6%
-                        - Good (71-85): 20.2%
-                        - Excellent (86-100): 0.2%
+                        st.metric("Vision Range Min", f"{spec.baseline_vision_min} letters")
+                        st.metric("Vision Range Max", f"{spec.baseline_vision_max} letters")
+                
+                    # Show the actual protocol distribution
+                    if not st.session_state.get('edit_mode', False):
+                        st.subheader("Baseline Vision Distribution")
                     
-                        **Key finding:** Only 20.4% measure >70 at first treatment
-                        - But all qualified with ≤70 at funding decision
-                        - 51.6% cluster in 51-70 range
+                        # Determine what distribution is being used
+                        if hasattr(spec, 'baseline_vision_distribution') and spec.baseline_vision_distribution:
+                            dist_config = spec.baseline_vision_distribution
+                            dist_type = dist_config.get('type', 'normal')
+                        else:
+                            dist_type = 'normal'
+                            dist_config = {
+                                'type': 'normal',
+                                'mean': spec.baseline_vision_mean,
+                                'std': spec.baseline_vision_std,
+                                'min': spec.baseline_vision_min,
+                                'max': spec.baseline_vision_max
+                            }
                     
-                        **Why some measure >70 at treatment:**
-                        - Measurement variability (±5 letters typical)
-                        - Regression to the mean
-                        - Time delay between funding & treatment
-                        - Possible measurement bias at funding
+                        # Create the distribution visualization
+                        from simulation_v2.models.baseline_vision_distributions import DistributionFactory
                     
-                        **Best fit:** Beta + threshold effect
-                        - Natural disease: Beta(α=3.5, β=2.0) 
-                        - 60% reduction above 70 (funding filter)
-                        - Captures both biology + healthcare system
-                        """)
+                        try:
+                            # Create the actual distribution
+                            distribution = DistributionFactory.create_distribution(dist_config)
+                        
+                            import numpy as np
+                            import matplotlib.pyplot as plt
+                            from scipy import stats
+                        
+                            fig, ax = plt.subplots(figsize=(8, 4))
+                            x = np.linspace(0, 100, 1000)
+                        
+                            # Plot the actual distribution being used
+                            if dist_type == 'normal':
+                                y = stats.norm.pdf(x, dist_config['mean'], dist_config['std'])
+                                ax.plot(x, y, 'b-', linewidth=2, label=f"Normal(μ={dist_config['mean']}, σ={dist_config['std']})")
+                                ax.fill_between(x, 0, y, 
+                                               where=(x >= dist_config['min']) & (x <= dist_config['max']), 
+                                               alpha=0.3, color='blue')
+                                ax.axvline(dist_config['min'], color='k', linestyle=':', alpha=0.5, label=f"Min: {dist_config['min']}")
+                                ax.axvline(dist_config['max'], color='k', linestyle=':', alpha=0.5, label=f"Max: {dist_config['max']}")
+                            
+                            elif dist_type == 'beta_with_threshold':
+                                # Use the actual distribution object for accurate plotting
+                                ax.plot(distribution.x_values, distribution.pdf, 'orange', linewidth=2, 
+                                       label=distribution.get_description())
+                                ax.axvline(dist_config['threshold'], color='red', linestyle='--', alpha=0.5, 
+                                          label=f"Threshold: {dist_config['threshold']}")
+                            
+                                # Calculate and show statistics
+                                stats_dict = distribution.get_statistics()
+                                ax.text(0.02, 0.95, f"Mean: {stats_dict['mean']:.1f}\nStd: {stats_dict['std']:.1f}\n% > 70: {stats_dict['pct_above_70']:.1f}%", 
+                                       transform=ax.transAxes, verticalalignment='top',
+                                       bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+                            
+                            elif dist_type == 'uniform':
+                                y = np.zeros_like(x)
+                                mask = (x >= dist_config['min']) & (x <= dist_config['max'])
+                                y[mask] = 1.0 / (dist_config['max'] - dist_config['min'])
+                                ax.plot(x, y, 'g-', linewidth=2, label=f"Uniform[{dist_config['min']}, {dist_config['max']}]")
+                                ax.fill_between(x, 0, y, where=mask, alpha=0.3, color='green')
+                        
+                            # Add NICE threshold reference
+                            ax.axvline(70, color='orange', linestyle='-', alpha=0.3, label='NICE Threshold: 70')
+                        
+                            ax.set_xlabel('Baseline Vision (ETDRS letters)')
+                            ax.set_ylabel('Probability Density')
+                            ax.set_title(f'Protocol Baseline Vision Distribution ({dist_type.replace("_", " ").title()})')
+                            ax.set_xlim(0, 100)
+                            ax.set_ylim(bottom=0)
+                            ax.legend()
+                            ax.grid(True, alpha=0.3)
+                        
+                            st.pyplot(fig)
+                        
+                        except Exception as e:
+                            st.error(f"Error creating distribution visualization: {str(e)}")
+                
+                    # Show UK data breakdown
+                    with st.expander("UK Baseline Vision Data (2,029 patients)"):
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.markdown("""
+                            **Actual Distribution:**
+                            - Mean: 58.36 letters
+                            - Median: 62.00 letters  
+                            - Std Dev: 15.12 letters
+                            - Range: 5-98 letters
+                            - **Best fit: Beta distribution**
+                            - Negative skew (-0.72)
+                            """)
+                        with col2:
+                            st.markdown("""
+                            **Vision Categories:**
+                            - Very Poor (0-30): 5.8%
+                            - Poor (31-50): 22.2%
+                            - Moderate (51-70): 51.6%
+                            - Good (71-85): 20.2%
+                            - Excellent (86-100): 0.2%
+                        
+                            **Key finding:** Only 20.4% measure >70 at first treatment
+                            - But all qualified with ≤70 at funding decision
+                            - 51.6% cluster in 51-70 range
+                        
+                            **Why some measure >70 at treatment:**
+                            - Measurement variability (±5 letters typical)
+                            - Regression to the mean
+                            - Time delay between funding & treatment
+                            - Possible measurement bias at funding
+                        
+                            **Best fit:** Beta + threshold effect
+                            - Natural disease: Beta(α=3.5, β=2.0) 
+                            - 60% reduction above 70 (funding filter)
+                            - Captures both biology + healthcare system
+                            """)
     
     # Discontinuation tab - only for standard protocols (tab5)
     if protocol_type != "time_based":
