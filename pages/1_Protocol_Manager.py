@@ -53,12 +53,14 @@ from ape.utils.carbon_button_helpers import (
 
 # Remove redundant title - page name is sufficient
 
-# Protocol directory - use parent directory path
-PROTOCOL_DIR = Path(__file__).parent.parent / "protocols" / "v2"
-TEMP_DIR = PROTOCOL_DIR / "temp"
+# Protocol directories - both standard and time-based
+STANDARD_PROTOCOL_DIR = Path(__file__).parent.parent / "protocols" / "v2"
+TIME_BASED_PROTOCOL_DIR = Path(__file__).parent.parent / "protocols" / "v2_time_based"
+TEMP_DIR = STANDARD_PROTOCOL_DIR / "temp"
 
 # Create directories if they don't exist
-PROTOCOL_DIR.mkdir(parents=True, exist_ok=True)
+STANDARD_PROTOCOL_DIR.mkdir(parents=True, exist_ok=True)
+TIME_BASED_PROTOCOL_DIR.mkdir(parents=True, exist_ok=True)
 TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
 # Clean up old temp files (older than 1 hour)
@@ -75,10 +77,19 @@ for temp_file in TEMP_DIR.glob("*.yaml"):
 MAX_PROTOCOLS = 100  # Maximum number of protocols allowed
 MAX_FILE_SIZE = 1_048_576  # 1MB max file size
 
-# Get available protocols (separate default and temp)
-default_files = list(PROTOCOL_DIR.glob("*.yaml"))
+# Get available protocols (standard, time-based, and temp)
+standard_files = list(STANDARD_PROTOCOL_DIR.glob("*.yaml"))
+time_based_files = list(TIME_BASED_PROTOCOL_DIR.glob("*.yaml"))
 temp_files = list(TEMP_DIR.glob("*.yaml"))
-protocol_files = default_files + temp_files
+
+# Combine all protocol files with type information
+protocol_files = []
+for f in standard_files:
+    protocol_files.append((f, "standard"))
+for f in time_based_files:
+    protocol_files.append((f, "time_based"))
+for f in temp_files:
+    protocol_files.append((f, "temp"))
 
 if not protocol_files:
     # Centered upload prompt
@@ -97,19 +108,22 @@ if temp_files:
 # Protocol selection
 st.subheader("Select Protocol")
 
-# Format function to show default vs temp
-def format_protocol(file):
+# Format function to show protocol type
+def format_protocol(file_info):
+    file, ptype = file_info
     name = file.stem
-    if file.parent == TEMP_DIR:
+    if ptype == "temp":
         return f"{name} (temporary)"
+    elif ptype == "time_based":
+        return f"{name} [TIME-BASED]"
     else:
-        return f"{name}"
+        return f"{name} [STANDARD]"
 
 # Try to maintain selection across reruns
 if 'selected_protocol_name' in st.session_state:
     # Find the file that matches the stored name
     default_index = 0
-    for i, file in enumerate(protocol_files):
+    for i, (file, ptype) in enumerate(protocol_files):
         if file.stem == st.session_state.selected_protocol_name:
             default_index = i
             break
@@ -117,7 +131,7 @@ else:
     default_index = 0
 
 # Select protocol on its own line
-selected_file = st.selectbox(
+selected_item = st.selectbox(
     "Available Protocols",
     protocol_files,
     format_func=format_protocol,
@@ -126,16 +140,21 @@ selected_file = st.selectbox(
     key="protocol_selector"
 )
 
-# Store the selection for persistence
-if selected_file:
+# Extract file and type from selected item
+if selected_item:
+    selected_file, protocol_type = selected_item
     st.session_state.selected_protocol_name = selected_file.stem
+    st.session_state.selected_protocol_type = protocol_type
+else:
+    selected_file = None
+    protocol_type = None
 
 # Action buttons in 4 equal columns
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     # Edit button (only for temporary protocols)
-    if selected_file and selected_file.parent == TEMP_DIR:
+    if selected_file and protocol_type == "temp":
         if ape_button("Edit", key="edit_btn", full_width=True):
             st.session_state.edit_mode = not st.session_state.get('edit_mode', False)
     else:
@@ -149,7 +168,7 @@ with col2:
 
 with col3:
     # Delete protocol (only temporary ones)
-    if selected_file and selected_file.parent == TEMP_DIR:
+    if selected_file and protocol_type == "temp":
         if delete_button(key="delete_btn", full_width=True):
             st.session_state.show_delete = not st.session_state.get('show_delete', False)
     else:
@@ -372,22 +391,39 @@ if st.session_state.get('show_delete', False):
 
 # Import functionality removed - now in Simulations page
 
+# Import time-based protocol spec if needed
+if protocol_type == "time_based":
+    from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSpecification
+
 # Load selected protocol
 try:
-    spec = ProtocolSpecification.from_yaml(selected_file)
-    st.session_state.current_protocol = {
-        'name': spec.name,
-        'version': spec.version,
-        'path': str(selected_file),
-        'spec': spec
-    }
+    if protocol_type == "time_based":
+        # Load as time-based protocol
+        spec = TimeBasedProtocolSpecification.from_yaml(selected_file)
+        st.session_state.current_protocol = {
+            'name': spec.name,
+            'version': spec.version,
+            'path': str(selected_file),
+            'spec': spec,
+            'type': 'time_based'
+        }
+    else:
+        # Load as standard protocol
+        spec = ProtocolSpecification.from_yaml(selected_file)
+        st.session_state.current_protocol = {
+            'name': spec.name,
+            'version': spec.version,
+            'path': str(selected_file),
+            'spec': spec,
+            'type': 'standard'
+        }
     
     
     # Main content header
     st.header(f"{spec.name} v{spec.version}")
     
     # Show edit mode controls if in edit mode
-    if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
+    if st.session_state.get('edit_mode', False) and protocol_type == "temp":
         st.warning("**Edit Mode** - Make changes below and save when ready")
         save_col, cancel_col, _, _ = st.columns(4)
         with save_col:
@@ -528,8 +564,12 @@ try:
                 st.session_state.edit_mode = False
                 st.rerun()
     
+    # Show model type indicator for time-based protocols
+    if protocol_type == "time_based":
+        st.info("🕐 **Time-Based Model**: Disease progression updates every 14 days, independent of visit schedule")
+    
     # Compact metadata display
-    if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
+    if st.session_state.get('edit_mode', False) and protocol_type == "temp":
         # Editable metadata
         col1, col2 = st.columns([3, 1])
         with col1:
@@ -548,14 +588,22 @@ try:
             st.caption(f"Created: {spec.created_date}")
             st.caption(f"Checksum: {spec.checksum[:8]}...")
     
-    # Protocol parameters tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "Timing Parameters", 
-        "Disease Transitions", 
-        "Vision Model",
-        "Population",
-        "Discontinuation"
-    ])
+    # Protocol parameters tabs - different for time-based
+    if protocol_type == "time_based":
+        tab1, tab2, tab3, tab4 = st.tabs([
+            "Timing Parameters",
+            "Model Type",
+            "Population",
+            "Parameter Files"
+        ])
+    else:
+        tab1, tab2, tab3, tab4, tab5 = st.tabs([
+            "Timing Parameters", 
+            "Disease Transitions", 
+            "Vision Model",
+            "Population",
+            "Discontinuation"
+        ])
     
     with tab1:
         st.subheader("Treatment Timing Parameters")
@@ -1039,8 +1087,53 @@ try:
             if 'discontinuation_types' in rules:
                 st.markdown("**Discontinuation Types:** " + ", ".join(rules['discontinuation_types']))
     
+    # Handle time-based protocol specific tabs
+    if protocol_type == "time_based":
+        with tab2:
+            st.subheader("Model Type Configuration")
+            st.markdown(f"**Model Type:** {spec.model_type}")
+            st.markdown(f"**Transition Model:** {spec.transition_model}")
+            st.markdown(f"**Update Interval:** {spec.update_interval_days} days")
+            
+            # Loading dose information if present
+            if hasattr(spec, 'loading_dose_injections') and spec.loading_dose_injections:
+                st.markdown("### Loading Dose")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Initial Injections", spec.loading_dose_injections)
+                with col2:
+                    st.metric("Interval", f"{spec.loading_dose_interval_days} days")
+        
+        with tab3:
+            st.subheader("Patient Population")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Baseline Vision Mean", f"{spec.baseline_vision_mean} letters")
+                st.metric("Baseline Vision Std", f"{spec.baseline_vision_std} letters")
+            with col2:
+                st.metric("Vision Range Min", f"{spec.baseline_vision_min} letters")
+                st.metric("Vision Range Max", f"{spec.baseline_vision_max} letters")
+        
+        with tab4:
+            st.subheader("Parameter Files")
+            st.markdown("Time-based models use external parameter files for detailed configuration:")
+            
+            # List parameter files
+            param_files = [
+                ("Disease Transitions", spec.disease_transitions_file),
+                ("Treatment Effect", spec.treatment_effect_file),
+                ("Vision Parameters", spec.vision_parameters_file),
+                ("Discontinuation", spec.discontinuation_parameters_file)
+            ]
+            
+            for name, file_ref in param_files:
+                if file_ref:
+                    st.markdown(f"• **{name}:** `{file_ref}`")
+            
+            st.info("Parameter files allow detailed configuration of the time-based model behavior without modifying the protocol specification.")
+    
     # Subtle reminder for temp protocols
-    if selected_file.parent == TEMP_DIR:
+    if protocol_type == "temp":
         st.markdown("---")
         st.caption("This temporary protocol expires in 1 hour")
     

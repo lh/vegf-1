@@ -107,17 +107,19 @@ class ABSEngineTimeBased(ABSEngine):
                 arrival_date, patient_id = self.patient_arrival_schedule[arrival_index]
                 
                 # Create new patient
-                patient = self._create_patient(patient_id, arrival_date)
+                # Normalize arrival date to midnight for consistency with visit scheduling
+                normalized_arrival_date = arrival_date.replace(hour=0, minute=0, second=0, microsecond=0)
+                patient = self._create_patient(patient_id, normalized_arrival_date)
                 self.patients[patient_id] = patient
-                self.enrollment_dates[patient_id] = arrival_date
+                self.enrollment_dates[patient_id] = normalized_arrival_date
                 
                 # Initialize actual vision tracking
                 baseline_vision = patient.baseline_vision
                 self.patient_actual_vision[patient_id] = float(baseline_vision)
                 self.patient_vision_ceiling[patient_id] = min(85, int(baseline_vision * 1.1))
                 
-                # Schedule first visit
-                visit_schedule[patient_id] = arrival_date
+                # Schedule first visit at enrollment date (already normalized to midnight)
+                visit_schedule[patient_id] = normalized_arrival_date
                 
                 arrival_index += 1
             

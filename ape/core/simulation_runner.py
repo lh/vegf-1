@@ -11,6 +11,8 @@ from typing import Dict, Any, List, Optional
 
 from simulation_v2.core.simulation_runner import SimulationRunner as V2SimulationRunner
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
+from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSpecification
+from simulation_v2.core.time_based_simulation_runner import TimeBasedSimulationRunner
 
 from .results.factory import ResultsFactory
 from .results.base import SimulationResults
@@ -26,15 +28,22 @@ class SimulationRunner:
     - Tracking runtime and audit logs
     """
     
-    def __init__(self, protocol_spec: ProtocolSpecification):
+    def __init__(self, protocol_spec):
         """
         Initialize with protocol specification.
         
         Args:
-            protocol_spec: Protocol specification to use
+            protocol_spec: Protocol specification to use (standard or time-based)
         """
-        self.v2_runner = V2SimulationRunner(protocol_spec)
         self.protocol_spec = protocol_spec
+        
+        # Create appropriate runner based on protocol type
+        if isinstance(protocol_spec, TimeBasedProtocolSpecification):
+            self.v2_runner = TimeBasedSimulationRunner(protocol_spec)
+            self.is_time_based = True
+        else:
+            self.v2_runner = V2SimulationRunner(protocol_spec)
+            self.is_time_based = False
         
     def run(
         self,

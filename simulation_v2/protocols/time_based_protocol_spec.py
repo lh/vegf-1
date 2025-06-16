@@ -59,6 +59,7 @@ class TimeBasedProtocolSpecification:
     
     # Model configuration (with defaults)
     model_type: str = "time_based"
+    transition_model: str = "fortnightly"  # How disease states transition
     update_interval_days: int = 14  # Fortnightly
     
     # Loading dose parameters (optional)
@@ -121,6 +122,7 @@ class TimeBasedProtocolSpecification:
             author=data['author'],
             description=data['description'],
             model_type=data.get('model_type', 'time_based'),
+            transition_model=data.get('transition_model', 'fortnightly'),
             update_interval_days=data.get('update_interval_days', 14),
             protocol_type=data['protocol_type'],
             loading_dose_injections=data.get('loading_dose_injections'),
@@ -181,4 +183,34 @@ class TimeBasedProtocolSpecification:
                 'vision': self.vision_parameters_file,
                 'discontinuation': self.discontinuation_parameters_file
             }
+        }
+    
+    def to_yaml_dict(self) -> Dict[str, Any]:
+        """Convert specification to YAML-serializable dictionary."""
+        return {
+            'name': self.name,
+            'version': self.version,
+            'created_date': self.created_date,
+            'author': self.author,
+            'description': self.description,
+            'model_type': self.model_type,
+            'transition_model': self.transition_model,
+            'update_interval_days': self.update_interval_days,
+            'protocol_type': self.protocol_type,
+            'min_interval_days': self.min_interval_days,
+            'max_interval_days': self.max_interval_days,
+            'extension_days': self.extension_days,
+            'shortening_days': self.shortening_days,
+            'loading_dose_injections': self.loading_dose_injections,
+            'loading_dose_interval_days': self.loading_dose_interval_days,
+            'baseline_vision': {
+                'mean': self.baseline_vision_mean,
+                'std': self.baseline_vision_std,
+                'min': self.baseline_vision_min,
+                'max': self.baseline_vision_max
+            },
+            'disease_transitions_file': self.disease_transitions_file,
+            'treatment_effect_file': self.treatment_effect_file,
+            'vision_parameters_file': self.vision_parameters_file,
+            'discontinuation_parameters_file': self.discontinuation_parameters_file
         }

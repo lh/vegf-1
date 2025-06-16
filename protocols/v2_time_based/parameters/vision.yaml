@@ -109,3 +109,10 @@ vision_floor_discontinuation:
   vision_threshold: 20              # Below this, consider discontinuation
   discontinuation_probability: 0.8  # 80% chance if below threshold
   grace_period_visits: 2           # Allow 2 visits before discontinuing
+
+# Miscellaneous parameters
+misc_parameters:
+  fortnights_per_day: 0.0714285714  # 1/14 for converting days to fortnights
+  treatment_effect_threshold: 0.5    # Threshold for improvement eligibility
+  no_injection_default_days: 999     # Default days when no injection history
+  minimal_effect_decay_rate: 0.25    # Additional decay rate after minimal effect period

@@ -61,14 +61,23 @@ class ABSEngineTimeBasedWithSpecs(ABSEngineTimeBased):
     def _load_vision_parameters(self):
         """Load vision parameters from protocol spec or parameter files."""
         # Check if protocol spec has time-based vision parameters
-        if hasattr(self.protocol_spec, 'vision_parameters_file'):
+        if hasattr(self.protocol_spec, 'vision_parameters_file') and self.protocol_spec.vision_parameters_file:
             # Load from external file
             params_path = Path(self.protocol_spec.source_file).parent / self.protocol_spec.vision_parameters_file
-            with open(params_path) as f:
-                self.vision_params = yaml.safe_load(f)
+            if params_path.exists():
+                with open(params_path) as f:
+                    self.vision_params = yaml.safe_load(f)
+            else:
+                # Fallback to default location
+                default_path = Path(__file__).parent.parent.parent / 'protocols' / 'v2_time_based' / 'parameters' / 'vision.yaml'
+                if default_path.exists():
+                    with open(default_path) as f:
+                        self.vision_params = yaml.safe_load(f)
+                else:
+                    # Use default parameters
+                    self.vision_params = self._get_default_vision_params()
         else:
             # Use default parameters for now
-            # TODO: Load from protocols/v2_time_based/parameters/vision.yaml
             self.vision_params = self._get_default_vision_params()
     
     def _load_discontinuation_parameters(self):

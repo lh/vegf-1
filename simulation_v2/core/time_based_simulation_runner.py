@@ -14,6 +14,7 @@ from simulation_v2.core.disease_model_time_based import DiseaseModelTimeBased
 from simulation_v2.core.protocol import StandardProtocol
 from simulation_v2.core.loading_dose_protocol import LoadingDoseProtocol
 from simulation_v2.engines.abs_engine_time_based_with_specs import ABSEngineTimeBasedWithSpecs
+from simulation_v2.engines.abs_engine_time_based_with_params import ABSEngineTimeBasedWithParams
 from simulation_v2.engines.abs_engine import SimulationResults
 
 
@@ -105,8 +106,9 @@ class TimeBasedSimulationRunner:
                 shortening_days=self.spec.shortening_days
             )
         
-        # Create time-based ABS engine
-        engine = ABSEngineTimeBasedWithSpecs(
+        # Create time-based ABS engine with full parameter support
+        # Use ABSEngineTimeBasedWithParams which removes all hardcoded values
+        engine = ABSEngineTimeBasedWithParams(
             disease_model=disease_model,
             protocol=protocol,
             protocol_spec=self.spec,
