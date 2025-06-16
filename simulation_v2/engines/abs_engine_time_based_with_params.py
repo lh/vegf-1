@@ -21,6 +21,7 @@ from simulation_v2.engines.abs_engine_time_based_with_specs import ABSEngineTime
 from simulation_v2.core.patient import Patient
 from simulation_v2.core.discontinuation_checker import DiscontinuationChecker
 from simulation_v2.core.disease_model import DiseaseState
+from simulation_v2.models.mortality import PopulationMortalityModel
 
 
 @dataclass
@@ -52,6 +53,9 @@ class ABSEngineTimeBasedWithParams(ABSEngineTimeBasedWithSpecs):
         
         # Load demographics parameters
         self._load_demographics_parameters()
+        
+        # Initialize population mortality model
+        self.population_mortality = PopulationMortalityModel()
     
     def _load_demographics_parameters(self):
         """Load demographics parameters from parameter files."""
@@ -386,14 +390,14 @@ class ABSEngineTimeBasedWithParams(ABSEngineTimeBasedWithSpecs):
     
     def _create_patient(self, patient_id: str, enrollment_date: datetime) -> Patient:
         """
-        Create patient with age initialization and vision tracking.
+        Create patient with age and gender initialization using population model.
         
-        Override to add age sampling and vision state initialization.
+        Override to add age/gender sampling and vision state initialization.
         """
         # Create base patient
         patient = super()._create_patient(patient_id, enrollment_date)
         
-        # Sample and set patient age from demographics
+        # Sample age first from demographics
         if self.demographics_params:
             age_dist = self.demographics_params.get('demographics_parameters', {}).get('age_distribution', {})
             mean_age = age_dist.get('mean', 77.5)
@@ -408,6 +412,15 @@ class ABSEngineTimeBasedWithParams(ABSEngineTimeBasedWithSpecs):
             
             # Calculate birth date from age at enrollment
             patient.birth_date = enrollment_date - timedelta(days=int(age * 365.25))
+            
+            # Determine gender based on age-dependent distribution
+            female_proportion = self.population_mortality.get_female_proportion(patient.age_years)
+            patient.sex = 'female' if random.random() < female_proportion else 'male'
+        else:
+            # Fallback: use simple demographics
+            patient.age_years = int(random.gauss(77.5, 8.2))
+            patient.birth_date = enrollment_date - timedelta(days=int(patient.age_years * 365.25))
+            patient.sex = 'female' if random.random() < 0.62 else 'male'
         
         # Initialize vision tracking
         self._initialize_patient_vision(patient_id, patient, enrollment_date)

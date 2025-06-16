@@ -10,6 +10,7 @@ from typing import Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 
 from simulation_v2.core.patient import Patient
+from simulation_v2.models.mortality import MortalityModel
 
 
 @dataclass
@@ -49,6 +50,9 @@ class DiscontinuationChecker:
             5: 'attrition',
             6: 'administrative'
         })
+        
+        # Initialize mortality model for more accurate death calculations
+        self.mortality_model = MortalityModel()
     
     def check_discontinuation(
         self, 
@@ -95,30 +99,40 @@ class DiscontinuationChecker:
         return DiscontinuationResult(should_discontinue=False)
     
     def _check_death(self, patient: Patient, patient_age: Optional[int]) -> DiscontinuationResult:
-        """Check natural mortality."""
+        """Check natural mortality using proper UK mortality tables."""
         if patient_age is None:
             return DiscontinuationResult(should_discontinue=False)
-            
-        death_params = self.params.get('death', {})
         
-        # Base annual mortality
-        base_annual = death_params.get('base_annual_mortality', 0.02)
+        # Get patient sex if available, otherwise use population average
+        patient_sex = getattr(patient, 'sex', None)
+        if patient_sex is None:
+            # Use age-dependent probability for unknown sex
+            # This is less accurate but better than fixed assumption
+            return DiscontinuationResult(should_discontinue=False)
         
-        # Age adjustment (per decade over 70)
-        age_adjustment = 1.0
-        if patient_age > 70:
-            decades_over_70 = (patient_age - 70) / 10
-            age_factor = death_params.get('age_adjustment_per_decade', 1.5)
-            age_adjustment = age_factor ** decades_over_70
-        
-        # Disease state adjustment
-        state_multipliers = death_params.get('disease_mortality_multiplier', {})
-        state_multiplier = state_multipliers.get(patient.current_state.name, 1.0)
+        # Get annual mortality probability from proper model
+        annual_prob = self.mortality_model.get_annual_mortality_probability(
+            age=patient_age,
+            sex=patient_sex,
+            has_wet_amd=True,  # All our patients have wet AMD
+            hazard_ratio='primary'  # Use primary estimate
+        )
         
         # Convert annual to per-visit probability
-        # Assuming average 8 visits per year
-        visits_per_year = 8
-        annual_prob = base_annual * age_adjustment * state_multiplier
+        # Calculate actual visit frequency for this patient
+        if len(patient.visit_history) >= 2:
+            # Calculate average days between visits
+            total_days = 0
+            for i in range(1, len(patient.visit_history)):
+                days_between = (patient.visit_history[i]['date'] - patient.visit_history[i-1]['date']).days
+                total_days += days_between
+            avg_days_between_visits = total_days / (len(patient.visit_history) - 1)
+            visits_per_year = 365.25 / avg_days_between_visits
+        else:
+            # Default assumption
+            visits_per_year = 8
+        
+        # Convert annual to per-visit probability
         per_visit_prob = 1 - (1 - annual_prob) ** (1 / visits_per_year)
         
         if random.random() < per_visit_prob:

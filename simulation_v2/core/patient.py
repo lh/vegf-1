@@ -66,6 +66,7 @@ class Patient:
         self.visits_with_significant_loss = 0
         self.age_years: Optional[int] = None  # Patient age for mortality calculations
         self.birth_date: Optional[datetime] = None  # Alternative to age tracking
+        self.sex: Optional[str] = None  # Patient sex ('male' or 'female')
         
         # Retreatment tracking
         self.retreatment_count = 0
