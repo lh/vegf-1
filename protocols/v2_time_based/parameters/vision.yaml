@@ -1,0 +1,111 @@
+# Vision Change Parameters for Time-Based Model
+# All changes are per fortnight (14 days)
+
+# Vision decline parameters by disease state and treatment status
+vision_decline_fortnightly:
+  NAIVE:
+    untreated: 
+      mean: -1.2  # Average decline of 1.2 letters per fortnight
+      std: 0.5    # Standard deviation
+    treated:
+      mean: -0.8  # Reduced decline with treatment
+      std: 0.4
+  
+  STABLE:
+    untreated:
+      mean: -0.3  # Minimal decline when stable
+      std: 0.2
+    treated:
+      mean: -0.1  # Almost no decline with treatment
+      std: 0.1
+  
+  ACTIVE:
+    untreated:
+      mean: -1.5  # Significant decline without treatment
+      std: 0.6
+    treated:
+      mean: -0.4  # Treatment dramatically reduces decline
+      std: 0.3
+  
+  HIGHLY_ACTIVE:
+    untreated:
+      mean: -2.0  # Severe decline
+      std: 0.8
+    treated:
+      mean: -0.6  # Still declining but slower
+      std: 0.4
+
+# Vision improvement parameters (when eligible)
+vision_improvement:
+  # Probability of improvement vs just stopping decline
+  improvement_probability:
+    STABLE: 0.3      # 30% chance when treated
+    ACTIVE: 0.4      # 40% chance
+    HIGHLY_ACTIVE: 0.2  # Only 20% in severe disease
+  
+  # Improvement rate when it occurs (per fortnight)
+  improvement_rate:
+    STABLE: 
+      mean: 0.5
+      std: 0.2
+    ACTIVE:
+      mean: 0.8
+      std: 0.3
+    HIGHLY_ACTIVE:
+      mean: 0.6
+      std: 0.3
+  
+  # Maximum improvement window
+  max_improvement_duration_fortnights: 6  # 3 months = 6 fortnights
+  max_treatments_for_improvement: 5       # Rare after 5 injections
+  treatment_gap_for_improvement_days: 84  # Can improve after treatment gap
+
+# Vision ceiling parameters
+vision_ceilings:
+  baseline_ceiling_factor: 1.1    # Can improve to 110% of baseline
+  absolute_ceiling_default: 85    # General maximum
+  absolute_ceiling_high_baseline: 95  # If started > 80
+  absolute_ceiling_low_baseline: 75   # If started < 50
+  high_baseline_threshold: 80
+  low_baseline_threshold: 50
+
+# Treatment effect decay on vision
+treatment_effect_decay:
+  full_effect_duration_days: 56   # 8 weeks of full effect
+  gradual_decline_end_days: 84    # Then gradual decline to 12 weeks
+  faster_decline_end_days: 112    # Faster decline to 16 weeks
+  
+  # Effect levels at transitions
+  effect_at_gradual_start: 1.0
+  effect_at_faster_start: 0.5
+  effect_at_minimal_start: 0.25
+
+# Hemorrhage risk parameters (bimodal vision loss)
+hemorrhage_risk:
+  # Risk per fortnight by time since treatment
+  risk_treated_fortnightly: 0.001      # 0.1% when recently treated
+  risk_medium_gap_fortnightly: 0.005   # 0.5% at 3-6 months
+  risk_long_gap_fortnightly: 0.01      # 1.0% beyond 6 months
+  
+  # Thresholds for risk categories
+  treated_threshold_days: 84     # Up to 12 weeks
+  medium_gap_threshold_days: 168 # Up to 24 weeks
+  
+  # Risk modifiers
+  highly_active_multiplier: 2.0  # Double risk in highly active disease
+  
+  # Vision loss from hemorrhage event
+  hemorrhage_loss_min: 10  # Minimum letters lost
+  hemorrhage_loss_max: 30  # Maximum letters lost
+
+# Vision measurement parameters
+vision_measurement:
+  measurement_noise_std: 2.5  # ±5 letters at 95% confidence
+  min_measurable_vision: 0
+  max_measurable_vision: 100
+
+# Vision floor discontinuation
+vision_floor_discontinuation:
+  vision_threshold: 20              # Below this, consider discontinuation
+  discontinuation_probability: 0.8  # 80% chance if below threshold
+  grace_period_visits: 2           # Allow 2 visits before discontinuing

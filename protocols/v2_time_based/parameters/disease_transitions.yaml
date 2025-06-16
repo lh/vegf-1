@@ -1,0 +1,39 @@
+# Disease State Transition Parameters for Time-Based Model
+# All probabilities are per fortnight (14 days)
+
+# Fortnightly transition probabilities
+# Calibrated from clinical data on annual progression rates
+fortnightly_transitions:
+  NAIVE:
+    # New patients typically progress quickly without treatment
+    NAIVE: 0.00          # Cannot stay naive
+    STABLE: 0.30         # 30% chance to stabilize
+    ACTIVE: 0.60         # 60% chance to be active
+    HIGHLY_ACTIVE: 0.10  # 10% chance of severe disease
+  
+  STABLE:
+    # Stable patients have slow progression
+    NAIVE: 0.00          # Cannot go back to naive
+    STABLE: 0.975        # 97.5% stay stable per fortnight (~15% annual progression)
+    ACTIVE: 0.025        # 2.5% progress per fortnight
+    HIGHLY_ACTIVE: 0.00  # Should not jump directly to highly active
+  
+  ACTIVE:
+    # Active disease has moderate progression risk
+    NAIVE: 0.00          # Cannot go back to naive
+    STABLE: 0.05         # 5% chance to stabilize (with treatment)
+    ACTIVE: 0.90         # 90% stay active
+    HIGHLY_ACTIVE: 0.05  # 5% worsen per fortnight
+  
+  HIGHLY_ACTIVE:
+    # Severe disease rarely improves without treatment
+    NAIVE: 0.00          # Cannot go back to naive
+    STABLE: 0.01         # 1% chance of dramatic improvement
+    ACTIVE: 0.04         # 4% chance to improve
+    HIGHLY_ACTIVE: 0.95  # 95% stay highly active
+
+# Validation targets (annual rates for calibration)
+validation_targets:
+  STABLE_annual_progression: 0.15    # ~15% progress from stable per year
+  ACTIVE_annual_worsening: 0.50      # ~50% worsen from active per year
+  HIGHLY_ACTIVE_improvement: 0.20    # ~20% improve with treatment per year

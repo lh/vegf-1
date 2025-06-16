@@ -6,8 +6,10 @@ patient states every 14 days regardless of when visits occur.
 """
 
 import random
+import yaml
+from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 from enum import Enum
 
 from .disease_model import DiseaseState
@@ -24,6 +26,33 @@ class DiseaseModelTimeBased:
     """
     
     UPDATE_INTERVAL_DAYS = 14  # Fortnightly updates
+    
+    @classmethod
+    def from_parameter_files(cls, params_dir: Path, seed: Optional[int] = None):
+        """
+        Create model from parameter YAML files.
+        
+        Args:
+            params_dir: Directory containing parameter files
+            seed: Random seed for reproducibility
+            
+        Returns:
+            DiseaseModelTimeBased instance
+        """
+        # Load transition parameters
+        with open(params_dir / 'disease_transitions.yaml') as f:
+            transitions_data = yaml.safe_load(f)
+        
+        # Load treatment effect parameters
+        with open(params_dir / 'treatment_effect.yaml') as f:
+            treatment_data = yaml.safe_load(f)
+        
+        return cls(
+            fortnightly_transitions=transitions_data['fortnightly_transitions'],
+            treatment_effect_multipliers=treatment_data['treatment_multipliers'],
+            treatment_half_life_days=treatment_data['treatment_decay']['half_life_days'],
+            seed=seed
+        )
     
     def __init__(
         self,
