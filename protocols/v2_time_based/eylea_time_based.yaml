@@ -13,8 +13,14 @@ model_type: "time_based"
 transition_model: "fortnightly"
 update_interval_days: 14
 
-# Protocol parameters (same as standard)
+# Protocol parameters
 protocol_type: "treat_and_extend"
+
+# Loading dose phase
+loading_dose_injections: 3  # Number of initial injections
+loading_dose_interval_days: 28  # Monthly (4 weeks)
+
+# Treat-and-extend phase (after loading)
 min_interval_days: 28
 max_interval_days: 112  
 extension_days: 14

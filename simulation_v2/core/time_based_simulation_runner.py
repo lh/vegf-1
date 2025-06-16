@@ -12,6 +12,7 @@ from typing import List, Dict, Any
 from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSpecification
 from simulation_v2.core.disease_model_time_based import DiseaseModelTimeBased
 from simulation_v2.core.protocol import StandardProtocol
+from simulation_v2.core.loading_dose_protocol import LoadingDoseProtocol
 from simulation_v2.engines.abs_engine_time_based_with_specs import ABSEngineTimeBasedWithSpecs
 from simulation_v2.engines.abs_engine import SimulationResults
 
@@ -75,6 +76,7 @@ class TimeBasedSimulationRunner:
             'seed': seed,
             'protocol_name': self.spec.name,
             'protocol_version': self.spec.version,
+            'protocol_checksum': self.spec.checksum,
             'model_type': self.spec.model_type
         })
         
@@ -85,13 +87,23 @@ class TimeBasedSimulationRunner:
             seed=seed
         )
         
-        # Create protocol (same structure as standard)
-        protocol = StandardProtocol(
-            min_interval_days=self.spec.min_interval_days,
-            max_interval_days=self.spec.max_interval_days,
-            extension_days=self.spec.extension_days,
-            shortening_days=self.spec.shortening_days
-        )
+        # Create protocol with loading dose if specified
+        if self.spec.loading_dose_injections:
+            protocol = LoadingDoseProtocol(
+                loading_dose_injections=self.spec.loading_dose_injections,
+                loading_dose_interval_days=self.spec.loading_dose_interval_days,
+                min_interval_days=self.spec.min_interval_days,
+                max_interval_days=self.spec.max_interval_days,
+                extension_days=self.spec.extension_days,
+                shortening_days=self.spec.shortening_days
+            )
+        else:
+            protocol = StandardProtocol(
+                min_interval_days=self.spec.min_interval_days,
+                max_interval_days=self.spec.max_interval_days,
+                extension_days=self.spec.extension_days,
+                shortening_days=self.spec.shortening_days
+            )
         
         # Create time-based ABS engine
         engine = ABSEngineTimeBasedWithSpecs(

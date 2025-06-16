@@ -9,6 +9,7 @@ from typing import Dict, Any, Optional
 from dataclasses import dataclass
 from pathlib import Path
 import yaml
+import hashlib
 from datetime import datetime
 
 
@@ -31,8 +32,14 @@ class TimeBasedProtocolSpecification:
     author: str
     description: str
     
-    # Treatment protocol parameters (same as standard)
+    # Treatment protocol parameters
     protocol_type: str  # "treat_and_extend", etc.
+    
+    # Loading dose parameters (optional)
+    loading_dose_injections: Optional[int] = None
+    loading_dose_interval_days: Optional[int] = None
+    
+    # Treat-and-extend parameters
     min_interval_days: int
     max_interval_days: int
     extension_days: int
@@ -58,6 +65,9 @@ class TimeBasedProtocolSpecification:
     model_type: str = "time_based"
     update_interval_days: int = 14  # Fortnightly
     
+    # Protocol checksum for verification
+    checksum: str = ""
+    
     @classmethod
     def from_yaml(cls, filepath: Path) -> 'TimeBasedProtocolSpecification':
         """
@@ -72,8 +82,13 @@ class TimeBasedProtocolSpecification:
         if not filepath.exists():
             raise FileNotFoundError(f"Protocol file not found: {filepath}")
         
+        # Load YAML
         with open(filepath) as f:
             data = yaml.safe_load(f)
+        
+        # Calculate checksum for audit trail
+        with open(filepath, 'rb') as f:
+            checksum = hashlib.sha256(f.read()).hexdigest()
         
         # Validate model type
         model_type = data.get('model_type', '')
@@ -108,6 +123,8 @@ class TimeBasedProtocolSpecification:
             model_type=data.get('model_type', 'time_based'),
             update_interval_days=data.get('update_interval_days', 14),
             protocol_type=data['protocol_type'],
+            loading_dose_injections=data.get('loading_dose_injections'),
+            loading_dose_interval_days=data.get('loading_dose_interval_days'),
             min_interval_days=data['min_interval_days'],
             max_interval_days=data['max_interval_days'],
             extension_days=data['extension_days'],
@@ -121,7 +138,8 @@ class TimeBasedProtocolSpecification:
             vision_parameters_file=data['vision_parameters_file'],
             discontinuation_parameters_file=data['discontinuation_parameters_file'],
             source_file=str(filepath.absolute()),
-            load_timestamp=datetime.now().isoformat()
+            load_timestamp=datetime.now().isoformat(),
+            checksum=checksum
         )
     
     def load_disease_transitions(self) -> Dict[str, Any]:
@@ -155,6 +173,7 @@ class TimeBasedProtocolSpecification:
             'protocol_version': self.version,
             'model_type': self.model_type,
             'source_file': self.source_file,
+            'checksum': self.checksum,
             'load_timestamp': self.load_timestamp,
             'parameter_files': {
                 'disease_transitions': self.disease_transitions_file,
