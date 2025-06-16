@@ -7,3 +7,6 @@
 [submodule "vegf_literature_data"]
 	path = vegf_literature_data
 	url = https://github.com/lh/VEGF-literature.git
+[submodule "cc_nhs_data"]
+	path = cc_nhs_data
+	url = https://github.com/lh/CC-nhs.git
