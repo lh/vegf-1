@@ -21,7 +21,8 @@ st.set_page_config(
 from ape.utils.startup_redirect import handle_page_startup
 from ape.components.ui.workflow_indicator import workflow_progress_indicator
 from ape.utils.carbon_button_helpers import ape_button, CarbonIcons
-from ape.utils.simulation_package import load_simulation_results
+# We'll create our own load function for comparison
+import zipfile
 
 # Check for startup redirect
 handle_page_startup("comparison")
@@ -255,11 +256,34 @@ with col2:
     st.markdown(f"**Model:** {sim_b['model_type'].title()}")
     st.markdown(f"**Run Date:** {sim_b['date']}")
 
+# Helper function to load simulation data from path
+def load_simulation_from_path(sim_path):
+    """Load simulation data from a path."""
+    # Check for the summary stats JSON file which has the data we need
+    summary_file = sim_path / "summary_stats.json"
+    
+    if summary_file.exists():
+        with open(summary_file) as f:
+            return json.load(f)
+    else:
+        # Try to load from parquet if available
+        from ape.core.results.factory import ResultsFactory
+        try:
+            results = ResultsFactory.load_results(sim_path)
+            # Convert to dictionary format expected by the comparison functions
+            return {
+                'patient_histories': results.get_patient_histories(),
+                'discontinuation_summary': results.get_discontinuation_summary(),
+                'summary_stats': results.get_summary_stats()
+            }
+        except:
+            return None
+
 # Load the actual simulation data
 with st.spinner("Loading simulation data..."):
     try:
-        results_a = load_simulation_results(sim_a['path'])
-        results_b = load_simulation_results(sim_b['path'])
+        results_a = load_simulation_from_path(sim_a['path'])
+        results_b = load_simulation_from_path(sim_b['path'])
         
         if not results_a or not results_b:
             st.error("Failed to load simulation data")
