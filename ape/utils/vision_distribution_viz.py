@@ -134,8 +134,8 @@ def create_compact_vision_distribution_plot(
     ax.tick_params(axis='both', which='major', labelsize=8)
     ax.grid(True, axis='y', alpha=0.2)
     
-    # Only show x-axis at key points
-    ax.set_xticks([0, 20, 40, 60, 70, 80, 100])
+    # Only show x-axis at key clinical thresholds
+    ax.set_xticks([20, 70])
     
     plt.tight_layout()
     return fig

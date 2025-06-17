@@ -8,6 +8,8 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import json
+import yaml
+import matplotlib.pyplot as plt
 
 # Page configuration
 st.set_page_config(
@@ -24,6 +26,8 @@ from ape.utils.carbon_button_helpers import ape_button, CarbonIcons
 # Import simulation loading utilities
 from ape.utils.simulation_loader import load_simulation_data
 from ape.core.results.factory import ResultsFactory
+# Import vision distribution visualization
+from ape.utils.vision_distribution_viz import create_compact_vision_distribution_plot
 
 # Check for startup redirect
 handle_page_startup("comparison")
@@ -82,11 +86,22 @@ def get_simulation_info(sim_path):
                 if len(parts) >= 5:  # sim_date_time_duration_name
                     memorable_name = parts[-1]
             
+            # Load protocol configuration if available
+            protocol_config = None
+            protocol_file = sim_path / "protocol.yaml"
+            if protocol_file.exists():
+                try:
+                    with open(protocol_file) as f:
+                        protocol_config = yaml.safe_load(f)
+                except:
+                    pass
+            
             return {
                 'path': sim_path,
                 'name': sim_path.name,
                 'memorable_name': memorable_name,
                 'protocol': protocol_name,
+                'protocol_config': protocol_config,
                 'patients': metadata.get('n_patients', 0),
                 'duration': duration_months,
                 'date': datetime.fromisoformat(metadata.get('timestamp', '')).strftime('%Y-%m-%d'),
@@ -300,6 +315,7 @@ if st.session_state.comparison_state.get('last_compared_pair') != current_pair:
 st.markdown("---")
 st.markdown("### Simulation Overview")
 
+# Create columns for overview with space for charts
 col1, col2 = st.columns(2)
 
 with col1:
@@ -311,6 +327,21 @@ with col1:
     st.markdown(f"**Duration:** {sim_a['duration']} months")
     st.markdown(f"**Model Type:** {sim_a['model_type'].replace('_', ' ').title()}")
     st.markdown(f"**Run Date:** {sim_a['date']}")
+    
+    # Add baseline vision distribution if available
+    if sim_a.get('protocol_config') and 'baseline_vision_distribution' in sim_a['protocol_config']:
+        st.markdown("**Baseline Vision Distribution:**")
+        try:
+            fig = create_compact_vision_distribution_plot(
+                sim_a['protocol_config']['baseline_vision_distribution'],
+                figsize=(4, 2.5),
+                show_stats=True,
+                title=None
+            )
+            st.pyplot(fig, use_container_width=True)
+            plt.close(fig)
+        except Exception as e:
+            st.caption("Could not display distribution")
 
 with col2:
     st.markdown(f"**📄 Simulation B**")
@@ -321,6 +352,21 @@ with col2:
     st.markdown(f"**Duration:** {sim_b['duration']} months")
     st.markdown(f"**Model Type:** {sim_b['model_type'].replace('_', ' ').title()}")
     st.markdown(f"**Run Date:** {sim_b['date']}")
+    
+    # Add baseline vision distribution if available
+    if sim_b.get('protocol_config') and 'baseline_vision_distribution' in sim_b['protocol_config']:
+        st.markdown("**Baseline Vision Distribution:**")
+        try:
+            fig = create_compact_vision_distribution_plot(
+                sim_b['protocol_config']['baseline_vision_distribution'],
+                figsize=(4, 2.5),
+                show_stats=True,
+                title=None
+            )
+            st.pyplot(fig, use_container_width=True)
+            plt.close(fig)
+        except Exception as e:
+            st.caption("Could not display distribution")
 
 # Helper function to load simulation data from path
 def load_simulation_from_path(sim_info):
