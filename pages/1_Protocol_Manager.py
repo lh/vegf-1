@@ -773,7 +773,7 @@ if st.session_state.get('show_manage', False):
 
 # Handle duplicate & edit success message
 if st.session_state.get('duplicate_edit_success', False):
-    st.success("Protocol duplicated! You are now in edit mode. Make your changes and click 'Save Changes' when done.")
+    st.success("Protocol duplicated! You are now in edit mode. Make your changes and click 'Commit Changes' when done.")
     # Clear the flag after showing
     st.session_state.duplicate_edit_success = False
 
