@@ -348,18 +348,22 @@ with col1:
                 }
         
         if dist_config:
-            st.markdown("**Baseline Vision:**")
-            try:
-                fig = create_compact_vision_distribution_plot(
-                    dist_config,
-                    figsize=(1.5, 0.5),
-                    show_stats=False,
-                    title=None
-                )
-                st.pyplot(fig, use_container_width=False)
-                plt.close(fig)
-            except Exception as e:
-                st.caption("Could not display distribution")
+            # Create inline layout for baseline vision
+            vision_col1, vision_col2 = st.columns([1, 3])
+            with vision_col1:
+                st.markdown("**Baseline Vision:**")
+            with vision_col2:
+                try:
+                    fig = create_compact_vision_distribution_plot(
+                        dist_config,
+                        figsize=(1.0, 0.25),
+                        show_stats=False,
+                        title=None
+                    )
+                    st.pyplot(fig, use_container_width=False)
+                    plt.close(fig)
+                except Exception as e:
+                    st.caption("Could not display")
 
 with col2:
     st.markdown(f"**Simulation B**")
@@ -391,18 +395,22 @@ with col2:
                 }
         
         if dist_config:
-            st.markdown("**Baseline Vision:**")
-            try:
-                fig = create_compact_vision_distribution_plot(
-                    dist_config,
-                    figsize=(2.5, 1),
-                    show_stats=False,
-                    title=None
-                )
-                st.pyplot(fig, use_container_width=False)
-                plt.close(fig)
-            except Exception as e:
-                st.caption("Could not display distribution")
+            # Create inline layout for baseline vision
+            vision_col1, vision_col2 = st.columns([1, 3])
+            with vision_col1:
+                st.markdown("**Baseline Vision:**")
+            with vision_col2:
+                try:
+                    fig = create_compact_vision_distribution_plot(
+                        dist_config,
+                        figsize=(1.0, 0.25),
+                        show_stats=False,
+                        title=None
+                    )
+                    st.pyplot(fig, use_container_width=False)
+                    plt.close(fig)
+                except Exception as e:
+                    st.caption("Could not display")
 
 # Helper function to load simulation data from path
 def load_simulation_from_path(sim_info):

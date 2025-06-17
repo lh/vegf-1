@@ -18,7 +18,7 @@ from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
 
 def create_compact_vision_distribution_plot(
     distribution_config: Dict[str, Any],
-    figsize: Tuple[float, float] = (1.5, 0.5),
+    figsize: Tuple[float, float] = (1.0, 0.25),
     show_stats: bool = True,
     title: Optional[str] = None
 ) -> plt.Figure:
@@ -45,8 +45,8 @@ def create_compact_vision_distribution_plot(
     dist = DistributionFactory.create_distribution(distribution_config)
     dist_type = distribution_config.get('type', 'normal')
     
-    # Create figure and axis
-    fig, ax = plt.subplots(figsize=figsize, dpi=100)
+    # Create figure and axis with lower DPI for smaller size
+    fig, ax = plt.subplots(figsize=figsize, dpi=72)
     x = np.linspace(0, 100, 1000)
     
     # Plot based on distribution type
