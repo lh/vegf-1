@@ -39,7 +39,8 @@ if 'comparison_state' not in st.session_state:
         'view_mode': 'side_by_side',
         'show_ci': True,
         'show_thresholds': True,
-        'recent_pairs': []
+        'recent_pairs': [],
+        'last_compared_pair': None  # Track last pair to avoid double updates
     }
 
 # Title with Carbon icon (will show as text for now)
@@ -134,6 +135,8 @@ if st.session_state.comparison_state['recent_pairs']:
                         st.session_state.comparison_state['sim_a'] = sim
                     if sim['name'] == sim_b_name:
                         st.session_state.comparison_state['sim_b'] = sim
+                # Set last compared pair to avoid double update
+                st.session_state.comparison_state['last_compared_pair'] = (sim_a_name, sim_b_name)
                 st.rerun()
     
     with cols[-1]:
@@ -179,6 +182,8 @@ with col2:
             # Swap them
             st.session_state.comparison_state['sim_a'] = temp_b
             st.session_state.comparison_state['sim_b'] = temp_a
+            # Update last compared pair to the swapped order
+            st.session_state.comparison_state['last_compared_pair'] = (temp_b['name'], temp_a['name'])
             st.rerun()
 
 with col3:
@@ -248,8 +253,11 @@ def update_recent_pairs(sim_a, sim_b):
     # Keep only last 3
     st.session_state.comparison_state['recent_pairs'] = recent[:3]
 
-# Update recent pairs
-update_recent_pairs(sim_a, sim_b)
+# Update recent pairs only if selection changed
+current_pair = (sim_a['name'], sim_b['name'])
+if st.session_state.comparison_state.get('last_compared_pair') != current_pair:
+    update_recent_pairs(sim_a, sim_b)
+    st.session_state.comparison_state['last_compared_pair'] = current_pair
 
 # Section 2: Simulation Overview Cards
 st.markdown("---")
