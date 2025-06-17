@@ -107,8 +107,8 @@ def get_compatible_simulations(selected_sim, all_sims):
     compatible = []
     
     for sim in all_sims:
-        duration_diff = abs(sim['duration'] - selected_duration)
-        if duration_diff <= 6:  # 6 month tolerance (0.5 years)
+        # Only show simulations with EXACTLY the same duration
+        if sim['duration'] == selected_duration:
             compatible.append(sim)
     
     return compatible
@@ -211,9 +211,9 @@ with col3:
 
 # Duration validation message
 if sim_a and not compatible_sims:
-    st.warning(f"⚠️ No simulations found with duration matching {sim_a['duration']} months")
+    st.warning(f"⚠️ No simulations found with exactly {sim_a['duration']} months duration. Comparisons require identical duration.")
 else:
-    st.info("ℹ️ Simulations must have matching duration for valid comparison")
+    st.info("ℹ️ Only simulations with identical duration can be compared")
 
 # Check if we have both simulations selected
 sim_a = st.session_state.comparison_state['sim_a']
