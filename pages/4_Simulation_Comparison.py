@@ -62,12 +62,19 @@ def get_simulation_info(sim_path):
                 metadata = json.load(f)
             
             # Extract key info
+            # Convert duration_years to months for display
+            duration_years = metadata.get('duration_years', 0)
+            duration_months = int(duration_years * 12)
+            
+            # Handle different protocol name fields
+            protocol_name = metadata.get('protocol_name') or metadata.get('protocol', 'Unknown')
+            
             return {
                 'path': sim_path,
                 'name': sim_path.name,
-                'protocol': metadata.get('protocol_name', 'Unknown'),
+                'protocol': protocol_name,
                 'patients': metadata.get('n_patients', 0),
-                'duration': metadata.get('duration_months', 0),
+                'duration': duration_months,
                 'date': datetime.fromisoformat(metadata.get('timestamp', '')).strftime('%Y-%m-%d'),
                 'model_type': metadata.get('model_type', 'standard')
             }
@@ -101,7 +108,7 @@ def get_compatible_simulations(selected_sim, all_sims):
     
     for sim in all_sims:
         duration_diff = abs(sim['duration'] - selected_duration)
-        if duration_diff <= 1:  # 1 month tolerance
+        if duration_diff <= 6:  # 6 month tolerance (0.5 years)
             compatible.append(sim)
     
     return compatible
