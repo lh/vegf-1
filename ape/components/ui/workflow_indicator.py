@@ -19,7 +19,8 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
         ('home', 'Home', 'APE.py', None),  # No icon
         ('protocol', 'Protocol', 'pages/1_Protocol_Manager.py', None),
         ('simulation', 'Simulation', 'pages/2_Simulations.py', None),  # Removed play icon
-        ('analysis', 'Analysis', 'pages/3_Analysis.py', None)
+        ('analysis', 'Analysis', 'pages/3_Analysis.py', None),
+        ('comparison', 'Compare', 'pages/4_Simulation_Comparison.py', None)
     ]
     
     # Find current step index

@@ -12,12 +12,15 @@ from streamlit_carbon_button import carbon_button, CarbonIcons
 
 CARBON_AVAILABLE = True
 
-# Icon mapping based on available Carbon icons (18 total)
+# Icon mapping based on available Carbon icons (260 total in v1.3.0)
 # Maps semantic names to actual CarbonIcons
 ICON_MAP = {
     # Navigation
     'home': CarbonIcons.HOME,
     'settings': CarbonIcons.SETTINGS,
+    'menu': CarbonIcons.MENU,
+    'back': CarbonIcons.ARROW_LEFT,
+    'forward': CarbonIcons.ARROW_RIGHT,
     
     # Actions
     'save': CarbonIcons.SAVE,
@@ -32,27 +35,66 @@ ICON_MAP = {
     'run': CarbonIcons.PLAY,
     'close': CarbonIcons.CLOSE,
     'dismiss': CarbonIcons.CLOSE,
+    'export': CarbonIcons.EXPORT,
+    'refresh': CarbonIcons.RENEW,
+    'reset': CarbonIcons.RESET,
+    'swap': CarbonIcons.ARROWS_HORIZONTAL,
     
     # Data operations
     'filter': CarbonIcons.FILTER,
     'search': CarbonIcons.SEARCH,
     'add': CarbonIcons.ADD,
     'new': CarbonIcons.ADD,
+    'sort': CarbonIcons.SORT_ASCENDING,
+    'table': CarbonIcons.TABLE,
     
-    # Visualization
+    # Visualization & Analytics
     'chart': CarbonIcons.CHART_BAR,
-    'analysis': CarbonIcons.CHART_BAR,
-    'analytics': CarbonIcons.CHART_BAR,
+    'analysis': CarbonIcons.ANALYTICS,
+    'analytics': CarbonIcons.ANALYTICS,
+    'compare': CarbonIcons.CHART_BAR_OVERLAY,
+    'line_chart': CarbonIcons.CHART_LINE,
+    'scatter': CarbonIcons.CHART_SCATTER,
+    'histogram': CarbonIcons.CHART_HISTOGRAM,
+    'waterfall': CarbonIcons.CHART_WATERFALL,
+    'report': CarbonIcons.REPORT,
+    'dashboard': CarbonIcons.DASHBOARD,
     
     # File operations
     'document': CarbonIcons.DOCUMENT,
     'protocol': CarbonIcons.DOCUMENT,
+    'csv': CarbonIcons.CSV,
+    'pdf': CarbonIcons.PDF,
+    'json': CarbonIcons.JSON,
     
     # Status
     'info': CarbonIcons.INFO,
     'help': CarbonIcons.HELP,
     'warning': CarbonIcons.WARNING,
     'success': CarbonIcons.SUCCESS,
+    
+    # View modes
+    'view': CarbonIcons.VIEW,
+    'view_off': CarbonIcons.VIEW_OFF,
+    'side_by_side': CarbonIcons.SIDE_PANEL_OPEN,
+    'overlay': CarbonIcons.CHART_BAR_OVERLAY,
+    'maximize': CarbonIcons.MAXIMIZE,
+    'minimize': CarbonIcons.MINIMIZE,
+    'expand': CarbonIcons.EXPAND_ALL,
+    'collapse': CarbonIcons.COLLAPSE_ALL,
+    
+    # Time/Calendar
+    'time': CarbonIcons.TIME,
+    'timer': CarbonIcons.TIMER,
+    'calendar': CarbonIcons.CALENDAR,
+    
+    # Arrows for navigation/comparison
+    'arrow_up': CarbonIcons.ARROW_UP,
+    'arrow_down': CarbonIcons.ARROW_DOWN,
+    'arrow_left': CarbonIcons.ARROW_LEFT,
+    'arrow_right': CarbonIcons.ARROW_RIGHT,
+    'chevron_up': CarbonIcons.CHEVRON_UP,
+    'chevron_down': CarbonIcons.CHEVRON_DOWN,
 }
 
 # Button style configuration
