@@ -573,19 +573,191 @@ st.markdown(df_metrics.to_html(escape=False, index=False), unsafe_allow_html=Tru
 # Add legend
 st.caption("**Legend:** ↑ Higher/More  ↓ Lower/Less | Green = Favorable | Red = Unfavorable")
 
-# Section 4: Visualizations (placeholder)
+# Section 5: Visualizations
 st.markdown("---")
 st.markdown("### Visualizations")
 
-# View mode toggle
-view_mode = st.radio(
-    "View Mode",
-    ["Side-by-Side", "Overlay", "Difference"],
-    horizontal=True,
-    key="view_mode_radio"
-)
+# Import visualization components
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-st.info(f"Visualization in {view_mode} mode will be implemented next...")
+# View mode toggle with settings
+col1, col2, col3 = st.columns([3, 2, 2])
+with col1:
+    view_mode = st.radio(
+        "View Mode",
+        ["Side-by-Side", "Overlay", "Difference"],
+        horizontal=True,
+        key="view_mode_radio"
+    )
+with col2:
+    show_ci = st.checkbox("Show Confidence Intervals", value=True, key="show_ci")
+with col3:
+    show_thresholds = st.checkbox("Show Clinical Thresholds", value=True, key="show_thresholds")
 
-# Success message
-st.success(f"Successfully loaded comparison: {sim_a['protocol']} vs {sim_b['protocol']}")
+# Visual Acuity Over Time
+st.subheader("Visual Acuity Over Time")
+
+# Prepare data for visualization
+def prepare_vision_data(histories):
+    """Prepare vision data for plotting."""
+    # Collect all visits
+    all_months = []
+    all_visions = []
+    
+    for patient_id, history in histories.items():
+        visits = history.get('visits', [])
+        for visit in visits:
+            all_months.append(visit['month'])
+            all_visions.append(visit['vision'])
+    
+    # Create DataFrame
+    df = pd.DataFrame({
+        'Month': all_months,
+        'Vision': all_visions
+    })
+    
+    # Calculate statistics by month
+    stats = df.groupby('Month')['Vision'].agg(['mean', 'std', 'count']).reset_index()
+    stats['ci_lower'] = stats['mean'] - 1.96 * stats['std'] / np.sqrt(stats['count'])
+    stats['ci_upper'] = stats['mean'] + 1.96 * stats['std'] / np.sqrt(stats['count'])
+    
+    return stats
+
+# Prepare data
+vision_data_a = prepare_vision_data(histories_a)
+vision_data_b = prepare_vision_data(histories_b)
+
+# Create visualizations based on view mode
+if view_mode == "Side-by-Side":
+    col1, col2 = st.columns(2)
+    
+    # Simulation A
+    with col1:
+        fig, ax = plt.subplots(figsize=(6, 4))
+        
+        # Main line
+        ax.plot(vision_data_a['Month'], vision_data_a['mean'], 'b-', linewidth=2, label='Mean Vision')
+        
+        # Confidence intervals
+        if show_ci:
+            ax.fill_between(vision_data_a['Month'], 
+                          vision_data_a['ci_lower'], 
+                          vision_data_a['ci_upper'],
+                          alpha=0.3, color='blue', label='95% CI')
+        
+        # Clinical thresholds
+        if show_thresholds:
+            ax.axhline(y=70, color='orange', linestyle='--', alpha=0.5, label='NICE Threshold')
+            ax.axhline(y=35, color='red', linestyle='--', alpha=0.5, label='Driving')
+            ax.axhline(y=20, color='darkred', linestyle='--', alpha=0.5, label='Legal Blindness')
+        
+        ax.set_xlabel('Month')
+        ax.set_ylabel('Vision (ETDRS Letters)')
+        ax.set_title(f'Simulation A: {sim_a["protocol"]}')
+        ax.set_ylim(0, 85)
+        ax.grid(True, alpha=0.3)
+        ax.legend(fontsize=8)
+        
+        st.pyplot(fig)
+    
+    # Simulation B
+    with col2:
+        fig, ax = plt.subplots(figsize=(6, 4))
+        
+        # Main line
+        ax.plot(vision_data_b['Month'], vision_data_b['mean'], 'orange', linewidth=2, label='Mean Vision')
+        
+        # Confidence intervals
+        if show_ci:
+            ax.fill_between(vision_data_b['Month'], 
+                          vision_data_b['ci_lower'], 
+                          vision_data_b['ci_upper'],
+                          alpha=0.3, color='orange', label='95% CI')
+        
+        # Clinical thresholds
+        if show_thresholds:
+            ax.axhline(y=70, color='orange', linestyle='--', alpha=0.5, label='NICE Threshold')
+            ax.axhline(y=35, color='red', linestyle='--', alpha=0.5, label='Driving')
+            ax.axhline(y=20, color='darkred', linestyle='--', alpha=0.5, label='Legal Blindness')
+        
+        ax.set_xlabel('Month')
+        ax.set_ylabel('Vision (ETDRS Letters)')
+        ax.set_title(f'Simulation B: {sim_b["protocol"]}')
+        ax.set_ylim(0, 85)
+        ax.grid(True, alpha=0.3)
+        ax.legend(fontsize=8)
+        
+        st.pyplot(fig)
+
+elif view_mode == "Overlay":
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Plot both simulations
+    ax.plot(vision_data_a['Month'], vision_data_a['mean'], 'b-', linewidth=2, label=f'A: {sim_a["protocol"]}')
+    ax.plot(vision_data_b['Month'], vision_data_b['mean'], 'orange', linewidth=2, label=f'B: {sim_b["protocol"]}')
+    
+    # Confidence intervals
+    if show_ci:
+        ax.fill_between(vision_data_a['Month'], 
+                      vision_data_a['ci_lower'], 
+                      vision_data_a['ci_upper'],
+                      alpha=0.2, color='blue')
+        ax.fill_between(vision_data_b['Month'], 
+                      vision_data_b['ci_lower'], 
+                      vision_data_b['ci_upper'],
+                      alpha=0.2, color='orange')
+    
+    # Clinical thresholds
+    if show_thresholds:
+        ax.axhline(y=70, color='gray', linestyle='--', alpha=0.5, label='NICE Threshold')
+        ax.axhline(y=35, color='gray', linestyle='--', alpha=0.5, label='Driving')
+        ax.axhline(y=20, color='gray', linestyle='--', alpha=0.5, label='Legal Blindness')
+    
+    ax.set_xlabel('Month')
+    ax.set_ylabel('Vision (ETDRS Letters)')
+    ax.set_title('Visual Acuity Comparison')
+    ax.set_ylim(0, 85)
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+    
+    st.pyplot(fig)
+
+else:  # Difference mode
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Interpolate to common time points for difference calculation
+    common_months = np.sort(list(set(vision_data_a['Month'].tolist()) & set(vision_data_b['Month'].tolist())))
+    
+    # Get values at common months
+    mean_a_common = []
+    mean_b_common = []
+    for month in common_months:
+        mean_a_common.append(vision_data_a[vision_data_a['Month'] == month]['mean'].values[0])
+        mean_b_common.append(vision_data_b[vision_data_b['Month'] == month]['mean'].values[0])
+    
+    # Calculate difference (B - A)
+    difference = np.array(mean_b_common) - np.array(mean_a_common)
+    
+    # Plot difference
+    ax.plot(common_months, difference, 'purple', linewidth=2, label='B - A')
+    ax.fill_between(common_months, 0, difference, 
+                   where=(difference >= 0), 
+                   color='green', alpha=0.3, label='B Better')
+    ax.fill_between(common_months, 0, difference, 
+                   where=(difference < 0), 
+                   color='red', alpha=0.3, label='A Better')
+    
+    # Zero line
+    ax.axhline(y=0, color='black', linestyle='-', alpha=0.5)
+    
+    ax.set_xlabel('Month')
+    ax.set_ylabel('Vision Difference (ETDRS Letters)')
+    ax.set_title('Difference in Visual Acuity (B - A)')
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+    
+    st.pyplot(fig)
+
+# Success message at the bottom
+st.success(f"Comparison complete: {sim_a['protocol']} vs {sim_b['protocol']}")
