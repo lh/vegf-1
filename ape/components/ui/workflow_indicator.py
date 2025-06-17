@@ -74,14 +74,14 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                     )
             else:
                 # Future step - check if it should be enabled
-                # Protocol and Simulation are always accessible
-                if step_id in ["protocol", "simulation"]:
+                # Protocol, Simulation, and Comparison are always accessible
+                if step_id in ["protocol", "simulation", "comparison"]:
                     if navigation_button(
                         display_label,
                         icon_name=None,  # Disable auto-icon since we're using our own
                         key=f"workflow_{step_id}",
                         full_width=True,
-                        help_text="Browse and select protocols" if step_id == "protocol" else "Run or load simulations",
+                        help_text="Browse and select protocols" if step_id == "protocol" else "Run or load simulations" if step_id == "simulation" else "Compare simulation results",
                         button_type="secondary"
                     ):
                         st.switch_page(page)
