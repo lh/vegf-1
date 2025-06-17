@@ -257,10 +257,236 @@ else:
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    # Edit button (only for temporary protocols)
+    # Edit/Save button (only for temporary protocols)
     if selected_file and protocol_type == "temp":
-        if ape_button("Edit", key="edit_btn", full_width=True):
-            st.session_state.edit_mode = not st.session_state.get('edit_mode', False)
+        # Toggle between Edit and Save Changes based on mode
+        if st.session_state.get('edit_mode', False):
+            # In edit mode - show Save Changes button
+            if ape_button("Save Changes", key="save_edit_btn", full_width=True, is_primary_action=True):
+                try:
+                    # Load the current YAML data
+                    with open(selected_file) as f:
+                        data = yaml.safe_load(f)
+                    
+                    # Update metadata if edited
+                    if 'edit_author' in st.session_state:
+                        data['author'] = st.session_state.edit_author
+                    if 'edit_description' in st.session_state:
+                        data['description'] = st.session_state.edit_description
+                    
+                    # Update timing parameters if edited
+                    if 'edit_min_interval' in st.session_state and st.session_state.edit_min_interval.isdigit():
+                        data['min_interval_days'] = int(st.session_state.edit_min_interval)
+                    if 'edit_max_interval' in st.session_state and st.session_state.edit_max_interval.isdigit():
+                        data['max_interval_days'] = int(st.session_state.edit_max_interval)
+                    if 'edit_extension' in st.session_state and st.session_state.edit_extension.isdigit():
+                        data['extension_days'] = int(st.session_state.edit_extension)
+                    if 'edit_shortening' in st.session_state and st.session_state.edit_shortening.isdigit():
+                        data['shortening_days'] = int(st.session_state.edit_shortening)
+                    
+                    # Update disease transitions if edited (for standard protocols)
+                    if protocol_type != "time_based":
+                        states = ['NAIVE', 'STABLE', 'ACTIVE', 'HIGHLY_ACTIVE']
+                        for from_state in states:
+                            for to_state in states:
+                                key = f'edit_trans_{from_state}_{to_state}'
+                                if key in st.session_state:
+                                    try:
+                                        value = float(st.session_state[key])
+                                        # Ensure transitions TO NAIVE from other states remain 0
+                                        if to_state == 'NAIVE' and from_state != 'NAIVE':
+                                            value = 0.0
+                                        data['disease_transitions'][from_state][to_state] = value
+                                    except:
+                                        pass  # Skip invalid values
+                        
+                        # Update treatment effect multipliers if edited
+                        for from_state in states:
+                            for to_state in states:
+                                key = f'edit_mult_{from_state}_{to_state}'
+                                if key in st.session_state:
+                                    try:
+                                        value = float(st.session_state[key])
+                                        # Initialize structure if needed
+                                        if from_state not in data.get('treatment_effect_on_transitions', {}):
+                                            data.setdefault('treatment_effect_on_transitions', {})[from_state] = {'multipliers': {}}
+                                        data['treatment_effect_on_transitions'][from_state]['multipliers'][to_state] = value
+                                    except:
+                                        pass  # Skip invalid values
+                        
+                        # Update vision model parameters if edited
+                        for state in states:
+                            for treatment in ['treated', 'untreated']:
+                                scenario = f"{state.lower()}_{treatment}"
+                                mean_key = f'edit_vision_{scenario}_mean'
+                                std_key = f'edit_vision_{scenario}_std'
+                                
+                                if mean_key in st.session_state:
+                                    try:
+                                        data['vision_change_model'][scenario]['mean'] = float(st.session_state[mean_key])
+                                    except:
+                                        pass
+                                
+                                if std_key in st.session_state:
+                                    try:
+                                        data['vision_change_model'][scenario]['std'] = float(st.session_state[std_key])
+                                    except:
+                                        pass
+                        
+                        # Update discontinuation rules if edited
+                        if 'edit_disc_pv_thresh' in st.session_state and st.session_state.edit_disc_pv_thresh.isdigit():
+                            data['discontinuation_rules']['poor_vision_threshold'] = int(st.session_state.edit_disc_pv_thresh)
+                        if 'edit_disc_pv_prob' in st.session_state:
+                            try:
+                                data['discontinuation_rules']['poor_vision_probability'] = float(st.session_state.edit_disc_pv_prob)
+                            except:
+                                pass
+                        if 'edit_disc_hi_thresh' in st.session_state and st.session_state.edit_disc_hi_thresh.isdigit():
+                            data['discontinuation_rules']['high_injection_count'] = int(st.session_state.edit_disc_hi_thresh)
+                        if 'edit_disc_hi_prob' in st.session_state:
+                            try:
+                                data['discontinuation_rules']['high_injection_probability'] = float(st.session_state.edit_disc_hi_prob)
+                            except:
+                                pass
+                        if 'edit_disc_lt_thresh' in st.session_state and st.session_state.edit_disc_lt_thresh.isdigit():
+                            data['discontinuation_rules']['long_treatment_months'] = int(st.session_state.edit_disc_lt_thresh)
+                        if 'edit_disc_lt_prob' in st.session_state:
+                            try:
+                                data['discontinuation_rules']['long_treatment_probability'] = float(st.session_state.edit_disc_lt_prob)
+                            except:
+                                pass
+                        if 'edit_disc_types' in st.session_state:
+                            types_list = [t.strip() for t in st.session_state.edit_disc_types.split(',') if t.strip()]
+                            if types_list:
+                                data['discontinuation_rules']['discontinuation_types'] = types_list
+                    
+                    # Update population parameters if edited
+                    dist_type_key = 'tb_edit_dist_type' if protocol_type == "time_based" else 'edit_dist_type'
+                    if dist_type_key in st.session_state:
+                        dist_type = st.session_state[dist_type_key]
+                        
+                        if dist_type == "normal":
+                            # Update normal distribution parameters
+                            prefix = 'tb_edit' if protocol_type == "time_based" else 'edit'
+                            if f'{prefix}_pop_mean' in st.session_state:
+                                try:
+                                    data['baseline_vision']['mean'] = float(st.session_state[f'{prefix}_pop_mean'])
+                                except:
+                                    pass
+                            if f'{prefix}_pop_std' in st.session_state:
+                                try:
+                                    data['baseline_vision']['std'] = float(st.session_state[f'{prefix}_pop_std'])
+                                except:
+                                    pass
+                            if f'{prefix}_pop_min' in st.session_state and st.session_state[f'{prefix}_pop_min'].isdigit():
+                                data['baseline_vision']['min'] = int(st.session_state[f'{prefix}_pop_min'])
+                            if f'{prefix}_pop_max' in st.session_state and st.session_state[f'{prefix}_pop_max'].isdigit():
+                                data['baseline_vision']['max'] = int(st.session_state[f'{prefix}_pop_max'])
+                            
+                            # Remove baseline_vision_distribution if switching to normal
+                            if 'baseline_vision_distribution' in data:
+                                del data['baseline_vision_distribution']
+                                
+                        elif dist_type == "beta_with_threshold":
+                            # Create/update beta distribution
+                            prefix = 'tb_edit' if protocol_type == "time_based" else 'edit'
+                            beta_dist = {
+                                'type': 'beta_with_threshold'
+                            }
+                            
+                            if f'{prefix}_beta_alpha' in st.session_state:
+                                try:
+                                    beta_dist['alpha'] = float(st.session_state[f'{prefix}_beta_alpha'])
+                                except:
+                                    beta_dist['alpha'] = 3.5
+                            
+                            if f'{prefix}_beta_beta' in st.session_state:
+                                try:
+                                    beta_dist['beta'] = float(st.session_state[f'{prefix}_beta_beta'])
+                                except:
+                                    beta_dist['beta'] = 2.0
+                                    
+                            if f'{prefix}_beta_min' in st.session_state:
+                                try:
+                                    beta_dist['min'] = int(st.session_state[f'{prefix}_beta_min'])
+                                except:
+                                    beta_dist['min'] = 5
+                                    
+                            if f'{prefix}_beta_max' in st.session_state:
+                                try:
+                                    beta_dist['max'] = int(st.session_state[f'{prefix}_beta_max'])
+                                except:
+                                    beta_dist['max'] = 98
+                                    
+                            if f'{prefix}_beta_threshold' in st.session_state:
+                                try:
+                                    beta_dist['threshold'] = int(st.session_state[f'{prefix}_beta_threshold'])
+                                except:
+                                    beta_dist['threshold'] = 70
+                                    
+                            if f'{prefix}_beta_reduction' in st.session_state:
+                                try:
+                                    beta_dist['threshold_reduction'] = float(st.session_state[f'{prefix}_beta_reduction'])
+                                except:
+                                    beta_dist['threshold_reduction'] = 0.6
+                            
+                            data['baseline_vision_distribution'] = beta_dist
+                            
+                            # Update baseline_vision to match beta expectations
+                            data['baseline_vision']['mean'] = 58
+                            data['baseline_vision']['std'] = 15
+                            data['baseline_vision']['min'] = beta_dist.get('min', 5)
+                            data['baseline_vision']['max'] = beta_dist.get('max', 98)
+                            
+                        elif dist_type == "uniform":
+                            # Create/update uniform distribution
+                            prefix = 'tb_edit' if protocol_type == "time_based" else 'edit'
+                            uniform_dist = {
+                                'type': 'uniform'
+                            }
+                            
+                            if f'{prefix}_uniform_min' in st.session_state:
+                                try:
+                                    uniform_dist['min'] = int(st.session_state[f'{prefix}_uniform_min'])
+                                    data['baseline_vision']['min'] = uniform_dist['min']
+                                except:
+                                    pass
+                                    
+                            if f'{prefix}_uniform_max' in st.session_state:
+                                try:
+                                    uniform_dist['max'] = int(st.session_state[f'{prefix}_uniform_max'])
+                                    data['baseline_vision']['max'] = uniform_dist['max']
+                                except:
+                                    pass
+                            
+                            data['baseline_vision_distribution'] = uniform_dist
+                            
+                            # Update mean/std to match uniform distribution
+                            if 'min' in uniform_dist and 'max' in uniform_dist:
+                                data['baseline_vision']['mean'] = (uniform_dist['min'] + uniform_dist['max']) / 2
+                                data['baseline_vision']['std'] = (uniform_dist['max'] - uniform_dist['min']) / (2 * 1.732)  # sqrt(3)
+                    
+                    # Save the updated data
+                    with open(selected_file, 'w') as f:
+                        yaml.dump(data, f, sort_keys=False, default_flow_style=False)
+                    
+                    # Clear edit mode
+                    st.session_state.edit_mode = False
+                    
+                    # Clear all edit session state variables
+                    keys_to_clear = [k for k in st.session_state.keys() if k.startswith('edit_') or k.startswith('tb_edit_')]
+                    for key in keys_to_clear:
+                        del st.session_state[key]
+                    
+                    st.success("Changes saved successfully!")
+                    st.rerun()
+                    
+                except Exception as e:
+                    st.error(f"Failed to save changes: {str(e)}")
+        else:
+            # Not in edit mode - show Edit button
+            if ape_button("Edit", key="edit_btn", full_width=True):
+                st.session_state.edit_mode = True
     else:
         # For default protocols, show a disabled ghost button
         ape_button("Edit", key="edit_btn_disabled", full_width=True, disabled=True)
@@ -515,374 +741,9 @@ try:
     # Main content header
     st.header(f"{spec.name} v{spec.version}")
     
-    # Show edit mode controls if in edit mode
+    # Show edit mode indicator if in edit mode
     if st.session_state.get('edit_mode', False) and protocol_type == "temp":
-        st.warning("**Edit Mode** - Make changes below and save when ready")
-        save_col, cancel_col, _, _ = st.columns(4)
-        with save_col:
-            if ape_button("Save Changes", key="save_changes", is_primary_action=True, full_width=True):
-                try:
-                    # Load the current YAML data
-                    with open(selected_file) as f:
-                        data = yaml.safe_load(f)
-                    
-                    # Update metadata if edited
-                    if 'edit_author' in st.session_state:
-                        data['author'] = st.session_state.edit_author
-                    if 'edit_description' in st.session_state:
-                        data['description'] = st.session_state.edit_description
-                    
-                    # Update timing parameters if edited
-                    if 'edit_min_interval' in st.session_state and st.session_state.edit_min_interval.isdigit():
-                        data['min_interval_days'] = int(st.session_state.edit_min_interval)
-                    if 'edit_max_interval' in st.session_state and st.session_state.edit_max_interval.isdigit():
-                        data['max_interval_days'] = int(st.session_state.edit_max_interval)
-                    if 'edit_extension' in st.session_state and st.session_state.edit_extension.isdigit():
-                        data['extension_days'] = int(st.session_state.edit_extension)
-                    if 'edit_shortening' in st.session_state and st.session_state.edit_shortening.isdigit():
-                        data['shortening_days'] = int(st.session_state.edit_shortening)
-                    
-                    # Update disease transitions if edited
-                    states = ['NAIVE', 'STABLE', 'ACTIVE', 'HIGHLY_ACTIVE']
-                    for from_state in states:
-                        for to_state in states:
-                            key = f'edit_trans_{from_state}_{to_state}'
-                            if key in st.session_state:
-                                try:
-                                    value = float(st.session_state[key])
-                                    # Ensure transitions TO NAIVE from other states remain 0
-                                    if to_state == 'NAIVE' and from_state != 'NAIVE':
-                                        value = 0.0
-                                    data['disease_transitions'][from_state][to_state] = value
-                                except:
-                                    pass  # Skip invalid values
-                    
-                    # Update treatment effect multipliers if edited
-                    for from_state in states:
-                        for to_state in states:
-                            key = f'edit_mult_{from_state}_{to_state}'
-                            if key in st.session_state:
-                                try:
-                                    value = float(st.session_state[key])
-                                    # Initialize structure if needed
-                                    if from_state not in data.get('treatment_effect_on_transitions', {}):
-                                        data.setdefault('treatment_effect_on_transitions', {})[from_state] = {'multipliers': {}}
-                                    data['treatment_effect_on_transitions'][from_state]['multipliers'][to_state] = value
-                                except:
-                                    pass  # Skip invalid values
-                    
-                    # Update vision model parameters if edited
-                    for state in states:
-                        for treatment in ['treated', 'untreated']:
-                            scenario = f"{state.lower()}_{treatment}"
-                            mean_key = f'edit_vision_{scenario}_mean'
-                            std_key = f'edit_vision_{scenario}_std'
-                            
-                            if mean_key in st.session_state:
-                                try:
-                                    data['vision_change_model'][scenario]['mean'] = float(st.session_state[mean_key])
-                                except:
-                                    pass
-                            
-                            if std_key in st.session_state:
-                                try:
-                                    data['vision_change_model'][scenario]['std'] = float(st.session_state[std_key])
-                                except:
-                                    pass
-                    
-                    # Update population parameters if edited
-                    if 'edit_dist_type' in st.session_state:
-                        dist_type = st.session_state.edit_dist_type
-                        
-                        if dist_type == "normal":
-                            # Update normal distribution parameters
-                            if 'edit_pop_mean' in st.session_state:
-                                try:
-                                    data['baseline_vision']['mean'] = float(st.session_state.edit_pop_mean)
-                                except:
-                                    pass
-                            if 'edit_pop_std' in st.session_state:
-                                try:
-                                    data['baseline_vision']['std'] = float(st.session_state.edit_pop_std)
-                                except:
-                                    pass
-                            if 'edit_pop_min' in st.session_state and st.session_state.edit_pop_min.isdigit():
-                                data['baseline_vision']['min'] = int(st.session_state.edit_pop_min)
-                            if 'edit_pop_max' in st.session_state and st.session_state.edit_pop_max.isdigit():
-                                data['baseline_vision']['max'] = int(st.session_state.edit_pop_max)
-                            
-                            # Remove baseline_vision_distribution if switching to normal
-                            if 'baseline_vision_distribution' in data:
-                                del data['baseline_vision_distribution']
-                                
-                        elif dist_type == "beta_with_threshold":
-                            # Create/update beta distribution
-                            beta_dist = {
-                                'type': 'beta_with_threshold'
-                            }
-                            
-                            if 'edit_beta_alpha' in st.session_state:
-                                try:
-                                    beta_dist['alpha'] = float(st.session_state.edit_beta_alpha)
-                                except:
-                                    beta_dist['alpha'] = 3.5
-                            
-                            if 'edit_beta_beta' in st.session_state:
-                                try:
-                                    beta_dist['beta'] = float(st.session_state.edit_beta_beta)
-                                except:
-                                    beta_dist['beta'] = 2.0
-                                    
-                            if 'edit_beta_min' in st.session_state:
-                                try:
-                                    beta_dist['min'] = int(st.session_state.edit_beta_min)
-                                except:
-                                    beta_dist['min'] = 5
-                                    
-                            if 'edit_beta_max' in st.session_state:
-                                try:
-                                    beta_dist['max'] = int(st.session_state.edit_beta_max)
-                                except:
-                                    beta_dist['max'] = 98
-                                    
-                            if 'edit_beta_threshold' in st.session_state:
-                                try:
-                                    beta_dist['threshold'] = int(st.session_state.edit_beta_threshold)
-                                except:
-                                    beta_dist['threshold'] = 70
-                                    
-                            if 'edit_beta_reduction' in st.session_state:
-                                try:
-                                    beta_dist['threshold_reduction'] = float(st.session_state.edit_beta_reduction)
-                                except:
-                                    beta_dist['threshold_reduction'] = 0.6
-                            
-                            data['baseline_vision_distribution'] = beta_dist
-                            
-                            # Update baseline_vision to match beta expectations
-                            data['baseline_vision']['mean'] = 58
-                            data['baseline_vision']['std'] = 15
-                            data['baseline_vision']['min'] = beta_dist.get('min', 5)
-                            data['baseline_vision']['max'] = beta_dist.get('max', 98)
-                            
-                        elif dist_type == "uniform":
-                            # Create/update uniform distribution
-                            uniform_dist = {
-                                'type': 'uniform'
-                            }
-                            
-                            if 'edit_uniform_min' in st.session_state:
-                                try:
-                                    uniform_dist['min'] = int(st.session_state.edit_uniform_min)
-                                    data['baseline_vision']['min'] = uniform_dist['min']
-                                except:
-                                    pass
-                                    
-                            if 'edit_uniform_max' in st.session_state:
-                                try:
-                                    uniform_dist['max'] = int(st.session_state.edit_uniform_max)
-                                    data['baseline_vision']['max'] = uniform_dist['max']
-                                except:
-                                    pass
-                            
-                            data['baseline_vision_distribution'] = uniform_dist
-                    else:
-                        # Legacy update for protocols without distribution type
-                        if 'edit_pop_mean' in st.session_state:
-                            try:
-                                data['baseline_vision']['mean'] = float(st.session_state.edit_pop_mean)
-                            except:
-                                pass
-                        if 'edit_pop_std' in st.session_state:
-                            try:
-                                data['baseline_vision']['std'] = float(st.session_state.edit_pop_std)
-                            except:
-                                pass
-                        if 'edit_pop_min' in st.session_state and st.session_state.edit_pop_min.isdigit():
-                            data['baseline_vision']['min'] = int(st.session_state.edit_pop_min)
-                        if 'edit_pop_max' in st.session_state and st.session_state.edit_pop_max.isdigit():
-                            data['baseline_vision']['max'] = int(st.session_state.edit_pop_max)
-                    
-                    # Update discontinuation rules if edited
-                    if 'edit_disc_pv_thresh' in st.session_state and st.session_state.edit_disc_pv_thresh.isdigit():
-                        data['discontinuation_rules']['poor_vision_threshold'] = int(st.session_state.edit_disc_pv_thresh)
-                    if 'edit_disc_pv_prob' in st.session_state:
-                        try:
-                            data['discontinuation_rules']['poor_vision_probability'] = float(st.session_state.edit_disc_pv_prob)
-                        except:
-                            pass
-                    if 'edit_disc_hi_thresh' in st.session_state and st.session_state.edit_disc_hi_thresh.isdigit():
-                        data['discontinuation_rules']['high_injection_count'] = int(st.session_state.edit_disc_hi_thresh)
-                    if 'edit_disc_hi_prob' in st.session_state:
-                        try:
-                            data['discontinuation_rules']['high_injection_probability'] = float(st.session_state.edit_disc_hi_prob)
-                        except:
-                            pass
-                    if 'edit_disc_lt_thresh' in st.session_state and st.session_state.edit_disc_lt_thresh.isdigit():
-                        data['discontinuation_rules']['long_treatment_months'] = int(st.session_state.edit_disc_lt_thresh)
-                    if 'edit_disc_lt_prob' in st.session_state:
-                        try:
-                            data['discontinuation_rules']['long_treatment_probability'] = float(st.session_state.edit_disc_lt_prob)
-                        except:
-                            pass
-                    if 'edit_disc_types' in st.session_state:
-                        # Parse discontinuation types from comma-separated input
-                        types = [t.strip() for t in st.session_state.edit_disc_types.split(',') if t.strip()]
-                        if types:
-                            data['discontinuation_rules']['discontinuation_types'] = types
-                    
-                    # For time-based protocols, save parameter file changes
-                    if protocol_type == "time_based":
-                        # Handle baseline vision distribution updates
-                        if 'tb_edit_dist_type' in st.session_state:
-                            dist_type = st.session_state.tb_edit_dist_type
-                            
-                            if dist_type == "normal":
-                                # Update normal distribution parameters
-                                if 'tb_edit_pop_mean' in st.session_state:
-                                    try:
-                                        data['baseline_vision']['mean'] = float(st.session_state.tb_edit_pop_mean)
-                                    except:
-                                        pass
-                                if 'tb_edit_pop_std' in st.session_state:
-                                    try:
-                                        data['baseline_vision']['std'] = float(st.session_state.tb_edit_pop_std)
-                                    except:
-                                        pass
-                                if 'tb_edit_pop_min' in st.session_state and st.session_state.tb_edit_pop_min.isdigit():
-                                    data['baseline_vision']['min'] = int(st.session_state.tb_edit_pop_min)
-                                if 'tb_edit_pop_max' in st.session_state and st.session_state.tb_edit_pop_max.isdigit():
-                                    data['baseline_vision']['max'] = int(st.session_state.tb_edit_pop_max)
-                                
-                                # Remove baseline_vision_distribution if switching to normal
-                                if 'baseline_vision_distribution' in data:
-                                    del data['baseline_vision_distribution']
-                                    
-                            elif dist_type == "beta_with_threshold":
-                                # Create/update beta distribution
-                                beta_dist = {
-                                    'type': 'beta_with_threshold'
-                                }
-                                
-                                if 'tb_edit_beta_alpha' in st.session_state:
-                                    try:
-                                        beta_dist['alpha'] = float(st.session_state.tb_edit_beta_alpha)
-                                    except:
-                                        beta_dist['alpha'] = 3.5
-                                
-                                if 'tb_edit_beta_beta' in st.session_state:
-                                    try:
-                                        beta_dist['beta'] = float(st.session_state.tb_edit_beta_beta)
-                                    except:
-                                        beta_dist['beta'] = 2.0
-                                        
-                                if 'tb_edit_beta_min' in st.session_state:
-                                    try:
-                                        beta_dist['min'] = int(st.session_state.tb_edit_beta_min)
-                                    except:
-                                        beta_dist['min'] = 5
-                                        
-                                if 'tb_edit_beta_max' in st.session_state:
-                                    try:
-                                        beta_dist['max'] = int(st.session_state.tb_edit_beta_max)
-                                    except:
-                                        beta_dist['max'] = 98
-                                        
-                                if 'tb_edit_beta_threshold' in st.session_state:
-                                    try:
-                                        beta_dist['threshold'] = int(st.session_state.tb_edit_beta_threshold)
-                                    except:
-                                        beta_dist['threshold'] = 70
-                                        
-                                if 'tb_edit_beta_reduction' in st.session_state:
-                                    try:
-                                        beta_dist['threshold_reduction'] = float(st.session_state.tb_edit_beta_reduction)
-                                    except:
-                                        beta_dist['threshold_reduction'] = 0.6
-                                
-                                data['baseline_vision_distribution'] = beta_dist
-                                
-                                # Update baseline_vision to match beta expectations
-                                data['baseline_vision']['mean'] = 58
-                                data['baseline_vision']['std'] = 15
-                                data['baseline_vision']['min'] = beta_dist.get('min', 5)
-                                data['baseline_vision']['max'] = beta_dist.get('max', 98)
-                                
-                            elif dist_type == "uniform":
-                                # Create/update uniform distribution
-                                uniform_dist = {
-                                    'type': 'uniform'
-                                }
-                                
-                                if 'tb_edit_uniform_min' in st.session_state:
-                                    try:
-                                        uniform_dist['min'] = int(st.session_state.tb_edit_uniform_min)
-                                        data['baseline_vision']['min'] = uniform_dist['min']
-                                    except:
-                                        pass
-                                        
-                                if 'tb_edit_uniform_max' in st.session_state:
-                                    try:
-                                        uniform_dist['max'] = int(st.session_state.tb_edit_uniform_max)
-                                        data['baseline_vision']['max'] = uniform_dist['max']
-                                    except:
-                                        pass
-                                
-                                data['baseline_vision_distribution'] = uniform_dist
-                        
-                        # Handle parameter file changes
-                        if 'tb_param_changes' in st.session_state:
-                            protocol_dir = Path(spec.source_file).parent
-                            
-                            # Save each modified parameter file
-                            for param_type, param_data in st.session_state.tb_param_changes.items():
-                                if param_type == 'transitions':
-                                    param_path = protocol_dir / spec.disease_transitions_file
-                                elif param_type == 'effects':
-                                    param_path = protocol_dir / spec.treatment_effect_file
-                                elif param_type == 'vision':
-                                    param_path = protocol_dir / spec.vision_parameters_file
-                                elif param_type == 'discontinuation':
-                                    param_path = protocol_dir / spec.discontinuation_parameters_file
-                                else:
-                                    continue
-                                
-                                # Backup original
-                                if param_path.exists():
-                                    import shutil
-                                    backup_path = param_path.with_suffix('.yaml.bak')
-                                    shutil.copy2(param_path, backup_path)
-                                
-                                # Save changes
-                                with open(param_path, 'w') as f:
-                                    yaml.dump(param_data, f, default_flow_style=False, sort_keys=False)
-                            
-                            # Clear parameter changes from session state
-                            del st.session_state['tb_param_changes']
-                    
-                    # Update modified date
-                    data['modified_date'] = datetime.now().strftime("%Y-%m-%d")
-                    
-                    # Write back to file
-                    with open(selected_file, 'w') as f:
-                        yaml.dump(data, f, sort_keys=False, default_flow_style=False)
-                    
-                    st.success("Changes saved!")
-                    st.session_state.edit_mode = False
-                    
-                    # Clear edit fields from session state
-                    for key in list(st.session_state.keys()):
-                        if key.startswith('edit_'):
-                            del st.session_state[key]
-                    
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Failed to save changes: {e}")
-        with cancel_col:
-            if ape_button("Cancel", key="cancel_edit", full_width=True):
-                st.session_state.edit_mode = False
-                st.rerun()
-    
+        st.warning("**Edit Mode** - Make changes below and click 'Save Changes' button above when ready")
     # Show model type indicator for time-based protocols
     if protocol_type == "time_based":
         st.info("**Time-Based Model**: Disease progression updates every 14 days, independent of visit schedule")
