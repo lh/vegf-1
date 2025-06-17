@@ -176,13 +176,17 @@ with col2:
         st.rerun()
 
 with col3:
-    st.markdown("**Simulation B**")
+    # Create sub-columns for the heading and caption
+    header_col, caption_col = st.columns([1, 2])
+    with header_col:
+        st.markdown("**Simulation B**")
     
     # Get compatible simulations
     sim_a = st.session_state.comparison_state['sim_a']
     if sim_a:
         compatible_sims = get_compatible_simulations(sim_a, simulation_infos)
-        st.caption(f"Showing {len(compatible_sims)} compatible simulations")
+        with caption_col:
+            st.caption(f"Showing {len(compatible_sims)} compatible simulations")
     else:
         compatible_sims = simulation_infos
     
