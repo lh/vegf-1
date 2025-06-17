@@ -327,18 +327,24 @@ class ABSEngineTimeBasedWithParams(ABSEngineTimeBasedWithSpecs):
             )
             
             if disc_result.should_discontinue:
-                patient.is_discontinued = True
-                patient.discontinuation_date = visit_date
-                patient.discontinuation_reason = disc_result.reason
+                # Use discontinue method to properly set all fields including pre_discontinuation_vision
+                patient.discontinue(
+                    date=visit_date,
+                    discontinuation_type=disc_result.reason,
+                    reason=disc_result.reason
+                )
                 return False  # Don't treat if discontinuing
         else:
             # Fallback to simple vision check
             should_discontinue = self._check_vision_discontinuation(patient.id, measured_vision)
             
             if should_discontinue:
-                patient.is_discontinued = True
-                patient.discontinuation_date = visit_date
-                patient.discontinuation_reason = 'poor_vision'
+                # Use discontinue method to properly set all fields including pre_discontinuation_vision
+                patient.discontinue(
+                    date=visit_date,
+                    discontinuation_type='poor_vision',
+                    reason='poor_vision'
+                )
                 return False  # Don't treat if discontinuing
         
         # Record visit

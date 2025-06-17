@@ -265,8 +265,12 @@ class ABSEngineTimeBased(ABSEngine):
         should_discontinue = self._should_discontinue(patient, visit_date)
         
         if should_discontinue:
-            patient.is_discontinued = True
-            patient.discontinuation_date = visit_date
+            # Use discontinue method to properly set all fields including pre_discontinuation_vision
+            patient.discontinue(
+                date=visit_date,
+                discontinuation_type='unspecified',
+                reason='unspecified'
+            )
         
         # Record visit
         visit_record = {
