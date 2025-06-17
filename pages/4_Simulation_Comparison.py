@@ -168,12 +168,16 @@ with col1:
 with col2:
     st.markdown("<br>", unsafe_allow_html=True)  # Spacing
     if ape_button("", key="swap_sims", icon="swap", help_text="Swap simulations"):
-        # Swap simulations
-        sim_a = st.session_state.comparison_state['sim_a']
-        sim_b = st.session_state.comparison_state['sim_b']
-        st.session_state.comparison_state['sim_a'] = sim_b
-        st.session_state.comparison_state['sim_b'] = sim_a
-        st.rerun()
+        # Only swap if both simulations are selected
+        if (st.session_state.comparison_state.get('sim_a') and 
+            st.session_state.comparison_state.get('sim_b')):
+            # Store current values
+            temp_a = st.session_state.comparison_state['sim_a'].copy()
+            temp_b = st.session_state.comparison_state['sim_b'].copy()
+            # Swap them
+            st.session_state.comparison_state['sim_a'] = temp_b
+            st.session_state.comparison_state['sim_b'] = temp_a
+            st.rerun()
 
 with col3:
     # Create sub-columns for the heading and caption
