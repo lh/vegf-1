@@ -274,105 +274,64 @@ with col2:
 
 # Helper function to load simulation data from path
 def load_simulation_from_path(sim_info):
-    """Load simulation data directly from JSON files."""
+    """Load simulation data from parquet files."""
     try:
         sim_path = sim_info['path']
         
-        # Load simulation_data.json which contains the actual patient data
-        sim_data_path = sim_path / "simulation_data.json"
-        if not sim_data_path.exists():
-            # Try other possible filenames
-            for name in ["results.json", "data.json"]:
-                alt_path = sim_path / name
-                if alt_path.exists():
-                    sim_data_path = alt_path
-                    break
+        # Load parquet data
+        patients_df = pd.read_parquet(sim_path / "patients.parquet")
+        visits_df = pd.read_parquet(sim_path / "visits.parquet")
         
-        if not sim_data_path.exists():
-            st.error(f"No simulation data file found in {sim_path}")
-            return None
-            
-        with open(sim_data_path) as f:
-            sim_data = json.load(f)
+        # Load summary stats
+        summary_stats = {}
+        summary_path = sim_path / "summary_stats.json"
+        if summary_path.exists():
+            with open(summary_path) as f:
+                summary_stats = json.load(f)
         
-        # Convert to the format expected by comparison functions
+        # Convert to format expected by comparison functions
         patient_histories = {}
         
-        # Handle different data formats
-        if 'patient_histories' in sim_data:
-            raw_histories = sim_data['patient_histories']
-        elif 'patients' in sim_data:
-            raw_histories = sim_data['patients']
-        else:
-            st.error(f"No patient data found in simulation")
-            return None
-        
-        # Process each patient
-        for patient_id, history in raw_histories.items():
+        # Group visits by patient
+        for patient_id in patients_df['patient_id'].unique():
+            patient_visits = visits_df[visits_df['patient_id'] == patient_id].sort_values('date')
+            patient_data = patients_df[patients_df['patient_id'] == patient_id].iloc[0]
+            
             visits = []
-            
-            # Get visit data
-            visit_list = history.get('visit_history', history.get('visits', []))
-            
-            if visit_list and len(visit_list) > 0:
-                # Get baseline date for month calculation
-                baseline_date = pd.to_datetime(visit_list[0].get('date', '2024-01-01'))
+            if len(patient_visits) > 0:
+                baseline_date = pd.to_datetime(patient_visits.iloc[0]['date'])
                 
-                for visit in visit_list:
-                    # Calculate month from visit date
-                    visit_date = pd.to_datetime(visit.get('date', baseline_date))
-                    month = (visit_date - baseline_date).days / 30.44  # Average days per month
-                    
-                    # Get vision value (try different field names)
-                    vision = visit.get('vision', visit.get('actual_vision', 
-                                     visit.get('va', visit.get('visual_acuity', 0))))
+                for _, visit in patient_visits.iterrows():
+                    visit_date = pd.to_datetime(visit['date'])
+                    month = (visit_date - baseline_date).days / 30.44
                     
                     visits.append({
                         'month': month,
-                        'vision': vision,
-                        'injection_given': visit.get('treatment_given', 
-                                                   visit.get('injection_given', False)),
+                        'vision': visit['vision'],  # Column is 'vision' not 'visual_acuity'
+                        'injection_given': visit['injected'],  # Column is 'injected' not 'injection_given'
                         'date': str(visit_date)
                     })
             
             patient_histories[patient_id] = {
                 'visits': visits,
-                'baseline_vision': history.get('baseline_vision', visits[0]['vision'] if visits else 0),
-                'current_vision': history.get('current_vision', visits[-1]['vision'] if visits else 0),
-                'is_discontinued': history.get('is_discontinued', False)
+                'baseline_vision': float(patient_data['baseline_vision']),
+                'current_vision': float(patient_data['final_vision']),
+                'is_discontinued': bool(patient_data['discontinued'])
             }
         
         # Get discontinuation summary
         disc_summary = {
             'by_reason': {},
-            'total': 0
+            'total': int(patients_df['discontinued'].sum())
         }
         
-        # Count discontinuations
-        for patient_id, history in patient_histories.items():
-            if history.get('is_discontinued', False):
-                disc_summary['total'] += 1
-        
-        # Get summary stats from metadata or calculate
-        metadata_path = sim_path / "metadata.json"
-        summary_stats = {}
-        
-        if metadata_path.exists():
-            with open(metadata_path) as f:
-                metadata = json.load(f)
-                summary_stats = {
-                    'total_patients': metadata.get('n_patients', len(patient_histories)),
-                    'total_injections': metadata.get('total_injections', 0),
-                    'mean_final_vision': metadata.get('mean_final_vision', 0),
-                    'discontinuation_rate': disc_summary['total'] / len(patient_histories) if patient_histories else 0
-                }
-        
-        # Also check summary_stats.json
-        summary_path = sim_path / "summary_stats.json"
-        if summary_path.exists():
-            with open(summary_path) as f:
-                summary_data = json.load(f)
-                summary_stats.update(summary_data)
+        # Add reason breakdown if available
+        if 'discontinuation_reason' in patients_df.columns:
+            # Filter out None/NaN values
+            disc_patients = patients_df[patients_df['discontinued'] == True]
+            if len(disc_patients) > 0:
+                reason_counts = disc_patients['discontinuation_reason'].value_counts()
+                disc_summary['by_reason'] = reason_counts.to_dict()
         
         return {
             'patient_histories': patient_histories,
@@ -382,6 +341,8 @@ def load_simulation_from_path(sim_info):
         
     except Exception as e:
         st.error(f"Error loading simulation data: {str(e)}")
+        import traceback
+        st.error(traceback.format_exc())
         return None
 
 # Load the actual simulation data
