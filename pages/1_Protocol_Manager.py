@@ -328,7 +328,7 @@ with col1:
         # Toggle between Edit and Commit Changes based on mode
         if st.session_state.get('edit_mode', False):
             # In edit mode - show Commit Changes button
-            if ape_button("Commit Changes", key="save_edit_btn", icon="checkmark", full_width=True, is_primary_action=True):
+            if ape_button("Commit Changes", key="save_edit_btn", icon="save", full_width=True, is_primary_action=True):
                 try:
                     # Load the current YAML data
                     with open(selected_file) as f:
