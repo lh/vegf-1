@@ -77,7 +77,7 @@ def get_simulation_info(sim_path):
                 'patients': metadata.get('n_patients', 0),
                 'duration': duration_months,
                 'date': datetime.fromisoformat(metadata.get('timestamp', '')).strftime('%Y-%m-%d'),
-                'model_type': metadata.get('model_type', 'standard')
+                'model_type': metadata.get('model_type', 'visit_based')
             }
     except Exception as e:
         st.warning(f"Could not read simulation {sim_path.name}: {str(e)}")
@@ -97,7 +97,8 @@ if not simulation_infos:
 # Helper functions
 def format_simulation_name(sim_info):
     """Format simulation name for dropdown display."""
-    return f"{sim_info['protocol']} - {sim_info['patients']} patients, {sim_info['duration']} months ({sim_info['date']})"
+    model_type = sim_info.get('model_type', 'visit_based').replace('_', ' ').title()
+    return f"{sim_info['protocol']} - {sim_info['patients']} patients, {sim_info['duration']} months, {model_type} ({sim_info['date']})"
 
 def get_compatible_simulations(selected_sim, all_sims):
     """Filter simulations to only show compatible options."""
@@ -261,7 +262,7 @@ with col1:
     st.markdown(f"**Protocol:** {sim_a['protocol']}")
     st.markdown(f"**Patients:** {sim_a['patients']:,}")
     st.markdown(f"**Duration:** {sim_a['duration']} months")
-    st.markdown(f"**Model:** {sim_a['model_type'].title()}")
+    st.markdown(f"**Model Type:** {sim_a['model_type'].replace('_', ' ').title()}")
     st.markdown(f"**Run Date:** {sim_a['date']}")
 
 with col2:
@@ -269,7 +270,7 @@ with col2:
     st.markdown(f"**Protocol:** {sim_b['protocol']}")
     st.markdown(f"**Patients:** {sim_b['patients']:,}")
     st.markdown(f"**Duration:** {sim_b['duration']} months")
-    st.markdown(f"**Model:** {sim_b['model_type'].title()}")
+    st.markdown(f"**Model Type:** {sim_b['model_type'].replace('_', ' ').title()}")
     st.markdown(f"**Run Date:** {sim_b['date']}")
 
 # Helper function to load simulation data from path
