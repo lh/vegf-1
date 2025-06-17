@@ -655,7 +655,7 @@ with col4:
     if ape_button("Import/Export", 
                   key="toggle_import_export",
                   full_width=True,
-                  icon="save"):
+                  icon="export"):
         st.session_state.show_manage = not st.session_state.get('show_manage', False)
 
 # Show manage panel if toggled
