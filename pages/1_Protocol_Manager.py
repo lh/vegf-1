@@ -10,6 +10,7 @@ from datetime import datetime
 import time
 import re
 import pandas as pd
+import random
 
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
 from ape.utils.startup_redirect import handle_page_startup
@@ -33,6 +34,15 @@ from ape.components.ui.workflow_indicator import workflow_progress_indicator, co
 # Show workflow progress
 workflow_progress_indicator("protocol")
 
+# Show auto-save indicator if active
+if st.session_state.get('show_save_indicator', False):
+    # Calculate time since last save
+    if 'last_save_time' in st.session_state:
+        time_since_save = time.time() - st.session_state.last_save_time
+        if time_since_save < 2:
+            st.success("✓ Auto-saved", icon="✅")
+        st.session_state.show_save_indicator = False
+
 # Minimal CSS for clean interface
 st.markdown("""
 <style>
@@ -54,6 +64,62 @@ from ape.utils.carbon_button_helpers import (
     ape_button, delete_button,
     navigation_button
 )
+
+# Auto-save functionality for temporary protocols
+def auto_save_protocol(selected_file, protocol_type):
+    """Auto-save changes to temporary protocol files."""
+    if protocol_type != "temp" or not st.session_state.get('edit_mode', False):
+        return
+        
+    try:
+        # Load the current YAML data
+        with open(selected_file) as f:
+            data = yaml.safe_load(f)
+        
+        # Track if any changes were made
+        changes_made = False
+        
+        # Update metadata if edited
+        if 'edit_author' in st.session_state and st.session_state.edit_author != data.get('author', ''):
+            data['author'] = st.session_state.edit_author
+            changes_made = True
+        if 'edit_description' in st.session_state and st.session_state.edit_description != data.get('description', ''):
+            data['description'] = st.session_state.edit_description
+            changes_made = True
+        
+        # Update timing parameters if edited
+        timing_fields = [
+            ('edit_min_interval', 'min_interval_days'),
+            ('edit_max_interval', 'max_interval_days'),
+            ('edit_extension', 'extension_days'),
+            ('edit_shortening', 'shortening_days')
+        ]
+        
+        for session_key, yaml_key in timing_fields:
+            if session_key in st.session_state:
+                try:
+                    new_val = int(st.session_state[session_key])
+                    if new_val != data.get(yaml_key):
+                        data[yaml_key] = new_val
+                        changes_made = True
+                except:
+                    pass
+        
+        # Save if changes were made
+        if changes_made:
+            # Add modified timestamp
+            data['modified_date'] = datetime.now().strftime("%Y-%m-%d")
+            
+            # Write the updated data
+            with open(selected_file, 'w') as f:
+                yaml.dump(data, f, sort_keys=False, default_flow_style=False)
+                
+            # Show subtle save indicator
+            if 'last_save_time' not in st.session_state or time.time() - st.session_state.last_save_time > 2:
+                st.session_state.last_save_time = time.time()
+                st.session_state.show_save_indicator = True
+    except:
+        pass  # Silently fail auto-save to not disrupt user
 
 
 def draw_baseline_vision_distribution(dist_type, params, session_prefix="edit"):
@@ -257,12 +323,12 @@ else:
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    # Edit/Save button (only for temporary protocols)
+    # Edit/Commit button (only for temporary protocols)
     if selected_file and protocol_type == "temp":
-        # Toggle between Edit and Save Changes based on mode
+        # Toggle between Edit and Commit Changes based on mode
         if st.session_state.get('edit_mode', False):
-            # In edit mode - show Save Changes button
-            if ape_button("Save Changes", key="save_edit_btn", full_width=True, is_primary_action=True):
+            # In edit mode - show Commit Changes button
+            if ape_button("Commit Changes", key="save_edit_btn", full_width=True, is_primary_action=True):
                 try:
                     # Load the current YAML data
                     with open(selected_file) as f:
@@ -478,7 +544,7 @@ with col1:
                     for key in keys_to_clear:
                         del st.session_state[key]
                     
-                    st.success("Changes saved successfully!")
+                    st.success("Changes committed successfully!")
                     st.rerun()
                     
                 except Exception as e:
@@ -515,14 +581,34 @@ with col2:
                 data['description'] = f"Copy of {original_name}"
                 data['created_date'] = datetime.now().strftime("%Y-%m-%d")
                 
-                # Create filename with timestamp for uniqueness
+                # Generate memorable name for protocol
+                colors = ['azure', 'crimson', 'emerald', 'golden', 'ivory', 'jade', 'lavender', 
+                         'obsidian', 'pearl', 'ruby', 'sapphire', 'silver', 'topaz', 'violet']
+                gemstones = ['amethyst', 'beryl', 'citrine', 'diamond', 'garnet', 'jasper', 
+                            'moonstone', 'onyx', 'opal', 'quartz', 'tourmaline', 'zircon']
+                
+                # Create unique memorable name
+                max_attempts = 10
+                for _ in range(max_attempts):
+                    color = random.choice(colors)
+                    gem = random.choice(gemstones)
+                    memorable_name = f"{color}-{gem}"
+                    
+                    # Check if this name already exists
+                    matching_files = list(TEMP_DIR.glob(f"*_{memorable_name}.yaml"))
+                    if not matching_files:
+                        break
+                else:
+                    # Fallback to timestamp if can't find unique name
+                    memorable_name = f"copy-{int(time.time()) % 10000}"
+                
+                # Create filename with memorable name
                 base_filename = f"{new_name.lower().replace(' ', '_')}_v{new_version}"
-                timestamp = int(time.time())
-                filename = f"{base_filename}_{timestamp}.yaml"
+                filename = f"{base_filename}_{memorable_name}.yaml"
                 
                 # Ensure filename isn't too long
                 if len(filename) > 255:
-                    filename = f"protocol_copy_{timestamp}.yaml"
+                    filename = f"protocol_{memorable_name}.yaml"
                     
                 save_path = TEMP_DIR / filename
                 
@@ -627,11 +713,30 @@ if st.session_state.get('show_manage', False):
                     # This will validate all required fields
                     test_spec = ProtocolSpecification.from_yaml(validation_path)
 
-                    # Save with timestamp to avoid collisions
+                    # Generate memorable name for uploaded protocol
+                    colors = ['azure', 'crimson', 'emerald', 'golden', 'ivory', 'jade', 'lavender', 
+                             'obsidian', 'pearl', 'ruby', 'sapphire', 'silver', 'topaz', 'violet']
+                    gemstones = ['amethyst', 'beryl', 'citrine', 'diamond', 'garnet', 'jasper', 
+                                'moonstone', 'onyx', 'opal', 'quartz', 'tourmaline', 'zircon']
+                    
+                    # Create unique memorable name
                     base_name = safe_filename.rsplit('.', 1)[0]
-                    timestamp = int(time.time())
-                    final_filename = f"{base_name}_{timestamp}.yaml"
-                    final_path = TEMP_DIR / final_filename
+                    max_attempts = 10
+                    for _ in range(max_attempts):
+                        color = random.choice(colors)
+                        gem = random.choice(gemstones)
+                        memorable_name = f"{color}-{gem}"
+                        
+                        # Check if this name already exists
+                        final_filename = f"{base_name}_{memorable_name}.yaml"
+                        final_path = TEMP_DIR / final_filename
+                        if not final_path.exists():
+                            break
+                    else:
+                        # Fallback to timestamp if can't find unique name
+                        memorable_name = f"upload-{int(time.time()) % 10000}"
+                        final_filename = f"{base_name}_{memorable_name}.yaml"
+                        final_path = TEMP_DIR / final_filename
 
                     validation_path.rename(final_path)
 
@@ -743,7 +848,7 @@ try:
     
     # Show edit mode indicator if in edit mode
     if st.session_state.get('edit_mode', False) and protocol_type == "temp":
-        st.warning("**Edit Mode** - Make changes below and click 'Save Changes' button above when ready")
+        st.warning("**Edit Mode** - Changes are saved automatically. Click 'Commit Changes' to finalize your edits.")
     # Show model type indicator for time-based protocols
     if protocol_type == "time_based":
         st.info("**Time-Based Model**: Disease progression updates every 14 days, independent of visit schedule")
@@ -753,8 +858,8 @@ try:
         # Editable metadata
         col1, col2 = st.columns([3, 1])
         with col1:
-            new_author = st.text_input("Author", value=spec.author, key="edit_author")
-            new_description = st.text_area("Description", value=spec.description, key="edit_description", height=70)
+            new_author = st.text_input("Author", value=spec.author, key="edit_author", on_change=lambda: auto_save_protocol(selected_file, protocol_type))
+            new_description = st.text_area("Description", value=spec.description, key="edit_description", height=70, on_change=lambda: auto_save_protocol(selected_file, protocol_type))
         with col2:
             st.caption(f"Created: {spec.created_date}")
             st.caption(f"Checksum: {spec.checksum[:8]}...")
@@ -791,14 +896,14 @@ try:
             # Editable parameters
             col1, col2 = st.columns(2)
             with col1:
-                min_interval = st.text_input("Min Interval (days)", value=str(spec.min_interval_days), key="edit_min_interval")
+                min_interval = st.text_input("Min Interval (days)", value=str(spec.min_interval_days), key="edit_min_interval", on_change=lambda: auto_save_protocol(selected_file, protocol_type))
                 st.caption(f"= {int(min_interval)/7:.1f} weeks" if min_interval.isdigit() else "Invalid")
-                extension = st.text_input("Extension (days)", value=str(spec.extension_days), key="edit_extension")
+                extension = st.text_input("Extension (days)", value=str(spec.extension_days), key="edit_extension", on_change=lambda: auto_save_protocol(selected_file, protocol_type))
                 st.caption(f"= {int(extension)/7:.1f} weeks" if extension.isdigit() else "Invalid")
             with col2:
-                max_interval = st.text_input("Max Interval (days)", value=str(spec.max_interval_days), key="edit_max_interval")
+                max_interval = st.text_input("Max Interval (days)", value=str(spec.max_interval_days), key="edit_max_interval", on_change=lambda: auto_save_protocol(selected_file, protocol_type))
                 st.caption(f"= {int(max_interval)/7:.1f} weeks" if max_interval.isdigit() else "Invalid")
-                shortening = st.text_input("Shortening (days)", value=str(spec.shortening_days), key="edit_shortening")
+                shortening = st.text_input("Shortening (days)", value=str(spec.shortening_days), key="edit_shortening", on_change=lambda: auto_save_protocol(selected_file, protocol_type))
                 st.caption(f"= {int(shortening)/7:.1f} weeks" if shortening.isdigit() else "Invalid")
         else:
             # Read-only display
