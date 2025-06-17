@@ -71,9 +71,21 @@ def get_simulation_info(sim_path):
             # Handle different protocol name fields
             protocol_name = metadata.get('protocol_name') or metadata.get('protocol', 'Unknown')
             
+            # Extract memorable name from simulation folder name
+            # Format is: sim_YYYYMMDD_HHMMSS_XX-YY_memorable-name
+            sim_name = sim_path.name
+            memorable_name = ""
+            
+            # Extract memorable name from current format
+            if sim_name.startswith('sim_') and '_' in sim_name:
+                parts = sim_name.split('_')
+                if len(parts) >= 5:  # sim_date_time_duration_name
+                    memorable_name = parts[-1]
+            
             return {
                 'path': sim_path,
                 'name': sim_path.name,
+                'memorable_name': memorable_name,
                 'protocol': protocol_name,
                 'patients': metadata.get('n_patients', 0),
                 'duration': duration_months,
@@ -99,11 +111,22 @@ if not simulation_infos:
 def format_simulation_name(sim_info):
     """Format simulation name for dropdown display."""
     model_type = sim_info.get('model_type', 'visit_based').replace('_', ' ').title()
-    return f"{sim_info['protocol']} - {sim_info['patients']} patients, {sim_info['duration']} months, {model_type} ({sim_info['date']})"
+    base_name = f"{sim_info['protocol']} - {sim_info['patients']} patients, {sim_info['duration']} months, {model_type} ({sim_info['date']})"
+    
+    # Add memorable name if available
+    memorable_name = sim_info.get('memorable_name', '')
+    if memorable_name:
+        # Replace hyphens with spaces for better readability
+        memorable_name = memorable_name.replace('-', ' ')
+        return f"{base_name} • {memorable_name}"
+    return base_name
 
-def get_compatible_simulations(selected_sim, all_sims):
+def get_compatible_simulations(selected_sim, all_sims, exclude_sim=None):
     """Filter simulations to only show compatible options."""
     if not selected_sim:
+        # If no sim selected, return all except the excluded one
+        if exclude_sim:
+            return [sim for sim in all_sims if sim['name'] != exclude_sim['name']]
         return all_sims
     
     selected_duration = selected_sim['duration']
@@ -111,7 +134,8 @@ def get_compatible_simulations(selected_sim, all_sims):
     
     for sim in all_sims:
         # Only show simulations with EXACTLY the same duration
-        if sim['duration'] == selected_duration:
+        # AND exclude the same simulation
+        if sim['duration'] == selected_duration and sim['name'] != selected_sim['name']:
             compatible.append(sim)
     
     return compatible
@@ -126,7 +150,19 @@ if st.session_state.comparison_state['recent_pairs']:
     
     for i, (sim_a_name, sim_b_name) in enumerate(st.session_state.comparison_state['recent_pairs']):
         with cols[i]:
-            if ape_button(f"{sim_a_name[:20]}... vs {sim_b_name[:20]}...", 
+            # Find the simulations to get their memorable names
+            sim_a_info = next((sim for sim in simulation_infos if sim['name'] == sim_a_name), None)
+            sim_b_info = next((sim for sim in simulation_infos if sim['name'] == sim_b_name), None)
+            
+            # Create button label with memorable names if available
+            if sim_a_info and sim_b_info:
+                a_label = sim_a_info.get('memorable_name', sim_a_name[:15]).replace('-', ' ')
+                b_label = sim_b_info.get('memorable_name', sim_b_name[:15]).replace('-', ' ')
+                button_label = f"{a_label} vs {b_label}"
+            else:
+                button_label = f"{sim_a_name[:20]}... vs {sim_b_name[:20]}..."
+            
+            if ape_button(button_label, 
                          key=f"recent_{i}", 
                          button_type="ghost"):
                 # Load this comparison
@@ -192,14 +228,15 @@ with col3:
     with header_col:
         st.markdown("**Simulation B**")
     
-    # Get compatible simulations
+    # Get compatible simulations (excluding the selected simulation A)
     sim_a = st.session_state.comparison_state['sim_a']
-    if sim_a:
-        compatible_sims = get_compatible_simulations(sim_a, simulation_infos)
-        with caption_col:
+    compatible_sims = get_compatible_simulations(sim_a, simulation_infos)
+    
+    with caption_col:
+        if sim_a:
             st.caption(f"Showing {len(compatible_sims)} compatible simulations")
-    else:
-        compatible_sims = simulation_infos
+        else:
+            st.caption(f"Showing {len(compatible_sims)} simulations")
     
     # Find current selection in compatible list
     current_b_idx = 0
@@ -267,6 +304,8 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.markdown(f"**📄 Simulation A**")
+    if sim_a.get('memorable_name'):
+        st.markdown(f"**Name:** {sim_a['memorable_name'].replace('-', ' ')}")
     st.markdown(f"**Protocol:** {sim_a['protocol']}")
     st.markdown(f"**Patients:** {sim_a['patients']:,}")
     st.markdown(f"**Duration:** {sim_a['duration']} months")
@@ -275,6 +314,8 @@ with col1:
 
 with col2:
     st.markdown(f"**📄 Simulation B**")
+    if sim_b.get('memorable_name'):
+        st.markdown(f"**Name:** {sim_b['memorable_name'].replace('-', ' ')}")
     st.markdown(f"**Protocol:** {sim_b['protocol']}")
     st.markdown(f"**Patients:** {sim_b['patients']:,}")
     st.markdown(f"**Duration:** {sim_b['duration']} months")
