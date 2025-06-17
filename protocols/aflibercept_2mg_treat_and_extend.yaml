@@ -128,7 +128,7 @@ treatment_effect_on_transitions:
       HIGHLY_ACTIVE: 0.8
 
 # Baseline vision parameters
-baseline_vision:
+baseline_vision_distribution:
   mean: 55             # Typical trial entry criteria
   std: 15
   min: 25              # Minimum for treatment (guidance threshold)

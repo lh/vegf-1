@@ -71,7 +71,8 @@ vision_change_model:
   highly_active_untreated:
     mean: -5
     std: 3
-baseline_vision:
+baseline_vision_distribution:
+  type: normal
   mean: 70
   std: 10
   min: 20

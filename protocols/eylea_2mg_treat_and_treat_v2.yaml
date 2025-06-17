@@ -111,7 +111,7 @@ treatment_effect_on_transitions:
       HIGHLY_ACTIVE: 1.0  # Placeholder - needs calibration
 
 # Required baseline vision parameters
-baseline_vision:
+baseline_vision_distribution:
   mean: 55           # ETDRS letters - typical trial entry
   std: 15
   min: 25

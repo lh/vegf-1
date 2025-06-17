@@ -34,7 +34,8 @@ discontinuation_parameters_file: "parameters/discontinuation.yaml"
 demographics_parameters_file: "parameters/demographics.yaml"
 
 # Baseline vision (same as standard protocols)
-baseline_vision:
+baseline_vision_distribution:
+  type: normal
   mean: 65
   std: 10
   min: 20
