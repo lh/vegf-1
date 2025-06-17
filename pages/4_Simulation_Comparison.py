@@ -472,13 +472,136 @@ st.markdown("### Key Outcome Metrics")
 
 # Export buttons
 col1, col2, col3 = st.columns([6, 1, 1])
+
+# Prepare export data
+def prepare_export_data():
+    """Prepare comparison data for export."""
+    export_data = []
+    
+    # Add metadata
+    export_data.append({
+        'Section': 'Metadata',
+        'Metric': 'Simulation A',
+        'Value A': sim_a['protocol'],
+        'Value B': sim_b['protocol'],
+        'Difference': ''
+    })
+    export_data.append({
+        'Section': 'Metadata',
+        'Metric': 'Patients',
+        'Value A': sim_a['patients'],
+        'Value B': sim_b['patients'],
+        'Difference': sim_b['patients'] - sim_a['patients']
+    })
+    export_data.append({
+        'Section': 'Metadata',
+        'Metric': 'Duration (months)',
+        'Value A': sim_a['duration'],
+        'Value B': sim_b['duration'],
+        'Difference': sim_b['duration'] - sim_a['duration']
+    })
+    
+    # Add visual acuity metrics
+    export_data.append({
+        'Section': 'Visual Acuity',
+        'Metric': 'Baseline Mean',
+        'Value A': f"{metrics['visual_acuity']['baseline'][0]:.1f}",
+        'Value B': f"{metrics['visual_acuity']['baseline'][1]:.1f}",
+        'Difference': f"{metrics['visual_acuity']['baseline'][1] - metrics['visual_acuity']['baseline'][0]:.1f}"
+    })
+    export_data.append({
+        'Section': 'Visual Acuity',
+        'Metric': 'Final Mean',
+        'Value A': f"{metrics['visual_acuity']['final'][0]:.1f}",
+        'Value B': f"{metrics['visual_acuity']['final'][1]:.1f}",
+        'Difference': f"{metrics['visual_acuity']['final'][1] - metrics['visual_acuity']['final'][0]:.1f}"
+    })
+    export_data.append({
+        'Section': 'Visual Acuity',
+        'Metric': 'Mean Change from Baseline',
+        'Value A': f"{metrics['visual_acuity']['change'][0]:.1f}",
+        'Value B': f"{metrics['visual_acuity']['change'][1]:.1f}",
+        'Difference': f"{metrics['visual_acuity']['change'][1] - metrics['visual_acuity']['change'][0]:.1f}"
+    })
+    export_data.append({
+        'Section': 'Visual Acuity',
+        'Metric': 'Maintained Vision (%)',
+        'Value A': f"{metrics['visual_acuity']['maintained'][0]:.1f}",
+        'Value B': f"{metrics['visual_acuity']['maintained'][1]:.1f}",
+        'Difference': f"{metrics['visual_acuity']['maintained'][1] - metrics['visual_acuity']['maintained'][0]:.1f}"
+    })
+    
+    # Add treatment burden metrics
+    export_data.append({
+        'Section': 'Treatment Burden',
+        'Metric': 'Mean Injections/Patient',
+        'Value A': f"{metrics['treatment_burden']['mean_injections'][0]:.1f}",
+        'Value B': f"{metrics['treatment_burden']['mean_injections'][1]:.1f}",
+        'Difference': f"{metrics['treatment_burden']['mean_injections'][1] - metrics['treatment_burden']['mean_injections'][0]:.1f}"
+    })
+    export_data.append({
+        'Section': 'Treatment Burden',
+        'Metric': 'Mean Visits/Patient',
+        'Value A': f"{metrics['treatment_burden']['mean_visits'][0]:.1f}",
+        'Value B': f"{metrics['treatment_burden']['mean_visits'][1]:.1f}",
+        'Difference': f"{metrics['treatment_burden']['mean_visits'][1] - metrics['treatment_burden']['mean_visits'][0]:.1f}"
+    })
+    export_data.append({
+        'Section': 'Treatment Burden',
+        'Metric': 'Injection:Visit Ratio',
+        'Value A': f"{metrics['treatment_burden']['injection_ratio'][0]:.2f}",
+        'Value B': f"{metrics['treatment_burden']['injection_ratio'][1]:.2f}",
+        'Difference': f"{metrics['treatment_burden']['injection_ratio'][1] - metrics['treatment_burden']['injection_ratio'][0]:.2f}"
+    })
+    
+    # Add discontinuation metrics
+    export_data.append({
+        'Section': 'Discontinuations',
+        'Metric': 'Total Discontinued (%)',
+        'Value A': f"{metrics['discontinuations']['total_pct'][0]:.1f}",
+        'Value B': f"{metrics['discontinuations']['total_pct'][1]:.1f}",
+        'Difference': f"{metrics['discontinuations']['total_pct'][1] - metrics['discontinuations']['total_pct'][0]:.1f}"
+    })
+    export_data.append({
+        'Section': 'Discontinuations',
+        'Metric': 'Poor Vision (%)',
+        'Value A': f"{metrics['discontinuations']['poor_vision_pct'][0]:.1f}",
+        'Value B': f"{metrics['discontinuations']['poor_vision_pct'][1]:.1f}",
+        'Difference': f"{metrics['discontinuations']['poor_vision_pct'][1] - metrics['discontinuations']['poor_vision_pct'][0]:.1f}"
+    })
+    
+    return pd.DataFrame(export_data)
+
 with col2:
     if ape_button("Copy", key="copy_metrics", icon="copy", button_type="ghost"):
-        st.info("Copy functionality coming soon")
+        # Prepare data for clipboard
+        export_df = prepare_export_data()
+        
+        # Format as tab-separated for easy pasting into Excel
+        clipboard_text = export_df.to_csv(sep='\t', index=False)
+        
+        # Using Streamlit's experimental clipboard (might need fallback)
+        try:
+            # Create a text area with the data
+            st.text_area("Copy this data:", clipboard_text, height=100, key="copy_area")
+            st.info("Data prepared for copying. Select all text above and copy.")
+        except:
+            st.warning("Copy the data from the CSV download instead.")
         
 with col3:
-    if ape_button("CSV", key="download_csv", icon="csv", button_type="ghost"):
-        st.info("Download functionality coming soon")
+    # Prepare CSV download
+    export_df = prepare_export_data()
+    csv = export_df.to_csv(index=False)
+    
+    # Create download button
+    st.download_button(
+        label="CSV",
+        data=csv,
+        file_name=f"comparison_{sim_a['name']}_{sim_b['name']}.csv",
+        mime="text/csv",
+        key="download_csv_btn",
+        help="Download comparison data as CSV"
+    )
 
 # Create metrics table
 def format_metric_row(label, value_a, value_b, format_str="{:.1f}", show_arrow=True):
@@ -756,6 +879,418 @@ else:  # Difference mode
     ax.set_title('Difference in Visual Acuity (B - A)')
     ax.grid(True, alpha=0.3)
     ax.legend()
+    
+    st.pyplot(fig)
+
+# Injection Frequency Distribution
+st.subheader("Injection Frequency Distribution")
+
+# Prepare injection data
+def prepare_injection_data(histories):
+    """Prepare injection frequency data for visualization."""
+    total_injections = []
+    
+    for patient_id, history in histories.items():
+        visits = history.get('visits', [])
+        injection_count = sum(1 for v in visits if v.get('injection_given', False))
+        total_injections.append(injection_count)
+    
+    return np.array(total_injections)
+
+# Get injection data
+injections_a = prepare_injection_data(histories_a)
+injections_b = prepare_injection_data(histories_b)
+
+# Calculate statistics
+stats_a = {
+    'mean': np.mean(injections_a),
+    'median': np.median(injections_a),
+    'q1': np.percentile(injections_a, 25),
+    'q3': np.percentile(injections_a, 75)
+}
+stats_b = {
+    'mean': np.mean(injections_b),
+    'median': np.median(injections_b),
+    'q1': np.percentile(injections_b, 25),
+    'q3': np.percentile(injections_b, 75)
+}
+
+# Create visualization based on view mode
+if view_mode == "Side-by-Side":
+    col1, col2 = st.columns(2)
+    
+    # Determine common bin edges for consistent comparison
+    min_inj = min(injections_a.min(), injections_b.min())
+    max_inj = max(injections_a.max(), injections_b.max())
+    bins = np.linspace(min_inj, max_inj, 20)
+    
+    # Simulation A
+    with col1:
+        fig, ax = plt.subplots(figsize=(6, 4))
+        
+        # Histogram
+        n, bins_plot, patches = ax.hist(injections_a, bins=bins, 
+                                       color='blue', alpha=0.7, 
+                                       edgecolor='black', linewidth=0.5)
+        
+        # Add statistics lines
+        ax.axvline(stats_a['mean'], color='red', linestyle='--', 
+                  linewidth=2, label=f"Mean: {stats_a['mean']:.1f}")
+        ax.axvline(stats_a['median'], color='green', linestyle='-', 
+                  linewidth=2, label=f"Median: {stats_a['median']:.1f}")
+        
+        # Formatting
+        ax.set_xlabel('Total Injections per Patient')
+        ax.set_ylabel('Number of Patients')
+        ax.set_title(f'Simulation A: {sim_a["protocol"]}')
+        ax.legend()
+        ax.grid(True, alpha=0.3, axis='y')
+        
+        # Add IQR text
+        ax.text(0.95, 0.95, f"IQR: {stats_a['q1']:.0f}-{stats_a['q3']:.0f}",
+               transform=ax.transAxes, ha='right', va='top',
+               bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+        
+        st.pyplot(fig)
+    
+    # Simulation B
+    with col2:
+        fig, ax = plt.subplots(figsize=(6, 4))
+        
+        # Histogram
+        n, bins_plot, patches = ax.hist(injections_b, bins=bins, 
+                                       color='orange', alpha=0.7, 
+                                       edgecolor='black', linewidth=0.5)
+        
+        # Add statistics lines
+        ax.axvline(stats_b['mean'], color='red', linestyle='--', 
+                  linewidth=2, label=f"Mean: {stats_b['mean']:.1f}")
+        ax.axvline(stats_b['median'], color='green', linestyle='-', 
+                  linewidth=2, label=f"Median: {stats_b['median']:.1f}")
+        
+        # Formatting
+        ax.set_xlabel('Total Injections per Patient')
+        ax.set_ylabel('Number of Patients')
+        ax.set_title(f'Simulation B: {sim_b["protocol"]}')
+        ax.legend()
+        ax.grid(True, alpha=0.3, axis='y')
+        
+        # Add IQR text
+        ax.text(0.95, 0.95, f"IQR: {stats_b['q1']:.0f}-{stats_b['q3']:.0f}",
+               transform=ax.transAxes, ha='right', va='top',
+               bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+        
+        st.pyplot(fig)
+
+elif view_mode == "Overlay":
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Determine common bins
+    min_inj = min(injections_a.min(), injections_b.min())
+    max_inj = max(injections_a.max(), injections_b.max())
+    bins = np.linspace(min_inj, max_inj, 20)
+    
+    # Plot both histograms with transparency
+    n_a, bins_plot, patches_a = ax.hist(injections_a, bins=bins, 
+                                       color='blue', alpha=0.5, 
+                                       label=f'A: {sim_a["protocol"]}',
+                                       edgecolor='blue', linewidth=1)
+    n_b, bins_plot, patches_b = ax.hist(injections_b, bins=bins, 
+                                       color='orange', alpha=0.5, 
+                                       label=f'B: {sim_b["protocol"]}',
+                                       edgecolor='orange', linewidth=1)
+    
+    # Add mean lines
+    ax.axvline(stats_a['mean'], color='blue', linestyle='--', 
+              linewidth=2, label=f"A Mean: {stats_a['mean']:.1f}")
+    ax.axvline(stats_b['mean'], color='orange', linestyle='--', 
+              linewidth=2, label=f"B Mean: {stats_b['mean']:.1f}")
+    
+    # Formatting
+    ax.set_xlabel('Total Injections per Patient')
+    ax.set_ylabel('Number of Patients')
+    ax.set_title('Injection Frequency Distribution Comparison')
+    ax.legend()
+    ax.grid(True, alpha=0.3, axis='y')
+    
+    st.pyplot(fig)
+    
+    # Summary statistics table below
+    col1, col2 = st.columns(2)
+    with col1:
+        st.caption(f"**Simulation A Statistics:**  \nMean: {stats_a['mean']:.1f} | Median: {stats_a['median']:.0f} | IQR: {stats_a['q1']:.0f}-{stats_a['q3']:.0f}")
+    with col2:
+        st.caption(f"**Simulation B Statistics:**  \nMean: {stats_b['mean']:.1f} | Median: {stats_b['median']:.0f} | IQR: {stats_b['q1']:.0f}-{stats_b['q3']:.0f}")
+
+else:  # Difference mode
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Create KDE for smooth difference visualization
+    from scipy import stats as scipy_stats
+    
+    # Calculate KDE for both distributions
+    kde_a = scipy_stats.gaussian_kde(injections_a)
+    kde_b = scipy_stats.gaussian_kde(injections_b)
+    
+    # Create x range
+    x_min = min(injections_a.min(), injections_b.min())
+    x_max = max(injections_a.max(), injections_b.max())
+    x_range = np.linspace(x_min, x_max, 200)
+    
+    # Calculate densities
+    density_a = kde_a(x_range)
+    density_b = kde_b(x_range)
+    
+    # Calculate difference (normalized by patient counts)
+    n_patients_a = len(injections_a)
+    n_patients_b = len(injections_b)
+    diff = (density_b * n_patients_b) - (density_a * n_patients_a)
+    
+    # Plot difference
+    ax.plot(x_range, diff, 'purple', linewidth=2)
+    ax.fill_between(x_range, 0, diff, 
+                   where=(diff >= 0), 
+                   color='green', alpha=0.3, label='More patients in B')
+    ax.fill_between(x_range, 0, diff, 
+                   where=(diff < 0), 
+                   color='red', alpha=0.3, label='More patients in A')
+    
+    # Zero line
+    ax.axhline(y=0, color='black', linestyle='-', alpha=0.5)
+    
+    # Add mean difference line
+    mean_diff = stats_b['mean'] - stats_a['mean']
+    ax.axvline(stats_a['mean'], color='blue', linestyle=':', alpha=0.5, label=f"A Mean: {stats_a['mean']:.1f}")
+    ax.axvline(stats_b['mean'], color='orange', linestyle=':', alpha=0.5, label=f"B Mean: {stats_b['mean']:.1f}")
+    
+    ax.set_xlabel('Total Injections per Patient')
+    ax.set_ylabel('Density Difference (B - A)')
+    ax.set_title(f'Injection Distribution Difference (Mean diff: {mean_diff:+.1f})')
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    
+    st.pyplot(fig)
+
+# Discontinuation Timeline
+st.subheader("Discontinuation Timeline")
+
+# Prepare discontinuation data
+def prepare_discontinuation_timeline(histories):
+    """Prepare cumulative discontinuation data over time."""
+    # Dictionary to track discontinuations by month and reason
+    disc_by_month = {}
+    active_by_month = {}
+    
+    # Process each patient
+    for patient_id, history in histories.items():
+        visits = history.get('visits', [])
+        
+        # Find discontinuation visit if any
+        disc_visit = None
+        disc_reason = None
+        for visit in visits:
+            if visit.get('is_discontinuation_visit', False):
+                disc_visit = visit
+                disc_reason = visit.get('discontinuation_reason', 'other')
+                break
+        
+        # Track patient status over time
+        if disc_visit:
+            disc_month = disc_visit['month']
+            if disc_month not in disc_by_month:
+                disc_by_month[disc_month] = {'poor_vision': 0, 'treatment_burden': 0, 'other': 0}
+            disc_by_month[disc_month][disc_reason] = disc_by_month[disc_month].get(disc_reason, 0) + 1
+    
+    # Convert to cumulative format
+    months = sorted(set(disc_by_month.keys()))
+    cumulative = {
+        'months': [],
+        'poor_vision': [],
+        'treatment_burden': [],
+        'other': [],
+        'total': []
+    }
+    
+    cum_poor_vision = 0
+    cum_treatment_burden = 0
+    cum_other = 0
+    
+    for month in range(0, max(months) + 1 if months else 60):
+        cumulative['months'].append(month)
+        
+        if month in disc_by_month:
+            cum_poor_vision += disc_by_month[month].get('poor_vision', 0)
+            cum_treatment_burden += disc_by_month[month].get('treatment_burden', 0)
+            cum_other += disc_by_month[month].get('other', 0)
+        
+        cumulative['poor_vision'].append(cum_poor_vision)
+        cumulative['treatment_burden'].append(cum_treatment_burden)
+        cumulative['other'].append(cum_other)
+        cumulative['total'].append(cum_poor_vision + cum_treatment_burden + cum_other)
+    
+    # Convert to percentages
+    n_patients = len(histories)
+    for key in ['poor_vision', 'treatment_burden', 'other', 'total']:
+        cumulative[key] = [val / n_patients * 100 for val in cumulative[key]]
+    
+    return cumulative, n_patients
+
+# Get discontinuation data
+disc_data_a, n_patients_a = prepare_discontinuation_timeline(histories_a)
+disc_data_b, n_patients_b = prepare_discontinuation_timeline(histories_b)
+
+# Create visualization based on view mode
+if view_mode == "Side-by-Side":
+    col1, col2 = st.columns(2)
+    
+    # Simulation A
+    with col1:
+        fig, ax = plt.subplots(figsize=(6, 4))
+        
+        # Plot cumulative curves
+        ax.plot(disc_data_a['months'], disc_data_a['total'], 
+               'k-', linewidth=2, label='Total')
+        ax.plot(disc_data_a['months'], disc_data_a['poor_vision'], 
+               'r--', linewidth=2, label='Poor Vision')
+        ax.plot(disc_data_a['months'], disc_data_a['treatment_burden'], 
+               'b--', linewidth=2, label='Treatment Burden')
+        ax.plot(disc_data_a['months'], disc_data_a['other'], 
+               'g--', linewidth=2, label='Other')
+        
+        # Formatting
+        ax.set_xlabel('Month')
+        ax.set_ylabel('Cumulative Discontinuation (%)')
+        ax.set_title(f'Simulation A: {sim_a["protocol"]}')
+        ax.set_ylim(0, max(40, max(disc_data_a['total']) * 1.1))
+        ax.grid(True, alpha=0.3)
+        ax.legend(loc='upper left')
+        
+        # Add final percentage
+        final_pct = disc_data_a['total'][-1] if disc_data_a['total'] else 0
+        ax.text(0.95, 0.05, f"Final: {final_pct:.1f}%",
+               transform=ax.transAxes, ha='right', va='bottom',
+               bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+        
+        st.pyplot(fig)
+    
+    # Simulation B
+    with col2:
+        fig, ax = plt.subplots(figsize=(6, 4))
+        
+        # Plot cumulative curves
+        ax.plot(disc_data_b['months'], disc_data_b['total'], 
+               'k-', linewidth=2, label='Total')
+        ax.plot(disc_data_b['months'], disc_data_b['poor_vision'], 
+               'r--', linewidth=2, label='Poor Vision')
+        ax.plot(disc_data_b['months'], disc_data_b['treatment_burden'], 
+               'b--', linewidth=2, label='Treatment Burden')
+        ax.plot(disc_data_b['months'], disc_data_b['other'], 
+               'g--', linewidth=2, label='Other')
+        
+        # Formatting
+        ax.set_xlabel('Month')
+        ax.set_ylabel('Cumulative Discontinuation (%)')
+        ax.set_title(f'Simulation B: {sim_b["protocol"]}')
+        ax.set_ylim(0, max(40, max(disc_data_b['total']) * 1.1))
+        ax.grid(True, alpha=0.3)
+        ax.legend(loc='upper left')
+        
+        # Add final percentage
+        final_pct = disc_data_b['total'][-1] if disc_data_b['total'] else 0
+        ax.text(0.95, 0.05, f"Final: {final_pct:.1f}%",
+               transform=ax.transAxes, ha='right', va='bottom',
+               bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+        
+        st.pyplot(fig)
+
+elif view_mode == "Overlay":
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Plot both simulations - total discontinuation
+    ax.plot(disc_data_a['months'], disc_data_a['total'], 
+           'b-', linewidth=2, label=f'A Total: {sim_a["protocol"]}')
+    ax.plot(disc_data_b['months'], disc_data_b['total'], 
+           'orange', linewidth=2, label=f'B Total: {sim_b["protocol"]}')
+    
+    # Plot discontinuation by reason with different line styles
+    ax.plot(disc_data_a['months'], disc_data_a['poor_vision'], 
+           'b:', linewidth=1.5, label='A: Poor Vision', alpha=0.7)
+    ax.plot(disc_data_b['months'], disc_data_b['poor_vision'], 
+           'orange', linestyle=':', linewidth=1.5, label='B: Poor Vision', alpha=0.7)
+    
+    ax.plot(disc_data_a['months'], disc_data_a['treatment_burden'], 
+           'b--', linewidth=1.5, label='A: Treatment Burden', alpha=0.7)
+    ax.plot(disc_data_b['months'], disc_data_b['treatment_burden'], 
+           'orange', linestyle='--', linewidth=1.5, label='B: Treatment Burden', alpha=0.7)
+    
+    # Formatting
+    ax.set_xlabel('Month')
+    ax.set_ylabel('Cumulative Discontinuation (%)')
+    ax.set_title('Discontinuation Timeline Comparison')
+    ax.grid(True, alpha=0.3)
+    ax.legend(loc='upper left', ncol=2)
+    
+    # Add risk table below
+    st.pyplot(fig)
+    
+    # Risk table
+    st.markdown("**Patients at Risk**")
+    months_to_show = [0, 12, 24, 36, 48, 60]
+    risk_data = []
+    
+    for month in months_to_show:
+        if month < len(disc_data_a['months']):
+            at_risk_a = n_patients_a * (100 - disc_data_a['total'][month]) / 100
+            at_risk_b = n_patients_b * (100 - disc_data_b['total'][month]) / 100
+            risk_data.append({
+                'Month': month,
+                'Simulation A': int(at_risk_a),
+                'Simulation B': int(at_risk_b)
+            })
+    
+    risk_df = pd.DataFrame(risk_data)
+    st.dataframe(risk_df, hide_index=True)
+
+else:  # Difference mode
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Calculate differences (B - A)
+    # Ensure same length
+    max_len = min(len(disc_data_a['months']), len(disc_data_b['months']))
+    months = disc_data_a['months'][:max_len]
+    
+    diff_total = [disc_data_b['total'][i] - disc_data_a['total'][i] for i in range(max_len)]
+    diff_poor_vision = [disc_data_b['poor_vision'][i] - disc_data_a['poor_vision'][i] for i in range(max_len)]
+    diff_treatment_burden = [disc_data_b['treatment_burden'][i] - disc_data_a['treatment_burden'][i] for i in range(max_len)]
+    
+    # Plot differences
+    ax.plot(months, diff_total, 'purple', linewidth=2, label='Total Difference')
+    ax.plot(months, diff_poor_vision, 'r--', linewidth=1.5, label='Poor Vision Diff')
+    ax.plot(months, diff_treatment_burden, 'b--', linewidth=1.5, label='Treatment Burden Diff')
+    
+    # Fill areas
+    ax.fill_between(months, 0, diff_total, 
+                   where=[d >= 0 for d in diff_total], 
+                   color='red', alpha=0.2, label='Higher in B')
+    ax.fill_between(months, 0, diff_total, 
+                   where=[d < 0 for d in diff_total], 
+                   color='green', alpha=0.2, label='Higher in A')
+    
+    # Zero line
+    ax.axhline(y=0, color='black', linestyle='-', alpha=0.5)
+    
+    # Formatting
+    ax.set_xlabel('Month')
+    ax.set_ylabel('Discontinuation Difference (B - A) %')
+    ax.set_title('Difference in Discontinuation Rates')
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+    
+    # Add final difference text
+    final_diff = diff_total[-1] if diff_total else 0
+    ax.text(0.95, 0.95, f"Final Difference: {final_diff:+.1f}%",
+           transform=ax.transAxes, ha='right', va='top',
+           bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
     
     st.pyplot(fig)
 
