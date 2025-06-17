@@ -432,26 +432,43 @@ with col1:
                         dist_type = st.session_state[dist_type_key]
                         
                         if dist_type == "normal":
-                            # Update normal distribution parameters
+                            # Create/update baseline_vision_distribution in new format
                             prefix = 'tb_edit' if protocol_type == "time_based" else 'edit'
+                            normal_dist = {
+                                'type': 'normal'
+                            }
+                            
                             if f'{prefix}_pop_mean' in st.session_state:
                                 try:
-                                    data['baseline_vision']['mean'] = float(st.session_state[f'{prefix}_pop_mean'])
+                                    normal_dist['mean'] = float(st.session_state[f'{prefix}_pop_mean'])
                                 except:
-                                    pass
+                                    normal_dist['mean'] = 70
+                            else:
+                                normal_dist['mean'] = 70
+                                    
                             if f'{prefix}_pop_std' in st.session_state:
                                 try:
-                                    data['baseline_vision']['std'] = float(st.session_state[f'{prefix}_pop_std'])
+                                    normal_dist['std'] = float(st.session_state[f'{prefix}_pop_std'])
                                 except:
-                                    pass
+                                    normal_dist['std'] = 10
+                            else:
+                                normal_dist['std'] = 10
+                                    
                             if f'{prefix}_pop_min' in st.session_state and st.session_state[f'{prefix}_pop_min'].isdigit():
-                                data['baseline_vision']['min'] = int(st.session_state[f'{prefix}_pop_min'])
+                                normal_dist['min'] = int(st.session_state[f'{prefix}_pop_min'])
+                            else:
+                                normal_dist['min'] = 20
+                                
                             if f'{prefix}_pop_max' in st.session_state and st.session_state[f'{prefix}_pop_max'].isdigit():
-                                data['baseline_vision']['max'] = int(st.session_state[f'{prefix}_pop_max'])
+                                normal_dist['max'] = int(st.session_state[f'{prefix}_pop_max'])
+                            else:
+                                normal_dist['max'] = 90
                             
-                            # Remove baseline_vision_distribution if switching to normal
-                            if 'baseline_vision_distribution' in data:
-                                del data['baseline_vision_distribution']
+                            data['baseline_vision_distribution'] = normal_dist
+                            
+                            # Remove old baseline_vision format if it exists
+                            if 'baseline_vision' in data:
+                                del data['baseline_vision']
                                 
                         elif dist_type == "beta_with_threshold":
                             # Create/update beta distribution
@@ -498,11 +515,9 @@ with col1:
                             
                             data['baseline_vision_distribution'] = beta_dist
                             
-                            # Update baseline_vision to match beta expectations
-                            data['baseline_vision']['mean'] = 58
-                            data['baseline_vision']['std'] = 15
-                            data['baseline_vision']['min'] = beta_dist.get('min', 5)
-                            data['baseline_vision']['max'] = beta_dist.get('max', 98)
+                            # Remove old baseline_vision format if it exists
+                            if 'baseline_vision' in data:
+                                del data['baseline_vision']
                             
                         elif dist_type == "uniform":
                             # Create/update uniform distribution
@@ -514,23 +529,24 @@ with col1:
                             if f'{prefix}_uniform_min' in st.session_state:
                                 try:
                                     uniform_dist['min'] = int(st.session_state[f'{prefix}_uniform_min'])
-                                    data['baseline_vision']['min'] = uniform_dist['min']
                                 except:
-                                    pass
+                                    uniform_dist['min'] = 20
+                            else:
+                                uniform_dist['min'] = 20
                                     
                             if f'{prefix}_uniform_max' in st.session_state:
                                 try:
                                     uniform_dist['max'] = int(st.session_state[f'{prefix}_uniform_max'])
-                                    data['baseline_vision']['max'] = uniform_dist['max']
                                 except:
-                                    pass
+                                    uniform_dist['max'] = 90
+                            else:
+                                uniform_dist['max'] = 90
                             
                             data['baseline_vision_distribution'] = uniform_dist
                             
-                            # Update mean/std to match uniform distribution
-                            if 'min' in uniform_dist and 'max' in uniform_dist:
-                                data['baseline_vision']['mean'] = (uniform_dist['min'] + uniform_dist['max']) / 2
-                                data['baseline_vision']['std'] = (uniform_dist['max'] - uniform_dist['min']) / (2 * 1.732)  # sqrt(3)
+                            # Remove old baseline_vision format if it exists
+                            if 'baseline_vision' in data:
+                                del data['baseline_vision']
                     
                     # Save the updated data
                     with open(selected_file, 'w') as f:
