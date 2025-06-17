@@ -47,6 +47,10 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                     st.switch_page(page)
             elif idx == current_idx:
                 # Current step - actionable if callback provided
+                # Special case: change "Simulation" to "Run Simulation" when on simulation page
+                if step_id == "simulation" and current_step == "simulation":
+                    display_label = "Run Simulation"
+                
                 if on_current_action:
                     # Make it an action button
                     if navigation_button(
