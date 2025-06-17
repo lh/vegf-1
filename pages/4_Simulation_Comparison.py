@@ -21,8 +21,9 @@ st.set_page_config(
 from ape.utils.startup_redirect import handle_page_startup
 from ape.components.ui.workflow_indicator import workflow_progress_indicator
 from ape.utils.carbon_button_helpers import ape_button, CarbonIcons
-# We'll create our own load function for comparison
-import zipfile
+# Import simulation loading utilities
+from ape.utils.simulation_loader import load_simulation_data
+from ape.core.results.factory import ResultsFactory
 
 # Check for startup redirect
 handle_page_startup("comparison")
@@ -272,33 +273,122 @@ with col2:
     st.markdown(f"**Run Date:** {sim_b['date']}")
 
 # Helper function to load simulation data from path
-def load_simulation_from_path(sim_path):
-    """Load simulation data from a path."""
-    # Check for the summary stats JSON file which has the data we need
-    summary_file = sim_path / "summary_stats.json"
-    
-    if summary_file.exists():
-        with open(summary_file) as f:
-            return json.load(f)
-    else:
-        # Try to load from parquet if available
-        from ape.core.results.factory import ResultsFactory
-        try:
-            results = ResultsFactory.load_results(sim_path)
-            # Convert to dictionary format expected by the comparison functions
-            return {
-                'patient_histories': results.get_patient_histories(),
-                'discontinuation_summary': results.get_discontinuation_summary(),
-                'summary_stats': results.get_summary_stats()
-            }
-        except:
+def load_simulation_from_path(sim_info):
+    """Load simulation data directly from JSON files."""
+    try:
+        sim_path = sim_info['path']
+        
+        # Load simulation_data.json which contains the actual patient data
+        sim_data_path = sim_path / "simulation_data.json"
+        if not sim_data_path.exists():
+            # Try other possible filenames
+            for name in ["results.json", "data.json"]:
+                alt_path = sim_path / name
+                if alt_path.exists():
+                    sim_data_path = alt_path
+                    break
+        
+        if not sim_data_path.exists():
+            st.error(f"No simulation data file found in {sim_path}")
             return None
+            
+        with open(sim_data_path) as f:
+            sim_data = json.load(f)
+        
+        # Convert to the format expected by comparison functions
+        patient_histories = {}
+        
+        # Handle different data formats
+        if 'patient_histories' in sim_data:
+            raw_histories = sim_data['patient_histories']
+        elif 'patients' in sim_data:
+            raw_histories = sim_data['patients']
+        else:
+            st.error(f"No patient data found in simulation")
+            return None
+        
+        # Process each patient
+        for patient_id, history in raw_histories.items():
+            visits = []
+            
+            # Get visit data
+            visit_list = history.get('visit_history', history.get('visits', []))
+            
+            if visit_list and len(visit_list) > 0:
+                # Get baseline date for month calculation
+                baseline_date = pd.to_datetime(visit_list[0].get('date', '2024-01-01'))
+                
+                for visit in visit_list:
+                    # Calculate month from visit date
+                    visit_date = pd.to_datetime(visit.get('date', baseline_date))
+                    month = (visit_date - baseline_date).days / 30.44  # Average days per month
+                    
+                    # Get vision value (try different field names)
+                    vision = visit.get('vision', visit.get('actual_vision', 
+                                     visit.get('va', visit.get('visual_acuity', 0))))
+                    
+                    visits.append({
+                        'month': month,
+                        'vision': vision,
+                        'injection_given': visit.get('treatment_given', 
+                                                   visit.get('injection_given', False)),
+                        'date': str(visit_date)
+                    })
+            
+            patient_histories[patient_id] = {
+                'visits': visits,
+                'baseline_vision': history.get('baseline_vision', visits[0]['vision'] if visits else 0),
+                'current_vision': history.get('current_vision', visits[-1]['vision'] if visits else 0),
+                'is_discontinued': history.get('is_discontinued', False)
+            }
+        
+        # Get discontinuation summary
+        disc_summary = {
+            'by_reason': {},
+            'total': 0
+        }
+        
+        # Count discontinuations
+        for patient_id, history in patient_histories.items():
+            if history.get('is_discontinued', False):
+                disc_summary['total'] += 1
+        
+        # Get summary stats from metadata or calculate
+        metadata_path = sim_path / "metadata.json"
+        summary_stats = {}
+        
+        if metadata_path.exists():
+            with open(metadata_path) as f:
+                metadata = json.load(f)
+                summary_stats = {
+                    'total_patients': metadata.get('n_patients', len(patient_histories)),
+                    'total_injections': metadata.get('total_injections', 0),
+                    'mean_final_vision': metadata.get('mean_final_vision', 0),
+                    'discontinuation_rate': disc_summary['total'] / len(patient_histories) if patient_histories else 0
+                }
+        
+        # Also check summary_stats.json
+        summary_path = sim_path / "summary_stats.json"
+        if summary_path.exists():
+            with open(summary_path) as f:
+                summary_data = json.load(f)
+                summary_stats.update(summary_data)
+        
+        return {
+            'patient_histories': patient_histories,
+            'discontinuation_summary': disc_summary,
+            'summary_stats': summary_stats
+        }
+        
+    except Exception as e:
+        st.error(f"Error loading simulation data: {str(e)}")
+        return None
 
 # Load the actual simulation data
 with st.spinner("Loading simulation data..."):
     try:
-        results_a = load_simulation_from_path(sim_a['path'])
-        results_b = load_simulation_from_path(sim_b['path'])
+        results_a = load_simulation_from_path(sim_a)
+        results_b = load_simulation_from_path(sim_b)
         
         if not results_a or not results_b:
             st.error("Failed to load simulation data")
