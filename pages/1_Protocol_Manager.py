@@ -7,6 +7,7 @@ from pathlib import Path
 import yaml
 import json
 from datetime import datetime
+import time
 import re
 import pandas as pd
 
@@ -265,9 +266,69 @@ with col1:
         ape_button("Edit", key="edit_btn_disabled", full_width=True, disabled=True)
 
 with col2:
-    # Create a copy with a new name
-    if ape_button("Duplicate", key="duplicate_btn", icon="copy", full_width=True):
-        st.session_state.show_duplicate = not st.session_state.get('show_duplicate', False)
+    # Combined Duplicate & Edit button - creates a copy and immediately enters edit mode
+    if ape_button("Duplicate & Edit", key="duplicate_edit_btn", icon="copy", full_width=True):
+        try:
+            # Check protocol count limit
+            if len(protocol_files) >= MAX_PROTOCOLS:
+                st.error(f"Protocol limit reached ({MAX_PROTOCOLS} files). Please delete some protocols first.")
+            else:
+                # Load the original spec data as a dict
+                with open(selected_file) as f:
+                    data = yaml.safe_load(f)
+                
+                # Generate new name and metadata
+                original_name = data.get('name', selected_file.stem)
+                new_name = f"{original_name} Copy"
+                new_version = "1.0.1"
+                
+                # Update the metadata
+                data['name'] = new_name
+                data['version'] = new_version
+                data['author'] = st.session_state.get('user_name', 'Your Name')
+                data['description'] = f"Copy of {original_name}"
+                data['created_date'] = datetime.now().strftime("%Y-%m-%d")
+                
+                # Create filename with timestamp for uniqueness
+                base_filename = f"{new_name.lower().replace(' ', '_')}_v{new_version}"
+                timestamp = int(time.time())
+                filename = f"{base_filename}_{timestamp}.yaml"
+                
+                # Ensure filename isn't too long
+                if len(filename) > 255:
+                    filename = f"protocol_copy_{timestamp}.yaml"
+                    
+                save_path = TEMP_DIR / filename
+                
+                # Write the modified data
+                with open(save_path, 'w') as f:
+                    yaml.dump(data, f, sort_keys=False, default_flow_style=False)
+                
+                # Validate the new file can be loaded
+                if protocol_type == "time_based":
+                    from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSpecification
+                    test_spec = TimeBasedProtocolSpecification.from_yaml(save_path)
+                else:
+                    test_spec = ProtocolSpecification.from_yaml(save_path)
+                
+                # Select the newly created duplicate
+                st.session_state.selected_protocol_name = save_path.stem
+                
+                # Automatically enter edit mode
+                st.session_state.edit_mode = True
+                
+                # Show success message
+                st.session_state.duplicate_edit_success = True
+                
+                # Close any open dialogs
+                st.session_state.show_duplicate = False
+                st.session_state.show_delete = False
+                st.session_state.show_manage = False
+                
+                st.rerun()
+                
+        except Exception as e:
+            st.error(f"Failed to duplicate: {str(e)}")
 
 with col3:
     # Delete protocol (only temporary ones)
@@ -379,86 +440,11 @@ if st.session_state.get('show_manage', False):
             except:
                 pass  # If spec can't be loaded, just don't show download
 
-# Handle duplicate dialog
-if st.session_state.get('duplicate_success', False):
-    st.success("Duplicate created successfully!")
+# Handle duplicate & edit success message
+if st.session_state.get('duplicate_edit_success', False):
+    st.success("Protocol duplicated! You are now in edit mode. Make your changes and click 'Save Changes' when done.")
     # Clear the flag after showing
-    st.session_state.duplicate_success = False
-
-if st.session_state.get('show_duplicate', False):
-        with st.expander("Duplicate Protocol", expanded=True):
-            st.info("Create a copy of this protocol with a new name")
-            
-            new_name = st.text_input("New Protocol Name", value=f"{selected_file.stem} Copy", key="dup_name")
-            new_version = st.text_input("Version", value="1.0.1", key="dup_version")
-            new_author = st.text_input("Author", value="Your Name", key="dup_author")
-            new_description = st.text_area("Description", value=f"Copy of {selected_file.stem}", key="dup_desc")
-            
-            # Show creating status
-            if st.session_state.get('creating_duplicate', False):
-                st.info("Creating duplicate...")
-            
-            # Regular button - requires click
-            if ape_button("Create Duplicate", key="create_dup_btn",
-                         icon="copy", full_width=True,
-                         disabled=st.session_state.get('creating_duplicate', False)):
-                try:
-                    # Set flag to prevent multiple clicks
-                    st.session_state.creating_duplicate = True
-                    
-                    # Check protocol count limit
-                    if len(protocol_files) >= MAX_PROTOCOLS:
-                        raise ValueError(f"Protocol limit reached ({MAX_PROTOCOLS} files). Please delete some protocols first.")
-                    
-                    # Validate new name isn't too long
-                    if len(new_name) > 100:
-                        raise ValueError("Protocol name too long (max 100 characters)")
-                    
-                    # Load the original spec data as a dict
-                    with open(selected_file) as f:
-                        data = yaml.safe_load(f)
-                    
-                    # Update the metadata
-                    data['name'] = new_name
-                    data['version'] = new_version
-                    data['author'] = new_author
-                    data['description'] = new_description
-                    data['created_date'] = datetime.now().strftime("%Y-%m-%d")
-                    
-                    # Always create with timestamp for duplicates to ensure uniqueness
-                    base_filename = f"{new_name.lower().replace(' ', '_')}_v{new_version}"
-                    timestamp = int(time.time())
-                    filename = f"{base_filename}_{timestamp}.yaml"
-                    
-                    # Ensure filename isn't too long
-                    if len(filename) > 255:
-                        raise ValueError("Generated filename too long")
-                        
-                    save_path = TEMP_DIR / filename
-                    
-                    # Write the modified data
-                    with open(save_path, 'w') as f:
-                        yaml.dump(data, f, sort_keys=False, default_flow_style=False)
-                    
-                    # Validate the new file can be loaded
-                    if protocol_type == "time_based":
-                        from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSpecification
-                        test_spec = TimeBasedProtocolSpecification.from_yaml(save_path)
-                    else:
-                        test_spec = ProtocolSpecification.from_yaml(save_path)
-                    
-                    # Select the newly created duplicate
-                    st.session_state.selected_protocol_name = save_path.stem
-                    
-                    # Set success flag and clear creating flag
-                    st.session_state.duplicate_success = True
-                    st.session_state.creating_duplicate = False
-                    st.session_state.show_duplicate = False  # Close the expander
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Failed to create duplicate: {e}")
-                    # Clear the flag on error too
-                    st.session_state.creating_duplicate = False
+    st.session_state.duplicate_edit_success = False
 
 # Handle delete dialog
 if st.session_state.get('show_delete', False):
