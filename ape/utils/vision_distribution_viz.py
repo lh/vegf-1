@@ -18,7 +18,7 @@ from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
 
 def create_compact_vision_distribution_plot(
     distribution_config: Dict[str, Any],
-    figsize: Tuple[float, float] = (4, 3),
+    figsize: Tuple[float, float] = (1.5, 0.5),
     show_stats: bool = True,
     title: Optional[str] = None
 ) -> plt.Figure:
@@ -116,28 +116,28 @@ def create_compact_vision_distribution_plot(
                    fontsize=8, bbox=dict(boxstyle='round,pad=0.3', 
                    facecolor='white', alpha=0.8))
     
-    # Styling
-    ax.set_xlabel('Baseline Vision (ETDRS)', fontsize=9)
-    ax.set_ylabel('Density', fontsize=9)
-    if title:
-        ax.set_title(title, fontsize=10, pad=5)
-    else:
-        ax.set_title(dist.get_description(), fontsize=9, pad=5)
-    
+    # Minimal styling - no labels, no title, no axis
     ax.set_xlim(0, 100)
     ax.set_ylim(bottom=0)
     
-    # Clean styling
+    # Remove all spines and ticks
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False)
-    ax.tick_params(axis='both', which='major', labelsize=8)
-    ax.grid(True, axis='y', alpha=0.2)
+    ax.spines['bottom'].set_visible(False)
     
-    # Only show x-axis at key clinical thresholds
-    ax.set_xticks([20, 70])
+    # No tick labels
+    ax.set_xticks([])
+    ax.set_yticks([])
     
-    plt.tight_layout()
+    # Add subtle vertical lines at 20 and 70
+    ax.axvline(20, color='gray', alpha=0.3, linewidth=0.5)
+    ax.axvline(70, color='gray', alpha=0.3, linewidth=0.5)
+    
+    # Remove margins
+    ax.margins(0)
+    
+    plt.tight_layout(pad=0)
     return fig
 
 

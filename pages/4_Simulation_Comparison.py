@@ -319,7 +319,7 @@ st.markdown("### Simulation Overview")
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown(f"**📄 Simulation A**")
+    st.markdown(f"**Simulation A**")
     if sim_a.get('memorable_name'):
         st.markdown(f"**Name:** {sim_a['memorable_name'].replace('-', ' ')}")
     st.markdown(f"**Protocol:** {sim_a['protocol']}")
@@ -329,22 +329,40 @@ with col1:
     st.markdown(f"**Run Date:** {sim_a['date']}")
     
     # Add baseline vision distribution if available
-    if sim_a.get('protocol_config') and 'baseline_vision_distribution' in sim_a['protocol_config']:
-        st.markdown("**Baseline Vision Distribution:**")
-        try:
-            fig = create_compact_vision_distribution_plot(
-                sim_a['protocol_config']['baseline_vision_distribution'],
-                figsize=(4, 2.5),
-                show_stats=True,
-                title=None
-            )
-            st.pyplot(fig, use_container_width=True)
-            plt.close(fig)
-        except Exception as e:
-            st.caption("Could not display distribution")
+    if sim_a.get('protocol_config'):
+        dist_config = None
+        
+        # Check for new format first
+        if 'baseline_vision_distribution' in sim_a['protocol_config']:
+            dist_config = sim_a['protocol_config']['baseline_vision_distribution']
+        # Fall back to old format
+        elif 'baseline_vision' in sim_a['protocol_config']:
+            baseline = sim_a['protocol_config']['baseline_vision']
+            if isinstance(baseline, dict):
+                dist_config = {
+                    'type': 'normal',
+                    'mean': baseline.get('mean', 70),
+                    'std': baseline.get('std', 10),
+                    'min': baseline.get('min', 20),
+                    'max': baseline.get('max', 90)
+                }
+        
+        if dist_config:
+            st.markdown("**Baseline Vision:**")
+            try:
+                fig = create_compact_vision_distribution_plot(
+                    dist_config,
+                    figsize=(1.5, 0.5),
+                    show_stats=False,
+                    title=None
+                )
+                st.pyplot(fig, use_container_width=False)
+                plt.close(fig)
+            except Exception as e:
+                st.caption("Could not display distribution")
 
 with col2:
-    st.markdown(f"**📄 Simulation B**")
+    st.markdown(f"**Simulation B**")
     if sim_b.get('memorable_name'):
         st.markdown(f"**Name:** {sim_b['memorable_name'].replace('-', ' ')}")
     st.markdown(f"**Protocol:** {sim_b['protocol']}")
@@ -354,19 +372,37 @@ with col2:
     st.markdown(f"**Run Date:** {sim_b['date']}")
     
     # Add baseline vision distribution if available
-    if sim_b.get('protocol_config') and 'baseline_vision_distribution' in sim_b['protocol_config']:
-        st.markdown("**Baseline Vision Distribution:**")
-        try:
-            fig = create_compact_vision_distribution_plot(
-                sim_b['protocol_config']['baseline_vision_distribution'],
-                figsize=(4, 2.5),
-                show_stats=True,
-                title=None
-            )
-            st.pyplot(fig, use_container_width=True)
-            plt.close(fig)
-        except Exception as e:
-            st.caption("Could not display distribution")
+    if sim_b.get('protocol_config'):
+        dist_config = None
+        
+        # Check for new format first
+        if 'baseline_vision_distribution' in sim_b['protocol_config']:
+            dist_config = sim_b['protocol_config']['baseline_vision_distribution']
+        # Fall back to old format
+        elif 'baseline_vision' in sim_b['protocol_config']:
+            baseline = sim_b['protocol_config']['baseline_vision']
+            if isinstance(baseline, dict):
+                dist_config = {
+                    'type': 'normal',
+                    'mean': baseline.get('mean', 70),
+                    'std': baseline.get('std', 10),
+                    'min': baseline.get('min', 20),
+                    'max': baseline.get('max', 90)
+                }
+        
+        if dist_config:
+            st.markdown("**Baseline Vision:**")
+            try:
+                fig = create_compact_vision_distribution_plot(
+                    dist_config,
+                    figsize=(2.5, 1),
+                    show_stats=False,
+                    title=None
+                )
+                st.pyplot(fig, use_container_width=False)
+                plt.close(fig)
+            except Exception as e:
+                st.caption("Could not display distribution")
 
 # Helper function to load simulation data from path
 def load_simulation_from_path(sim_info):
