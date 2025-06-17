@@ -38,13 +38,6 @@ vision_parameters_file: "parameters/vision.yaml"
 discontinuation_parameters_file: "parameters/discontinuation.yaml"  # Standard file already has 20 letter threshold
 demographics_parameters_file: "parameters/demographics.yaml"
 
-# Baseline vision - will be overridden by beta distribution
-baseline_vision:
-  mean: 58
-  std: 15
-  min: 5
-  max: 98
-
 # Beta distribution with threshold effect - UK real-world data (DEFAULT)
 baseline_vision_distribution:
   type: beta_with_threshold

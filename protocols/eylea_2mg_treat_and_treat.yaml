@@ -106,7 +106,7 @@ treatment_effect_on_transitions:
       HIGHLY_ACTIVE: 0.85
 
 # Required baseline vision parameters
-baseline_vision:
+baseline_vision_distribution:
   mean: 55           # ETDRS letters
   std: 15
   min: 25

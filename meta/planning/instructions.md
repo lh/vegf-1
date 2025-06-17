@@ -2,12 +2,32 @@
 
 **IMPORTANT**: This is the primary instruction file. Always check this file at the start of each session.
 
-## 🚨 Current Active Task: Time-Based Disease Model Implementation
-**Status**: Implementation Starting  
+## 🚨 Current Active Task: Simulation Comparison Feature
+**Status**: Implementation in Progress (80% complete)  
+**Branch**: feature/simulation-comparison  
+**Instructions**: See SIMULATION_COMPARISON_PLAN_V2.md
+
+### Completed Components:
+- ✅ Basic page structure and navigation
+- ✅ Simulation selection with smart filtering (matching durations)
+- ✅ Simulation overview cards
+- ✅ Key metrics comparison table with clinical indicators
+- ✅ Visual acuity over time (3 view modes: side-by-side, overlay, difference)
+- ✅ Injection frequency distribution visualization
+- ✅ Discontinuation timeline visualization
+- ✅ Carbon Design System icons integration (v1.3.0 with 260 icons)
+
+### Pending Components:
+- ⏳ Export functionality (CSV download, copy to clipboard)
+- ⏳ Key insights auto-generation (partially implemented)
+- ⏳ Session state persistence improvements
+
+### Previous Task: Time-Based Disease Model Implementation ⏸️
+**Status**: Paused  
 **Branch**: feature/time-based-disease-model  
 **Instructions**: See TIME_BASED_IMPLEMENTATION_INSTRUCTIONS.md
 
-### Previous Task: Hybrid Repository Refactoring ✅
+### Earlier Task: Hybrid Repository Refactoring ✅
 **Status**: COMPLETE (Phases 1-5 done, deployment testing pending)  
 **Branch**: main  
 **Backup**: main-backup-20250114  

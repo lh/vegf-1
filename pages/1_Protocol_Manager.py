@@ -7,8 +7,10 @@ from pathlib import Path
 import yaml
 import json
 from datetime import datetime
+import time
 import re
 import pandas as pd
+import random
 
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
 from ape.utils.startup_redirect import handle_page_startup
@@ -32,6 +34,15 @@ from ape.components.ui.workflow_indicator import workflow_progress_indicator, co
 # Show workflow progress
 workflow_progress_indicator("protocol")
 
+# Show auto-save indicator if active
+if st.session_state.get('show_save_indicator', False):
+    # Calculate time since last save
+    if 'last_save_time' in st.session_state:
+        time_since_save = time.time() - st.session_state.last_save_time
+        if time_since_save < 2:
+            st.success("✓ Auto-saved", icon="✅")
+        st.session_state.show_save_indicator = False
+
 # Minimal CSS for clean interface
 st.markdown("""
 <style>
@@ -53,6 +64,62 @@ from ape.utils.carbon_button_helpers import (
     ape_button, delete_button,
     navigation_button
 )
+
+# Auto-save functionality for temporary protocols
+def auto_save_protocol(selected_file, protocol_type):
+    """Auto-save changes to temporary protocol files."""
+    if protocol_type != "temp" or not st.session_state.get('edit_mode', False):
+        return
+        
+    try:
+        # Load the current YAML data
+        with open(selected_file) as f:
+            data = yaml.safe_load(f)
+        
+        # Track if any changes were made
+        changes_made = False
+        
+        # Update metadata if edited
+        if 'edit_author' in st.session_state and st.session_state.edit_author != data.get('author', ''):
+            data['author'] = st.session_state.edit_author
+            changes_made = True
+        if 'edit_description' in st.session_state and st.session_state.edit_description != data.get('description', ''):
+            data['description'] = st.session_state.edit_description
+            changes_made = True
+        
+        # Update timing parameters if edited
+        timing_fields = [
+            ('edit_min_interval', 'min_interval_days'),
+            ('edit_max_interval', 'max_interval_days'),
+            ('edit_extension', 'extension_days'),
+            ('edit_shortening', 'shortening_days')
+        ]
+        
+        for session_key, yaml_key in timing_fields:
+            if session_key in st.session_state:
+                try:
+                    new_val = int(st.session_state[session_key])
+                    if new_val != data.get(yaml_key):
+                        data[yaml_key] = new_val
+                        changes_made = True
+                except:
+                    pass
+        
+        # Save if changes were made
+        if changes_made:
+            # Add modified timestamp
+            data['modified_date'] = datetime.now().strftime("%Y-%m-%d")
+            
+            # Write the updated data
+            with open(selected_file, 'w') as f:
+                yaml.dump(data, f, sort_keys=False, default_flow_style=False)
+                
+            # Show subtle save indicator
+            if 'last_save_time' not in st.session_state or time.time() - st.session_state.last_save_time > 2:
+                st.session_state.last_save_time = time.time()
+                st.session_state.show_save_indicator = True
+    except:
+        pass  # Silently fail auto-save to not disrupt user
 
 
 def draw_baseline_vision_distribution(dist_type, params, session_prefix="edit"):
@@ -256,18 +323,340 @@ else:
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    # Edit button (only for temporary protocols)
+    # Edit/Commit button (only for temporary protocols)
     if selected_file and protocol_type == "temp":
-        if ape_button("Edit", key="edit_btn", full_width=True):
-            st.session_state.edit_mode = not st.session_state.get('edit_mode', False)
+        # Toggle between Edit and Commit Changes based on mode
+        if st.session_state.get('edit_mode', False):
+            # In edit mode - show Commit Changes button
+            if ape_button("Commit Changes", key="save_edit_btn", icon="save", full_width=True, is_primary_action=True):
+                try:
+                    # Load the current YAML data
+                    with open(selected_file) as f:
+                        data = yaml.safe_load(f)
+                    
+                    # Update metadata if edited
+                    if 'edit_author' in st.session_state:
+                        data['author'] = st.session_state.edit_author
+                    if 'edit_description' in st.session_state:
+                        data['description'] = st.session_state.edit_description
+                    
+                    # Update timing parameters if edited
+                    if 'edit_min_interval' in st.session_state and st.session_state.edit_min_interval.isdigit():
+                        data['min_interval_days'] = int(st.session_state.edit_min_interval)
+                    if 'edit_max_interval' in st.session_state and st.session_state.edit_max_interval.isdigit():
+                        data['max_interval_days'] = int(st.session_state.edit_max_interval)
+                    if 'edit_extension' in st.session_state and st.session_state.edit_extension.isdigit():
+                        data['extension_days'] = int(st.session_state.edit_extension)
+                    if 'edit_shortening' in st.session_state and st.session_state.edit_shortening.isdigit():
+                        data['shortening_days'] = int(st.session_state.edit_shortening)
+                    
+                    # Update disease transitions if edited (for standard protocols)
+                    if protocol_type != "time_based":
+                        states = ['NAIVE', 'STABLE', 'ACTIVE', 'HIGHLY_ACTIVE']
+                        for from_state in states:
+                            for to_state in states:
+                                key = f'edit_trans_{from_state}_{to_state}'
+                                if key in st.session_state:
+                                    try:
+                                        value = float(st.session_state[key])
+                                        # Ensure transitions TO NAIVE from other states remain 0
+                                        if to_state == 'NAIVE' and from_state != 'NAIVE':
+                                            value = 0.0
+                                        data['disease_transitions'][from_state][to_state] = value
+                                    except:
+                                        pass  # Skip invalid values
+                        
+                        # Update treatment effect multipliers if edited
+                        for from_state in states:
+                            for to_state in states:
+                                key = f'edit_mult_{from_state}_{to_state}'
+                                if key in st.session_state:
+                                    try:
+                                        value = float(st.session_state[key])
+                                        # Initialize structure if needed
+                                        if from_state not in data.get('treatment_effect_on_transitions', {}):
+                                            data.setdefault('treatment_effect_on_transitions', {})[from_state] = {'multipliers': {}}
+                                        data['treatment_effect_on_transitions'][from_state]['multipliers'][to_state] = value
+                                    except:
+                                        pass  # Skip invalid values
+                        
+                        # Update vision model parameters if edited
+                        for state in states:
+                            for treatment in ['treated', 'untreated']:
+                                scenario = f"{state.lower()}_{treatment}"
+                                mean_key = f'edit_vision_{scenario}_mean'
+                                std_key = f'edit_vision_{scenario}_std'
+                                
+                                if mean_key in st.session_state:
+                                    try:
+                                        data['vision_change_model'][scenario]['mean'] = float(st.session_state[mean_key])
+                                    except:
+                                        pass
+                                
+                                if std_key in st.session_state:
+                                    try:
+                                        data['vision_change_model'][scenario]['std'] = float(st.session_state[std_key])
+                                    except:
+                                        pass
+                        
+                        # Update discontinuation rules if edited
+                        if 'edit_disc_pv_thresh' in st.session_state and st.session_state.edit_disc_pv_thresh.isdigit():
+                            data['discontinuation_rules']['poor_vision_threshold'] = int(st.session_state.edit_disc_pv_thresh)
+                        if 'edit_disc_pv_prob' in st.session_state:
+                            try:
+                                data['discontinuation_rules']['poor_vision_probability'] = float(st.session_state.edit_disc_pv_prob)
+                            except:
+                                pass
+                        if 'edit_disc_hi_thresh' in st.session_state and st.session_state.edit_disc_hi_thresh.isdigit():
+                            data['discontinuation_rules']['high_injection_count'] = int(st.session_state.edit_disc_hi_thresh)
+                        if 'edit_disc_hi_prob' in st.session_state:
+                            try:
+                                data['discontinuation_rules']['high_injection_probability'] = float(st.session_state.edit_disc_hi_prob)
+                            except:
+                                pass
+                        if 'edit_disc_lt_thresh' in st.session_state and st.session_state.edit_disc_lt_thresh.isdigit():
+                            data['discontinuation_rules']['long_treatment_months'] = int(st.session_state.edit_disc_lt_thresh)
+                        if 'edit_disc_lt_prob' in st.session_state:
+                            try:
+                                data['discontinuation_rules']['long_treatment_probability'] = float(st.session_state.edit_disc_lt_prob)
+                            except:
+                                pass
+                        if 'edit_disc_types' in st.session_state:
+                            types_list = [t.strip() for t in st.session_state.edit_disc_types.split(',') if t.strip()]
+                            if types_list:
+                                data['discontinuation_rules']['discontinuation_types'] = types_list
+                    
+                    # Update population parameters if edited
+                    dist_type_key = 'tb_edit_dist_type' if protocol_type == "time_based" else 'edit_dist_type'
+                    if dist_type_key in st.session_state:
+                        dist_type = st.session_state[dist_type_key]
+                        
+                        if dist_type == "normal":
+                            # Create/update baseline_vision_distribution in new format
+                            prefix = 'tb_edit' if protocol_type == "time_based" else 'edit'
+                            normal_dist = {
+                                'type': 'normal'
+                            }
+                            
+                            if f'{prefix}_pop_mean' in st.session_state:
+                                try:
+                                    normal_dist['mean'] = float(st.session_state[f'{prefix}_pop_mean'])
+                                except:
+                                    normal_dist['mean'] = 70
+                            else:
+                                normal_dist['mean'] = 70
+                                    
+                            if f'{prefix}_pop_std' in st.session_state:
+                                try:
+                                    normal_dist['std'] = float(st.session_state[f'{prefix}_pop_std'])
+                                except:
+                                    normal_dist['std'] = 10
+                            else:
+                                normal_dist['std'] = 10
+                                    
+                            if f'{prefix}_pop_min' in st.session_state and st.session_state[f'{prefix}_pop_min'].isdigit():
+                                normal_dist['min'] = int(st.session_state[f'{prefix}_pop_min'])
+                            else:
+                                normal_dist['min'] = 20
+                                
+                            if f'{prefix}_pop_max' in st.session_state and st.session_state[f'{prefix}_pop_max'].isdigit():
+                                normal_dist['max'] = int(st.session_state[f'{prefix}_pop_max'])
+                            else:
+                                normal_dist['max'] = 90
+                            
+                            data['baseline_vision_distribution'] = normal_dist
+                            
+                            # Remove old baseline_vision format if it exists
+                            if 'baseline_vision' in data:
+                                del data['baseline_vision']
+                                
+                        elif dist_type == "beta_with_threshold":
+                            # Create/update beta distribution
+                            prefix = 'tb_edit' if protocol_type == "time_based" else 'edit'
+                            beta_dist = {
+                                'type': 'beta_with_threshold'
+                            }
+                            
+                            if f'{prefix}_beta_alpha' in st.session_state:
+                                try:
+                                    beta_dist['alpha'] = float(st.session_state[f'{prefix}_beta_alpha'])
+                                except:
+                                    beta_dist['alpha'] = 3.5
+                            
+                            if f'{prefix}_beta_beta' in st.session_state:
+                                try:
+                                    beta_dist['beta'] = float(st.session_state[f'{prefix}_beta_beta'])
+                                except:
+                                    beta_dist['beta'] = 2.0
+                                    
+                            if f'{prefix}_beta_min' in st.session_state:
+                                try:
+                                    beta_dist['min'] = int(st.session_state[f'{prefix}_beta_min'])
+                                except:
+                                    beta_dist['min'] = 5
+                                    
+                            if f'{prefix}_beta_max' in st.session_state:
+                                try:
+                                    beta_dist['max'] = int(st.session_state[f'{prefix}_beta_max'])
+                                except:
+                                    beta_dist['max'] = 98
+                                    
+                            if f'{prefix}_beta_threshold' in st.session_state:
+                                try:
+                                    beta_dist['threshold'] = int(st.session_state[f'{prefix}_beta_threshold'])
+                                except:
+                                    beta_dist['threshold'] = 70
+                                    
+                            if f'{prefix}_beta_reduction' in st.session_state:
+                                try:
+                                    beta_dist['threshold_reduction'] = float(st.session_state[f'{prefix}_beta_reduction'])
+                                except:
+                                    beta_dist['threshold_reduction'] = 0.6
+                            
+                            data['baseline_vision_distribution'] = beta_dist
+                            
+                            # Remove old baseline_vision format if it exists
+                            if 'baseline_vision' in data:
+                                del data['baseline_vision']
+                            
+                        elif dist_type == "uniform":
+                            # Create/update uniform distribution
+                            prefix = 'tb_edit' if protocol_type == "time_based" else 'edit'
+                            uniform_dist = {
+                                'type': 'uniform'
+                            }
+                            
+                            if f'{prefix}_uniform_min' in st.session_state:
+                                try:
+                                    uniform_dist['min'] = int(st.session_state[f'{prefix}_uniform_min'])
+                                except:
+                                    uniform_dist['min'] = 20
+                            else:
+                                uniform_dist['min'] = 20
+                                    
+                            if f'{prefix}_uniform_max' in st.session_state:
+                                try:
+                                    uniform_dist['max'] = int(st.session_state[f'{prefix}_uniform_max'])
+                                except:
+                                    uniform_dist['max'] = 90
+                            else:
+                                uniform_dist['max'] = 90
+                            
+                            data['baseline_vision_distribution'] = uniform_dist
+                            
+                            # Remove old baseline_vision format if it exists
+                            if 'baseline_vision' in data:
+                                del data['baseline_vision']
+                    
+                    # Save the updated data
+                    with open(selected_file, 'w') as f:
+                        yaml.dump(data, f, sort_keys=False, default_flow_style=False)
+                    
+                    # Clear edit mode
+                    st.session_state.edit_mode = False
+                    
+                    # Clear all edit session state variables
+                    keys_to_clear = [k for k in st.session_state.keys() if k.startswith('edit_') or k.startswith('tb_edit_')]
+                    for key in keys_to_clear:
+                        del st.session_state[key]
+                    
+                    st.success("Changes committed successfully!")
+                    st.rerun()
+                    
+                except Exception as e:
+                    st.error(f"Failed to save changes: {str(e)}")
+        else:
+            # Not in edit mode - show Edit button
+            if ape_button("Edit", key="edit_btn", icon="edit", full_width=True):
+                st.session_state.edit_mode = True
     else:
         # For default protocols, show a disabled ghost button
-        ape_button("Edit", key="edit_btn_disabled", full_width=True, disabled=True)
+        ape_button("Edit", key="edit_btn_disabled", icon="edit", full_width=True, disabled=True)
 
 with col2:
-    # Create a copy with a new name
-    if ape_button("Duplicate", key="duplicate_btn", icon="copy", full_width=True):
-        st.session_state.show_duplicate = not st.session_state.get('show_duplicate', False)
+    # Combined Duplicate & Edit button - creates a copy and immediately enters edit mode
+    if ape_button("Duplicate & Edit", key="duplicate_edit_btn", icon="copy", full_width=True):
+        try:
+            # Check protocol count limit
+            if len(protocol_files) >= MAX_PROTOCOLS:
+                st.error(f"Protocol limit reached ({MAX_PROTOCOLS} files). Please delete some protocols first.")
+            else:
+                # Load the original spec data as a dict
+                with open(selected_file) as f:
+                    data = yaml.safe_load(f)
+                
+                # Generate new name and metadata
+                original_name = data.get('name', selected_file.stem)
+                new_name = f"{original_name} Copy"
+                new_version = "1.0.1"
+                
+                # Update the metadata
+                data['name'] = new_name
+                data['version'] = new_version
+                data['author'] = st.session_state.get('user_name', 'Your Name')
+                data['description'] = f"Copy of {original_name}"
+                data['created_date'] = datetime.now().strftime("%Y-%m-%d")
+                
+                # Generate memorable name for protocol
+                colors = ['azure', 'crimson', 'emerald', 'golden', 'ivory', 'jade', 'lavender', 
+                         'obsidian', 'pearl', 'ruby', 'sapphire', 'silver', 'topaz', 'violet']
+                gemstones = ['amethyst', 'beryl', 'citrine', 'diamond', 'garnet', 'jasper', 
+                            'moonstone', 'onyx', 'opal', 'quartz', 'tourmaline', 'zircon']
+                
+                # Create unique memorable name
+                max_attempts = 10
+                for _ in range(max_attempts):
+                    color = random.choice(colors)
+                    gem = random.choice(gemstones)
+                    memorable_name = f"{color}-{gem}"
+                    
+                    # Check if this name already exists
+                    matching_files = list(TEMP_DIR.glob(f"*_{memorable_name}.yaml"))
+                    if not matching_files:
+                        break
+                else:
+                    # Fallback to timestamp if can't find unique name
+                    memorable_name = f"copy-{int(time.time()) % 10000}"
+                
+                # Create filename with memorable name
+                base_filename = f"{new_name.lower().replace(' ', '_')}_v{new_version}"
+                filename = f"{base_filename}_{memorable_name}.yaml"
+                
+                # Ensure filename isn't too long
+                if len(filename) > 255:
+                    filename = f"protocol_{memorable_name}.yaml"
+                    
+                save_path = TEMP_DIR / filename
+                
+                # Write the modified data
+                with open(save_path, 'w') as f:
+                    yaml.dump(data, f, sort_keys=False, default_flow_style=False)
+                
+                # Validate the new file can be loaded
+                if protocol_type == "time_based":
+                    from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSpecification
+                    test_spec = TimeBasedProtocolSpecification.from_yaml(save_path)
+                else:
+                    test_spec = ProtocolSpecification.from_yaml(save_path)
+                
+                # Select the newly created duplicate
+                st.session_state.selected_protocol_name = save_path.stem
+                
+                # Automatically enter edit mode
+                st.session_state.edit_mode = True
+                
+                # Show success message
+                st.session_state.duplicate_edit_success = True
+                
+                # Close any open dialogs
+                st.session_state.show_duplicate = False
+                st.session_state.show_delete = False
+                st.session_state.show_manage = False
+                
+                st.rerun()
+                
+        except Exception as e:
+            st.error(f"Failed to duplicate: {str(e)}")
 
 with col3:
     # Delete protocol (only temporary ones)
@@ -282,7 +671,7 @@ with col4:
     if ape_button("Import/Export", 
                   key="toggle_import_export",
                   full_width=True,
-                  icon="save"):
+                  icon="export"):
         st.session_state.show_manage = not st.session_state.get('show_manage', False)
 
 # Show manage panel if toggled
@@ -340,11 +729,30 @@ if st.session_state.get('show_manage', False):
                     # This will validate all required fields
                     test_spec = ProtocolSpecification.from_yaml(validation_path)
 
-                    # Save with timestamp to avoid collisions
+                    # Generate memorable name for uploaded protocol
+                    colors = ['azure', 'crimson', 'emerald', 'golden', 'ivory', 'jade', 'lavender', 
+                             'obsidian', 'pearl', 'ruby', 'sapphire', 'silver', 'topaz', 'violet']
+                    gemstones = ['amethyst', 'beryl', 'citrine', 'diamond', 'garnet', 'jasper', 
+                                'moonstone', 'onyx', 'opal', 'quartz', 'tourmaline', 'zircon']
+                    
+                    # Create unique memorable name
                     base_name = safe_filename.rsplit('.', 1)[0]
-                    timestamp = int(time.time())
-                    final_filename = f"{base_name}_{timestamp}.yaml"
-                    final_path = TEMP_DIR / final_filename
+                    max_attempts = 10
+                    for _ in range(max_attempts):
+                        color = random.choice(colors)
+                        gem = random.choice(gemstones)
+                        memorable_name = f"{color}-{gem}"
+                        
+                        # Check if this name already exists
+                        final_filename = f"{base_name}_{memorable_name}.yaml"
+                        final_path = TEMP_DIR / final_filename
+                        if not final_path.exists():
+                            break
+                    else:
+                        # Fallback to timestamp if can't find unique name
+                        memorable_name = f"upload-{int(time.time()) % 10000}"
+                        final_filename = f"{base_name}_{memorable_name}.yaml"
+                        final_path = TEMP_DIR / final_filename
 
                     validation_path.rename(final_path)
 
@@ -379,86 +787,11 @@ if st.session_state.get('show_manage', False):
             except:
                 pass  # If spec can't be loaded, just don't show download
 
-# Handle duplicate dialog
-if st.session_state.get('duplicate_success', False):
-    st.success("Duplicate created successfully!")
+# Handle duplicate & edit success message
+if st.session_state.get('duplicate_edit_success', False):
+    st.success("Protocol duplicated! You are now in edit mode. Make your changes and click 'Commit Changes' when done.")
     # Clear the flag after showing
-    st.session_state.duplicate_success = False
-
-if st.session_state.get('show_duplicate', False):
-        with st.expander("Duplicate Protocol", expanded=True):
-            st.info("Create a copy of this protocol with a new name")
-            
-            new_name = st.text_input("New Protocol Name", value=f"{selected_file.stem} Copy", key="dup_name")
-            new_version = st.text_input("Version", value="1.0.1", key="dup_version")
-            new_author = st.text_input("Author", value="Your Name", key="dup_author")
-            new_description = st.text_area("Description", value=f"Copy of {selected_file.stem}", key="dup_desc")
-            
-            # Show creating status
-            if st.session_state.get('creating_duplicate', False):
-                st.info("Creating duplicate...")
-            
-            # Regular button - requires click
-            if ape_button("Create Duplicate", key="create_dup_btn",
-                         icon="copy", full_width=True,
-                         disabled=st.session_state.get('creating_duplicate', False)):
-                try:
-                    # Set flag to prevent multiple clicks
-                    st.session_state.creating_duplicate = True
-                    
-                    # Check protocol count limit
-                    if len(protocol_files) >= MAX_PROTOCOLS:
-                        raise ValueError(f"Protocol limit reached ({MAX_PROTOCOLS} files). Please delete some protocols first.")
-                    
-                    # Validate new name isn't too long
-                    if len(new_name) > 100:
-                        raise ValueError("Protocol name too long (max 100 characters)")
-                    
-                    # Load the original spec data as a dict
-                    with open(selected_file) as f:
-                        data = yaml.safe_load(f)
-                    
-                    # Update the metadata
-                    data['name'] = new_name
-                    data['version'] = new_version
-                    data['author'] = new_author
-                    data['description'] = new_description
-                    data['created_date'] = datetime.now().strftime("%Y-%m-%d")
-                    
-                    # Always create with timestamp for duplicates to ensure uniqueness
-                    base_filename = f"{new_name.lower().replace(' ', '_')}_v{new_version}"
-                    timestamp = int(time.time())
-                    filename = f"{base_filename}_{timestamp}.yaml"
-                    
-                    # Ensure filename isn't too long
-                    if len(filename) > 255:
-                        raise ValueError("Generated filename too long")
-                        
-                    save_path = TEMP_DIR / filename
-                    
-                    # Write the modified data
-                    with open(save_path, 'w') as f:
-                        yaml.dump(data, f, sort_keys=False, default_flow_style=False)
-                    
-                    # Validate the new file can be loaded
-                    if protocol_type == "time_based":
-                        from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSpecification
-                        test_spec = TimeBasedProtocolSpecification.from_yaml(save_path)
-                    else:
-                        test_spec = ProtocolSpecification.from_yaml(save_path)
-                    
-                    # Select the newly created duplicate
-                    st.session_state.selected_protocol_name = save_path.stem
-                    
-                    # Set success flag and clear creating flag
-                    st.session_state.duplicate_success = True
-                    st.session_state.creating_duplicate = False
-                    st.session_state.show_duplicate = False  # Close the expander
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Failed to create duplicate: {e}")
-                    # Clear the flag on error too
-                    st.session_state.creating_duplicate = False
+    st.session_state.duplicate_edit_success = False
 
 # Handle delete dialog
 if st.session_state.get('show_delete', False):
@@ -529,374 +862,9 @@ try:
     # Main content header
     st.header(f"{spec.name} v{spec.version}")
     
-    # Show edit mode controls if in edit mode
+    # Show edit mode indicator if in edit mode
     if st.session_state.get('edit_mode', False) and protocol_type == "temp":
-        st.warning("**Edit Mode** - Make changes below and save when ready")
-        save_col, cancel_col, _, _ = st.columns(4)
-        with save_col:
-            if ape_button("Save Changes", key="save_changes", is_primary_action=True, full_width=True):
-                try:
-                    # Load the current YAML data
-                    with open(selected_file) as f:
-                        data = yaml.safe_load(f)
-                    
-                    # Update metadata if edited
-                    if 'edit_author' in st.session_state:
-                        data['author'] = st.session_state.edit_author
-                    if 'edit_description' in st.session_state:
-                        data['description'] = st.session_state.edit_description
-                    
-                    # Update timing parameters if edited
-                    if 'edit_min_interval' in st.session_state and st.session_state.edit_min_interval.isdigit():
-                        data['min_interval_days'] = int(st.session_state.edit_min_interval)
-                    if 'edit_max_interval' in st.session_state and st.session_state.edit_max_interval.isdigit():
-                        data['max_interval_days'] = int(st.session_state.edit_max_interval)
-                    if 'edit_extension' in st.session_state and st.session_state.edit_extension.isdigit():
-                        data['extension_days'] = int(st.session_state.edit_extension)
-                    if 'edit_shortening' in st.session_state and st.session_state.edit_shortening.isdigit():
-                        data['shortening_days'] = int(st.session_state.edit_shortening)
-                    
-                    # Update disease transitions if edited
-                    states = ['NAIVE', 'STABLE', 'ACTIVE', 'HIGHLY_ACTIVE']
-                    for from_state in states:
-                        for to_state in states:
-                            key = f'edit_trans_{from_state}_{to_state}'
-                            if key in st.session_state:
-                                try:
-                                    value = float(st.session_state[key])
-                                    # Ensure transitions TO NAIVE from other states remain 0
-                                    if to_state == 'NAIVE' and from_state != 'NAIVE':
-                                        value = 0.0
-                                    data['disease_transitions'][from_state][to_state] = value
-                                except:
-                                    pass  # Skip invalid values
-                    
-                    # Update treatment effect multipliers if edited
-                    for from_state in states:
-                        for to_state in states:
-                            key = f'edit_mult_{from_state}_{to_state}'
-                            if key in st.session_state:
-                                try:
-                                    value = float(st.session_state[key])
-                                    # Initialize structure if needed
-                                    if from_state not in data.get('treatment_effect_on_transitions', {}):
-                                        data.setdefault('treatment_effect_on_transitions', {})[from_state] = {'multipliers': {}}
-                                    data['treatment_effect_on_transitions'][from_state]['multipliers'][to_state] = value
-                                except:
-                                    pass  # Skip invalid values
-                    
-                    # Update vision model parameters if edited
-                    for state in states:
-                        for treatment in ['treated', 'untreated']:
-                            scenario = f"{state.lower()}_{treatment}"
-                            mean_key = f'edit_vision_{scenario}_mean'
-                            std_key = f'edit_vision_{scenario}_std'
-                            
-                            if mean_key in st.session_state:
-                                try:
-                                    data['vision_change_model'][scenario]['mean'] = float(st.session_state[mean_key])
-                                except:
-                                    pass
-                            
-                            if std_key in st.session_state:
-                                try:
-                                    data['vision_change_model'][scenario]['std'] = float(st.session_state[std_key])
-                                except:
-                                    pass
-                    
-                    # Update population parameters if edited
-                    if 'edit_dist_type' in st.session_state:
-                        dist_type = st.session_state.edit_dist_type
-                        
-                        if dist_type == "normal":
-                            # Update normal distribution parameters
-                            if 'edit_pop_mean' in st.session_state:
-                                try:
-                                    data['baseline_vision']['mean'] = float(st.session_state.edit_pop_mean)
-                                except:
-                                    pass
-                            if 'edit_pop_std' in st.session_state:
-                                try:
-                                    data['baseline_vision']['std'] = float(st.session_state.edit_pop_std)
-                                except:
-                                    pass
-                            if 'edit_pop_min' in st.session_state and st.session_state.edit_pop_min.isdigit():
-                                data['baseline_vision']['min'] = int(st.session_state.edit_pop_min)
-                            if 'edit_pop_max' in st.session_state and st.session_state.edit_pop_max.isdigit():
-                                data['baseline_vision']['max'] = int(st.session_state.edit_pop_max)
-                            
-                            # Remove baseline_vision_distribution if switching to normal
-                            if 'baseline_vision_distribution' in data:
-                                del data['baseline_vision_distribution']
-                                
-                        elif dist_type == "beta_with_threshold":
-                            # Create/update beta distribution
-                            beta_dist = {
-                                'type': 'beta_with_threshold'
-                            }
-                            
-                            if 'edit_beta_alpha' in st.session_state:
-                                try:
-                                    beta_dist['alpha'] = float(st.session_state.edit_beta_alpha)
-                                except:
-                                    beta_dist['alpha'] = 3.5
-                            
-                            if 'edit_beta_beta' in st.session_state:
-                                try:
-                                    beta_dist['beta'] = float(st.session_state.edit_beta_beta)
-                                except:
-                                    beta_dist['beta'] = 2.0
-                                    
-                            if 'edit_beta_min' in st.session_state:
-                                try:
-                                    beta_dist['min'] = int(st.session_state.edit_beta_min)
-                                except:
-                                    beta_dist['min'] = 5
-                                    
-                            if 'edit_beta_max' in st.session_state:
-                                try:
-                                    beta_dist['max'] = int(st.session_state.edit_beta_max)
-                                except:
-                                    beta_dist['max'] = 98
-                                    
-                            if 'edit_beta_threshold' in st.session_state:
-                                try:
-                                    beta_dist['threshold'] = int(st.session_state.edit_beta_threshold)
-                                except:
-                                    beta_dist['threshold'] = 70
-                                    
-                            if 'edit_beta_reduction' in st.session_state:
-                                try:
-                                    beta_dist['threshold_reduction'] = float(st.session_state.edit_beta_reduction)
-                                except:
-                                    beta_dist['threshold_reduction'] = 0.6
-                            
-                            data['baseline_vision_distribution'] = beta_dist
-                            
-                            # Update baseline_vision to match beta expectations
-                            data['baseline_vision']['mean'] = 58
-                            data['baseline_vision']['std'] = 15
-                            data['baseline_vision']['min'] = beta_dist.get('min', 5)
-                            data['baseline_vision']['max'] = beta_dist.get('max', 98)
-                            
-                        elif dist_type == "uniform":
-                            # Create/update uniform distribution
-                            uniform_dist = {
-                                'type': 'uniform'
-                            }
-                            
-                            if 'edit_uniform_min' in st.session_state:
-                                try:
-                                    uniform_dist['min'] = int(st.session_state.edit_uniform_min)
-                                    data['baseline_vision']['min'] = uniform_dist['min']
-                                except:
-                                    pass
-                                    
-                            if 'edit_uniform_max' in st.session_state:
-                                try:
-                                    uniform_dist['max'] = int(st.session_state.edit_uniform_max)
-                                    data['baseline_vision']['max'] = uniform_dist['max']
-                                except:
-                                    pass
-                            
-                            data['baseline_vision_distribution'] = uniform_dist
-                    else:
-                        # Legacy update for protocols without distribution type
-                        if 'edit_pop_mean' in st.session_state:
-                            try:
-                                data['baseline_vision']['mean'] = float(st.session_state.edit_pop_mean)
-                            except:
-                                pass
-                        if 'edit_pop_std' in st.session_state:
-                            try:
-                                data['baseline_vision']['std'] = float(st.session_state.edit_pop_std)
-                            except:
-                                pass
-                        if 'edit_pop_min' in st.session_state and st.session_state.edit_pop_min.isdigit():
-                            data['baseline_vision']['min'] = int(st.session_state.edit_pop_min)
-                        if 'edit_pop_max' in st.session_state and st.session_state.edit_pop_max.isdigit():
-                            data['baseline_vision']['max'] = int(st.session_state.edit_pop_max)
-                    
-                    # Update discontinuation rules if edited
-                    if 'edit_disc_pv_thresh' in st.session_state and st.session_state.edit_disc_pv_thresh.isdigit():
-                        data['discontinuation_rules']['poor_vision_threshold'] = int(st.session_state.edit_disc_pv_thresh)
-                    if 'edit_disc_pv_prob' in st.session_state:
-                        try:
-                            data['discontinuation_rules']['poor_vision_probability'] = float(st.session_state.edit_disc_pv_prob)
-                        except:
-                            pass
-                    if 'edit_disc_hi_thresh' in st.session_state and st.session_state.edit_disc_hi_thresh.isdigit():
-                        data['discontinuation_rules']['high_injection_count'] = int(st.session_state.edit_disc_hi_thresh)
-                    if 'edit_disc_hi_prob' in st.session_state:
-                        try:
-                            data['discontinuation_rules']['high_injection_probability'] = float(st.session_state.edit_disc_hi_prob)
-                        except:
-                            pass
-                    if 'edit_disc_lt_thresh' in st.session_state and st.session_state.edit_disc_lt_thresh.isdigit():
-                        data['discontinuation_rules']['long_treatment_months'] = int(st.session_state.edit_disc_lt_thresh)
-                    if 'edit_disc_lt_prob' in st.session_state:
-                        try:
-                            data['discontinuation_rules']['long_treatment_probability'] = float(st.session_state.edit_disc_lt_prob)
-                        except:
-                            pass
-                    if 'edit_disc_types' in st.session_state:
-                        # Parse discontinuation types from comma-separated input
-                        types = [t.strip() for t in st.session_state.edit_disc_types.split(',') if t.strip()]
-                        if types:
-                            data['discontinuation_rules']['discontinuation_types'] = types
-                    
-                    # For time-based protocols, save parameter file changes
-                    if protocol_type == "time_based":
-                        # Handle baseline vision distribution updates
-                        if 'tb_edit_dist_type' in st.session_state:
-                            dist_type = st.session_state.tb_edit_dist_type
-                            
-                            if dist_type == "normal":
-                                # Update normal distribution parameters
-                                if 'tb_edit_pop_mean' in st.session_state:
-                                    try:
-                                        data['baseline_vision']['mean'] = float(st.session_state.tb_edit_pop_mean)
-                                    except:
-                                        pass
-                                if 'tb_edit_pop_std' in st.session_state:
-                                    try:
-                                        data['baseline_vision']['std'] = float(st.session_state.tb_edit_pop_std)
-                                    except:
-                                        pass
-                                if 'tb_edit_pop_min' in st.session_state and st.session_state.tb_edit_pop_min.isdigit():
-                                    data['baseline_vision']['min'] = int(st.session_state.tb_edit_pop_min)
-                                if 'tb_edit_pop_max' in st.session_state and st.session_state.tb_edit_pop_max.isdigit():
-                                    data['baseline_vision']['max'] = int(st.session_state.tb_edit_pop_max)
-                                
-                                # Remove baseline_vision_distribution if switching to normal
-                                if 'baseline_vision_distribution' in data:
-                                    del data['baseline_vision_distribution']
-                                    
-                            elif dist_type == "beta_with_threshold":
-                                # Create/update beta distribution
-                                beta_dist = {
-                                    'type': 'beta_with_threshold'
-                                }
-                                
-                                if 'tb_edit_beta_alpha' in st.session_state:
-                                    try:
-                                        beta_dist['alpha'] = float(st.session_state.tb_edit_beta_alpha)
-                                    except:
-                                        beta_dist['alpha'] = 3.5
-                                
-                                if 'tb_edit_beta_beta' in st.session_state:
-                                    try:
-                                        beta_dist['beta'] = float(st.session_state.tb_edit_beta_beta)
-                                    except:
-                                        beta_dist['beta'] = 2.0
-                                        
-                                if 'tb_edit_beta_min' in st.session_state:
-                                    try:
-                                        beta_dist['min'] = int(st.session_state.tb_edit_beta_min)
-                                    except:
-                                        beta_dist['min'] = 5
-                                        
-                                if 'tb_edit_beta_max' in st.session_state:
-                                    try:
-                                        beta_dist['max'] = int(st.session_state.tb_edit_beta_max)
-                                    except:
-                                        beta_dist['max'] = 98
-                                        
-                                if 'tb_edit_beta_threshold' in st.session_state:
-                                    try:
-                                        beta_dist['threshold'] = int(st.session_state.tb_edit_beta_threshold)
-                                    except:
-                                        beta_dist['threshold'] = 70
-                                        
-                                if 'tb_edit_beta_reduction' in st.session_state:
-                                    try:
-                                        beta_dist['threshold_reduction'] = float(st.session_state.tb_edit_beta_reduction)
-                                    except:
-                                        beta_dist['threshold_reduction'] = 0.6
-                                
-                                data['baseline_vision_distribution'] = beta_dist
-                                
-                                # Update baseline_vision to match beta expectations
-                                data['baseline_vision']['mean'] = 58
-                                data['baseline_vision']['std'] = 15
-                                data['baseline_vision']['min'] = beta_dist.get('min', 5)
-                                data['baseline_vision']['max'] = beta_dist.get('max', 98)
-                                
-                            elif dist_type == "uniform":
-                                # Create/update uniform distribution
-                                uniform_dist = {
-                                    'type': 'uniform'
-                                }
-                                
-                                if 'tb_edit_uniform_min' in st.session_state:
-                                    try:
-                                        uniform_dist['min'] = int(st.session_state.tb_edit_uniform_min)
-                                        data['baseline_vision']['min'] = uniform_dist['min']
-                                    except:
-                                        pass
-                                        
-                                if 'tb_edit_uniform_max' in st.session_state:
-                                    try:
-                                        uniform_dist['max'] = int(st.session_state.tb_edit_uniform_max)
-                                        data['baseline_vision']['max'] = uniform_dist['max']
-                                    except:
-                                        pass
-                                
-                                data['baseline_vision_distribution'] = uniform_dist
-                        
-                        # Handle parameter file changes
-                        if 'tb_param_changes' in st.session_state:
-                            protocol_dir = Path(spec.source_file).parent
-                            
-                            # Save each modified parameter file
-                            for param_type, param_data in st.session_state.tb_param_changes.items():
-                                if param_type == 'transitions':
-                                    param_path = protocol_dir / spec.disease_transitions_file
-                                elif param_type == 'effects':
-                                    param_path = protocol_dir / spec.treatment_effect_file
-                                elif param_type == 'vision':
-                                    param_path = protocol_dir / spec.vision_parameters_file
-                                elif param_type == 'discontinuation':
-                                    param_path = protocol_dir / spec.discontinuation_parameters_file
-                                else:
-                                    continue
-                                
-                                # Backup original
-                                if param_path.exists():
-                                    import shutil
-                                    backup_path = param_path.with_suffix('.yaml.bak')
-                                    shutil.copy2(param_path, backup_path)
-                                
-                                # Save changes
-                                with open(param_path, 'w') as f:
-                                    yaml.dump(param_data, f, default_flow_style=False, sort_keys=False)
-                            
-                            # Clear parameter changes from session state
-                            del st.session_state['tb_param_changes']
-                    
-                    # Update modified date
-                    data['modified_date'] = datetime.now().strftime("%Y-%m-%d")
-                    
-                    # Write back to file
-                    with open(selected_file, 'w') as f:
-                        yaml.dump(data, f, sort_keys=False, default_flow_style=False)
-                    
-                    st.success("Changes saved!")
-                    st.session_state.edit_mode = False
-                    
-                    # Clear edit fields from session state
-                    for key in list(st.session_state.keys()):
-                        if key.startswith('edit_'):
-                            del st.session_state[key]
-                    
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Failed to save changes: {e}")
-        with cancel_col:
-            if ape_button("Cancel", key="cancel_edit", full_width=True):
-                st.session_state.edit_mode = False
-                st.rerun()
-    
+        st.warning("**Edit Mode** - Changes are saved automatically. Click 'Commit Changes' to finalize your edits.")
     # Show model type indicator for time-based protocols
     if protocol_type == "time_based":
         st.info("**Time-Based Model**: Disease progression updates every 14 days, independent of visit schedule")
@@ -906,8 +874,8 @@ try:
         # Editable metadata
         col1, col2 = st.columns([3, 1])
         with col1:
-            new_author = st.text_input("Author", value=spec.author, key="edit_author")
-            new_description = st.text_area("Description", value=spec.description, key="edit_description", height=70)
+            new_author = st.text_input("Author", value=spec.author, key="edit_author", on_change=lambda: auto_save_protocol(selected_file, protocol_type))
+            new_description = st.text_area("Description", value=spec.description, key="edit_description", height=70, on_change=lambda: auto_save_protocol(selected_file, protocol_type))
         with col2:
             st.caption(f"Created: {spec.created_date}")
             st.caption(f"Checksum: {spec.checksum[:8]}...")
@@ -944,14 +912,14 @@ try:
             # Editable parameters
             col1, col2 = st.columns(2)
             with col1:
-                min_interval = st.text_input("Min Interval (days)", value=str(spec.min_interval_days), key="edit_min_interval")
+                min_interval = st.text_input("Min Interval (days)", value=str(spec.min_interval_days), key="edit_min_interval", on_change=lambda: auto_save_protocol(selected_file, protocol_type))
                 st.caption(f"= {int(min_interval)/7:.1f} weeks" if min_interval.isdigit() else "Invalid")
-                extension = st.text_input("Extension (days)", value=str(spec.extension_days), key="edit_extension")
+                extension = st.text_input("Extension (days)", value=str(spec.extension_days), key="edit_extension", on_change=lambda: auto_save_protocol(selected_file, protocol_type))
                 st.caption(f"= {int(extension)/7:.1f} weeks" if extension.isdigit() else "Invalid")
             with col2:
-                max_interval = st.text_input("Max Interval (days)", value=str(spec.max_interval_days), key="edit_max_interval")
+                max_interval = st.text_input("Max Interval (days)", value=str(spec.max_interval_days), key="edit_max_interval", on_change=lambda: auto_save_protocol(selected_file, protocol_type))
                 st.caption(f"= {int(max_interval)/7:.1f} weeks" if max_interval.isdigit() else "Invalid")
-                shortening = st.text_input("Shortening (days)", value=str(spec.shortening_days), key="edit_shortening")
+                shortening = st.text_input("Shortening (days)", value=str(spec.shortening_days), key="edit_shortening", on_change=lambda: auto_save_protocol(selected_file, protocol_type))
                 st.caption(f"= {int(shortening)/7:.1f} weeks" if shortening.isdigit() else "Invalid")
         else:
             # Read-only display

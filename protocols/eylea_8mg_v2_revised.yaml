@@ -119,7 +119,7 @@ treatment_effect_on_transitions:
       HIGHLY_ACTIVE: 0.7
 
 # Required baseline vision parameters
-baseline_vision:
+baseline_vision_distribution:
   mean: 55           # ETDRS letters (20/80 Snellen)
   std: 15            # Standard deviation
   min: 25            # 20/320 (legal blindness threshold)

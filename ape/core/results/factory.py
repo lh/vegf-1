@@ -39,7 +39,8 @@ class ResultsFactory:
         n_patients: int,
         duration_years: float,
         seed: int,
-        runtime_seconds: float
+        runtime_seconds: float,
+        model_type: str = "visit_based"
     ) -> SimulationResults:
         """
         Create SimulationResults instance with Parquet storage.
@@ -53,6 +54,7 @@ class ResultsFactory:
             duration_years: Duration of simulation in years
             seed: Random seed used
             runtime_seconds: Time taken to run simulation
+            model_type: 'visit_based' or 'time_based'
             
         Returns:
             ParquetResults instance
@@ -107,7 +109,8 @@ class ResultsFactory:
             seed=seed,
             runtime_seconds=runtime_seconds,
             storage_type="parquet",
-            memorable_name=memorable_name
+            memorable_name=memorable_name,
+            model_type=model_type
         )
         
         # Determine save path

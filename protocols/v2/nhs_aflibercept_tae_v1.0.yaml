@@ -100,7 +100,8 @@ vision_change_model:
 
 # Baseline vision distribution (ETDRS letters)
 # NHS population tends to present later than trials
-baseline_vision:
+baseline_vision_distribution:
+  type: normal
   mean: 65      # Lower than trial populations
   std: 12       # More variation in NHS practice
   min: 20       # Legal blindness threshold

@@ -90,7 +90,8 @@ vision_change_model:
     std: 3
 
 # Baseline vision distribution (ETDRS letters)
-baseline_vision:
+baseline_vision_distribution:
+  type: normal
   mean: 70      # Typical AMD presentation
   std: 10       # Reasonable variation
   min: 20       # Legal blindness threshold

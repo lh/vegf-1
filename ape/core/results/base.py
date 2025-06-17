@@ -27,6 +27,7 @@ class SimulationMetadata:
     runtime_seconds: float
     storage_type: str  # 'memory' or 'parquet'
     memorable_name: str = ""  # e.g. "autumn-surf", "winter-breeze"
+    model_type: str = "visit_based"  # 'visit_based' or 'time_based'
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
@@ -41,7 +42,8 @@ class SimulationMetadata:
             'timestamp': self.timestamp.isoformat(),
             'runtime_seconds': self.runtime_seconds,
             'storage_type': self.storage_type,
-            'memorable_name': self.memorable_name
+            'memorable_name': self.memorable_name,
+            'model_type': self.model_type
         }
 
 

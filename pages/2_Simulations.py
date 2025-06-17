@@ -177,6 +177,9 @@ if selected_preset:
         st.session_state.preset_patients = preset['patients']
         st.session_state.preset_duration = preset['duration']
         st.session_state.recruitment_mode = "Fixed Total"
+        # Clear any previous duration_years to ensure preset takes effect
+        if 'duration_years' in st.session_state:
+            del st.session_state.duration_years
     # No st.rerun() - let Streamlit handle it naturally!
 
 # Get parameters - always need them for running simulation

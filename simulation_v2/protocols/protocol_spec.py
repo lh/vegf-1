@@ -89,7 +89,7 @@ class ProtocolSpecification:
             'protocol_type', 'min_interval_days', 'max_interval_days',
             'extension_days', 'shortening_days', 'disease_transitions',
             'vision_change_model', 'treatment_effect_on_transitions',
-            'baseline_vision', 'discontinuation_rules'
+            'baseline_vision_distribution', 'discontinuation_rules'
         ]
         
         missing = [f for f in required_fields if f not in data]
@@ -102,12 +102,51 @@ class ProtocolSpecification:
         # Validate vision change model
         _validate_vision_change_model(data['vision_change_model'])
         
-        # Validate baseline vision
-        baseline = data['baseline_vision']
-        required_baseline = ['mean', 'std', 'min', 'max']
-        missing_baseline = [f for f in required_baseline if f not in baseline]
-        if missing_baseline:
-            raise ValueError(f"Missing baseline_vision fields: {missing_baseline}")
+        # Validate baseline vision distribution
+        baseline_dist = data['baseline_vision_distribution']
+        if not isinstance(baseline_dist, dict):
+            raise ValueError("baseline_vision_distribution must be a dictionary")
+        if 'type' not in baseline_dist:
+            raise ValueError("baseline_vision_distribution must have a 'type' field")
+        
+        # Extract parameters based on distribution type
+        dist_type = baseline_dist['type']
+        if dist_type == 'normal':
+            required_fields = ['mean', 'std', 'min', 'max']
+            missing = [f for f in required_fields if f not in baseline_dist]
+            if missing:
+                raise ValueError(f"Normal distribution missing fields: {missing}")
+            baseline_mean = baseline_dist['mean']
+            baseline_std = baseline_dist['std']
+            baseline_min = baseline_dist['min']
+            baseline_max = baseline_dist['max']
+        elif dist_type == 'beta_with_threshold':
+            # Beta distribution must specify all required parameters
+            required_fields = ['alpha', 'beta', 'min', 'max', 'threshold', 'threshold_reduction']
+            missing = [f for f in required_fields if f not in baseline_dist]
+            if missing:
+                raise ValueError(f"Beta with threshold distribution missing fields: {missing}")
+            # For compatibility with legacy fields, calculate approximate values
+            # These are only used for the legacy baseline_vision_* fields
+            baseline_min = baseline_dist['min']
+            baseline_max = baseline_dist['max']
+            # Approximate mean and std from beta parameters
+            alpha = baseline_dist['alpha']
+            beta = baseline_dist['beta']
+            # Mean of beta distribution scaled to range
+            baseline_mean = baseline_min + (alpha / (alpha + beta)) * (baseline_max - baseline_min)
+            # Approximate std (this is rough but sufficient for legacy compatibility)
+            variance = (alpha * beta) / ((alpha + beta)**2 * (alpha + beta + 1))
+            baseline_std = ((baseline_max - baseline_min) * variance**0.5)
+        elif dist_type == 'uniform':
+            if 'min' not in baseline_dist or 'max' not in baseline_dist:
+                raise ValueError("Uniform distribution requires 'min' and 'max' fields")
+            baseline_min = baseline_dist['min']
+            baseline_max = baseline_dist['max']
+            baseline_mean = (baseline_min + baseline_max) / 2
+            baseline_std = (baseline_max - baseline_min) / (2 * 1.732)  # std for uniform dist
+        else:
+            raise ValueError(f"Unknown baseline vision distribution type: {dist_type}")
             
         return cls(
             name=data['name'],
@@ -123,11 +162,11 @@ class ProtocolSpecification:
             disease_transitions=data['disease_transitions'],
             vision_change_model=data['vision_change_model'],
             treatment_effect_on_transitions=data['treatment_effect_on_transitions'],
-            baseline_vision_mean=baseline['mean'],
-            baseline_vision_std=baseline['std'],
-            baseline_vision_min=baseline['min'],
-            baseline_vision_max=baseline['max'],
-            baseline_vision_distribution=data.get('baseline_vision_distribution'),
+            baseline_vision_mean=baseline_mean,
+            baseline_vision_std=baseline_std,
+            baseline_vision_min=baseline_min,
+            baseline_vision_max=baseline_max,
+            baseline_vision_distribution=data['baseline_vision_distribution'],
             discontinuation_rules=data['discontinuation_rules'],
             source_file=str(filepath.absolute()),
             load_timestamp=datetime.now().isoformat(),

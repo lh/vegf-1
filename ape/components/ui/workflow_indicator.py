@@ -19,7 +19,8 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
         ('home', 'Home', 'APE.py', None),  # No icon
         ('protocol', 'Protocol', 'pages/1_Protocol_Manager.py', None),
         ('simulation', 'Simulation', 'pages/2_Simulations.py', None),  # Removed play icon
-        ('analysis', 'Analysis', 'pages/3_Analysis.py', None)
+        ('analysis', 'Analysis', 'pages/3_Analysis.py', None),
+        ('comparison', 'Compare', 'pages/4_Simulation_Comparison.py', None)
     ]
     
     # Find current step index
@@ -46,6 +47,10 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                     st.switch_page(page)
             elif idx == current_idx:
                 # Current step - actionable if callback provided
+                # Special case: change "Simulation" to "Run Simulation" when on simulation page
+                if step_id == "simulation" and current_step == "simulation":
+                    display_label = "Run Simulation"
+                
                 if on_current_action:
                     # Make it an action button
                     if navigation_button(
@@ -69,14 +74,14 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                     )
             else:
                 # Future step - check if it should be enabled
-                # Protocol and Simulation are always accessible
-                if step_id in ["protocol", "simulation"]:
+                # Protocol, Simulation, and Comparison are always accessible
+                if step_id in ["protocol", "simulation", "comparison"]:
                     if navigation_button(
                         display_label,
                         icon_name=None,  # Disable auto-icon since we're using our own
                         key=f"workflow_{step_id}",
                         full_width=True,
-                        help_text="Browse and select protocols" if step_id == "protocol" else "Run or load simulations",
+                        help_text="Browse and select protocols" if step_id == "protocol" else "Run or load simulations" if step_id == "simulation" else "Compare simulation results",
                         button_type="secondary"
                     ):
                         st.switch_page(page)

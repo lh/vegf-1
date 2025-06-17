@@ -100,7 +100,8 @@ class SimulationRunner:
             n_patients=n_patients,
             duration_years=duration_years,
             seed=seed,
-            runtime_seconds=runtime_seconds
+            runtime_seconds=runtime_seconds,
+            model_type="time_based" if self.is_time_based else "visit_based"
         )
         
         # Save the full protocol specification with the results
