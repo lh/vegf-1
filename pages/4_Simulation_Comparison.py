@@ -657,6 +657,10 @@ def calculate_comparison_metrics(results_a, results_b):
 # Calculate metrics
 metrics = calculate_comparison_metrics(results_a, results_b)
 
+# Extract histories for visualization
+histories_a = results_a.get('patient_histories', {})
+histories_b = results_b.get('patient_histories', {})
+
 # Section 3: Key Insights
 st.markdown("---")
 st.markdown("### Key Insights")
