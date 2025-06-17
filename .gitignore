@@ -150,3 +150,6 @@ vegf-carbon-buttons/
 
 # Repository digest file
 lh-vegf-1.txt
+
+# Temporary protocols (cleared hourly)
+protocols/v2/temp/
