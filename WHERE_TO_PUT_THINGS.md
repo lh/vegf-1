@@ -72,6 +72,32 @@
 - Clinical trial data
 - Literature reviews
 
+### For Core Application Code
+
+#### ⚠️ `simulation/` - DEPRECATED - DO NOT USE ⚠️
+**This is the OLD simulation framework (v1)**
+- Contains legacy code from pre-2024
+- DO NOT import from here for new work
+- See `simulation/DEPRECATED_DO_NOT_USE.md`
+
+#### ✅ `simulation_v2/` - Current Simulation Framework
+**This is what APE uses**
+- `engines/` - Simulation engines (ABS, DES)
+- `core/` - Core models and protocols
+- `models/` - Disease and treatment models
+- All new simulation work goes here
+
+#### `ape/` - APE Application Components
+- `core/` - Core APE functionality
+- `components/` - UI components
+- `visualizations/` - Visualization modules
+- `utils/` - Utility functions
+
+#### `protocols/` - Protocol Definitions
+- `v2/` - Current protocol format (YAML)
+- `v2_time_based/` - Time-based protocols
+- Old formats in root are legacy
+
 ## 🎯 Quick Decision Tree
 
 **"Where should I put this file?"**

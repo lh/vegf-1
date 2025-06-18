@@ -1,4 +1,19 @@
-"""Discrete Event Simulation (DES) core for AMD treatment modeling.
+"""
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+WARNING: DEPRECATED - DO NOT USE FOR NEW DEVELOPMENT
+
+This is part of the OLD simulation framework (v1).
+APE uses simulation_v2 exclusively.
+
+For new development, use:
+  - simulation_v2/engines/des_engine.py for discrete event simulations
+  - ape/ for APE-specific components
+
+Last used: Pre-2024
+Replaced by: simulation_v2/engines/des_engine.py
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Discrete Event Simulation (DES) core for AMD treatment modeling.
 
 This module implements a pure Discrete Event Simulation approach for modeling
 AMD treatment protocols, focusing on system-level performance and efficiency.

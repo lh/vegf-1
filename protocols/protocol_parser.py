@@ -30,8 +30,8 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Type
 import yaml
 from dataclasses import dataclass
-from validation.config_validator import ConfigValidator, ConfigurationError
-from protocol_models import (
+from research.experiments.validation.config_validator import ConfigValidator, ConfigurationError
+from protocols.protocol_models import (
     TreatmentProtocol, ProtocolPhase, LoadingPhase, MaintenancePhase,
     ExtensionPhase, DiscontinuationPhase, VisitType, TreatmentDecision,
     ActionType, DecisionType, PhaseType

@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional, Union
 from datetime import datetime, timedelta
 from queue import PriorityQueue
-from protocol_models import (
+from protocols.protocol_models import (
     TreatmentProtocol, ProtocolPhase, PhaseType,
     VisitType, ActionType, DecisionType
 )

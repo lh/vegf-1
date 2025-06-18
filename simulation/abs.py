@@ -1,4 +1,19 @@
-"""Agent-Based Simulation (ABS) implementation for modeling AMD treatment pathways.
+"""
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+WARNING: DEPRECATED - DO NOT USE FOR NEW DEVELOPMENT
+
+This is part of the OLD simulation framework (v1).
+APE uses simulation_v2 exclusively.
+
+For new development, use:
+  - simulation_v2/engines/abs_engine.py for agent-based simulations
+  - ape/ for APE-specific components
+
+Last used: Pre-2024
+Replaced by: simulation_v2/engines/abs_engine.py
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Agent-Based Simulation (ABS) implementation for modeling AMD treatment pathways.
 
 This module implements an agent-based simulation approach where each patient is modeled
 as an autonomous agent following a treatment protocol. The simulation handles patient

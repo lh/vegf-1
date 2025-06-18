@@ -147,15 +147,9 @@ presets = {
 
 # Create engine selector widget function
 def engine_selector():
-    """Engine selector without label"""
-    engine_type = st.selectbox(
-        "Engine",
-        ["abs", "des"],
-        format_func=lambda x: {"abs": "Agent-Based", "des": "Discrete Event"}[x],
-        index=0,
-        label_visibility="collapsed",
-        help="Simulation engine: Agent-Based (ABS) or Discrete Event (DES)"
-    )
+    """Engine selector - fixed to ABS only"""
+    # Always use agent-based simulation (DES is being phased out)
+    engine_type = "abs"
     st.session_state.engine_type = engine_type
     return engine_type
 

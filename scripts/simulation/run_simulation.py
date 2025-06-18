@@ -1,4 +1,15 @@
-"""Run comparative simulations between agent-based and discrete event models.
+"""
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+WARNING: This script uses the DEPRECATED simulation framework (v1)
+
+This script imports from simulation/ which is the old framework.
+For new development, use scripts that import from simulation_v2/
+
+Status: Legacy script - kept for reference
+Consider: Updating to use simulation_v2 framework
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Run comparative simulations between agent-based and discrete event models.
 
 This script executes both simulation types (ABS and DES) using the same configuration,
 compares their results, and generates visualizations showing:
