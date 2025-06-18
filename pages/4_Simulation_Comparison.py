@@ -1613,17 +1613,16 @@ def save_sankey_debug(fig, name, transitions_df, save_path="debug"):
             for state in sorted(transitions_df['to_state'].dropna().unique()):
                 count = len(transitions_df[transitions_df['to_state'] == state])
                 f.write(f"    - {state}: {count} transitions\n")
+                
+            # Identify terminal states by name pattern
+            f.write("\nTerminal states (identified by name pattern):\n")
+            terminal_states = [s for s in transitions_df['to_state'].unique() 
+                             if 'Still in' in s or 'No Further Visits' in s]
+            for state in sorted(terminal_states):
+                count = len(transitions_df[transitions_df['to_state'] == state])
+                f.write(f"  - {state}: {count} transitions\n")
         else:
             f.write("  No state columns found! Columns are: " + str(list(transitions_df.columns)) + "\n")
-        
-        f.write("\nTerminal states distribution:\n")
-        if 'is_terminal' in transitions_df.columns:
-            terminal_df = transitions_df[transitions_df['is_terminal'] == True]
-            terminal_counts = terminal_df['state'].value_counts()
-            for state, count in terminal_counts.items():
-                f.write(f"  - {state}: {count} patients\n")
-        else:
-            f.write("  No 'is_terminal' column found!\n")
         
         f.write("\nTransition patterns (first 20):\n")
         for idx, row in transitions_df.head(20).iterrows():
@@ -1637,8 +1636,9 @@ def save_sankey_debug(fig, name, transitions_df, save_path="debug"):
 # Add debug controls
 debug_mode = st.checkbox("Enable Debug Mode", key="sankey_debug_mode")
 
-# Create columns for side-by-side Sankey diagrams
-col1, col2 = st.columns(2)
+# Create columns for side-by-side Sankey diagrams with more space
+# Use ratio to give more space if needed
+col1, col2 = st.columns([1, 1], gap="medium")
 
 # Create a simplified version of the Sankey diagram
 def create_simplified_sankey(transitions_df):
@@ -1661,12 +1661,14 @@ def create_simplified_sankey(transitions_df):
     )
     
     # Make layout more compact with proper margins to prevent truncation
+    # Try fixed width approach for consistent sizing
     sankey.update_layout(
-        height=350,  # Increased height to ensure no truncation
-        margin=dict(l=40, r=60, t=30, b=30),  # Generous margins, especially on right
+        height=400,  # Taller for better visibility
+        width=600,   # Fixed width to prevent overflow
+        margin=dict(l=10, r=100, t=20, b=20),  # Extra right margin for terminal nodes
         showlegend=False,
         font_size=1,  # Minimum size
-        autosize=True,  # Let it size to container
+        autosize=False,  # Disable autosize to use fixed dimensions
         paper_bgcolor='rgba(0,0,0,0)',  # Transparent background
         plot_bgcolor='rgba(0,0,0,0)'  # Transparent plot background
     )
@@ -1705,11 +1707,14 @@ with col1:
                 st.write("First 5 rows of transitions data:")
                 st.dataframe(transitions_df_a.head())
                 
-                if 'is_terminal' in transitions_df_a.columns:
-                    terminal_states = transitions_df_a[transitions_df_a['is_terminal']]['state'].value_counts()
-                    st.write("Terminal states:", terminal_states.to_dict())
-                else:
-                    st.warning("No 'is_terminal' column found!")
+                # Show terminal states by name pattern
+                terminal_states = [s for s in transitions_df_a['to_state'].unique() 
+                                 if 'Still in' in s or 'No Further Visits' in s]
+                if terminal_states:
+                    st.write("Terminal states found:")
+                    for state in sorted(terminal_states):
+                        count = len(transitions_df_a[transitions_df_a['to_state'] == state])
+                        st.write(f"  - {state}: {count} transitions")
                 
             try:
                 sankey_a = create_simplified_sankey(transitions_df_a)
@@ -1719,7 +1724,7 @@ with col1:
                     html_path, txt_path = save_sankey_debug(sankey_a, "comparison_A", transitions_df_a)
                     st.caption(f"Debug files saved to {html_path.parent}")
                 
-                st.plotly_chart(sankey_a, use_container_width=True)
+                st.plotly_chart(sankey_a, use_container_width=False)
             except Exception as e:
                 st.error(f"Error creating Sankey: {str(e)}")
                 if debug_mode:
@@ -1763,11 +1768,14 @@ with col2:
                 st.write("First 5 rows of transitions data:")
                 st.dataframe(transitions_df_b.head())
                 
-                if 'is_terminal' in transitions_df_b.columns:
-                    terminal_states = transitions_df_b[transitions_df_b['is_terminal']]['state'].value_counts()
-                    st.write("Terminal states:", terminal_states.to_dict())
-                else:
-                    st.warning("No 'is_terminal' column found!")
+                # Show terminal states by name pattern
+                terminal_states = [s for s in transitions_df_b['to_state'].unique() 
+                                 if 'Still in' in s or 'No Further Visits' in s]
+                if terminal_states:
+                    st.write("Terminal states found:")
+                    for state in sorted(terminal_states):
+                        count = len(transitions_df_b[transitions_df_b['to_state'] == state])
+                        st.write(f"  - {state}: {count} transitions")
                     
             try:
                 sankey_b = create_simplified_sankey(transitions_df_b)
@@ -1776,7 +1784,7 @@ with col2:
                 if debug_mode:
                     html_path, txt_path = save_sankey_debug(sankey_b, "comparison_B", transitions_df_b)
                 
-                st.plotly_chart(sankey_b, use_container_width=True)
+                st.plotly_chart(sankey_b, use_container_width=False)
             except Exception as e:
                 st.error(f"Error creating Sankey: {str(e)}")
                 if debug_mode:

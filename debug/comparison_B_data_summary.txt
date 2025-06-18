@@ -13,8 +13,10 @@ Unique states in data:
     - Still in Initial Treatment (Year 5): 87 transitions
     - Still in Regular (6-8 weeks) (Year 5): 1903 transitions
 
-Terminal states distribution:
-  No 'is_terminal' column found!
+Terminal states (identified by name pattern):
+  - No Further Visits: 1819 transitions
+  - Still in Initial Treatment (Year 5): 87 transitions
+  - Still in Regular (6-8 weeks) (Year 5): 1903 transitions
 
 Transition patterns (first 20):
   Pre-Treatment -> Initial Treatment

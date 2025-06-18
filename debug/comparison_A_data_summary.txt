@@ -19,8 +19,12 @@ Unique states in data:
     - Still in Maximum Extension (16 weeks) (Year 5): 622 transitions
     - Still in Regular (6-8 weeks) (Year 5): 188 transitions
 
-Terminal states distribution:
-  No 'is_terminal' column found!
+Terminal states (identified by name pattern):
+  - No Further Visits: 1937 transitions
+  - Still in Initial Treatment (Year 5): 58 transitions
+  - Still in Intensive (Monthly) (Year 5): 1121 transitions
+  - Still in Maximum Extension (16 weeks) (Year 5): 622 transitions
+  - Still in Regular (6-8 weeks) (Year 5): 188 transitions
 
 Transition patterns (first 20):
   Pre-Treatment -> Initial Treatment
