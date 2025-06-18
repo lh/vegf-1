@@ -1640,161 +1640,219 @@ debug_mode = st.checkbox("Enable Debug Mode", key="sankey_debug_mode")
 # Use ratio to give more space if needed
 col1, col2 = st.columns([1, 1], gap="medium")
 
-# Create a simplified version of the Sankey diagram
-def create_simplified_sankey(transitions_df):
-    """Create a simplified Sankey diagram without labels."""
+# Create both Sankey diagrams first to analyze scaling
+def create_comparison_sankeys(transitions_df_a, transitions_df_b):
+    """Create two Sankey diagrams with matched Y-axis scaling."""
     from ape.components.treatment_patterns.sankey_builder_enhanced import create_enhanced_sankey_with_terminals
+    import plotly.graph_objects as go
+    import pandas as pd
     
-    # Create the sankey
-    sankey = create_enhanced_sankey_with_terminals(transitions_df)
+    # Create both original sankeys
+    sankey_a = create_enhanced_sankey_with_terminals(transitions_df_a)
+    sankey_b = create_enhanced_sankey_with_terminals(transitions_df_b)
     
-    # Simplify by removing labels and making it more compact
-    sankey.update_traces(
-        textfont_size=1,  # Minimum size to effectively hide labels
-        textfont_color='rgba(0,0,0,0)',  # Make text transparent
-        node=dict(
-            pad=10,  # Reduce padding between nodes
-            thickness=15,  # Make nodes thinner
-            line=dict(width=0),  # Remove node borders
-            label=[""] * len(sankey.data[0].node.label)  # Empty labels
-        )
-    )
+    # Extract flow data from both
+    def get_initial_flow_sum(sankey):
+        """Get the sum of flows from the initial state."""
+        if sankey.data and len(sankey.data) > 0:
+            data = sankey.data[0]
+            if hasattr(data, 'node') and hasattr(data, 'link'):
+                # Find Initial Treatment node
+                labels = data.node.label
+                initial_idx = None
+                for i, label in enumerate(labels):
+                    if 'Initial' in str(label):
+                        initial_idx = i
+                        break
+                
+                if initial_idx is not None:
+                    # Sum all flows FROM Initial Treatment
+                    total_flow = sum(
+                        v for s, v in zip(data.link.source, data.link.value)
+                        if s == initial_idx
+                    )
+                    return total_flow
+        return 1990  # Default to expected value
     
-    # Make layout more compact with proper margins to prevent truncation
-    # Try fixed width approach for consistent sizing
-    sankey.update_layout(
-        height=400,  # Taller for better visibility
-        width=600,   # Fixed width to prevent overflow
-        margin=dict(l=10, r=100, t=20, b=20),  # Extra right margin for terminal nodes
-        showlegend=False,
-        font_size=1,  # Minimum size
-        autosize=False,  # Disable autosize to use fixed dimensions
-        paper_bgcolor='rgba(0,0,0,0)',  # Transparent background
-        plot_bgcolor='rgba(0,0,0,0)'  # Transparent plot background
-    )
+    initial_flow_a = get_initial_flow_sum(sankey_a)
+    initial_flow_b = get_initial_flow_sum(sankey_b)
     
-    return sankey
+    # Create scaling factor - both should appear the same height
+    # Use the larger flow as reference
+    max_initial_flow = max(initial_flow_a, initial_flow_b)
+    
+    def create_scaled_sankey(original_sankey, initial_flow, max_flow):
+        """Create a simplified sankey with scaled values."""
+        if original_sankey.data and len(original_sankey.data) > 0:
+            original_data = original_sankey.data[0]
+            
+            # Scale factor to normalize both diagrams
+            scale_factor = max_flow / initial_flow if initial_flow > 0 else 1.0
+            
+            # Create new sankey with scaled values
+            scaled_sankey = go.Figure(data=[go.Sankey(
+                domain=dict(x=[0, 1], y=[0, 1]),
+                orientation="h",
+                valueformat=".0f",
+                valuesuffix=" patients",
+                node=dict(
+                    pad=10,
+                    thickness=20,  # Slightly thicker for visibility
+                    line=dict(width=0),
+                    label=[""] * len(original_data.node.label),  # Empty labels
+                    color=original_data.node.color,
+                    x=original_data.node.x if hasattr(original_data.node, 'x') else None,
+                    y=original_data.node.y if hasattr(original_data.node, 'y') else None
+                ),
+                link=dict(
+                    source=original_data.link.source,
+                    target=original_data.link.target,
+                    value=[v * scale_factor for v in original_data.link.value],  # Scale the values
+                    color=original_data.link.color if hasattr(original_data.link, 'color') else None,
+                    hovertemplate='%{value:.0f} patients<extra></extra>'  # Simplified hover
+                ),
+                textfont=dict(size=1, color='rgba(0,0,0,0)')  # Hide text
+            )])
+            
+            # Apply consistent layout
+            scaled_sankey.update_layout(
+                height=450,  # Slightly taller
+                width=600,
+                margin=dict(l=10, r=100, t=10, b=10),
+                showlegend=False,
+                font_size=1,
+                autosize=False,
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)'
+            )
+            
+            # Add annotation showing actual patient count
+            scaled_sankey.add_annotation(
+                text=f"Total: {int(initial_flow)} patients",
+                xref="paper", yref="paper",
+                x=0.02, y=0.98,
+                showarrow=False,
+                font=dict(size=12, color="#666"),
+                bgcolor="rgba(255,255,255,0.8)",
+                borderpad=4
+            )
+            
+            return scaled_sankey
+        
+        return original_sankey
+    
+    # Create scaled versions
+    scaled_a = create_scaled_sankey(sankey_a, initial_flow_a, max_initial_flow)
+    scaled_b = create_scaled_sankey(sankey_b, initial_flow_b, max_initial_flow)
+    
+    return scaled_a, scaled_b
 
-with col1:
-    st.markdown(f"**Simulation A: {sim_a['protocol']}**")
-    try:
-        # Check if we already loaded results_a above
-        if 'results_a' not in locals():
-            results_a = ResultsFactory.load_results(sim_a['path'])
+# First, load both datasets
+transitions_df_a = None
+transitions_df_b = None
+
+# Load data for Simulation A
+try:
+    # Check if we already loaded results_a above
+    if 'results_a' not in locals():
+        results_a = ResultsFactory.load_results(sim_a['path'])
+        
+    if results_a:
+        # Use the same approach as analysis page - check for enhanced version
+        try:
+            from ape.components.treatment_patterns.pattern_analyzer_enhanced import extract_treatment_patterns_with_terminals
+            enhanced_available = True
+        except ImportError:
+            enhanced_available = False
             
-        if results_a:
-            # Use the same approach as analysis page - check for enhanced version
-            try:
-                from ape.components.treatment_patterns.pattern_analyzer_enhanced import extract_treatment_patterns_with_terminals
-                enhanced_available = True
-            except ImportError:
-                enhanced_available = False
-                
-            # Get patterns with terminal states if available
-            if enhanced_available:
-                transitions_df_a, _ = extract_treatment_patterns_with_terminals(results_a)
-            else:
-                from ape.components.treatment_patterns.data_manager import get_treatment_pattern_data
-                transitions_df_a, _ = get_treatment_pattern_data(results_a)
-            
-            # Debug: Show data info
-            if debug_mode:
-                st.info(f"Transitions shape: {transitions_df_a.shape}")
-                st.write(f"Enhanced analyzer: {enhanced_available}")
-                st.write("Columns in transitions_df:", list(transitions_df_a.columns))
-                
-                # Show first few rows to understand structure
-                st.write("First 5 rows of transitions data:")
-                st.dataframe(transitions_df_a.head())
-                
-                # Show terminal states by name pattern
-                terminal_states = [s for s in transitions_df_a['to_state'].unique() 
-                                 if 'Still in' in s or 'No Further Visits' in s]
-                if terminal_states:
-                    st.write("Terminal states found:")
-                    for state in sorted(terminal_states):
-                        count = len(transitions_df_a[transitions_df_a['to_state'] == state])
-                        st.write(f"  - {state}: {count} transitions")
-                
-            try:
-                sankey_a = create_simplified_sankey(transitions_df_a)
-                
-                # Save debug files
-                if debug_mode:
-                    html_path, txt_path = save_sankey_debug(sankey_a, "comparison_A", transitions_df_a)
-                    st.caption(f"Debug files saved to {html_path.parent}")
-                
-                st.plotly_chart(sankey_a, use_container_width=False)
-            except Exception as e:
-                st.error(f"Error creating Sankey: {str(e)}")
-                if debug_mode:
-                    st.exception(e)
-                    # Still save the transitions data for debugging
-                    transitions_df_a.to_csv("debug/comparison_A_transitions_error.csv", index=False)
+        # Get patterns with terminal states if available
+        if enhanced_available:
+            transitions_df_a, _ = extract_treatment_patterns_with_terminals(results_a)
         else:
-            st.error("Could not load simulation A data for Sankey diagram")
-    except Exception as e:
-        st.error(f"Error creating Sankey diagram A: {str(e)}")
+            from ape.components.treatment_patterns.data_manager import get_treatment_pattern_data
+            transitions_df_a, _ = get_treatment_pattern_data(results_a)
+except Exception as e:
+    st.error(f"Error loading Simulation A data: {str(e)}")
 
-with col2:
-    st.markdown(f"**Simulation B: {sim_b['protocol']}**")
-    try:
-        # Check if we already loaded results_b above
-        if 'results_b' not in locals():
-            results_b = ResultsFactory.load_results(sim_b['path'])
+# Load data for Simulation B
+try:
+    # Check if we already loaded results_b above
+    if 'results_b' not in locals():
+        results_b = ResultsFactory.load_results(sim_b['path'])
+        
+    if results_b:
+        # Use the same approach as analysis page - check for enhanced version
+        try:
+            from ape.components.treatment_patterns.pattern_analyzer_enhanced import extract_treatment_patterns_with_terminals
+            enhanced_available = True
+        except ImportError:
+            enhanced_available = False
             
-        if results_b:
-            # Use the same approach as analysis page - check for enhanced version
-            try:
-                from ape.components.treatment_patterns.pattern_analyzer_enhanced import extract_treatment_patterns_with_terminals
-                enhanced_available = True
-            except ImportError:
-                enhanced_available = False
-                
-            # Get patterns with terminal states if available
-            if enhanced_available:
-                transitions_df_b, _ = extract_treatment_patterns_with_terminals(results_b)
-            else:
-                from ape.components.treatment_patterns.data_manager import get_treatment_pattern_data
-                transitions_df_b, _ = get_treatment_pattern_data(results_b)
+        # Get patterns with terminal states if available
+        if enhanced_available:
+            transitions_df_b, _ = extract_treatment_patterns_with_terminals(results_b)
+        else:
+            from ape.components.treatment_patterns.data_manager import get_treatment_pattern_data
+            transitions_df_b, _ = get_treatment_pattern_data(results_b)
+except Exception as e:
+    st.error(f"Error loading Simulation B data: {str(e)}")
+
+# Create both Sankeys with matched scaling
+if transitions_df_a is not None and transitions_df_b is not None:
+    sankey_a, sankey_b = create_comparison_sankeys(transitions_df_a, transitions_df_b)
+    
+    with col1:
+        st.markdown(f"**Simulation A: {sim_a['protocol']}**")
+        
+        # Debug info for A
+        if debug_mode:
+            st.info(f"Transitions shape: {transitions_df_a.shape}")
+            st.write(f"Enhanced analyzer: {enhanced_available}")
             
-            # Debug: Show data info
-            if debug_mode:
-                st.info(f"Transitions shape: {transitions_df_b.shape}")
-                st.write(f"Enhanced analyzer: {enhanced_available}")
-                st.write("Columns in transitions_df:", list(transitions_df_b.columns))
-                
-                # Show first few rows to understand structure
-                st.write("First 5 rows of transitions data:")
-                st.dataframe(transitions_df_b.head())
-                
-                # Show terminal states by name pattern
-                terminal_states = [s for s in transitions_df_b['to_state'].unique() 
-                                 if 'Still in' in s or 'No Further Visits' in s]
-                if terminal_states:
-                    st.write("Terminal states found:")
-                    for state in sorted(terminal_states):
-                        count = len(transitions_df_b[transitions_df_b['to_state'] == state])
-                        st.write(f"  - {state}: {count} transitions")
+            # Show terminal states by name pattern
+            terminal_states = [s for s in transitions_df_a['to_state'].unique() 
+                             if 'Still in' in s or 'No Further Visits' in s]
+            if terminal_states:
+                st.write("Terminal states found:")
+                for state in sorted(terminal_states):
+                    count = len(transitions_df_a[transitions_df_a['to_state'] == state])
+                    st.write(f"  - {state}: {count} transitions")
                     
+            # Save debug files
             try:
-                sankey_b = create_simplified_sankey(transitions_df_b)
-                
-                # Save debug files
-                if debug_mode:
-                    html_path, txt_path = save_sankey_debug(sankey_b, "comparison_B", transitions_df_b)
-                
-                st.plotly_chart(sankey_b, use_container_width=False)
-            except Exception as e:
-                st.error(f"Error creating Sankey: {str(e)}")
-                if debug_mode:
-                    st.exception(e)
-                    # Still save the transitions data for debugging
-                    transitions_df_b.to_csv("debug/comparison_B_transitions_error.csv", index=False)
-        else:
-            st.error("Could not load simulation B data for Sankey diagram")
-    except Exception as e:
-        st.error(f"Error creating Sankey diagram B: {str(e)}")
+                html_path, txt_path = save_sankey_debug(sankey_a, "comparison_A", transitions_df_a)
+                st.caption(f"Debug files saved to {html_path.parent}")
+            except:
+                pass
+        
+        st.plotly_chart(sankey_a, use_container_width=False)
+    
+    with col2:
+        st.markdown(f"**Simulation B: {sim_b['protocol']}**")
+        
+        # Debug info for B
+        if debug_mode:
+            st.info(f"Transitions shape: {transitions_df_b.shape}")
+            st.write(f"Enhanced analyzer: {enhanced_available}")
+            
+            # Show terminal states by name pattern
+            terminal_states = [s for s in transitions_df_b['to_state'].unique() 
+                             if 'Still in' in s or 'No Further Visits' in s]
+            if terminal_states:
+                st.write("Terminal states found:")
+                for state in sorted(terminal_states):
+                    count = len(transitions_df_b[transitions_df_b['to_state'] == state])
+                    st.write(f"  - {state}: {count} transitions")
+                    
+            # Save debug files
+            try:
+                html_path, txt_path = save_sankey_debug(sankey_b, "comparison_B", transitions_df_b)
+            except:
+                pass
+        
+        st.plotly_chart(sankey_b, use_container_width=False)
+else:
+    st.error("Could not load data for both simulations")
 
 # Debug download section
 if debug_mode:
