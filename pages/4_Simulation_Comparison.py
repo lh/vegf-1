@@ -1683,6 +1683,14 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
     states_b = set(flows_b['from_state']) | set(flows_b['to_state'])
     all_states = sorted(states_a | states_b)
     
+    # Collect terminal states for each stream to calculate dynamic positioning
+    terminal_states_a = sorted([s for s in states_a if 'Still in' in s])
+    terminal_states_b = sorted([s for s in states_b if 'Still in' in s])
+    
+    # Count how many "Still in" states exist for each stream
+    num_still_in_a = len(terminal_states_a)
+    num_still_in_b = len(terminal_states_b)
+    
     # Create node mapping
     node_map = {state: i for i, state in enumerate(all_states)}
     
@@ -1692,6 +1700,36 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
     y_positions = []
     node_colors = []
     node_labels = []
+    
+    # Calculate dynamic Y positions for "Still in" states
+    still_in_y_positions_a = {}
+    still_in_y_positions_b = {}
+    
+    # For A stream: distribute between 0.65 and 0.90
+    if num_still_in_a > 0:
+        if num_still_in_a == 1:
+            # Center single state
+            still_in_y_positions_a[terminal_states_a[0]] = 0.775
+        else:
+            # Distribute evenly
+            y_start_a = 0.65
+            y_end_a = 0.90
+            y_step_a = (y_end_a - y_start_a) / (num_still_in_a - 1)
+            for i, state in enumerate(terminal_states_a):
+                still_in_y_positions_a[state] = y_start_a + i * y_step_a
+    
+    # For B stream: distribute between 0.15 and 0.40
+    if num_still_in_b > 0:
+        if num_still_in_b == 1:
+            # Center single state
+            still_in_y_positions_b[terminal_states_b[0]] = 0.275
+        else:
+            # Distribute evenly
+            y_start_b = 0.15
+            y_end_b = 0.40
+            y_step_b = (y_end_b - y_start_b) / (num_still_in_b - 1)
+            for i, state in enumerate(terminal_states_b):
+                still_in_y_positions_b[state] = y_start_b + i * y_step_b
     
     for state in all_states:
         # Remove prefix for base state
@@ -1731,17 +1769,8 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
             elif 'No Further' in base_state:
                 y = 0.60  # Put discontinued at bottom of A stream
             elif 'Still in' in base_state:
-                # Distribute terminal states vertically with more spacing
-                if 'Initial' in base_state:
-                    y = 0.85
-                elif 'Intensive' in base_state:
-                    y = 0.80
-                elif 'Regular' in base_state:
-                    y = 0.75
-                elif 'Maximum' in base_state:
-                    y = 0.70
-                else:
-                    y = 0.77
+                # Use dynamically calculated position
+                y = still_in_y_positions_a.get(state, 0.77)
             else:
                 y = 0.75
         else:
@@ -1759,17 +1788,8 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
             elif 'No Further' in base_state:
                 y = 0.10  # Put discontinued at bottom of B stream
             elif 'Still in' in base_state:
-                # Distribute terminal states vertically with more spacing
-                if 'Initial' in base_state:
-                    y = 0.40
-                elif 'Intensive' in base_state:
-                    y = 0.35
-                elif 'Regular' in base_state:
-                    y = 0.30
-                elif 'Maximum' in base_state:
-                    y = 0.25
-                else:
-                    y = 0.32
+                # Use dynamically calculated position
+                y = still_in_y_positions_b.get(state, 0.32)
             else:
                 y = 0.25
         
