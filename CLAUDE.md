@@ -1,268 +1,198 @@
-At the start of each session, use the memory server to retrieve relevant project context and maintain continuity.
+# CLAUDE.md
 
-## 📁 IMPORTANT: File Organization
-**ALWAYS consult WHERE_TO_PUT_THINGS.md before creating new files!**
-- Use `workspace/` for temporary development work
-- NEVER clutter the root directory with test files
-- See WHERE_TO_PUT_THINGS.md for the complete guide
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 📋 Active Implementation Instructions
-**IMPORTANT**: Check `instructions.md` in the project root for the current implementation plan and follow it exactly.
+## Project Overview
+APE (AMD Protocol Explorer) is a scientific simulation platform for Age-related Macular Degeneration treatment protocols. It uses Agent-Based Simulation (ABS) and Discrete Event Simulation (DES) to model patient pathways through anti-VEGF treatments.
 
-### Current Active Implementation: Economic Analysis Features
-- **Primary Guide**: `instructions.md` - Economic Analysis Implementation Plan
-- **TDD Approach**: `TDD_ECONOMIC_PLAN.md` - Test specifications
-- **Design Decisions**: `ECONOMIC_ANALYSIS_PLANNING.md` - Architecture choices
-- **Status**: Starting Phase 1 - Core Cost Infrastructure
-- **Next Steps**: Write failing tests for CostConfig class, then implement
+## Key Commands
 
-Automatically store the following in the memory server:
-1. Key project context (requirements, architecture decisions)
-2. Important code snippets with descriptive tags
-3. Design patterns and conventions used in the project
-4. Solutions to complex problems for future reference
-5. Module/component information with appropriate tags
-6. Testing strategies and edge cases
-
-Tag all memories appropriately to enable efficient retrieval in future sessions.
-
-Use Git and github  for version control. You have access to the gh command. Use it.
-
-# Git and GitHub Instructions
-1. Use concise, descriptive commit messages that explain the purpose of changes
-2. DO NOT add attribution like "Generated with Claude" or "Co-Authored-By" to commits
-3. Follow project conventions for branch naming and PR format
-4. Include issue numbers in commit messages when applicable
-5. When asked to create PRs, use existing PR templates if available
-
-# Development Environment
-- This is a development environment. Always git commit and push after changes. Use the gh command for github if needed.
-- "When modifying Streamlit components, test changes with test scripts and show the user the results before updating the app"
-- **NO SILENT FALLBACKS**: Never add try/except blocks that hide errors or fall back to alternative implementations. Fail fast with clear error messages.
-- **TESTING REQUIRES FAILURES**: When testing new features, force their use without fallbacks so errors are visible.
-- **EXPLICIT ERRORS**: If something might fail, let it fail with a clear error message rather than silently switching to an alternative.
-
-# Playwright Integration
-
-## Streamlit App Debugging with Playwright
-
-Playwright is configured and working in both `streamlit_app` and `streamlit_app_parquet` directories for browser automation and debugging.
-
-### Quick Start for Debugging
-1. **Test Setup**: Ensure Playwright is installed with `npx playwright install chromium`
-2. **Use Configurable Port Scripts**: Use `playwright_debug_configurable.js` to avoid port conflicts
-3. **Default Ports**: Scripts default to port 8503 (not 8502) to avoid interfering with running apps
-
-### Available Debugging Scripts
-
-#### Basic Connection Test
+### Running the Application
 ```bash
-cd streamlit_app  # or streamlit_app_parquet
-node test_playwright_simple.js
-```
-- Quick test to verify Playwright can connect
-- Takes a screenshot for verification
-- Minimal output, good for CI/CD
+# Main Streamlit application
+streamlit run APE.py
 
-#### Interactive Debugging (Recommended)
+# Development server with hot reload
+streamlit run APE.py --server.runOnSave true
+```
+
+### Testing
 ```bash
-# Run test app on different port
-streamlit run test_streamlit_app.py --server.port 8503
+# Run all tests except known failures
+./scripts/run_tests.sh
 
-# Debug in browser with DevTools
-node playwright_debug_configurable.js 8503
+# Run all tests including known failures
+python -m pytest tests/
+
+# Run specific test file
+python -m pytest tests/unit/test_clinical_model.py
+
+# Run tests with coverage
+python -m pytest --cov=simulation --cov=ape tests/
+
+# Run UI tests
+cd tests/ui && ./run_ui_tests.sh
 ```
-- Opens visible browser window with DevTools
-- Console logging and error reporting
-- Interactive mode - browser stays open for manual testing
-- Press Ctrl+C to exit
 
-#### Advanced Debugging
+### Code Quality
 ```bash
-node playwright_advanced_debug.js
+# Format code with black
+black .
+
+# Sort imports
+isort .
+
+# Lint with flake8
+flake8 .
+
+# Type checking
+mypy simulation/ ape/
+
+# Run all quality checks
+black . && isort . && flake8 . && mypy simulation/ ape/
 ```
-- Video recording of sessions
-- Full element analysis
-- Comprehensive debug information capture
-- Network monitoring
 
-### Port Management
-- **Main app**: Use your actual port (usually 8502)
-- **Testing**: Use alternate ports (8503, 8504, etc.)
-- **Command syntax**: `node script.js [port]`
-- **Example**: `node playwright_debug_configurable.js 8504`
+### Development Tools
+```bash
+# Check root cleanliness (should be < 30 files)
+./scripts/check_root_cleanliness.sh
 
-### Testing Real vs Test Apps
-- **Real app debugging**: `node playwright_debug_configurable.js 8502`
-- **Safe testing**: Use `test_streamlit_app.py` on alternate port
-- **Port conflicts**: Always specify different port for testing
+# Git worktree status
+./scripts/dev/worktree-status.sh
 
-### Key Files
-- `playwright_debug_configurable.js` - Main debugging tool
-- `test_streamlit_app.py` - Safe test Streamlit app
-- `test_playwright_simple.js` - Quick connection test
-- `playwright_advanced_debug.js` - Full-featured debugger
+# Create new worktree for feature
+git worktree add ../CC-feature-name -b feature/branch-name
+```
 
-### Best Practices
-- ALWAYS use alternate ports for testing to avoid disrupting running apps
-- Use the test Streamlit app for initial Playwright verification
-- Only debug real apps when necessary and with caution
-- Capture screenshots for visual verification
-- ONLY run tests against real simulation data, NEVER with synthetic test data
-- Verify data integrity in automated tests by checking key values match expected distributions
-- When validating visualizations, check the actual data source, not just the visual appearance
+## Architecture Overview
 
-# Visualization Guidelines
-- For visual acuity graphs use a y-axis scale running from 0 to 85 and so far as is possible make sure they all have the same vertical height for the scale. This is to maintain a consistent mental model for the user.
-- X-axis ticks should be at yearly intervals (0, 12, 24, 36, 48, 60 months) for better readability and understanding of time progression
-- "For all visualizations, follow Tufte principles documented in meta/visualization_templates.md"
-- "Maintain consistent styling across charts with the established color system"
+### Simulation Engines
+The project supports two simulation paradigms:
 
-# Styling and Visualization Standards
+1. **Agent-Based Simulation (ABS)** - `simulation/abs.py`
+   - Each patient is an autonomous agent
+   - Individual state tracking and decision making
+   - Protocol-driven visit scheduling
+   - Key classes: `Patient`, `AgentBasedSimulation`
 
-  1. Single Source of Truth: All colors, opacity values, and styling constants MUST be defined in the central color system
-  (visualization.color_system). Never define fallback or alternative values elsewhere.
-  2. No Duplicate Definitions: Never redefine or create local copies of styling values. Import all styling constants from the
-   central system.
-  3. Fix at Source: When encountering styling issues, fix them in the central color system rather than creating workarounds
-  in individual components.
-  4. Consistent Naming: Always use the established naming conventions from the central system. Don't create alternative names
-   for the same concept.
-  5. Clean Visualization Style: Follow Tufte principles in all visualizations - remove unnecessary chart elements, use
-  minimal styling, and focus on data representation.
-  6. No Bounding Lines: Avoid unnecessary bounding boxes, borders, and visual elements that don't contribute to data
-  understanding.
-  7. Error Handling: If a styling element is missing, report the issue rather than creating a local fallback.
-  8. Refactoring Priority: Consider inconsistent styling as a bug that needs immediate attention, not as a feature to be
-  worked around.
+2. **Discrete Event Simulation (DES)** - `simulation/des.py`
+   - Event queue-driven simulation
+   - Efficient for large populations
+   - Same protocol compatibility as ABS
 
-# CRITICAL SCIENTIFIC TOOL PRINCIPLES
+### Core Components
 
-**NEVER GENERATE SYNTHETIC DATA**: This is a scientific analysis tool, not a demo
+#### Patient State Management
+- `simulation/patient_state.py` - Core patient state tracking
+- `simulation/patient_state_enhanced.py` - Enhanced state with discontinuation flags
+- Tracks: vision, disease state, treatment history, discontinuation status
 
-This is the single most important principle guiding all development, testing, and validation:
+#### Clinical Models
+- `simulation/clinical_model.py` - Treatment decision logic
+- `simulation/vision_models.py` - Vision progression modeling
+- `simulation/discontinuation_manager.py` - Discontinuation criteria
 
-- If data is missing, FAIL FAST with clear error messages
-- NEVER create fallback data, synthetic timelines, or mock values
-- NEVER add try/except blocks that hide missing data
-- The integrity of the analysis depends on using only real simulation data
-- NEVER use test data or fixtures in production code - test data belongs ONLY in test files
-- ALWAYS validate that functions like `generate_sample_results` are not being called in production code
-- When implementing visualizations, ONLY use real data from simulations, NEVER create synthetic curves
-- ALWAYS verify data conservation principles (e.g., total patient counts must remain constant)
-- Flag and refuse to use any code containing "sample", "mock", "fake", "dummy", or "synthetic" outside test contexts
-- IMMEDIATELY halt and speak up if asked to replace actual data with something "prettier" or "smoother"
-- NEVER "enhance" actual data for aesthetics - show the real data with all its messiness
-- When debugging, inspect and verify the ACTUAL data values rather than making assumptions
-- Do not "normalize" or "standardize" data without explicit scientific justification
-- Document actual data sources and calculation methods in code comments
-- In testing, verify against known reference values, not arbitrary placeholders
+#### Protocol System
+- `protocols/protocol_models.py` - Protocol phase definitions
+- `protocols/config_parser.py` - YAML protocol parsing
+- Protocol phases: Loading → Maintenance → Extension → Discontinuation
 
-These principles are NON-NEGOTIABLE. As the postmortem in meta/streamgraph_synthetic_data_postmortem.md states: 
-"In scientific computing, accuracy is paramount. Never invent data. Ever."
+#### Economics Integration
+- `simulation/economics/` - Cost tracking and analysis
+- `simulation_v2/economics/` - Enhanced v2 economics
+- Tracks: drug costs, visit costs, monitoring costs
 
-# Workflow Reminder
-- Every summary should be followed by an offer to git commit and push and update documentation
+### Streamlit UI Structure
+```
+APE.py                    # Main entry point
+pages/
+├── 1_Protocol_Manager.py # Protocol CRUD operations
+├── 2_Simulations.py      # Run simulations
+├── 3_Analysis.py         # Analyze results
+└── 4_Simulation_Comparison.py # Compare protocols
 
-# Always run these tests before committing changes
-When making changes to the codebase, always run the following tests before committing:
-1. For discontinuation tracking changes:
-   - `python verify_fixed_discontinuation.py`
-   - `python verify_streamlit_integration.py`
+ape/
+├── components/           # UI components
+│   ├── simulation_ui.py  # Simulation runner UI
+│   └── simulation_io.py  # Import/export functionality
+├── utils/               # UI utilities
+│   ├── chart_builder.py # Visualization builder
+│   └── style_constants.py # Consistent styling
+└── visualizations/      # Streamgraph implementations
+```
 
-2. For Streamlit visualization changes:
-   - Check visualization output in the `output/debug` directory
+### Data Flow
+1. **Protocol Definition** → YAML files in `protocols/`
+2. **Patient Generation** → Based on distribution parameters
+3. **Simulation Run** → ABS/DES engine processes patients
+4. **Results Storage** → Parquet format with metadata
+5. **Visualization** → Tufte-style charts and streamgraphs
 
-3. Always confirm ABS/DES compatibility:
-   - Test both ABS and DES implementations with the same configuration
+## Critical Development Principles
 
-# Simulation Management and Performance
+### Scientific Integrity
+- **NEVER generate synthetic data** - fail fast on missing data
+- **No silent fallbacks** - explicit errors over hidden issues
+- **Data conservation** - patient counts must remain constant
+- **Real data only** - no mock/fake/dummy data in production
 
-## Recent Improvements (2025-01-24)
+### File Organization
+- **Use `workspace/`** for temporary development
+- **Never clutter root** - use appropriate subdirectories
+- **Output goes to `output/`** - this directory is gitignored
+- See `WHERE_TO_PUT_THINGS.md` for complete guide
 
-### Recruitment Modes
-- **Fixed Total Mode**: Specify total patients, system calculates monthly rate
-- **Constant Rate Mode**: Specify patients/month, continues throughout simulation
-- Enables modeling of both clinical trials and real-world steady-state operations
+### Testing Requirements
+- All new features need tests
+- Use `@pytest.mark.known_failure` for WIP tests
+- Verify both ABS and DES compatibility
+- Check visualizations produce real data
 
-### Simulation File Management
-- New naming: `YYYYMMDD-HHMMSS-sim-Xp-Yy` (e.g., `20250124-120530-sim-1000p-5y`)
-- Files automatically sort by date/time
-- Saved simulations browser with quick actions
-- Auto-loads latest simulation in analysis pages
+### Memory and Performance
+- Use vectorized pandas operations for large datasets
+- Session state persistence across Streamlit pages
+- Efficient parquet storage for simulation results
+- Progress indicators for long-running operations
 
-### Performance Optimizations
-- Calendar-time transformation now uses vectorized pandas operations
-- 10-100x speedup for large datasets (1000+ patients process in seconds)
-- Progress indicators show transformation status
-- Removed inefficient patient-by-patient loops
+## Current Feature: ABS Engine Heterogeneity
 
-### User Experience
-- Session state persistence across pages
-- One-click navigation to Calendar-Time Analysis or Patient Explorer
-- Latest simulation automatically selected in analysis pages
-- Enrollment period can extend throughout entire simulation
+You are on branch `feature/abs-engine-heterogeneity` to implement patient heterogeneity in the ABS engine.
 
-# DATA INTEGRITY VERIFICATION PROTOCOL
+Key areas to consider:
+- `simulation/abs.py` - Core ABS implementation
+- `simulation/patient_state.py` - Patient state definitions
+- `simulation/patient_generator.py` - Patient generation logic
+- `protocols/distributions/` - Population distribution configs
 
-These protocols MUST be followed for all data manipulation and visualization tasks:
+Heterogeneity dimensions might include:
+- Vision response variability
+- Treatment adherence patterns
+- Disease progression rates
+- Discontinuation thresholds
+- Geographic/demographic factors
 
-  1. Be explicit about the data structure: Tell me exactly what fields contain the real data. For example:
-    - "The patient visit times are in results['patient_histories'][patient_id]['visits'][i]['time']"
-    - "The discontinuation events are marked by visit['is_discontinuation_visit'] == True"
-  
-  2. Demand data inspection BEFORE any implementation:
-    ```python
-    # First, inspect the data structure
-    print("Sample patient data:", patient_histories[first_patient_id])
-    print("Visit structure:", patient_histories[first_patient_id]['visits'][0])
-    
-    # Then, verify the specific values you'll be working with
-    print("Time values:", [visit['time'] for visit in patient_histories[first_patient_id]['visits'][:5]])
-    print("Discontinuation events:", sum(1 for visit in patient_histories[first_patient_id]['visits'] if visit.get('is_discontinuation_visit')))
-    ```
-  
-  3. Reject synthetic patterns immediately: When you see sigmoid curves or smooth transitions, challenge them:
-    - "Why are you using sigmoid? Show me where in the data this curve comes from"
-    - "This looks too smooth. Show me the actual patient state counts at each time point"
-    - "Demonstrate from the raw data how these patterns emerge, not from smoothing algorithms"
-  
-  4. Request raw data exports for verification and traceability:
-    ```python
-    # Export the actual counts at each time point for verification
-    with open('actual_patient_states.csv', 'w') as f:
-        f.write("month,active,discontinued_planned,discontinued_admin,...\n")
-        for month, counts in sorted(state_counts.items()):
-            f.write(f"{month},{counts['active']},{counts['discontinued_planned']},{counts['discontinued_admin']},...\n")
-    print("Raw data exported to actual_patient_states.csv for verification")
-    ```
-  
-  5. Fail fast and loudly on missing data: Implement explicit error handling:
-    ```python
-    if 'patient_histories' not in results:
-        raise ValueError("ERROR: No patient histories available - cannot create visualization")
-        
-    if not patient_histories:
-        raise ValueError("ERROR: Patient histories dictionary is empty")
-        
-    # Verify key fields exist in the data structure
-    first_patient = next(iter(patient_histories.values()))
-    if 'visits' not in first_patient:
-        raise ValueError("ERROR: Patient data missing required 'visits' field")
-    ```
-  
-  6. Document data lineage in code and visualization outputs:
-    ```python
-    # Add a data source annotation to all visualizations
-    plt.annotate(f"Data source: {data_source_file}\nPatient count: {len(patient_histories)}\nTime period: {start_date} to {end_date}",
-                xy=(0.01, 0.01), xycoords='figure fraction', fontsize=8)
-    ```
-  
-  7. Validate conservation principles in data transforms:
-    ```python
-    # Ensure patient count remains constant across transformations
-    original_patient_count = len(patient_histories)
-    # ... perform data transformation ...
-    transformed_patient_count = sum(len(group) for group in patient_groups)
-    assert original_patient_count == transformed_patient_count, f"ERROR: Patient count mismatch! Original: {original_patient_count}, After transformation: {transformed_patient_count}"
-    ```
+## Visualization Standards
+- Y-axis for VA plots: 0-85 ETDRS letters
+- X-axis: yearly intervals (0, 12, 24, 36, 48, 60 months)
+- Follow Tufte principles (see `meta/visualization_templates.md`)
+- Use central color system (`visualization/color_system.py`)
+- No synthetic smoothing - show real data patterns
+
+## Git Workflow
+- Commit frequently with clear messages
+- No attribution in commits (no "Generated with Claude")
+- Use PR templates when creating pull requests
+- Include issue numbers in commit messages
+- Push changes regularly in development environment
+
+## Troubleshooting
+- Port conflicts: Use alternate ports (8503, 8504) for testing
+- Playwright debugging: `node playwright_debug_configurable.js [port]`
+- Memory issues: Check `output/` directory size
+- Slow performance: Use vectorized operations, not loops
+
+## Documentation
+- API docs: https://lh.github.io/vegf-1/
+- Deployment guide: `docs/deployment/DEPLOYMENT_GUIDE.md`
+- Clinical summaries: `meta/clinical_summaries/`
+- Planning docs: `meta/planning/`

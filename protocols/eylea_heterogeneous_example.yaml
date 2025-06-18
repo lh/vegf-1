@@ -1,0 +1,147 @@
+# Example Eylea protocol with heterogeneity configuration
+# This demonstrates how to add patient heterogeneity to an existing protocol
+
+agent: Eylea
+protocols:
+  treat_and_extend:
+    steps:
+      - step_type: injection_phase
+        parameters:
+          dose: 0.5mg
+          interval_weeks: 4
+          max_repeats: 3
+        next_step: initial_assessment
+        conditions: []
+        exit_criteria: []
+
+      - step_type: dynamic_interval
+        parameters:
+          initial_interval: 8
+          min_interval: 8
+          max_interval: 16
+          adjustment_weeks: 2
+        conditions:
+          - metric: disease_activity
+            comparator: "=="
+            value: recurring
+            action: decrease_interval
+          - metric: disease_activity
+            comparator: "=="
+            value: stable
+            action: increase_interval
+        exit_criteria:
+          - metric: vision
+            comparator: "<="
+            value: "baseline - 15"
+            action: consider_stop
+
+# Heterogeneity configuration - enables patient variability
+heterogeneity:
+  enabled: true
+  version: '1.0'
+  
+  # Patient trajectory classes based on Seven-UP study patterns
+  trajectory_classes:
+    good_responders:
+      proportion: 0.25
+      description: "Patients who maintain vision near baseline with good treatment response"
+      parameters:
+        treatment_effect_multiplier:
+          distribution: lognormal
+          mean: 1.3
+          std: 0.2
+          comment: "30% better treatment response on average"
+        disease_progression_multiplier:
+          distribution: lognormal
+          mean: 0.7
+          std: 0.15
+          comment: "30% slower disease progression"
+    
+    moderate_decliners:
+      proportion: 0.40
+      description: "Patients with gradual vision decline over time"
+      parameters:
+        treatment_effect_multiplier:
+          distribution: lognormal
+          mean: 1.0
+          std: 0.3
+          comment: "Average treatment response with variability"
+        disease_progression_multiplier:
+          distribution: lognormal
+          mean: 1.0
+          std: 0.3
+          comment: "Average disease progression"
+    
+    poor_responders:
+      proportion: 0.35
+      description: "Patients with rapid vision decline despite treatment"
+      parameters:
+        treatment_effect_multiplier:
+          distribution: lognormal
+          mean: 0.7
+          std: 0.2
+          comment: "30% worse treatment response"
+        disease_progression_multiplier:
+          distribution: lognormal
+          mean: 1.5
+          std: 0.4
+          comment: "50% faster disease progression"
+  
+  # Additional patient-specific parameters
+  patient_parameters:
+    # Treatment resistance development (tachyphylaxis)
+    resistance_rate:
+      distribution: beta
+      alpha: 2
+      beta: 5
+      comment: "Most patients (mode ~0.2) develop mild resistance, some develop significant resistance"
+    
+    # Maximum achievable vision (ceiling effect)
+    max_achievable_va_offset:
+      distribution: normal
+      mean: 10
+      std: 15
+      comment: "Added to baseline VA to determine individual ceiling (capped at 85 letters)"
+  
+  # Rare catastrophic events that permanently affect vision
+  catastrophic_events:
+    geographic_atrophy:
+      probability_per_month: 0.001
+      vision_impact:
+        distribution: uniform
+        min: -30
+        max: -10
+      permanent: true
+      comment: "Development of geographic atrophy causes significant vision loss"
+    
+    subretinal_fibrosis:
+      probability_per_month: 0.0005
+      vision_impact:
+        distribution: normal
+        mean: -20
+        std: 5
+      permanent: true
+      max_va_reduction: 20
+      comment: "Fibrosis reduces maximum achievable vision"
+  
+  # Variance decomposition (for validation)
+  variance_components:
+    between_patient: 0.65  # 65% of variance is between patients
+    within_patient: 0.25   # 25% is within-patient variation
+    measurement: 0.10      # 10% is measurement noise
+  
+  # Validation targets from Seven-UP study
+  validation:
+    mean_change_7_years: -8.6
+    std_7_years: 30
+    year2_year7_correlation: 0.97
+    proportion_above_70: 0.25
+    proportion_below_35: 0.35
+    comment: "Target outcomes for model validation against Seven-UP study"
+  
+  # Optional debug settings
+  debug: false
+  debug_output:
+    - patient_assignments    # Log trajectory class assignments
+    - distribution_samples   # Log sampled parameter values
+    - validation_metrics     # Log validation calculations

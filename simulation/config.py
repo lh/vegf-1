@@ -74,7 +74,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import yaml
 from protocols.protocol_parser import ProtocolParser
-from protocol_models import TreatmentProtocol
+from protocols.protocol_models import TreatmentProtocol
 import logging
 
 logger = logging.getLogger(__name__)

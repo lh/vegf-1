@@ -1,0 +1,218 @@
+# Eylea Time-Based Treat and Extend Protocol with Heterogeneity
+# Uses fortnightly disease progression model with patient variability
+# Based on Seven-UP study showing enormous outcome variability
+
+# Metadata
+name: "Eylea Time-Based T&E - Heterogeneous"
+version: "1.0"
+created_date: "2025-06-18"
+author: "Luke Herbert with Claude Code"
+description: "Eylea treat-and-extend with time-based progression and patient heterogeneity"
+
+# Model type indicator
+model_type: "time_based"
+transition_model: "fortnightly"
+update_interval_days: 14
+
+# Protocol parameters
+protocol_type: "treat_and_extend"
+
+# Loading dose phase
+loading_dose_injections: 3  # Number of initial injections
+loading_dose_interval_days: 28  # Monthly (4 weeks)
+
+# Treat-and-extend phase (after loading)
+min_interval_days: 28
+max_interval_days: 112  
+extension_days: 14
+shortening_days: 14
+
+# Reference to parameter files (relative to this file)
+disease_transitions_file: "parameters/disease_transitions.yaml"
+treatment_effect_file: "parameters/treatment_effect.yaml"
+vision_parameters_file: "parameters/vision.yaml"
+discontinuation_parameters_file: "parameters/discontinuation.yaml"
+demographics_parameters_file: "parameters/demographics.yaml"
+
+# Baseline vision (same as standard protocols)
+baseline_vision_distribution:
+  type: normal
+  mean: 65
+  std: 10
+
+# Heterogeneity configuration - enables patient variability
+heterogeneity:
+  enabled: true
+  version: '1.0'
+  
+  # Patient trajectory classes based on Seven-UP study patterns
+  trajectory_classes:
+    good_responders:
+      proportion: 0.25
+      description: "Patients who maintain vision near baseline with good treatment response"
+      parameters:
+        treatment_effect_multiplier:
+          distribution: lognormal
+          mean: 1.3
+          std: 0.2
+          comment: "30% better treatment response on average"
+        disease_progression_multiplier:
+          distribution: lognormal
+          mean: 0.7
+          std: 0.15
+          comment: "30% slower disease progression"
+        # Time-based specific parameters
+        treatment_duration_multiplier:
+          distribution: lognormal
+          mean: 1.2
+          std: 0.1
+          comment: "Treatment effects last 20% longer"
+        extension_success_multiplier:
+          distribution: lognormal
+          mean: 1.3
+          std: 0.2
+          comment: "30% more likely to extend successfully"
+    
+    moderate_decliners:
+      proportion: 0.40
+      description: "Patients with gradual vision decline over time"
+      parameters:
+        treatment_effect_multiplier:
+          distribution: lognormal
+          mean: 1.0
+          std: 0.3
+          comment: "Average treatment response with high variability"
+        disease_progression_multiplier:
+          distribution: lognormal
+          mean: 1.0
+          std: 0.3
+          comment: "Average disease progression"
+        treatment_duration_multiplier:
+          distribution: lognormal
+          mean: 1.0
+          std: 0.15
+          comment: "Average treatment duration"
+        extension_success_multiplier:
+          distribution: lognormal
+          mean: 1.0
+          std: 0.25
+          comment: "Average extension success"
+    
+    poor_responders:
+      proportion: 0.35
+      description: "Patients with rapid vision decline despite treatment"
+      parameters:
+        treatment_effect_multiplier:
+          distribution: lognormal
+          mean: 0.7
+          std: 0.2
+          comment: "30% worse treatment response"
+        disease_progression_multiplier:
+          distribution: lognormal
+          mean: 1.5
+          std: 0.4
+          comment: "50% faster disease progression"
+        treatment_duration_multiplier:
+          distribution: lognormal
+          mean: 0.8
+          std: 0.15
+          comment: "Treatment effects wear off 20% faster"
+        extension_success_multiplier:
+          distribution: lognormal
+          mean: 0.7
+          std: 0.2
+          comment: "30% less likely to extend successfully"
+  
+  # Additional patient-specific parameters
+  patient_parameters:
+    # Treatment resistance development (tachyphylaxis)
+    resistance_rate:
+      distribution: beta
+      alpha: 2
+      beta: 5
+      comment: "Rate of treatment effectiveness decrease per injection"
+    
+    # Maximum achievable vision (ceiling effect)
+    max_achievable_va_offset:
+      distribution: normal
+      mean: 10
+      std: 15
+      comment: "Added to baseline VA to determine individual ceiling"
+    
+    # Individual variation in baseline decline
+    baseline_decline_multiplier:
+      distribution: lognormal
+      mean: 1.0
+      std: 0.3
+      comment: "Individual variation in natural progression rate"
+    
+    # Individual variation in treatment onset
+    treatment_onset_speed:
+      distribution: lognormal
+      mean: 1.0
+      std: 0.2
+      comment: "How quickly treatment takes effect (lower = faster)"
+  
+  # Rare catastrophic events
+  catastrophic_events:
+    geographic_atrophy:
+      probability_per_month: 0.001
+      vision_impact:
+        distribution: uniform
+        min: -30
+        max: -10
+      permanent: true
+      progression_multiplier: 2.0
+      extension_penalty: 28  # Forces shorter intervals
+      comment: "Geographic atrophy development"
+    
+    subretinal_fibrosis:
+      probability_per_month: 0.0005
+      vision_impact:
+        distribution: normal
+        mean: -20
+        std: 5
+      permanent: true
+      max_va_reduction: 20
+      treatment_response_multiplier: 0.5
+      comment: "Fibrosis reduces treatment effectiveness"
+  
+  # Time-based specific modulation
+  time_based_modulation:
+    # How heterogeneity affects the fortnightly updates
+    progression_noise:
+      distribution: normal
+      mean: 0
+      std: 0.5
+      comment: "Additional noise in fortnightly progression"
+    
+    # Seasonal/cyclical effects (optional)
+    seasonal_variation:
+      enabled: false
+      amplitude: 0.1
+      period_days: 365
+      comment: "Annual variation in disease activity"
+  
+  # Validation targets from Seven-UP study
+  validation:
+    mean_change_7_years: -8.6
+    std_7_years: 30
+    year2_year7_correlation: 0.97
+    proportion_above_70: 0.25
+    proportion_below_35: 0.35
+    proportion_stable_at_2_years: 0.40  # Time-based specific
+    mean_injections_year_1: 7.5  # Expected injections
+    mean_injections_year_2: 5.8
+    comment: "Target outcomes for validation"
+  
+  # Debug settings
+  debug: true
+  debug_output:
+    - patient_assignments
+    - fortnightly_updates  # Time-based specific
+    - extension_decisions
+    - treatment_responses
+    - validation_metrics
+
+# Parameters directory for time-based model files
+parameters_directory: "./parameters"
