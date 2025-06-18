@@ -16,12 +16,16 @@ def create_treatment_pattern_sankey(transitions_df):
     # Get colors from central system
     treatment_colors = get_treatment_state_colors()
     
-    # Aggregate transitions - count unique patients, not transition instances
-    flow_counts = transitions_df.groupby(['from_state', 'to_state'])['patient_id'].nunique().reset_index(name='count')
+    # Aggregate transitions
+    flow_counts = transitions_df.groupby(['from_state', 'to_state']).size().reset_index(name='count')
+    
+    # Adjust terminal node counts to show unique patients
+    from ape.components.treatment_patterns.sankey_patient_counts import adjust_terminal_node_counts
+    flow_counts = adjust_terminal_node_counts(flow_counts, transitions_df)
     
     # Filter out small flows (but keep all terminal flows)
     min_flow_size = max(1, len(transitions_df) * 0.001)
-    is_terminal = flow_counts['to_state'].str.contains('Still in')
+    is_terminal = flow_counts['to_state'].str.contains('Still in|Discontinued')
     flow_counts = flow_counts[(flow_counts['count'] >= min_flow_size) | is_terminal]
     
     # Create nodes
@@ -113,8 +117,8 @@ def create_enhanced_sankey_with_colored_streams(transitions_df):
     # Get colors from central system
     treatment_colors = get_treatment_state_colors()
     
-    # Aggregate transitions - count unique patients, not transition instances
-    flow_counts = transitions_df.groupby(['from_state', 'to_state'])['patient_id'].nunique().reset_index(name='count')
+    # Aggregate transitions
+    flow_counts = transitions_df.groupby(['from_state', 'to_state']).size().reset_index(name='count')
     
     # Filter out small flows (but keep all terminal flows)
     min_flow_size = max(1, len(transitions_df) * 0.001)
@@ -185,7 +189,7 @@ def create_enhanced_sankey_with_colored_streams(transitions_df):
             target=[node_map[row['to_state']] for _, row in flow_counts.iterrows()],
             value=[row['count'] for _, row in flow_counts.iterrows()],
             color=link_colors,
-            hovertemplate='%{source.label} → %{target.label}<br>%{value} patients<extra></extra>'
+            hovertemplate='%{source.label} → %{target.label}<br>Count: %{value}<extra></extra>'
         ),
         textfont=dict(size=12, color='#333333', family='Arial')
     )])
@@ -212,8 +216,8 @@ def create_gradient_sankey(transitions_df):
     # Get colors from central system
     treatment_colors = get_treatment_state_colors()
     
-    # Aggregate transitions - count unique patients, not transition instances
-    flow_counts = transitions_df.groupby(['from_state', 'to_state'])['patient_id'].nunique().reset_index(name='count')
+    # Aggregate transitions
+    flow_counts = transitions_df.groupby(['from_state', 'to_state']).size().reset_index(name='count')
     
     # Filter out small flows (but keep all terminal flows)
     min_flow_size = max(1, len(transitions_df) * 0.001)
@@ -303,7 +307,7 @@ def create_gradient_sankey(transitions_df):
             target=[node_map[row['to_state']] for _, row in flow_counts.iterrows()],
             value=[row['count'] for _, row in flow_counts.iterrows()],
             color=link_colors,
-            hovertemplate='%{source.label} → %{target.label}<br>%{value} patients<extra></extra>'
+            hovertemplate='%{source.label} → %{target.label}<br>Count: %{value}<extra></extra>'
         ),
         textfont=dict(size=12, color='#333333', family='Arial')
     )])

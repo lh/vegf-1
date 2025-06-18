@@ -740,13 +740,13 @@ with tab7:
         # Show top transition patterns
         st.markdown("#### Most Common Treatment Transitions")
         
-        # Calculate transition frequencies - count unique patients per transition type
-        transition_counts = transitions_df.groupby(['from_state', 'to_state'])['patient_id'].nunique().reset_index(name='count')
+        # Calculate transition frequencies
+        transition_counts = transitions_df.groupby(['from_state', 'to_state']).size().reset_index(name='count')
         transition_counts = transition_counts.sort_values('count', ascending=False).head(15)
         
-        # Add percentage based on total unique patients
-        total_patients = transitions_df['patient_id'].nunique()
-        transition_counts['percentage'] = (transition_counts['count'] / total_patients * 100).round(1)
+        # Add percentage
+        total_transitions = len(transitions_df)
+        transition_counts['percentage'] = (transition_counts['count'] / total_transitions * 100).round(1)
         
         # Format for display
         transition_counts['Transition'] = transition_counts['from_state'] + ' → ' + transition_counts['to_state']
@@ -760,23 +760,23 @@ with tab7:
         # Summary insights
         st.markdown("#### Key Insights")
         
-        # Calculate some key metrics - count unique patients, not transition instances
-        gap_transitions = transitions_df[transitions_df['to_state'].str.contains('Gap')]['patient_id'].nunique()
-        restart_transitions = transitions_df[transitions_df['to_state'] == 'Restarted After Gap']['patient_id'].nunique()
-        discontinuation_transitions = transitions_df[transitions_df['to_state'] == 'No Further Visits']['patient_id'].nunique()
+        # Calculate some key metrics
+        gap_transitions = transitions_df[transitions_df['to_state'].str.contains('Gap')].shape[0]
+        restart_transitions = transitions_df[transitions_df['to_state'] == 'Restarted After Gap'].shape[0]
+        discontinuation_transitions = transitions_df[transitions_df['to_state'] == 'No Further Visits'].shape[0]
         
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            gap_rate = (gap_transitions / total_patients * 100) if total_patients > 0 else 0
-            st.metric("Patients with Gaps", f"{gap_rate:.1f}%")
+            gap_rate = (gap_transitions / total_transitions * 100) if total_transitions > 0 else 0
+            st.metric("Transitions to Gaps", f"{gap_rate:.1f}%")
         
         with col2:
             restart_rate = (restart_transitions / gap_transitions * 100) if gap_transitions > 0 else 0
             st.metric("Gap Recovery Rate", f"{restart_rate:.1f}%")
         
         with col3:
-            disc_rate = (discontinuation_transitions / total_patients * 100) if total_patients > 0 else 0
+            disc_rate = (discontinuation_transitions / total_transitions * 100) if total_transitions > 0 else 0
             st.metric("No Further Visits", f"{disc_rate:.1f}%")
         
         # Patient journey length analysis

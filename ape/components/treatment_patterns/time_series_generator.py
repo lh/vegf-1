@@ -10,7 +10,8 @@ def generate_patient_state_time_series(
     time_resolution: str = 'month',
     start_time: float = 0,
     end_time: Optional[float] = None,
-    enrollment_df: Optional[pd.DataFrame] = None
+    enrollment_df: Optional[pd.DataFrame] = None,
+    results: Optional[object] = None
 ) -> pd.DataFrame:
     """
     Generate time series of patient counts by state.
@@ -36,6 +37,11 @@ def generate_patient_state_time_series(
     # Validate data
     if visits_df['patient_id'].nunique() == 1:
         st.warning("Streamgraph may not be meaningful with single patient")
+    
+    # Add discontinued information if results provided
+    if results is not None:
+        from ape.components.treatment_patterns.discontinued_utils import add_discontinued_info_to_visits
+        visits_df = add_discontinued_info_to_visits(visits_df, results)
     
     # Convert patient-relative time to calendar time
     visits_df = visits_df.copy()
@@ -95,12 +101,12 @@ def generate_patient_state_time_series(
         enrolled_at_time = np.full(len(time_points), total_patients)
     
     # Prepare result list
-    results = []
+    time_series_results = []
     
     # For each time point, determine each patient's state
     for i, t in enumerate(time_points):
         # Count patients in each state at this time
-        state_counts = get_patient_states_at_time(visits_df, t, end_time, enrollment_times)
+        state_counts = get_patient_states_at_time(visits_df, t, end_time, enrollment_times, results)
         
         # Get pre-computed enrolled count (much faster than counting in loop)
         enrolled_count = enrolled_at_time[i]
@@ -109,25 +115,26 @@ def generate_patient_state_time_series(
         for state, count in state_counts.items():
             percentage = (count / enrolled_count * 100) if enrolled_count > 0 else 0
             
-            results.append({
+            time_series_results.append({
                 'time_point': t,
                 'state': state,
                 'patient_count': count,
                 'percentage': percentage
             })
     
-    return pd.DataFrame(results)
+    return pd.DataFrame(time_series_results)
 
 def get_patient_states_at_time(visits_df: pd.DataFrame, time_point: float, sim_end_time: float, 
-                              enrollment_times: dict = None) -> dict:
+                              enrollment_times: dict = None, results: Optional[object] = None) -> dict:
     """
     Determine patient states at a specific time point using vectorized operations.
     
     Args:
-        visits_df: Visit data
+        visits_df: Visit data (may include patient_discontinued column)
         time_point: Time point in months
         sim_end_time: Simulation end time in months
         enrollment_times: Dict of {patient_id: enrollment_time_months}
+        results: Optional results object for discontinued info
     
     Returns dict of {state: count}
     """
@@ -177,18 +184,52 @@ def get_patient_states_at_time(visits_df: pd.DataFrame, time_point: float, sim_e
     # We'll keep them in Initial Treatment for a reasonable period (e.g., up to 2 months)
     # after their first visit to represent the initial treatment period
     
-    # Vectorized state determination
-    conditions = [
-        time_since_last > 6,  # No further visits after 6 months
-        is_first_visit & (time_since_last <= 2) & (last_visits['treatment_state'] == 'Initial Treatment'),  # Still in initial period
-        True  # Default case
-    ]
+    # Check if we have discontinued information
+    has_discontinued_info = 'patient_discontinued' in last_visits.columns
     
-    choices = [
-        'No Further Visits',
-        'Initial Treatment',  # Keep in Initial Treatment for up to 2 months after first visit
-        last_visits['treatment_state']  # Use the visit's treatment state
-    ]
+    if has_discontinued_info:
+        # Check discontinuation time if available
+        if 'discontinuation_time_days' in last_visits.columns:
+            # Convert time point to days for comparison
+            time_point_days = time_point * 30.44
+            
+            # Patient is discontinued if:
+            # 1. They have the discontinued flag AND
+            # 2. The discontinuation happened before current time point
+            is_discontinued = (
+                last_visits['patient_discontinued'] & 
+                (last_visits['discontinuation_time_days'] <= time_point_days)
+            )
+        else:
+            # Just use the flag if no time info
+            is_discontinued = last_visits['patient_discontinued']
+        
+        # Vectorized state determination with discontinued info
+        conditions = [
+            is_discontinued,  # Discontinued patients
+            is_first_visit & (time_since_last <= 2) & (last_visits['treatment_state'] == 'Initial Treatment'),
+            True  # Default case
+        ]
+        
+        choices = [
+            'Discontinued',  # Use "Discontinued" not "No Further Visits"
+            'Initial Treatment',
+            last_visits['treatment_state']  # Use actual treatment state
+        ]
+    else:
+        # Fall back to time-based logic if no discontinued info
+        # But use a more conservative cutoff and different label
+        conditions = [
+            time_since_last > 12,  # Only after 12 months, not 6
+            is_first_visit & (time_since_last <= 2) & (last_visits['treatment_state'] == 'Initial Treatment'),
+            True  # Default case
+        ]
+        
+        choices = [
+            'Lost to Follow-up',  # More accurate than "No Further Visits"
+            'Initial Treatment',
+            last_visits['treatment_state']
+        ]
     
     last_visits['current_state'] = np.select(conditions, choices)
     

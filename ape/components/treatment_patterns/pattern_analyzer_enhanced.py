@@ -12,7 +12,7 @@ from ape.utils.visualization_modes import get_mode_colors
 
 
 def create_terminal_transitions(visits_df: pd.DataFrame, transitions_df: pd.DataFrame, 
-                              simulation_end_days: float) -> pd.DataFrame:
+                              simulation_end_days: float, results=None) -> pd.DataFrame:
     """
     Create artificial transitions for patients still in treatment at simulation end.
     
@@ -20,36 +20,36 @@ def create_terminal_transitions(visits_df: pd.DataFrame, transitions_df: pd.Data
         visits_df: DataFrame with all visits
         transitions_df: Original transitions between states
         simulation_end_days: Total simulation duration in days
+        results: Optional results object to get discontinued information
         
     Returns:
         Enhanced transitions DataFrame including terminal transitions
     """
-    # First, identify patients who already have terminal transitions (No Further Visits)
-    existing_terminal_patients = set()
-    if 'to_state' in transitions_df.columns:
-        terminal_mask = transitions_df['to_state'].str.contains('No Further Visits', na=False)
-        existing_terminal_patients = set(transitions_df[terminal_mask]['patient_id'].unique())
-    
     # Get the last visit for each patient - use idxmax to preserve all columns
     last_visit_idx = visits_df.groupby('patient_id')['time_days'].idxmax()
     last_visits = visits_df.loc[last_visit_idx].copy()
     
-    # Only consider patients whose last visit was a reasonable time before simulation end
-    # (e.g., if someone's last visit was at day 3640 of a 3650-day simulation, they're probably done)
-    cutoff_days = simulation_end_days - 30  # Within last month
-    
-    # Filter to active patients who DON'T already have "No Further Visits"
-    active_at_end = last_visits[
-        (last_visits['time_days'] < cutoff_days) & 
-        (~last_visits['patient_id'].isin(existing_terminal_patients))
-    ].copy()
-    
-    if len(active_at_end) == 0:
-        return transitions_df
+    # Get discontinued information if available
+    if results is not None:
+        from ape.components.treatment_patterns.discontinued_utils import get_discontinued_patients
+        discontinued_info = get_discontinued_patients(results)
+        
+        # Add discontinued status to last visits
+        last_visits['is_discontinued'] = last_visits['patient_id'].map(
+            lambda pid: discontinued_info.get(pid, {}).get('discontinued', False)
+        )
+        
+        # Only consider patients who are NOT discontinued
+        active_at_end = last_visits[~last_visits['is_discontinued']].copy()
+    else:
+        # Fallback to time-based logic if no results provided
+        cutoff_days = simulation_end_days - 30  # Within last month
+        active_at_end = last_visits[last_visits['time_days'] < cutoff_days].copy()
     
     # Create terminal transitions
     terminal_transitions = []
     
+    # Add transitions for active patients
     for _, patient in active_at_end.iterrows():
         # Use the treatment_state from the last visit
         current_state = patient['treatment_state']
@@ -70,6 +70,29 @@ def create_terminal_transitions(visits_df: pd.DataFrame, transitions_df: pd.Data
             'duration': (simulation_end_days - patient['time_days']) / (365.25 / 12),
             'interval_days': np.nan  # No actual interval since it's terminal
         })
+    
+    # Add transitions for discontinued patients if we have the info
+    if results is not None and 'is_discontinued' in last_visits.columns:
+        # Get discontinued patients  
+        discontinued_patients = last_visits[last_visits['is_discontinued']].copy()
+        
+        for _, patient in discontinued_patients.iterrows():
+            # Use their last treatment state
+            current_state = patient['treatment_state']
+            
+            # Create transition to "Discontinued"
+            terminal_transitions.append({
+                'patient_id': patient['patient_id'],
+                'from_state': current_state,
+                'to_state': 'Discontinued',
+                'from_time_days': patient['time_days'],
+                'to_time_days': patient['time_days'],  # Discontinuation at last visit
+                'from_time': patient['time_days'] / (365.25 / 12),
+                'to_time': patient['time_days'] / (365.25 / 12),
+                'duration_days': 0,  # Instant transition to discontinued
+                'duration': 0,
+                'interval_days': np.nan
+            })
     
     # Combine with original transitions
     if terminal_transitions:
@@ -110,7 +133,7 @@ def extract_treatment_patterns_with_terminals(results) -> Tuple[pd.DataFrame, pd
     
     # Add terminal transitions
     enhanced_transitions = create_terminal_transitions(
-        visits_df, transitions_df, simulation_days
+        visits_df, transitions_df, simulation_days, results
     )
     
     # Don't print during web app usage - only for debugging

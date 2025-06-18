@@ -91,12 +91,11 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
             )
         
         if len(transitions_df) > 0:
-            # Always use enhanced version with terminal status colors if available
-            if enhanced_available:
-                fig = create_enhanced_sankey_with_terminals(transitions_df)
-            else:
-                # Fallback to basic version if enhanced not available
-                fig = create_enhanced_sankey_with_colored_streams(transitions_df)
+            # Use enhanced version - no fallbacks!
+            if not enhanced_available:
+                raise ValueError("Enhanced pattern analyzer is required but not available")
+            
+            fig = create_enhanced_sankey_with_terminals(transitions_df, results)
             
             # Import export configuration
             from ape.utils.export_config import get_sankey_export_config

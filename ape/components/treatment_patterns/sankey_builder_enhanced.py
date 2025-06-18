@@ -39,7 +39,7 @@ def add_terminal_node_styling(nodes: List[Dict], node_map: Dict[str, int]):
             node['is_terminal'] = True
 
 
-def create_enhanced_sankey_with_terminals(transitions_df):
+def create_enhanced_sankey_with_terminals(transitions_df, results=None):
     """
     Create Sankey diagram with terminal state nodes for patients still in treatment.
     
@@ -58,12 +58,15 @@ def create_enhanced_sankey_with_terminals(transitions_df):
     ].copy()
     
     # Aggregate transitions
-    # Aggregate transitions - count unique patients, not transition instances
-    flow_counts = filtered_df.groupby(['from_state', 'to_state'])['patient_id'].nunique().reset_index(name='count')
+    flow_counts = filtered_df.groupby(['from_state', 'to_state']).size().reset_index(name='count')
+    
+    # Adjust terminal node counts to show unique patients
+    from ape.components.treatment_patterns.sankey_patient_counts import adjust_terminal_node_counts
+    flow_counts = adjust_terminal_node_counts(flow_counts, filtered_df)
     
     # Filter out small flows (but keep all terminal flows)
     min_flow_size = max(1, len(filtered_df) * 0.001)
-    is_terminal = flow_counts['to_state'].str.contains('Still in|No Further')
+    is_terminal = flow_counts['to_state'].str.contains('Still in|No Further|Discontinued')
     flow_counts = flow_counts[(flow_counts['count'] >= min_flow_size) | is_terminal]
     
     # Create nodes
@@ -83,7 +86,8 @@ def create_enhanced_sankey_with_terminals(transitions_df):
         'Long Gap (12+ months)',
         'Restarted After Gap',
         'Irregular Pattern',
-        'No Further Visits'
+        'No Further Visits',
+        'Discontinued'
     ]
     
     # Add terminal states at the end
@@ -164,9 +168,9 @@ def create_enhanced_sankey_with_terminals(transitions_df):
         if 'Still in' in state:
             # Green for continuing treatment
             node_colors.append(mode_colors.get('terminal_active', '#27ae60'))
-        elif 'No Further Visits' in state:
-            # Red for discontinued
-            node_colors.append(mode_colors.get('terminal_discontinued', '#e74c3c'))
+        elif 'No Further Visits' in state or 'Discontinued' in state:
+            # Gray for discontinued (matches streamgraph)
+            node_colors.append('#999999')
         else:
             # Use standard colors for non-terminal nodes
             node_colors.append(treatment_colors.get(state, "#cccccc"))
@@ -243,11 +247,16 @@ def create_enhanced_sankey_with_terminals(transitions_df):
         textfont=dict(size=14, color='#333333', family='Arial')  # Increased font size
     )])
     
+    # Create title with memorable name if available
+    title = None
+    if results and hasattr(results, 'metadata') and hasattr(results.metadata, 'memorable_name') and results.metadata.memorable_name:
+        title = f"Treatment Pattern Transitions - {results.metadata.memorable_name}"
+    
     fig.update_layout(
-        title=None,  # Remove title since it's redundant with the section header
+        title=title,
         font=dict(size=12),
         height=600,
-        margin=dict(l=10, r=150, t=10, b=40),  # Reduced top margin since no title
+        margin=dict(l=10, r=150, t=40 if title else 10, b=40),
         showlegend=False
     )
     
@@ -262,8 +271,7 @@ def create_enhanced_sankey_with_terminals_destination_colored(transitions_df):
     treatment_colors = get_treatment_state_colors()
     
     # Aggregate transitions
-    # Aggregate transitions - count unique patients, not transition instances
-    flow_counts = transitions_df.groupby(['from_state', 'to_state'])['patient_id'].nunique().reset_index(name='count')
+    flow_counts = transitions_df.groupby(['from_state', 'to_state']).size().reset_index(name='count')
     
     # Don't filter out terminal flows
     min_flow_size = max(1, len(transitions_df) * 0.001)
@@ -396,7 +404,7 @@ def create_enhanced_sankey_with_terminals_destination_colored(transitions_df):
             target=[node_map[row['to_state']] for _, row in flow_counts.iterrows()],
             value=[row['count'] for _, row in flow_counts.iterrows()],
             color=link_colors,
-            hovertemplate='%{source.label} → %{target.label}<br>%{value} patients<extra></extra>'
+            hovertemplate='%{source.label} → %{target.label}<br>Count: %{value}<extra></extra>'
         ),
         textfont=dict(
             size=11,  # Slightly smaller for less cramping

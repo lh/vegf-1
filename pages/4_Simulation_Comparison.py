@@ -1651,16 +1651,12 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
     # Process transitions for both streams
     def process_transitions(df, prefix):
         """Process transitions and add prefix to states."""
-        # Group and aggregate - counting UNIQUE patients per transition
-        flow_data = []
-        for (from_state, to_state), group in df.groupby(['from_state', 'to_state']):
-            flow_data.append({
-                'from_state': from_state,
-                'to_state': to_state,
-                'count': group['patient_id'].nunique()  # Count unique patients, not transitions
-            })
+        # Group and aggregate
+        flow_counts = df.groupby(['from_state', 'to_state']).size().reset_index(name='count')
         
-        flow_counts = pd.DataFrame(flow_data)
+        # Adjust terminal node counts to show unique patients
+        from ape.components.treatment_patterns.sankey_patient_counts import adjust_terminal_node_counts
+        flow_counts = adjust_terminal_node_counts(flow_counts, df)
         
         # Filter out Pre-Treatment and small flows
         flow_counts = flow_counts[
@@ -1669,9 +1665,8 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
         ]
         
         # Keep significant flows and all terminal flows
-        total_patients = df['patient_id'].nunique()
-        min_flow = max(1, total_patients * 0.001)
-        is_terminal = flow_counts['to_state'].str.contains('Still in|No Further')
+        min_flow = max(1, len(df) * 0.001)
+        is_terminal = flow_counts['to_state'].str.contains('Still in|No Further|Discontinued')
         flow_counts = flow_counts[(flow_counts['count'] >= min_flow) | is_terminal]
         
         # Add prefix to states
@@ -1692,30 +1687,6 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
     states_b = set(flows_b['from_state']) | set(flows_b['to_state'])
     all_states = sorted(states_a | states_b)
     
-    # Calculate node flows (sum of all incoming and outgoing flows)
-    node_flows = {}
-    for state in all_states:
-        incoming = all_flows[all_flows['to_state'] == state]['count'].sum()
-        outgoing = all_flows[all_flows['from_state'] == state]['count'].sum()
-        # For initial states, use outgoing; for terminal states, use incoming; for others, use max
-        if 'Initial' in state and 'Still in' not in state:
-            node_flows[state] = outgoing
-        elif 'Still in' in state or 'No Further' in state:
-            node_flows[state] = incoming
-        else:
-            node_flows[state] = max(incoming, outgoing)
-    
-    # Calculate total patient count for each stream using terminal states for accuracy
-    # Terminal states give the true patient count since each patient has exactly one terminal state
-    terminal_a = flows_a[flows_a['to_state'].str.contains('Still in|No Further')]
-    terminal_b = flows_b[flows_b['to_state'].str.contains('Still in|No Further')]
-    
-    total_patients_a = terminal_a['count'].sum() if len(terminal_a) > 0 else flows_a['count'].max()
-    total_patients_b = terminal_b['count'].sum() if len(terminal_b) > 0 else flows_b['count'].max()
-    
-    # Use the maximum total for scaling
-    max_total = max(total_patients_a, total_patients_b, 1)  # Avoid division by zero
-    
     # Collect terminal states for each stream to calculate dynamic positioning
     terminal_states_a = sorted([s for s in states_a if 'Still in' in s])
     terminal_states_b = sorted([s for s in states_b if 'Still in' in s])
@@ -1733,7 +1704,6 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
     y_positions = []
     node_colors = []
     node_labels = []
-    node_customdata = []  # For storing thickness values
     
     # Calculate dynamic Y positions for "Still in" states
     still_in_y_positions_a = {}
@@ -1833,103 +1803,54 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
         # Colors based on state type
         if 'Still in' in base_state:
             node_colors.append('#27ae60')  # Green for continuing
-        elif 'No Further' in base_state:
-            node_colors.append('#e74c3c')  # Red for discontinued
+        elif 'No Further' in base_state or 'Discontinued' in base_state:
+            node_colors.append('#999999')  # Gray for discontinued (matches streamgraph)
         else:
             node_colors.append(treatment_colors.get(base_state, '#cccccc'))
         
-        # Create concise labels for key states
-        if 'Initial' in base_state and 'Still in' not in base_state:
-            label = "Initial"
-        elif 'Still in' in base_state:
-            # Extract treatment stage from "Still in X" pattern
-            parts = base_state.split(' ')
-            if len(parts) >= 3:
-                label = f"Active: {parts[-1]}"
-            else:
-                label = "Active"
-        elif 'No Further' in base_state:
-            label = "Discontinued"
-        else:
-            # Extract key part of state name
-            if 'Intensive' in base_state:
-                label = "Intensive"
-            elif 'Regular' in base_state:
-                label = "Regular"
-            elif 'Extended' in base_state:
-                label = "Extended"
-            elif 'Maximum' in base_state:
-                label = "Maximum"
-            else:
-                label = ""
-        
-        node_labels.append(label)
-        
-        # Calculate node thickness based on patient flow
-        # Scale thickness between 5 and 40 based on flow proportion
-        flow = node_flows.get(state, 0)
-        if is_stream_a:
-            # Scale relative to stream A's total
-            flow_proportion = flow / total_patients_a if total_patients_a > 0 else 0
-        else:
-            # Scale relative to stream B's total
-            flow_proportion = flow / total_patients_b if total_patients_b > 0 else 0
-        
-        # Map flow proportion to thickness (min 5, max 40)
-        thickness = max(5, min(40, 5 + flow_proportion * 35))
-        node_customdata.append(thickness)
+        # Empty labels
+        node_labels.append("")
     
     # Create links
     sources = [node_map[row['from_state']] for _, row in all_flows.iterrows()]
     targets = [node_map[row['to_state']] for _, row in all_flows.iterrows()]
     values = [row['count'] for _, row in all_flows.iterrows()]
     
-    # Link colors with transparency based on flow volume
+    # Link colors with transparency
     link_colors = []
-    max_flow = all_flows['count'].max()
-    
     for _, row in all_flows.iterrows():
         base_state = row['from_state'][2:]  # Remove prefix
         color = treatment_colors.get(base_state, '#cccccc')
-        
-        # Calculate opacity based on flow volume (min 0.2, max 0.6)
-        flow_ratio = row['count'] / max_flow if max_flow > 0 else 0.5
-        opacity = 0.2 + (flow_ratio * 0.4)
-        
-        # Convert hex to rgba with dynamic transparency
+        # Convert hex to rgba with transparency
         if color.startswith('#'):
             hex_color = color.lstrip('#')
             r = int(hex_color[0:2], 16)
             g = int(hex_color[2:4], 16)
             b = int(hex_color[4:6], 16)
-            link_colors.append(f'rgba({r}, {g}, {b}, {opacity:.2f})')
+            link_colors.append(f'rgba({r}, {g}, {b}, 0.4)')
         else:
             link_colors.append(color)
     
-    # Create Sankey with dynamic node sizing
-    # Note: Plotly Sankey doesn't support individual node thickness, but we can use
-    # customdata to store the information and display it in hover
+    # Create Sankey
     fig = go.Figure(data=[go.Sankey(
         arrangement='fixed',
         node=dict(
             pad=8,  # Reduced padding
-            thickness=20,  # Fixed thickness for all nodes
-            line=dict(width=0.5, color='rgba(0,0,0,0.1)'),  # Subtle border
+            thickness=15,  # Thinner nodes
+            line=dict(width=0),
             label=node_labels,
             color=node_colors,
             x=x_positions,
             y=y_positions,
-            customdata=[[node_flows.get(state, 0)] for state in all_states],  # Store actual patient counts
-            hovertemplate='<b>%{label}</b><br>%{customdata[0]:,.0f} patients<extra></extra>'
         ),
         link=dict(
             source=sources,
             target=targets,
             value=values,
             color=link_colors,
-            hovertemplate='%{value:,.0f} patients<extra></extra>'
+            hovertemplate='%{value} patients<extra></extra>'
         ),
-        textfont=dict(size=10, color='rgba(0,0,0,0.7)')  # Show labels with reasonable size
+        textfont=dict(size=1, color='rgba(0,0,0,0)')
     )])
     
     # Add separator line
@@ -1941,9 +1862,9 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
         xref="paper", yref="paper"
     )
     
-    # Add labels for each stream with patient counts
+    # Add labels for each stream
     fig.add_annotation(
-        text=f"<b>{name_a}</b><br><span style='font-size:12px'>{total_patients_a:,} patients</span>",
+        text=f"<b>{name_a}</b>",
         xref="paper", yref="paper",
         x=0.02, y=0.95,
         showarrow=False,
@@ -1953,7 +1874,7 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
     )
     
     fig.add_annotation(
-        text=f"<b>{name_b}</b><br><span style='font-size:12px'>{total_patients_b:,} patients</span>",
+        text=f"<b>{name_b}</b>",
         xref="paper", yref="paper",
         x=0.02, y=0.05,
         showarrow=False,
