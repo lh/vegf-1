@@ -45,10 +45,9 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
     @st.cache_data
     def get_cached_treatment_patterns(sim_id, include_terminals=False):
         """Extract and cache treatment patterns."""
-        if include_terminals and enhanced_available:
-            transitions_df, visits_df = extract_treatment_patterns_with_terminals(results)
-        else:
-            transitions_df, visits_df = extract_treatment_patterns_vectorized(results)
+        if not include_terminals or not enhanced_available:
+            raise ValueError("Enhanced pattern analyzer with terminals is required")
+        transitions_df, visits_df = extract_treatment_patterns_with_terminals(results)
         return transitions_df, visits_df
     
     @st.cache_data

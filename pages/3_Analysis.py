@@ -123,7 +123,7 @@ with tab1:
     except ImportError:
         enhanced_available = False
     
-    from ape.components.treatment_patterns import extract_treatment_patterns_vectorized, create_enhanced_sankey_with_colored_streams
+    # Only import enhanced versions - no fallbacks!
     
     @st.cache_data
     def get_cached_treatment_patterns(sim_id, include_terminals=False):
@@ -139,11 +139,10 @@ with tab1:
             else:
                 return data['transitions_df'], data['visits_df']
         
-        # Fall back to on-demand calculation (current behavior)
-        if include_terminals and enhanced_available:
-            transitions_df, visits_df = extract_treatment_patterns_with_terminals(results)
-        else:
-            transitions_df, visits_df = extract_treatment_patterns_vectorized(results)
+        # Use enhanced version only - no fallbacks
+        if not include_terminals or not enhanced_available:
+            raise ValueError("Enhanced pattern analyzer with terminals is required")
+        transitions_df, visits_df = extract_treatment_patterns_with_terminals(results)
         
         return transitions_df, visits_df
     
