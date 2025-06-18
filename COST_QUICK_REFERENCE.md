@@ -1,16 +1,16 @@
 # Cost Quick Reference Guide
 
-## Drug Unit Costs (NHS Net Prices per Vial)
+## Drug Unit Costs (NHS Actual Costs Including VAT)
 
-| Drug | Net Price | List Price | Discount |
-|------|-----------|------------|----------|
-| **Aflibercept generic** (biosimilar) | £228 | £400 | 43% |
-| **Eylea 8mg** (aflibercept HD) | £339 | £998 | 66% |
-| **Eylea 2mg** (original) | £457 | £816 | 44% |
-| **Ranibizumab** (Lucentis) | £519 | £742 | 30% |
-| **Ranibizumab biosimilar** | £294 | £613 | 52% |
-| **Bevacizumab** (compounded) | £50 | £50 | 0% |
-| **Faricimab** (Vabysmo) | £1,084 | £1,445 | 25% |
+| Drug | Net Price | +VAT (20%) | List Price | Discount |
+|------|-----------|------------|------------|----------|
+| **Aflibercept generic** (biosimilar) | £228 | £274 | £400 | 43% |
+| **Eylea 8mg** (aflibercept HD) | £339 | £407 | £998 | 66% |
+| **Eylea 2mg** (original) | £457 | £548 | £816 | 44% |
+| **Ranibizumab** (Lucentis) | £519 | £623 | £742 | 30% |
+| **Ranibizumab biosimilar** | £294 | £353 | £613 | 52% |
+| **Bevacizumab** (compounded) | £50 | £60 | £50 | 0% |
+| **Faricimab** (Vabysmo) | £1,084 | £1,301 | £1,445 | 25% |
 
 ## Visit Component Costs
 
@@ -73,9 +73,10 @@
 - **Appointment cancellation**: Full slot cost if <24hr notice
 
 ## Notes
-- All prices exclude VAT (NHS trusts pay VAT on purchases)
-- VAT typically 20% on drugs and medical supplies
-- Some VAT may be reclaimed through COS scheme
+- Drug prices show both net price and actual NHS cost including 20% VAT
+- VAT on drug purchases is NOT recoverable under COS scheme
+- COS scheme only covers certain contracted-out services
+- Staff and facility costs may be VAT exempt (internal NHS provision)
 - Costs based on 2024/25 NHS reference costs
 - Generic pricing assumes July 2025 launch
 - Regional variations apply

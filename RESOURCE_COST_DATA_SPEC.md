@@ -17,6 +17,8 @@ drug_costs:
     list_price: 816.00
     discount_rate: 0.44
     net_price: 457.00
+    vat_rate: 0.20  # Non-recoverable for drug purchases
+    nhs_cost_inc_vat: 548.40
     unit: "per_vial"
     typical_annual_usage: 6.9  # injections per year
     
@@ -24,6 +26,8 @@ drug_costs:
     list_price: 998.00
     discount_rate: 0.66
     net_price: 339.00
+    vat_rate: 0.20
+    nhs_cost_inc_vat: 406.80
     unit: "per_vial"
     typical_annual_usage: 6.1
     
@@ -31,12 +35,16 @@ drug_costs:
     list_price: 742.00
     discount_rate: 0.30
     net_price: 519.00
+    vat_rate: 0.20
+    nhs_cost_inc_vat: 622.80
     unit: "per_vial"
     
   bevacizumab_compounded:
     list_price: 50.00
     discount_rate: 0.00
     net_price: 50.00
+    vat_rate: 0.20
+    nhs_cost_inc_vat: 60.00
     unit: "per_vial"
 
 # Visit component costs
@@ -118,6 +126,8 @@ time_variations:
         list_price: 400.00
         discount_rate: 0.43
         net_price: 228.00
+        vat_rate: 0.20
+        nhs_cost_inc_vat: 273.60
 ```
 
 ## Resource Categories and Tracking

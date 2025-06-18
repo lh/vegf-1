@@ -12,14 +12,14 @@ This document outlines the plan for adding resource tracking and cost analysis t
 
 ## Available Cost Data
 
-### Drug Costs (from nhs_net_prices_ref.yaml)
-- **Aflibercept 2mg (Eylea)**: £457 net per injection
-- **Aflibercept 8mg (Eylea HD)**: £339 net per injection
-- **Ranibizumab (Lucentis)**: £519 net per injection
-- **Ranibizumab biosimilar**: £294 net per injection
-- **Bevacizumab compounded**: £50 per injection
-- **Faricimab (Vabysmo)**: £1,084 net per injection
-- **Aflibercept biosimilar (projected)**: £228 net per injection
+### Drug Costs (NHS actual cost including 20% VAT)
+- **Aflibercept 2mg (Eylea)**: £548 per injection (£457 + VAT)
+- **Aflibercept 8mg (Eylea HD)**: £407 per injection (£339 + VAT)
+- **Ranibizumab (Lucentis)**: £623 per injection (£519 + VAT)
+- **Ranibizumab biosimilar**: £353 per injection (£294 + VAT)
+- **Bevacizumab compounded**: £60 per injection (£50 + VAT)
+- **Faricimab (Vabysmo)**: £1,301 per injection (£1,084 + VAT)
+- **Aflibercept biosimilar (projected)**: £274 per injection (£228 + VAT)
 
 ### Visit/Procedure Costs (from extracted data)
 - Appointment costs range: £173,394 - £694,348 (aggregated)
