@@ -1699,15 +1699,15 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
         is_stream_a = state.startswith('A:')
         
         # X position based on treatment stage
-        if 'Initial' in base_state:
+        if 'Initial' in base_state and 'Still in' not in base_state:
             x = 0.0
-        elif 'Intensive' in base_state:
+        elif 'Intensive' in base_state and 'Still in' not in base_state:
             x = 0.2
-        elif 'Regular' in base_state:
+        elif 'Regular' in base_state and 'Still in' not in base_state:
             x = 0.4
-        elif 'Extended' in base_state and 'Maximum' not in base_state:
+        elif 'Extended' in base_state and 'Maximum' not in base_state and 'Still in' not in base_state:
             x = 0.6
-        elif 'Maximum' in base_state:
+        elif 'Maximum' in base_state and 'Still in' not in base_state:
             x = 0.7
         elif 'Still in' in base_state or 'No Further' in base_state:
             x = 0.95
@@ -1715,60 +1715,61 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
             x = 0.5
             
         # Y position based on stream and state type
+        # Compress the vertical space usage more
         if is_stream_a:
-            # A stream - upper half
+            # A stream - upper half (0.55 to 0.95)
             if 'Initial' in base_state:
                 y = 0.75
             elif 'Intensive' in base_state:
-                y = 0.80
+                y = 0.78
             elif 'Regular' in base_state:
                 y = 0.75
             elif 'Extended' in base_state:
-                y = 0.70
+                y = 0.72
             elif 'Maximum' in base_state:
-                y = 0.65
+                y = 0.70
             elif 'No Further' in base_state:
                 y = 0.85
             elif 'Still in' in base_state:
-                # Distribute terminal states
+                # Distribute terminal states vertically
                 if 'Initial' in base_state:
-                    y = 0.75
-                elif 'Intensive' in base_state:
-                    y = 0.80
-                elif 'Regular' in base_state:
-                    y = 0.75
-                elif 'Maximum' in base_state:
                     y = 0.65
+                elif 'Intensive' in base_state:
+                    y = 0.72
+                elif 'Regular' in base_state:
+                    y = 0.76
+                elif 'Maximum' in base_state:
+                    y = 0.80
                 else:
-                    y = 0.70
+                    y = 0.73
             else:
                 y = 0.75
         else:
-            # B stream - lower half
+            # B stream - lower half (0.05 to 0.45)
             if 'Initial' in base_state:
                 y = 0.25
             elif 'Intensive' in base_state:
-                y = 0.30
+                y = 0.28
             elif 'Regular' in base_state:
                 y = 0.25
             elif 'Extended' in base_state:
-                y = 0.20
+                y = 0.22
             elif 'Maximum' in base_state:
-                y = 0.15
+                y = 0.20
             elif 'No Further' in base_state:
-                y = 0.35
+                y = 0.15
             elif 'Still in' in base_state:
-                # Distribute terminal states
+                # Distribute terminal states vertically
                 if 'Initial' in base_state:
-                    y = 0.25
+                    y = 0.35
                 elif 'Intensive' in base_state:
-                    y = 0.30
+                    y = 0.28
                 elif 'Regular' in base_state:
-                    y = 0.25
+                    y = 0.24
                 elif 'Maximum' in base_state:
-                    y = 0.15
-                else:
                     y = 0.20
+                else:
+                    y = 0.27
             else:
                 y = 0.25
         
@@ -1810,8 +1811,8 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
     fig = go.Figure(data=[go.Sankey(
         arrangement='fixed',
         node=dict(
-            pad=10,
-            thickness=20,
+            pad=8,  # Reduced padding
+            thickness=15,  # Thinner nodes
             line=dict(width=0),
             label=node_labels,
             color=node_colors,
@@ -1860,8 +1861,8 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
     
     # Update layout
     fig.update_layout(
-        height=700,  # Taller to accommodate both streams
-        margin=dict(l=20, r=120, t=20, b=20),
+        height=650,  # Reduced height with better node positioning
+        margin=dict(l=20, r=150, t=50, b=60),  # More margin at top and bottom
         showlegend=False,
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)'
