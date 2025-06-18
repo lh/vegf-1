@@ -35,7 +35,18 @@ def adjust_terminal_node_counts(flow_counts_df: pd.DataFrame, transitions_df: pd
             # Count unique patients
             unique_patient_count = terminal_transitions['patient_id'].nunique()
             
-            # Update all flows TO this terminal state with unique patient count
-            flow_counts.loc[flow_counts['to_state'] == terminal_state, 'count'] = unique_patient_count
+            # Get all flows TO this terminal state
+            flows_to_terminal = flow_counts[flow_counts['to_state'] == terminal_state]
+            
+            if len(flows_to_terminal) > 0:
+                # Calculate the ratio to preserve relative flow sizes
+                total_flow = flows_to_terminal['count'].sum()
+                
+                # Adjust each flow proportionally
+                for idx in flows_to_terminal.index:
+                    original_count = flow_counts.loc[idx, 'count']
+                    proportion = original_count / total_flow
+                    adjusted_count = int(unique_patient_count * proportion)
+                    flow_counts.loc[idx, 'count'] = adjusted_count
     
     return flow_counts

@@ -82,7 +82,10 @@ def create_interval_distribution_tufte(intervals: np.ndarray,
     ))
     
     # Add direct labels for significant bars
-    threshold = counts.max() * 0.1  # Label bars with >10% of max count
+    if len(counts) > 0 and counts.max() > 0:
+        threshold = counts.max() * 0.1  # Label bars with >10% of max count
+    else:
+        threshold = 0
     for i, (center, count) in enumerate(zip(bin_centers, counts)):
         if count > threshold:
             fig.add_annotation(
