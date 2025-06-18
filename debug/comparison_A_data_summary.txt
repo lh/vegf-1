@@ -1,0 +1,4 @@
+=== Debug Info for comparison_A ===
+Transitions DataFrame shape: (13074, 10)
+
+Unique states in data:

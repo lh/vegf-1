@@ -1579,6 +1579,51 @@ with col2:
 
 st.subheader("Patient Journey Flow")
 
+# Debug functionality
+def save_sankey_debug(fig, name, transitions_df, save_path="debug"):
+    """Save Sankey diagram and data for debugging."""
+    import os
+    from pathlib import Path
+    
+    # Create debug directory
+    debug_dir = Path(save_path)
+    debug_dir.mkdir(exist_ok=True)
+    
+    # Save figure as HTML for interactive inspection
+    fig.write_html(debug_dir / f"{name}_sankey.html")
+    
+    # Save data summary
+    with open(debug_dir / f"{name}_data_summary.txt", "w") as f:
+        f.write(f"=== Debug Info for {name} ===\n")
+        f.write(f"Transitions DataFrame shape: {transitions_df.shape}\n\n")
+        
+        f.write("Unique states in data:\n")
+        unique_states = sorted(transitions_df['state'].unique())
+        for state in unique_states:
+            count = len(transitions_df[transitions_df['state'] == state])
+            f.write(f"  - {state}: {count} transitions\n")
+        
+        f.write("\nTerminal states distribution:\n")
+        if 'is_terminal' in transitions_df.columns:
+            terminal_df = transitions_df[transitions_df['is_terminal'] == True]
+            terminal_counts = terminal_df['state'].value_counts()
+            for state, count in terminal_counts.items():
+                f.write(f"  - {state}: {count} patients\n")
+        else:
+            f.write("  No 'is_terminal' column found!\n")
+        
+        f.write("\nTransition patterns (first 20):\n")
+        for idx, row in transitions_df.head(20).iterrows():
+            f.write(f"  {row.get('from_state', 'N/A')} -> {row.get('to_state', row.get('state', 'N/A'))}\n")
+    
+    # Save raw data as CSV for analysis
+    transitions_df.to_csv(debug_dir / f"{name}_transitions.csv", index=False)
+    
+    return debug_dir / f"{name}_sankey.html", debug_dir / f"{name}_data_summary.txt"
+
+# Add debug controls
+debug_mode = st.checkbox("Enable Debug Mode", key="sankey_debug_mode")
+
 # Create columns for side-by-side Sankey diagrams
 col1, col2 = st.columns(2)
 
@@ -1623,9 +1668,37 @@ with col1:
             results_a = ResultsFactory.load_results(sim_a['path'])
             
         if results_a:
-            from ape.components.treatment_patterns.data_manager import get_treatment_pattern_data
-            transitions_df_a, _ = get_treatment_pattern_data(results_a)
+            # Use the same approach as analysis page - check for enhanced version
+            try:
+                from ape.components.treatment_patterns.pattern_analyzer_enhanced import extract_treatment_patterns_with_terminals
+                enhanced_available = True
+            except ImportError:
+                enhanced_available = False
+                
+            # Get patterns with terminal states if available
+            if enhanced_available:
+                transitions_df_a, _ = extract_treatment_patterns_with_terminals(results_a)
+            else:
+                from ape.components.treatment_patterns.data_manager import get_treatment_pattern_data
+                transitions_df_a, _ = get_treatment_pattern_data(results_a)
+            
+            # Debug: Show data info
+            if debug_mode:
+                st.info(f"Transitions shape: {transitions_df_a.shape}")
+                st.write(f"Enhanced analyzer: {enhanced_available}")
+                if 'is_terminal' in transitions_df_a.columns:
+                    terminal_states = transitions_df_a[transitions_df_a['is_terminal']]['state'].value_counts()
+                    st.write("Terminal states:", terminal_states.to_dict())
+                else:
+                    st.warning("No 'is_terminal' column found!")
+                
             sankey_a = create_simplified_sankey(transitions_df_a)
+            
+            # Save debug files
+            if debug_mode:
+                html_path, txt_path = save_sankey_debug(sankey_a, "comparison_A", transitions_df_a)
+                st.caption(f"Debug files saved to {html_path.parent}")
+            
             st.plotly_chart(sankey_a, use_container_width=True)
         else:
             st.error("Could not load simulation A data for Sankey diagram")
@@ -1640,14 +1713,77 @@ with col2:
             results_b = ResultsFactory.load_results(sim_b['path'])
             
         if results_b:
-            from ape.components.treatment_patterns.data_manager import get_treatment_pattern_data
-            transitions_df_b, _ = get_treatment_pattern_data(results_b)
+            # Use the same approach as analysis page - check for enhanced version
+            try:
+                from ape.components.treatment_patterns.pattern_analyzer_enhanced import extract_treatment_patterns_with_terminals
+                enhanced_available = True
+            except ImportError:
+                enhanced_available = False
+                
+            # Get patterns with terminal states if available
+            if enhanced_available:
+                transitions_df_b, _ = extract_treatment_patterns_with_terminals(results_b)
+            else:
+                from ape.components.treatment_patterns.data_manager import get_treatment_pattern_data
+                transitions_df_b, _ = get_treatment_pattern_data(results_b)
+            
+            # Debug: Show data info
+            if debug_mode:
+                st.info(f"Transitions shape: {transitions_df_b.shape}")
+                st.write(f"Enhanced analyzer: {enhanced_available}")
+                if 'is_terminal' in transitions_df_b.columns:
+                    terminal_states = transitions_df_b[transitions_df_b['is_terminal']]['state'].value_counts()
+                    st.write("Terminal states:", terminal_states.to_dict())
+                else:
+                    st.warning("No 'is_terminal' column found!")
+                    
             sankey_b = create_simplified_sankey(transitions_df_b)
+            
+            # Save debug files
+            if debug_mode:
+                html_path, txt_path = save_sankey_debug(sankey_b, "comparison_B", transitions_df_b)
+            
             st.plotly_chart(sankey_b, use_container_width=True)
         else:
             st.error("Could not load simulation B data for Sankey diagram")
     except Exception as e:
         st.error(f"Error creating Sankey diagram B: {str(e)}")
+
+# Debug download section
+if debug_mode:
+    st.markdown("---")
+    st.subheader("Debug Downloads")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        # Check if debug files exist
+        debug_dir = Path("debug")
+        if debug_dir.exists():
+            # Create a zip of debug files
+            import zipfile
+            import io
+            
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                for file in debug_dir.iterdir():
+                    if file.is_file():
+                        zip_file.write(file, file.name)
+            
+            st.download_button(
+                label="Download Debug Files",
+                data=zip_buffer.getvalue(),
+                file_name="sankey_debug.zip",
+                mime="application/zip"
+            )
+    
+    with col2:
+        st.info("Debug files include:\n- HTML interactive diagrams\n- Data summaries\n- Raw CSV data")
+    
+    with col3:
+        # Add comparison with analysis page
+        st.markdown("**Compare with Analysis Page:**")
+        st.caption("To compare, navigate to Analysis > Patient Journey tab and enable debug mode there too")
 
 # Success message at the bottom
 st.success(f"Comparison complete: {sim_a['protocol']} vs {sim_b['protocol']}")
