@@ -134,7 +134,7 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     
                     **Visual Elements**:
                     - 🟢 **Green nodes**: Still in treatment at end
-                    - 🩶 **Gray node**: Discontinued treatment
+                    - **Gray node**: Discontinued treatment
                     - **Flow colors**: Based on source state
                     - **Flow thickness**: Number of transitions (patients for terminal nodes)
                     """)

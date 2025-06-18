@@ -218,7 +218,7 @@ with tab1:
                 
                 **Visual Elements**:
                 - **Green nodes**: Still in treatment at end
-                - 🩶 **Gray node**: Discontinued treatment
+                - **Gray node**: Discontinued treatment
                 - **Flow colors**: Based on source state
                 - **Flow thickness**: Number of patients
                 """)
