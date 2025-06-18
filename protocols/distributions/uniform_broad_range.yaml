@@ -1,0 +1,8 @@
+# Uniform Broad Range Distribution
+# Equal probability across full vision range
+name: "Uniform Broad Range"
+description: "Uniform distribution across broad vision range for sensitivity analysis"
+type: "uniform"
+min: 15
+max: 85
+source: "Modeling assumption for sensitivity analysis"

@@ -1,0 +1,8 @@
+name: test
+description: ''
+source: User defined
+type: normal
+mean: 65
+std: 12
+min: 20
+max: 81

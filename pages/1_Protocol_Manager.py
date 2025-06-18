@@ -17,6 +17,7 @@ from ape.utils.startup_redirect import handle_page_startup
 from simulation_v2.models.baseline_vision_distributions import (
     NormalDistribution, BetaWithThresholdDistribution, UniformDistribution
 )
+from ape.utils.distribution_presets import get_distribution_presets
 
 st.set_page_config(
     page_title="Protocol Manager", 
@@ -963,6 +964,121 @@ try:
                 else:
                     current_type = 'normal'
                 
+                # Distribution Presets Section
+                st.caption("**Distribution Presets**")
+                preset_manager = get_distribution_presets()
+                available_presets = preset_manager.get_available_presets()
+                
+                preset_col1, preset_col2 = st.columns([3, 1])
+                
+                with preset_col1:
+                    if available_presets:
+                        preset_options = ["Custom..."] + [preset['name'] for preset in available_presets]
+                        selected_preset = st.selectbox(
+                            "Load Preset",
+                            preset_options,
+                            key="tb_edit_preset_selector",
+                            help="Load a predefined distribution or create custom"
+                        )
+                        
+                        if selected_preset != "Custom...":
+                            # Find the selected preset
+                            preset_data = next((p for p in available_presets if p['name'] == selected_preset), None)
+                            if preset_data:
+                                st.caption(f"{preset_data.get('description', 'No description')}")
+                                st.caption(f"{preset_manager.get_preset_summary(preset_data)}")
+                                
+                                if ape_button("Apply Preset", key="tb_apply_preset"):
+                                    # Apply preset to session state
+                                    preset_config = preset_manager.preset_to_distribution_config(preset_data)
+                                    
+                                    # Update session state based on preset type
+                                    st.session_state['tb_edit_dist_type'] = preset_config['type']
+                                    
+                                    if preset_config['type'] == 'normal':
+                                        st.session_state['tb_edit_pop_mean'] = str(preset_config['mean'])
+                                        st.session_state['tb_edit_pop_std'] = str(preset_config['std'])
+                                        st.session_state['tb_edit_pop_min'] = str(preset_config['min'])
+                                        st.session_state['tb_edit_pop_max'] = str(preset_config['max'])
+                                    elif preset_config['type'] == 'beta_with_threshold':
+                                        st.session_state['tb_edit_beta_alpha'] = str(preset_config['alpha'])
+                                        st.session_state['tb_edit_beta_beta'] = str(preset_config['beta'])
+                                        st.session_state['tb_edit_beta_min'] = str(preset_config['min'])
+                                        st.session_state['tb_edit_beta_max'] = str(preset_config['max'])
+                                        st.session_state['tb_edit_beta_threshold'] = str(preset_config['threshold'])
+                                        st.session_state['tb_edit_beta_reduction'] = str(preset_config['threshold_reduction'])
+                                    elif preset_config['type'] == 'uniform':
+                                        st.session_state['tb_edit_uniform_min'] = str(preset_config['min'])
+                                        st.session_state['tb_edit_uniform_max'] = str(preset_config['max'])
+                                    
+                                    st.success(f"Applied preset: {selected_preset}")
+                                    st.rerun()
+                    else:
+                        st.info("No presets available")
+                
+                with preset_col2:
+                    if ape_button("Save as Preset", key="tb_save_preset_btn"):
+                        st.session_state['tb_show_save_preset'] = True
+                
+                
+                # Save preset dialog
+                if st.session_state.get('tb_show_save_preset', False):
+                    with st.expander("Save Current Distribution as Preset", expanded=True):
+                        preset_name = st.text_input("Preset Name", key="tb_preset_name")
+                        preset_desc = st.text_area("Description", key="tb_preset_desc", height=80)
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            if ape_button("Save", key="tb_save_preset_confirm"):
+                                if preset_name:
+                                    try:
+                                        # Build current distribution config
+                                        current_config = {'type': current_type}
+                                        
+                                        if current_type == 'normal':
+                                            current_config.update({
+                                                'mean': int(st.session_state.get('tb_edit_pop_mean', spec.baseline_vision_mean)),
+                                                'std': int(st.session_state.get('tb_edit_pop_std', spec.baseline_vision_std)),
+                                                'min': int(st.session_state.get('tb_edit_pop_min', spec.baseline_vision_min)),
+                                                'max': int(st.session_state.get('tb_edit_pop_max', spec.baseline_vision_max))
+                                            })
+                                        elif current_type == 'beta_with_threshold':
+                                            defaults = {'alpha': 3.5, 'beta': 2.0, 'min': 5, 'max': 98, 'threshold': 70, 'threshold_reduction': 0.6}
+                                            if current_dist and current_dist.get('type') == 'beta_with_threshold':
+                                                for key in defaults:
+                                                    if key in current_dist:
+                                                        defaults[key] = current_dist[key]
+                                            current_config.update({
+                                                'alpha': float(st.session_state.get('tb_edit_beta_alpha', defaults['alpha'])),
+                                                'beta': float(st.session_state.get('tb_edit_beta_beta', defaults['beta'])),
+                                                'min': int(st.session_state.get('tb_edit_beta_min', defaults['min'])),
+                                                'max': int(st.session_state.get('tb_edit_beta_max', defaults['max'])),
+                                                'threshold': int(st.session_state.get('tb_edit_beta_threshold', defaults['threshold'])),
+                                                'threshold_reduction': float(st.session_state.get('tb_edit_beta_reduction', defaults['threshold_reduction']))
+                                            })
+                                        elif current_type == 'uniform':
+                                            current_config.update({
+                                                'min': int(st.session_state.get('tb_edit_uniform_min', spec.baseline_vision_min)),
+                                                'max': int(st.session_state.get('tb_edit_uniform_max', spec.baseline_vision_max))
+                                            })
+                                        
+                                        filename = preset_manager.save_preset(
+                                            current_config, preset_name, preset_desc, "User defined"
+                                        )
+                                        st.success(f"Saved preset as {filename}")
+                                        st.session_state['tb_show_save_preset'] = False
+                                        st.rerun()
+                                    except Exception as e:
+                                        st.error(f"Error saving preset: {e}")
+                                else:
+                                    st.error("Please enter a preset name")
+                        with col2:
+                            if ape_button("Cancel", key="tb_save_preset_cancel"):
+                                st.session_state['tb_show_save_preset'] = False
+                                st.rerun()
+                
+                st.divider()
+                
                 dist_type = st.selectbox(
                     "Distribution Type",
                     ["normal", "beta_with_threshold", "uniform"],
@@ -1721,6 +1837,121 @@ try:
                     current_type = current_dist.get('type', 'normal')
                 else:
                     current_type = 'normal'
+                
+                # Distribution Presets Section
+                st.caption("**Distribution Presets**")
+                preset_manager = get_distribution_presets()
+                available_presets = preset_manager.get_available_presets()
+                
+                preset_col1, preset_col2, preset_col3 = st.columns([2, 1, 1])
+                
+                with preset_col1:
+                    if available_presets:
+                        preset_options = ["Custom..."] + [preset['name'] for preset in available_presets]
+                        selected_preset = st.selectbox(
+                            "Load Preset",
+                            preset_options,
+                            key="edit_preset_selector",
+                            help="Load a predefined distribution or create custom"
+                        )
+                        
+                        if selected_preset != "Custom...":
+                            # Find the selected preset
+                            preset_data = next((p for p in available_presets if p['name'] == selected_preset), None)
+                            if preset_data:
+                                st.caption(f"{preset_data.get('description', 'No description')}")
+                                st.caption(f"{preset_manager.get_preset_summary(preset_data)}")
+                                
+                                if ape_button("Apply Preset", key="apply_preset"):
+                                    # Apply preset to session state
+                                    preset_config = preset_manager.preset_to_distribution_config(preset_data)
+                                    
+                                    # Update session state based on preset type
+                                    st.session_state['edit_dist_type'] = preset_config['type']
+                                    
+                                    if preset_config['type'] == 'normal':
+                                        st.session_state['edit_pop_mean'] = str(preset_config['mean'])
+                                        st.session_state['edit_pop_std'] = str(preset_config['std'])
+                                        st.session_state['edit_pop_min'] = str(preset_config['min'])
+                                        st.session_state['edit_pop_max'] = str(preset_config['max'])
+                                    elif preset_config['type'] == 'beta_with_threshold':
+                                        st.session_state['edit_beta_alpha'] = str(preset_config['alpha'])
+                                        st.session_state['edit_beta_beta'] = str(preset_config['beta'])
+                                        st.session_state['edit_beta_min'] = str(preset_config['min'])
+                                        st.session_state['edit_beta_max'] = str(preset_config['max'])
+                                        st.session_state['edit_beta_threshold'] = str(preset_config['threshold'])
+                                        st.session_state['edit_beta_reduction'] = str(preset_config['threshold_reduction'])
+                                    elif preset_config['type'] == 'uniform':
+                                        st.session_state['edit_uniform_min'] = str(preset_config['min'])
+                                        st.session_state['edit_uniform_max'] = str(preset_config['max'])
+                                    
+                                    st.success(f"Applied preset: {selected_preset}")
+                                    st.rerun()
+                    else:
+                        st.info("No presets available")
+                
+                with preset_col2:
+                    if ape_button("Save as Preset", key="save_preset_btn"):
+                        st.session_state['show_save_preset'] = True
+                
+                
+                # Save preset dialog
+                if st.session_state.get('show_save_preset', False):
+                    with st.expander("Save Current Distribution as Preset", expanded=True):
+                        preset_name = st.text_input("Preset Name", key="preset_name")
+                        preset_desc = st.text_area("Description", key="preset_desc", height=80)
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            if ape_button("Save", key="save_preset_confirm"):
+                                if preset_name:
+                                    try:
+                                        # Build current distribution config
+                                        current_config = {'type': current_type}
+                                        
+                                        if current_type == 'normal':
+                                            current_config.update({
+                                                'mean': int(st.session_state.get('edit_pop_mean', spec.baseline_vision_mean)),
+                                                'std': int(st.session_state.get('edit_pop_std', spec.baseline_vision_std)),
+                                                'min': int(st.session_state.get('edit_pop_min', spec.baseline_vision_min)),
+                                                'max': int(st.session_state.get('edit_pop_max', spec.baseline_vision_max))
+                                            })
+                                        elif current_type == 'beta_with_threshold':
+                                            defaults = {'alpha': 3.5, 'beta': 2.0, 'min': 5, 'max': 98, 'threshold': 70, 'threshold_reduction': 0.6}
+                                            if current_dist and current_dist.get('type') == 'beta_with_threshold':
+                                                for key in defaults:
+                                                    if key in current_dist:
+                                                        defaults[key] = current_dist[key]
+                                            current_config.update({
+                                                'alpha': float(st.session_state.get('edit_beta_alpha', defaults['alpha'])),
+                                                'beta': float(st.session_state.get('edit_beta_beta', defaults['beta'])),
+                                                'min': int(st.session_state.get('edit_beta_min', defaults['min'])),
+                                                'max': int(st.session_state.get('edit_beta_max', defaults['max'])),
+                                                'threshold': int(st.session_state.get('edit_beta_threshold', defaults['threshold'])),
+                                                'threshold_reduction': float(st.session_state.get('edit_beta_reduction', defaults['threshold_reduction']))
+                                            })
+                                        elif current_type == 'uniform':
+                                            current_config.update({
+                                                'min': int(st.session_state.get('edit_uniform_min', spec.baseline_vision_min)),
+                                                'max': int(st.session_state.get('edit_uniform_max', spec.baseline_vision_max))
+                                            })
+                                        
+                                        filename = preset_manager.save_preset(
+                                            current_config, preset_name, preset_desc, "User defined"
+                                        )
+                                        st.success(f"Saved preset as {filename}")
+                                        st.session_state['show_save_preset'] = False
+                                        st.rerun()
+                                    except Exception as e:
+                                        st.error(f"Error saving preset: {e}")
+                                else:
+                                    st.error("Please enter a preset name")
+                        with col2:
+                            if ape_button("Cancel", key="save_preset_cancel"):
+                                st.session_state['show_save_preset'] = False
+                                st.rerun()
+                
+                st.divider()
                 
                 dist_type = st.selectbox(
                     "Distribution Type",

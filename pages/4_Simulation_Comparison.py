@@ -28,6 +28,9 @@ from ape.utils.simulation_loader import load_simulation_data
 from ape.core.results.factory import ResultsFactory
 # Import vision distribution visualization
 from ape.utils.vision_distribution_viz import create_compact_vision_distribution_plot
+# Import streamgraph and flow visualizations
+from ape.visualizations.streamgraph_treatment_states import create_treatment_state_streamgraph
+from ape.components.treatment_patterns.sankey_builder_enhanced import create_enhanced_sankey_with_terminals
 
 # Check for startup redirect
 handle_page_startup("comparison")
@@ -1006,8 +1009,6 @@ if view_mode == "Side-by-Side":
         # Clinical thresholds
         if show_thresholds:
             ax.axhline(y=70, color='orange', linestyle='--', alpha=0.5, label='NICE Threshold')
-            ax.axhline(y=35, color='red', linestyle='--', alpha=0.5, label='Driving')
-            ax.axhline(y=20, color='darkred', linestyle='--', alpha=0.5, label='Legal Blindness')
         
         ax.set_xlabel('Month')
         ax.set_ylabel('Vision (ETDRS Letters)')
@@ -1035,7 +1036,6 @@ if view_mode == "Side-by-Side":
         # Clinical thresholds
         if show_thresholds:
             ax.axhline(y=70, color='orange', linestyle='--', alpha=0.5, label='NICE Threshold')
-            ax.axhline(y=35, color='red', linestyle='--', alpha=0.5, label='Driving')
             ax.axhline(y=20, color='darkred', linestyle='--', alpha=0.5, label='Legal Blindness')
         
         ax.set_xlabel('Month')
@@ -1068,8 +1068,6 @@ elif view_mode == "Overlay":
     # Clinical thresholds
     if show_thresholds:
         ax.axhline(y=70, color='gray', linestyle='--', alpha=0.5, label='NICE Threshold')
-        ax.axhline(y=35, color='gray', linestyle='--', alpha=0.5, label='Driving')
-        ax.axhline(y=20, color='gray', linestyle='--', alpha=0.5, label='Legal Blindness')
     
     ax.set_xlabel('Month')
     ax.set_ylabel('Vision (ETDRS Letters)')
@@ -1527,6 +1525,129 @@ else:  # Difference mode
            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
     
     st.pyplot(fig)
+
+# ==================================================================
+# TREATMENT FLOW ANALYSIS
+# ==================================================================
+
+st.subheader("Treatment Flow Analysis")
+
+# Create columns for side-by-side streamgraphs
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown(f"**Simulation A: {sim_a['protocol']}**")
+    try:
+        # Load simulation data using ResultsFactory
+        results_a = ResultsFactory.load_results(sim_a['path'])
+        if results_a:
+            streamgraph_a = create_treatment_state_streamgraph(
+                results_a, 
+                time_resolution='month',
+                normalize=False,
+                height=400,
+                show_title=False
+            )
+            st.plotly_chart(streamgraph_a, use_container_width=True)
+        else:
+            st.error("Could not load simulation A data for streamgraph")
+    except Exception as e:
+        st.error(f"Error creating streamgraph A: {str(e)}")
+
+with col2:
+    st.markdown(f"**Simulation B: {sim_b['protocol']}**")
+    try:
+        # Load simulation data using ResultsFactory
+        results_b = ResultsFactory.load_results(sim_b['path'])
+        if results_b:
+            streamgraph_b = create_treatment_state_streamgraph(
+                results_b,
+                time_resolution='month', 
+                normalize=False,
+                height=400,
+                show_title=False
+            )
+            st.plotly_chart(streamgraph_b, use_container_width=True)
+        else:
+            st.error("Could not load simulation B data for streamgraph")
+    except Exception as e:
+        st.error(f"Error creating streamgraph B: {str(e)}")
+
+# ==================================================================
+# PATIENT JOURNEY FLOW
+# ==================================================================
+
+st.subheader("Patient Journey Flow")
+
+# Create columns for side-by-side Sankey diagrams
+col1, col2 = st.columns(2)
+
+# Create a simplified version of the Sankey diagram
+def create_simplified_sankey(transitions_df):
+    """Create a simplified Sankey diagram without labels."""
+    from ape.components.treatment_patterns.sankey_builder_enhanced import create_enhanced_sankey_with_terminals
+    
+    # Create the sankey
+    sankey = create_enhanced_sankey_with_terminals(transitions_df)
+    
+    # Simplify by removing labels and making it more compact
+    sankey.update_traces(
+        textfont_size=1,  # Minimum size to effectively hide labels
+        textfont_color='rgba(0,0,0,0)',  # Make text transparent
+        node=dict(
+            pad=10,  # Reduce padding between nodes
+            thickness=15,  # Make nodes thinner
+            line=dict(width=0),  # Remove node borders
+            label=[""] * len(sankey.data[0].node.label)  # Empty labels
+        )
+    )
+    
+    # Make layout more compact with proper margins to prevent truncation
+    sankey.update_layout(
+        height=350,  # Increased height to ensure no truncation
+        margin=dict(l=40, r=60, t=30, b=30),  # Generous margins, especially on right
+        showlegend=False,
+        font_size=1,  # Minimum size
+        autosize=True,  # Let it size to container
+        paper_bgcolor='rgba(0,0,0,0)',  # Transparent background
+        plot_bgcolor='rgba(0,0,0,0)'  # Transparent plot background
+    )
+    
+    return sankey
+
+with col1:
+    st.markdown(f"**Simulation A: {sim_a['protocol']}**")
+    try:
+        # Check if we already loaded results_a above
+        if 'results_a' not in locals():
+            results_a = ResultsFactory.load_results(sim_a['path'])
+            
+        if results_a:
+            from ape.components.treatment_patterns.data_manager import get_treatment_pattern_data
+            transitions_df_a, _ = get_treatment_pattern_data(results_a)
+            sankey_a = create_simplified_sankey(transitions_df_a)
+            st.plotly_chart(sankey_a, use_container_width=True)
+        else:
+            st.error("Could not load simulation A data for Sankey diagram")
+    except Exception as e:
+        st.error(f"Error creating Sankey diagram A: {str(e)}")
+
+with col2:
+    st.markdown(f"**Simulation B: {sim_b['protocol']}**")
+    try:
+        # Check if we already loaded results_b above
+        if 'results_b' not in locals():
+            results_b = ResultsFactory.load_results(sim_b['path'])
+            
+        if results_b:
+            from ape.components.treatment_patterns.data_manager import get_treatment_pattern_data
+            transitions_df_b, _ = get_treatment_pattern_data(results_b)
+            sankey_b = create_simplified_sankey(transitions_df_b)
+            st.plotly_chart(sankey_b, use_container_width=True)
+        else:
+            st.error("Could not load simulation B data for Sankey diagram")
+    except Exception as e:
+        st.error(f"Error creating Sankey diagram B: {str(e)}")
 
 # Success message at the bottom
 st.success(f"Comparison complete: {sim_a['protocol']} vs {sim_b['protocol']}")

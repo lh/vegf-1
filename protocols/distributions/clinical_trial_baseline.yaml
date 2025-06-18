@@ -1,0 +1,10 @@
+# Clinical Trial Baseline Distribution
+# Typical enrollment criteria for pivotal trials
+name: "Clinical Trial Baseline"
+description: "Standard clinical trial enrollment criteria (50-80 ETDRS letters)"
+type: "normal"
+mean: 65
+std: 8
+min: 50
+max: 80
+source: "Typical Phase III Trial Criteria"

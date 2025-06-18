@@ -1,0 +1,12 @@
+# Real UK Population Distribution
+# Based on actual UK AMD treatment data
+name: "Real UK Population"
+description: "Distribution matching actual UK AMD patients entering treatment"
+type: "beta_with_threshold"
+alpha: 3.5
+beta: 2.0
+min: 5
+max: 98
+threshold: 70
+threshold_reduction: 0.6
+source: "UK Real World Evidence Study 2023"

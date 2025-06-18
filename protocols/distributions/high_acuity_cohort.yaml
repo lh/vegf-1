@@ -1,0 +1,10 @@
+# High Acuity Cohort Distribution
+# Patients with more severe vision loss
+name: "High Acuity Cohort"
+description: "Patients presenting with more significant vision impairment"
+type: "normal"
+mean: 45
+std: 12
+min: 10
+max: 65
+source: "Late Presentation Study Data"
