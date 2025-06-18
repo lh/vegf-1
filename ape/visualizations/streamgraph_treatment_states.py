@@ -23,7 +23,9 @@ STATE_ORDER = [
     'Treatment Gap (3-6 months)',
     'Extended Gap (6-12 months)',
     'Long Gap (12+ months)',
-    'No Further Visits'
+    'No Further Visits',
+    'Discontinued',  # True discontinued patients
+    'Lost to Follow-up'  # Fallback for time-based cutoff
 ]
 
 def create_treatment_state_streamgraph(
@@ -145,6 +147,10 @@ def create_treatment_state_streamgraph(
     title = "Patient Treatment States Over Time"
     if normalize:
         title += " (Percentage)"
+    
+    # Add memorable name if available
+    if hasattr(results.metadata, 'memorable_name') and results.metadata.memorable_name:
+        title += f" - {results.metadata.memorable_name}"
     
     fig.update_layout(
         title=title if show_title else None,

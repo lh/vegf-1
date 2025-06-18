@@ -19,9 +19,13 @@ def create_treatment_pattern_sankey(transitions_df):
     # Aggregate transitions
     flow_counts = transitions_df.groupby(['from_state', 'to_state']).size().reset_index(name='count')
     
+    # Adjust terminal node counts to show unique patients
+    from ape.components.treatment_patterns.sankey_patient_counts import adjust_terminal_node_counts
+    flow_counts = adjust_terminal_node_counts(flow_counts, transitions_df)
+    
     # Filter out small flows (but keep all terminal flows)
     min_flow_size = max(1, len(transitions_df) * 0.001)
-    is_terminal = flow_counts['to_state'].str.contains('Still in')
+    is_terminal = flow_counts['to_state'].str.contains('Still in|Discontinued')
     flow_counts = flow_counts[(flow_counts['count'] >= min_flow_size) | is_terminal]
     
     # Create nodes

@@ -19,7 +19,9 @@ STATE_COLOR_MAPPING = {
     'Long Gap (12+ months)': 'long_gap_12_plus',
     'Restarted After Gap': 'restarted_after_gap',
     'Irregular Pattern': 'irregular_pattern',
-    'No Further Visits': 'no_further_visits'
+    'No Further Visits': 'no_further_visits',
+    'Discontinued': 'no_further_visits',  # Uses same gray color
+    'Lost to Follow-up': 'no_further_visits'  # Fallback state
 }
 
 # Get colors from central system - this is now a function

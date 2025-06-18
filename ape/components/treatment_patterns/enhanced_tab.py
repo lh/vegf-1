@@ -45,10 +45,9 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
     @st.cache_data
     def get_cached_treatment_patterns(sim_id, include_terminals=False):
         """Extract and cache treatment patterns."""
-        if include_terminals and enhanced_available:
-            transitions_df, visits_df = extract_treatment_patterns_with_terminals(results)
-        else:
-            transitions_df, visits_df = extract_treatment_patterns_vectorized(results)
+        if not include_terminals or not enhanced_available:
+            raise ValueError("Enhanced pattern analyzer with terminals is required")
+        transitions_df, visits_df = extract_treatment_patterns_with_terminals(results)
         return transitions_df, visits_df
     
     @st.cache_data
@@ -91,12 +90,11 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
             )
         
         if len(transitions_df) > 0:
-            # Always use enhanced version with terminal status colors if available
-            if enhanced_available:
-                fig = create_enhanced_sankey_with_terminals(transitions_df)
-            else:
-                # Fallback to basic version if enhanced not available
-                fig = create_enhanced_sankey_with_colored_streams(transitions_df)
+            # Use enhanced version - no fallbacks!
+            if not enhanced_available:
+                raise ValueError("Enhanced pattern analyzer is required but not available")
+            
+            fig = create_enhanced_sankey_with_terminals(transitions_df, results)
             
             # Import export configuration
             from ape.utils.export_config import get_sankey_export_config
@@ -136,9 +134,9 @@ def render_enhanced_treatment_patterns_tab(results, protocol, params, stats):
                     
                     **Visual Elements**:
                     - 🟢 **Green nodes**: Still in treatment at end
-                    - 🔴 **Red node**: Discontinued treatment
+                    - **Gray node**: Discontinued treatment
                     - **Flow colors**: Based on source state
-                    - **Flow thickness**: Number of patients
+                    - **Flow thickness**: Number of transitions (patients for terminal nodes)
                     """)
                 
                 st.info("""

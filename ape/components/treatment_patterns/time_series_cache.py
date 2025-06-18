@@ -43,7 +43,8 @@ def get_cached_time_series_data(
     time_series_df = generate_patient_state_time_series(
         visits_df,
         time_resolution=time_resolution,
-        enrollment_df=enrollment_df
+        enrollment_df=enrollment_df,
+        results=results  # Pass results for discontinued info
     )
     
     return time_series_df

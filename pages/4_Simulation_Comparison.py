@@ -1654,6 +1654,10 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
         # Group and aggregate
         flow_counts = df.groupby(['from_state', 'to_state']).size().reset_index(name='count')
         
+        # Adjust terminal node counts to show unique patients
+        from ape.components.treatment_patterns.sankey_patient_counts import adjust_terminal_node_counts
+        flow_counts = adjust_terminal_node_counts(flow_counts, df)
+        
         # Filter out Pre-Treatment and small flows
         flow_counts = flow_counts[
             (flow_counts['from_state'] != 'Pre-Treatment') & 
@@ -1662,7 +1666,7 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
         
         # Keep significant flows and all terminal flows
         min_flow = max(1, len(df) * 0.001)
-        is_terminal = flow_counts['to_state'].str.contains('Still in|No Further')
+        is_terminal = flow_counts['to_state'].str.contains('Still in|No Further|Discontinued')
         flow_counts = flow_counts[(flow_counts['count'] >= min_flow) | is_terminal]
         
         # Add prefix to states
@@ -1799,8 +1803,8 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
         # Colors based on state type
         if 'Still in' in base_state:
             node_colors.append('#27ae60')  # Green for continuing
-        elif 'No Further' in base_state:
-            node_colors.append('#e74c3c')  # Red for discontinued
+        elif 'No Further' in base_state or 'Discontinued' in base_state:
+            node_colors.append('#999999')  # Gray for discontinued (matches streamgraph)
         else:
             node_colors.append(treatment_colors.get(base_state, '#cccccc'))
         
