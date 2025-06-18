@@ -1598,10 +1598,23 @@ def save_sankey_debug(fig, name, transitions_df, save_path="debug"):
         f.write(f"Transitions DataFrame shape: {transitions_df.shape}\n\n")
         
         f.write("Unique states in data:\n")
-        unique_states = sorted(transitions_df['state'].unique())
-        for state in unique_states:
-            count = len(transitions_df[transitions_df['state'] == state])
-            f.write(f"  - {state}: {count} transitions\n")
+        # Check which column contains states
+        if 'state' in transitions_df.columns:
+            unique_states = sorted(transitions_df['state'].unique())
+            for state in unique_states:
+                count = len(transitions_df[transitions_df['state'] == state])
+                f.write(f"  - {state}: {count} transitions\n")
+        elif 'from_state' in transitions_df.columns and 'to_state' in transitions_df.columns:
+            f.write("  From states:\n")
+            for state in sorted(transitions_df['from_state'].dropna().unique()):
+                count = len(transitions_df[transitions_df['from_state'] == state])
+                f.write(f"    - {state}: {count} transitions\n")
+            f.write("  To states:\n")
+            for state in sorted(transitions_df['to_state'].dropna().unique()):
+                count = len(transitions_df[transitions_df['to_state'] == state])
+                f.write(f"    - {state}: {count} transitions\n")
+        else:
+            f.write("  No state columns found! Columns are: " + str(list(transitions_df.columns)) + "\n")
         
         f.write("\nTerminal states distribution:\n")
         if 'is_terminal' in transitions_df.columns:
@@ -1686,20 +1699,33 @@ with col1:
             if debug_mode:
                 st.info(f"Transitions shape: {transitions_df_a.shape}")
                 st.write(f"Enhanced analyzer: {enhanced_available}")
+                st.write("Columns in transitions_df:", list(transitions_df_a.columns))
+                
+                # Show first few rows to understand structure
+                st.write("First 5 rows of transitions data:")
+                st.dataframe(transitions_df_a.head())
+                
                 if 'is_terminal' in transitions_df_a.columns:
                     terminal_states = transitions_df_a[transitions_df_a['is_terminal']]['state'].value_counts()
                     st.write("Terminal states:", terminal_states.to_dict())
                 else:
                     st.warning("No 'is_terminal' column found!")
                 
-            sankey_a = create_simplified_sankey(transitions_df_a)
-            
-            # Save debug files
-            if debug_mode:
-                html_path, txt_path = save_sankey_debug(sankey_a, "comparison_A", transitions_df_a)
-                st.caption(f"Debug files saved to {html_path.parent}")
-            
-            st.plotly_chart(sankey_a, use_container_width=True)
+            try:
+                sankey_a = create_simplified_sankey(transitions_df_a)
+                
+                # Save debug files
+                if debug_mode:
+                    html_path, txt_path = save_sankey_debug(sankey_a, "comparison_A", transitions_df_a)
+                    st.caption(f"Debug files saved to {html_path.parent}")
+                
+                st.plotly_chart(sankey_a, use_container_width=True)
+            except Exception as e:
+                st.error(f"Error creating Sankey: {str(e)}")
+                if debug_mode:
+                    st.exception(e)
+                    # Still save the transitions data for debugging
+                    transitions_df_a.to_csv("debug/comparison_A_transitions_error.csv", index=False)
         else:
             st.error("Could not load simulation A data for Sankey diagram")
     except Exception as e:
@@ -1731,19 +1757,32 @@ with col2:
             if debug_mode:
                 st.info(f"Transitions shape: {transitions_df_b.shape}")
                 st.write(f"Enhanced analyzer: {enhanced_available}")
+                st.write("Columns in transitions_df:", list(transitions_df_b.columns))
+                
+                # Show first few rows to understand structure
+                st.write("First 5 rows of transitions data:")
+                st.dataframe(transitions_df_b.head())
+                
                 if 'is_terminal' in transitions_df_b.columns:
                     terminal_states = transitions_df_b[transitions_df_b['is_terminal']]['state'].value_counts()
                     st.write("Terminal states:", terminal_states.to_dict())
                 else:
                     st.warning("No 'is_terminal' column found!")
                     
-            sankey_b = create_simplified_sankey(transitions_df_b)
-            
-            # Save debug files
-            if debug_mode:
-                html_path, txt_path = save_sankey_debug(sankey_b, "comparison_B", transitions_df_b)
-            
-            st.plotly_chart(sankey_b, use_container_width=True)
+            try:
+                sankey_b = create_simplified_sankey(transitions_df_b)
+                
+                # Save debug files
+                if debug_mode:
+                    html_path, txt_path = save_sankey_debug(sankey_b, "comparison_B", transitions_df_b)
+                
+                st.plotly_chart(sankey_b, use_container_width=True)
+            except Exception as e:
+                st.error(f"Error creating Sankey: {str(e)}")
+                if debug_mode:
+                    st.exception(e)
+                    # Still save the transitions data for debugging
+                    transitions_df_b.to_csv("debug/comparison_B_transitions_error.csv", index=False)
         else:
             st.error("Could not load simulation B data for Sankey diagram")
     except Exception as e:

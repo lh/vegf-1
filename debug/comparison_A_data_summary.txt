@@ -2,3 +2,44 @@
 Transitions DataFrame shape: (13074, 10)
 
 Unique states in data:
+  From states:
+    - Initial Treatment: 2048 transitions
+    - Intensive (Monthly): 4426 transitions
+    - Maximum Extension (16 weeks): 2218 transitions
+    - Pre-Treatment: 1990 transitions
+    - Regular (6-8 weeks): 2392 transitions
+  To states:
+    - Initial Treatment: 1990 transitions
+    - Intensive (Monthly): 3329 transitions
+    - Maximum Extension (16 weeks): 1622 transitions
+    - No Further Visits: 1937 transitions
+    - Regular (6-8 weeks): 2207 transitions
+    - Still in Initial Treatment (Year 5): 58 transitions
+    - Still in Intensive (Monthly) (Year 5): 1121 transitions
+    - Still in Maximum Extension (16 weeks) (Year 5): 622 transitions
+    - Still in Regular (6-8 weeks) (Year 5): 188 transitions
+
+Terminal states distribution:
+  No 'is_terminal' column found!
+
+Transition patterns (first 20):
+  Pre-Treatment -> Initial Treatment
+  Initial Treatment -> Intensive (Monthly)
+  Intensive (Monthly) -> Regular (6-8 weeks)
+  Regular (6-8 weeks) -> Intensive (Monthly)
+  Intensive (Monthly) -> Regular (6-8 weeks)
+  Regular (6-8 weeks) -> Maximum Extension (16 weeks)
+  Maximum Extension (16 weeks) -> Intensive (Monthly)
+  Pre-Treatment -> Initial Treatment
+  Initial Treatment -> Intensive (Monthly)
+  Intensive (Monthly) -> Regular (6-8 weeks)
+  Regular (6-8 weeks) -> Maximum Extension (16 weeks)
+  Maximum Extension (16 weeks) -> Intensive (Monthly)
+  Intensive (Monthly) -> Regular (6-8 weeks)
+  Regular (6-8 weeks) -> Intensive (Monthly)
+  Intensive (Monthly) -> Regular (6-8 weeks)
+  Regular (6-8 weeks) -> Maximum Extension (16 weeks)
+  Maximum Extension (16 weeks) -> Intensive (Monthly)
+  Intensive (Monthly) -> Regular (6-8 weeks)
+  Regular (6-8 weeks) -> Maximum Extension (16 weeks)
+  Maximum Extension (16 weeks) -> Intensive (Monthly)

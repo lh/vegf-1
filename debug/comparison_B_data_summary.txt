@@ -1,4 +1,39 @@
 === Debug Info for comparison_B ===
-Transitions DataFrame shape: (5712, 10)
+Transitions DataFrame shape: (7702, 10)
 
 Unique states in data:
+  From states:
+    - Initial Treatment: 2077 transitions
+    - Pre-Treatment: 1990 transitions
+    - Regular (6-8 weeks): 3635 transitions
+  To states:
+    - Initial Treatment: 1990 transitions
+    - No Further Visits: 1819 transitions
+    - Regular (6-8 weeks): 1903 transitions
+    - Still in Initial Treatment (Year 5): 87 transitions
+    - Still in Regular (6-8 weeks) (Year 5): 1903 transitions
+
+Terminal states distribution:
+  No 'is_terminal' column found!
+
+Transition patterns (first 20):
+  Pre-Treatment -> Initial Treatment
+  Initial Treatment -> Regular (6-8 weeks)
+  Pre-Treatment -> Initial Treatment
+  Initial Treatment -> Regular (6-8 weeks)
+  Pre-Treatment -> Initial Treatment
+  Initial Treatment -> Regular (6-8 weeks)
+  Pre-Treatment -> Initial Treatment
+  Initial Treatment -> Regular (6-8 weeks)
+  Pre-Treatment -> Initial Treatment
+  Initial Treatment -> Regular (6-8 weeks)
+  Pre-Treatment -> Initial Treatment
+  Initial Treatment -> Regular (6-8 weeks)
+  Pre-Treatment -> Initial Treatment
+  Initial Treatment -> Regular (6-8 weeks)
+  Pre-Treatment -> Initial Treatment
+  Initial Treatment -> Regular (6-8 weeks)
+  Pre-Treatment -> Initial Treatment
+  Initial Treatment -> Regular (6-8 weeks)
+  Pre-Treatment -> Initial Treatment
+  Initial Treatment -> Regular (6-8 weeks)
