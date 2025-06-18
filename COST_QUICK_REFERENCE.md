@@ -73,7 +73,9 @@
 - **Appointment cancellation**: Full slot cost if <24hr notice
 
 ## Notes
-- All prices exclude VAT (NHS exempt)
+- All prices exclude VAT (NHS trusts pay VAT on purchases)
+- VAT typically 20% on drugs and medical supplies
+- Some VAT may be reclaimed through COS scheme
 - Costs based on 2024/25 NHS reference costs
 - Generic pricing assumes July 2025 launch
 - Regional variations apply
