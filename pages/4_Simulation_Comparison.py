@@ -1729,19 +1729,19 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
             elif 'Maximum' in base_state:
                 y = 0.70
             elif 'No Further' in base_state:
-                y = 0.85
+                y = 0.60  # Put discontinued at bottom of A stream
             elif 'Still in' in base_state:
-                # Distribute terminal states vertically
+                # Distribute terminal states vertically with more spacing
                 if 'Initial' in base_state:
-                    y = 0.65
+                    y = 0.85
                 elif 'Intensive' in base_state:
-                    y = 0.72
-                elif 'Regular' in base_state:
-                    y = 0.76
-                elif 'Maximum' in base_state:
                     y = 0.80
+                elif 'Regular' in base_state:
+                    y = 0.75
+                elif 'Maximum' in base_state:
+                    y = 0.70
                 else:
-                    y = 0.73
+                    y = 0.77
             else:
                 y = 0.75
         else:
@@ -1749,27 +1749,27 @@ def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b
             if 'Initial' in base_state:
                 y = 0.25
             elif 'Intensive' in base_state:
-                y = 0.28
+                y = 0.22
             elif 'Regular' in base_state:
                 y = 0.25
             elif 'Extended' in base_state:
-                y = 0.22
+                y = 0.28
             elif 'Maximum' in base_state:
-                y = 0.20
+                y = 0.30
             elif 'No Further' in base_state:
-                y = 0.15
+                y = 0.10  # Put discontinued at bottom of B stream
             elif 'Still in' in base_state:
-                # Distribute terminal states vertically
+                # Distribute terminal states vertically with more spacing
                 if 'Initial' in base_state:
-                    y = 0.35
+                    y = 0.40
                 elif 'Intensive' in base_state:
-                    y = 0.28
+                    y = 0.35
                 elif 'Regular' in base_state:
-                    y = 0.24
+                    y = 0.30
                 elif 'Maximum' in base_state:
-                    y = 0.20
+                    y = 0.25
                 else:
-                    y = 0.27
+                    y = 0.32
             else:
                 y = 0.25
         
