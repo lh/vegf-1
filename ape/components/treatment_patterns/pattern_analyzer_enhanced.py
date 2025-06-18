@@ -24,6 +24,12 @@ def create_terminal_transitions(visits_df: pd.DataFrame, transitions_df: pd.Data
     Returns:
         Enhanced transitions DataFrame including terminal transitions
     """
+    # First, identify patients who already have terminal transitions (No Further Visits)
+    existing_terminal_patients = set()
+    if 'to_state' in transitions_df.columns:
+        terminal_mask = transitions_df['to_state'].str.contains('No Further Visits', na=False)
+        existing_terminal_patients = set(transitions_df[terminal_mask]['patient_id'].unique())
+    
     # Get the last visit for each patient - use idxmax to preserve all columns
     last_visit_idx = visits_df.groupby('patient_id')['time_days'].idxmax()
     last_visits = visits_df.loc[last_visit_idx].copy()
@@ -32,7 +38,11 @@ def create_terminal_transitions(visits_df: pd.DataFrame, transitions_df: pd.Data
     # (e.g., if someone's last visit was at day 3640 of a 3650-day simulation, they're probably done)
     cutoff_days = simulation_end_days - 30  # Within last month
     
-    active_at_end = last_visits[last_visits['time_days'] < cutoff_days].copy()
+    # Filter to active patients who DON'T already have "No Further Visits"
+    active_at_end = last_visits[
+        (last_visits['time_days'] < cutoff_days) & 
+        (~last_visits['patient_id'].isin(existing_terminal_patients))
+    ].copy()
     
     if len(active_at_end) == 0:
         return transitions_df

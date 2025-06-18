@@ -58,7 +58,8 @@ def create_enhanced_sankey_with_terminals(transitions_df):
     ].copy()
     
     # Aggregate transitions
-    flow_counts = filtered_df.groupby(['from_state', 'to_state']).size().reset_index(name='count')
+    # Aggregate transitions - count unique patients, not transition instances
+    flow_counts = filtered_df.groupby(['from_state', 'to_state'])['patient_id'].nunique().reset_index(name='count')
     
     # Filter out small flows (but keep all terminal flows)
     min_flow_size = max(1, len(filtered_df) * 0.001)
@@ -261,7 +262,8 @@ def create_enhanced_sankey_with_terminals_destination_colored(transitions_df):
     treatment_colors = get_treatment_state_colors()
     
     # Aggregate transitions
-    flow_counts = transitions_df.groupby(['from_state', 'to_state']).size().reset_index(name='count')
+    # Aggregate transitions - count unique patients, not transition instances
+    flow_counts = transitions_df.groupby(['from_state', 'to_state'])['patient_id'].nunique().reset_index(name='count')
     
     # Don't filter out terminal flows
     min_flow_size = max(1, len(transitions_df) * 0.001)
@@ -394,7 +396,7 @@ def create_enhanced_sankey_with_terminals_destination_colored(transitions_df):
             target=[node_map[row['to_state']] for _, row in flow_counts.iterrows()],
             value=[row['count'] for _, row in flow_counts.iterrows()],
             color=link_colors,
-            hovertemplate='%{source.label} → %{target.label}<br>Count: %{value}<extra></extra>'
+            hovertemplate='%{source.label} → %{target.label}<br>%{value} patients<extra></extra>'
         ),
         textfont=dict(
             size=11,  # Slightly smaller for less cramping
