@@ -128,6 +128,9 @@ def extract_treatment_patterns_with_terminals(results) -> Tuple[pd.DataFrame, pd
     # Get original transitions
     transitions_df, visits_df = extract_treatment_patterns_vectorized(results)
     
+    # Remove "No Further Visits" transitions - we'll replace with proper "Discontinued" 
+    transitions_df = transitions_df[transitions_df['to_state'] != 'No Further Visits']
+    
     # Get simulation duration
     simulation_days = results.metadata.duration_years * 365
     
