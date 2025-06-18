@@ -1636,116 +1636,238 @@ def save_sankey_debug(fig, name, transitions_df, save_path="debug"):
 # Add debug controls
 debug_mode = st.checkbox("Enable Debug Mode", key="sankey_debug_mode")
 
-# Create columns for side-by-side Sankey diagrams with more space
-# Use ratio to give more space if needed
-col1, col2 = st.columns([1, 1], gap="medium")
+# No columns needed for dual-stream approach
+# The diagram will span the full width
 
-# Create both Sankey diagrams first to analyze scaling
-def create_comparison_sankeys(transitions_df_a, transitions_df_b):
-    """Create two Sankey diagrams with matched Y-axis scaling."""
-    from ape.components.treatment_patterns.sankey_builder_enhanced import create_enhanced_sankey_with_terminals
+def create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b):
+    """Create a single Sankey diagram with two separate streams for comparison."""
     import plotly.graph_objects as go
     import pandas as pd
+    from ape.components.treatment_patterns.pattern_analyzer import get_treatment_state_colors
     
-    # Create both original sankeys
-    sankey_a = create_enhanced_sankey_with_terminals(transitions_df_a)
-    sankey_b = create_enhanced_sankey_with_terminals(transitions_df_b)
+    # Get color scheme
+    treatment_colors = get_treatment_state_colors()
     
-    # Extract flow data from both
-    def get_initial_flow_sum(sankey):
-        """Get the sum of flows from the initial state."""
-        if sankey.data and len(sankey.data) > 0:
-            data = sankey.data[0]
-            if hasattr(data, 'node') and hasattr(data, 'link'):
-                # Find Initial Treatment node
-                labels = data.node.label
-                initial_idx = None
-                for i, label in enumerate(labels):
-                    if 'Initial' in str(label):
-                        initial_idx = i
-                        break
-                
-                if initial_idx is not None:
-                    # Sum all flows FROM Initial Treatment
-                    total_flow = sum(
-                        v for s, v in zip(data.link.source, data.link.value)
-                        if s == initial_idx
-                    )
-                    return total_flow
-        return 1990  # Default to expected value
-    
-    initial_flow_a = get_initial_flow_sum(sankey_a)
-    initial_flow_b = get_initial_flow_sum(sankey_b)
-    
-    # Create scaling factor - both should appear the same height
-    # Use the larger flow as reference
-    max_initial_flow = max(initial_flow_a, initial_flow_b)
-    
-    def create_scaled_sankey(original_sankey, initial_flow, max_flow):
-        """Create a simplified sankey with scaled values."""
-        if original_sankey.data and len(original_sankey.data) > 0:
-            original_data = original_sankey.data[0]
-            
-            # Scale factor to normalize both diagrams
-            scale_factor = max_flow / initial_flow if initial_flow > 0 else 1.0
-            
-            # Create new sankey with scaled values
-            scaled_sankey = go.Figure(data=[go.Sankey(
-                domain=dict(x=[0, 1], y=[0, 1]),
-                orientation="h",
-                valueformat=".0f",
-                valuesuffix=" patients",
-                node=dict(
-                    pad=10,
-                    thickness=20,  # Slightly thicker for visibility
-                    line=dict(width=0),
-                    label=[""] * len(original_data.node.label),  # Empty labels
-                    color=original_data.node.color,
-                    x=original_data.node.x if hasattr(original_data.node, 'x') else None,
-                    y=original_data.node.y if hasattr(original_data.node, 'y') else None
-                ),
-                link=dict(
-                    source=original_data.link.source,
-                    target=original_data.link.target,
-                    value=[v * scale_factor for v in original_data.link.value],  # Scale the values
-                    color=original_data.link.color if hasattr(original_data.link, 'color') else None,
-                    hovertemplate='%{value:.0f} patients<extra></extra>'  # Simplified hover
-                ),
-                textfont=dict(size=1, color='rgba(0,0,0,0)')  # Hide text
-            )])
-            
-            # Apply consistent layout
-            scaled_sankey.update_layout(
-                height=450,  # Slightly taller
-                width=600,
-                margin=dict(l=10, r=100, t=10, b=10),
-                showlegend=False,
-                font_size=1,
-                autosize=False,
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)'
-            )
-            
-            # Add annotation showing actual patient count
-            scaled_sankey.add_annotation(
-                text=f"Total: {int(initial_flow)} patients",
-                xref="paper", yref="paper",
-                x=0.02, y=0.98,
-                showarrow=False,
-                font=dict(size=12, color="#666"),
-                bgcolor="rgba(255,255,255,0.8)",
-                borderpad=4
-            )
-            
-            return scaled_sankey
+    # Process transitions for both streams
+    def process_transitions(df, prefix):
+        """Process transitions and add prefix to states."""
+        # Group and aggregate
+        flow_counts = df.groupby(['from_state', 'to_state']).size().reset_index(name='count')
         
-        return original_sankey
+        # Filter out Pre-Treatment and small flows
+        flow_counts = flow_counts[
+            (flow_counts['from_state'] != 'Pre-Treatment') & 
+            (flow_counts['to_state'] != 'Pre-Treatment')
+        ]
+        
+        # Keep significant flows and all terminal flows
+        min_flow = max(1, len(df) * 0.001)
+        is_terminal = flow_counts['to_state'].str.contains('Still in|No Further')
+        flow_counts = flow_counts[(flow_counts['count'] >= min_flow) | is_terminal]
+        
+        # Add prefix to states
+        flow_counts['from_state'] = prefix + flow_counts['from_state']
+        flow_counts['to_state'] = prefix + flow_counts['to_state']
+        
+        return flow_counts
     
-    # Create scaled versions
-    scaled_a = create_scaled_sankey(sankey_a, initial_flow_a, max_initial_flow)
-    scaled_b = create_scaled_sankey(sankey_b, initial_flow_b, max_initial_flow)
+    # Process both streams
+    flows_a = process_transitions(transitions_df_a, "A:")
+    flows_b = process_transitions(transitions_df_b, "B:")
     
-    return scaled_a, scaled_b
+    # Combine flows
+    all_flows = pd.concat([flows_a, flows_b], ignore_index=True)
+    
+    # Get all unique states
+    states_a = set(flows_a['from_state']) | set(flows_a['to_state'])
+    states_b = set(flows_b['from_state']) | set(flows_b['to_state'])
+    all_states = sorted(states_a | states_b)
+    
+    # Create node mapping
+    node_map = {state: i for i, state in enumerate(all_states)}
+    
+    # Define positions for nodes
+    # Y positions: A stream 0.55-0.95, B stream 0.05-0.45
+    x_positions = []
+    y_positions = []
+    node_colors = []
+    node_labels = []
+    
+    for state in all_states:
+        # Remove prefix for base state
+        base_state = state[2:] if state.startswith(('A:', 'B:')) else state
+        is_stream_a = state.startswith('A:')
+        
+        # X position based on treatment stage
+        if 'Initial' in base_state:
+            x = 0.0
+        elif 'Intensive' in base_state:
+            x = 0.2
+        elif 'Regular' in base_state:
+            x = 0.4
+        elif 'Extended' in base_state and 'Maximum' not in base_state:
+            x = 0.6
+        elif 'Maximum' in base_state:
+            x = 0.7
+        elif 'Still in' in base_state or 'No Further' in base_state:
+            x = 0.95
+        else:
+            x = 0.5
+            
+        # Y position based on stream and state type
+        if is_stream_a:
+            # A stream - upper half
+            if 'Initial' in base_state:
+                y = 0.75
+            elif 'Intensive' in base_state:
+                y = 0.80
+            elif 'Regular' in base_state:
+                y = 0.75
+            elif 'Extended' in base_state:
+                y = 0.70
+            elif 'Maximum' in base_state:
+                y = 0.65
+            elif 'No Further' in base_state:
+                y = 0.85
+            elif 'Still in' in base_state:
+                # Distribute terminal states
+                if 'Initial' in base_state:
+                    y = 0.75
+                elif 'Intensive' in base_state:
+                    y = 0.80
+                elif 'Regular' in base_state:
+                    y = 0.75
+                elif 'Maximum' in base_state:
+                    y = 0.65
+                else:
+                    y = 0.70
+            else:
+                y = 0.75
+        else:
+            # B stream - lower half
+            if 'Initial' in base_state:
+                y = 0.25
+            elif 'Intensive' in base_state:
+                y = 0.30
+            elif 'Regular' in base_state:
+                y = 0.25
+            elif 'Extended' in base_state:
+                y = 0.20
+            elif 'Maximum' in base_state:
+                y = 0.15
+            elif 'No Further' in base_state:
+                y = 0.35
+            elif 'Still in' in base_state:
+                # Distribute terminal states
+                if 'Initial' in base_state:
+                    y = 0.25
+                elif 'Intensive' in base_state:
+                    y = 0.30
+                elif 'Regular' in base_state:
+                    y = 0.25
+                elif 'Maximum' in base_state:
+                    y = 0.15
+                else:
+                    y = 0.20
+            else:
+                y = 0.25
+        
+        x_positions.append(x)
+        y_positions.append(y)
+        
+        # Colors based on state type
+        if 'Still in' in base_state:
+            node_colors.append('#27ae60')  # Green for continuing
+        elif 'No Further' in base_state:
+            node_colors.append('#e74c3c')  # Red for discontinued
+        else:
+            node_colors.append(treatment_colors.get(base_state, '#cccccc'))
+        
+        # Empty labels
+        node_labels.append("")
+    
+    # Create links
+    sources = [node_map[row['from_state']] for _, row in all_flows.iterrows()]
+    targets = [node_map[row['to_state']] for _, row in all_flows.iterrows()]
+    values = [row['count'] for _, row in all_flows.iterrows()]
+    
+    # Link colors with transparency
+    link_colors = []
+    for _, row in all_flows.iterrows():
+        base_state = row['from_state'][2:]  # Remove prefix
+        color = treatment_colors.get(base_state, '#cccccc')
+        # Convert hex to rgba with transparency
+        if color.startswith('#'):
+            hex_color = color.lstrip('#')
+            r = int(hex_color[0:2], 16)
+            g = int(hex_color[2:4], 16)
+            b = int(hex_color[4:6], 16)
+            link_colors.append(f'rgba({r}, {g}, {b}, 0.4)')
+        else:
+            link_colors.append(color)
+    
+    # Create Sankey
+    fig = go.Figure(data=[go.Sankey(
+        arrangement='fixed',
+        node=dict(
+            pad=10,
+            thickness=20,
+            line=dict(width=0),
+            label=node_labels,
+            color=node_colors,
+            x=x_positions,
+            y=y_positions,
+        ),
+        link=dict(
+            source=sources,
+            target=targets,
+            value=values,
+            color=link_colors,
+            hovertemplate='%{value} patients<extra></extra>'
+        ),
+        textfont=dict(size=1, color='rgba(0,0,0,0)')
+    )])
+    
+    # Add separator line
+    fig.add_shape(
+        type="line",
+        x0=0, x1=1,
+        y0=0.5, y1=0.5,
+        line=dict(color="gray", width=1, dash="dash"),
+        xref="paper", yref="paper"
+    )
+    
+    # Add labels for each stream
+    fig.add_annotation(
+        text=f"<b>{name_a}</b>",
+        xref="paper", yref="paper",
+        x=0.02, y=0.95,
+        showarrow=False,
+        font=dict(size=14, color="#333"),
+        bgcolor="rgba(255,255,255,0.9)",
+        borderpad=4
+    )
+    
+    fig.add_annotation(
+        text=f"<b>{name_b}</b>",
+        xref="paper", yref="paper",
+        x=0.02, y=0.05,
+        showarrow=False,
+        font=dict(size=14, color="#333"),
+        bgcolor="rgba(255,255,255,0.9)",
+        borderpad=4
+    )
+    
+    # Update layout
+    fig.update_layout(
+        height=700,  # Taller to accommodate both streams
+        margin=dict(l=20, r=120, t=20, b=20),
+        showlegend=False,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)'
+    )
+    
+    return fig
 
 # First, load both datasets
 transitions_df_a = None
@@ -1797,60 +1919,64 @@ try:
 except Exception as e:
     st.error(f"Error loading Simulation B data: {str(e)}")
 
-# Create both Sankeys with matched scaling
+# Create dual-stream Sankey with both simulations
 if transitions_df_a is not None and transitions_df_b is not None:
-    sankey_a, sankey_b = create_comparison_sankeys(transitions_df_a, transitions_df_b)
+    # Get memorable names from simulations
+    name_a = sim_a.get('memorable_name', sim_a['name'])
+    name_b = sim_b.get('memorable_name', sim_b['name'])
     
-    with col1:
-        st.markdown(f"**Simulation A: {sim_a['protocol']}**")
+    # Debug info
+    if debug_mode:
+        col1, col2 = st.columns(2)
         
-        # Debug info for A
-        if debug_mode:
+        with col1:
+            st.markdown(f"**Simulation A: {name_a}**")
             st.info(f"Transitions shape: {transitions_df_a.shape}")
             st.write(f"Enhanced analyzer: {enhanced_available}")
             
             # Show terminal states by name pattern
-            terminal_states = [s for s in transitions_df_a['to_state'].unique() 
-                             if 'Still in' in s or 'No Further Visits' in s]
-            if terminal_states:
+            terminal_states_a = [s for s in transitions_df_a['to_state'].unique() 
+                               if 'Still in' in s or 'No Further Visits' in s]
+            if terminal_states_a:
                 st.write("Terminal states found:")
-                for state in sorted(terminal_states):
+                for state in sorted(terminal_states_a):
                     count = len(transitions_df_a[transitions_df_a['to_state'] == state])
                     st.write(f"  - {state}: {count} transitions")
-                    
-            # Save debug files
-            try:
-                html_path, txt_path = save_sankey_debug(sankey_a, "comparison_A", transitions_df_a)
-                st.caption(f"Debug files saved to {html_path.parent}")
-            except:
-                pass
         
-        st.plotly_chart(sankey_a, use_container_width=False)
-    
-    with col2:
-        st.markdown(f"**Simulation B: {sim_b['protocol']}**")
-        
-        # Debug info for B
-        if debug_mode:
+        with col2:
+            st.markdown(f"**Simulation B: {name_b}**")
             st.info(f"Transitions shape: {transitions_df_b.shape}")
             st.write(f"Enhanced analyzer: {enhanced_available}")
             
             # Show terminal states by name pattern
-            terminal_states = [s for s in transitions_df_b['to_state'].unique() 
-                             if 'Still in' in s or 'No Further Visits' in s]
-            if terminal_states:
+            terminal_states_b = [s for s in transitions_df_b['to_state'].unique() 
+                               if 'Still in' in s or 'No Further Visits' in s]
+            if terminal_states_b:
                 st.write("Terminal states found:")
-                for state in sorted(terminal_states):
+                for state in sorted(terminal_states_b):
                     count = len(transitions_df_b[transitions_df_b['to_state'] == state])
                     st.write(f"  - {state}: {count} transitions")
-                    
-            # Save debug files
-            try:
-                html_path, txt_path = save_sankey_debug(sankey_b, "comparison_B", transitions_df_b)
-            except:
-                pass
+    
+    # Create and display the dual-stream Sankey
+    try:
+        dual_sankey = create_dual_stream_sankey(transitions_df_a, transitions_df_b, name_a, name_b)
+        st.plotly_chart(dual_sankey, use_container_width=True)
         
-        st.plotly_chart(sankey_b, use_container_width=False)
+        # Save debug files if in debug mode
+        if debug_mode:
+            try:
+                # Save the dual sankey
+                html_path = Path("debug") / "dual_stream_sankey.html"
+                html_path.parent.mkdir(exist_ok=True)
+                dual_sankey.write_html(html_path)
+                st.caption(f"Debug file saved to {html_path}")
+            except Exception as e:
+                st.error(f"Error saving debug file: {str(e)}")
+                
+    except Exception as e:
+        st.error(f"Error creating dual-stream Sankey: {str(e)}")
+        if debug_mode:
+            st.exception(e)
 else:
     st.error("Could not load data for both simulations")
 
