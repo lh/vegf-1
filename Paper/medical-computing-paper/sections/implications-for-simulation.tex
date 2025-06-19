@@ -1,0 +1,66 @@
+% !TEX root = ../main.tex
+
+\section{Implications for Simulation Modeling}
+
+\subsection{Synthesizing Limited Long-Term Data}
+
+The scarcity of long-term aflibercept data beyond 5 years necessitates careful consideration when developing simulation models. While the SEVEN-UP study provides insights into the 7-year trajectory of ranibizumab treatment, assuming identical long-term patterns for aflibercept remains unvalidated. The available evidence suggests several key modeling considerations:
+
+\subsection{Treatment Pattern Heterogeneity}
+
+Real-world studies consistently demonstrate heterogeneous treatment patterns that deviate substantially from clinical trial protocols. The bimodal distribution observed by \citet{nishikawaFourYearOutcomeAflibercept2019} — where some patients require minimal treatment after year 1 while others need continuous injections — highlights the need for patient stratification in simulation models. This heterogeneity likely reflects underlying differences in disease severity, treatment response, and patient characteristics that must be captured to generate realistic outcomes.
+
+\subsection{Critical Thresholds and Tipping Points}
+
+The finding that $\geq$5 injections annually are required to maintain visual gains \citep{kimImpactInjectionFrequency2020} suggests a critical threshold below which treatment effectiveness diminishes rapidly. Similarly, the observation that patients receiving $\geq$20 injections over 5 years have significantly better outcomes indicates cumulative dose effects that extend beyond annual treatment intensity. These thresholds provide important calibration targets for simulation models.
+
+\subsection{Extrapolation Challenges}
+
+The absence of aflibercept data beyond 5 years requires careful extrapolation approaches:
+
+\begin{enumerate}
+    \item \textbf{Conservative assumption}: Apply ranibizumab long-term trajectories to aflibercept, acknowledging uncertainty
+    \item \textbf{Mechanism-based modeling}: Use pharmacokinetic/pharmacodynamic differences to project differential outcomes
+    \item \textbf{Sensitivity analysis}: Vary long-term assumptions within plausible ranges to assess impact on conclusions
+\end{enumerate}
+
+\subsection{Real-World Constraints}
+
+The substantial gap between clinical trial outcomes and real-world effectiveness — with real-world patients gaining only 1-3 letters versus 8-10 in trials — must be explicitly modeled. Key factors include:
+
+\begin{itemize}
+    \item Undertreatment due to capacity constraints
+    \item Variable adherence to monitoring schedules
+    \item Comorbidities affecting treatment persistence
+    \item Healthcare system variations in treatment protocols
+\end{itemize}
+
+\subsection{Parameter Uncertainty Quantification}
+
+Given the data limitations, formal uncertainty quantification becomes essential. Parameters with high uncertainty include:
+
+\begin{itemize}
+    \item Long-term discontinuation rates beyond 5 years
+    \item Geographic atrophy progression rates with aflibercept
+    \item Treatment effectiveness in years 6-10
+    \item Impact of biosimilar entry on treatment patterns
+\end{itemize}
+
+Probabilistic sensitivity analysis and value of information analysis can help identify which parameters most influence cost-effectiveness conclusions and prioritize future research efforts.
+
+\subsection{Validation Strategies}
+
+Without complete long-term data, model validation requires creative approaches:
+
+\begin{enumerate}
+    \item Cross-validation using different cohorts for calibration and testing
+    \item External validation against emerging registry data
+    \item Pattern validation comparing simulated treatment trajectories to observed patterns
+    \item Face validity assessment with clinical experts
+\end{enumerate}
+
+The ongoing collection of real-world data through registries like Fight Retinal Blindness! will be crucial for retrospective validation as longer-term outcomes become available.
+
+\subsection{Conclusion}
+
+The limited availability of long-term aflibercept data represents both a challenge and an opportunity for simulation modeling. While requiring careful handling of uncertainty and transparent communication of limitations, it also highlights the value of modeling approaches that can synthesize available evidence to inform current decision-making while identifying priorities for future data collection. As aflibercept approaches its tenth year of use, the accumulation of real-world evidence will enable increasingly robust modeling, but current decisions cannot await perfect information.

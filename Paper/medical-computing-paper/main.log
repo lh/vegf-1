@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.16.0 (TeX Live 2023)  (format=lualatex 2024.3.3)  12 JUN 2025 13:18
+This is LuaHBTeX, Version 1.16.0 (TeX Live 2023)  (format=lualatex 2024.3.3)  19 JUN 2025 12:03
  restricted system commands enabled.
  file:line:error style messages enabled.
 **main
@@ -840,7 +840,7 @@ LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
 (Font)              scaled to size 5.99936pt on input line 16.
 (./sections/abstract.tex) (./sections/literature-review.tex [1
 
-{/usr/local/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]) (./sections/parameter-extraction.tex [2]
+{/usr/local/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]) (./sections/methods-gap-analysis.tex [2] [3] [4]) (./sections/parameter-extraction.tex
 Underfull \hbox (badness 8189) in paragraph at lines 41--41
 []\TU/lmr/m/n/10 NAIVE to HIGHLY_AC-
  []
@@ -862,12 +862,20 @@ Overfull \hbox (5.0363pt too wide) in paragraph at lines 23--91
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[3]
+[5]
 Overfull \hbox (13.15993pt too wide) detected at line 137
 [] \TU/latinmodern-math.otf(1)/m/n/10 = [] + (0.6 × []) + (0.4 × [] × [])
  []
 
-) (./sections/premature-discontinuation-analysis.tex [4]
+) (./sections/parameter-synthesis.tex [6]
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[7]
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[8]) (./sections/premature-discontinuation-analysis.tex [9]
 Underfull \hbox (badness 10000) in paragraph at lines 41--42
 []\TU/lmr/m/n/10 Real-world fre-
  []
@@ -880,8 +888,15 @@ Underfull \hbox (badness 10000) in paragraph at lines 44--45
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-) (./sections/baseline-acuity-analysis.tex
-<figures/acuity/baseline_va_distribution.png, id=182, 733.5405pt x 512.8761pt>
+) (./sections/sash-practice-patterns.tex [10]
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[11] [12]) (./sections/baseline-acuity-analysis.tex
+<figures/acuity/baseline_va_distribution.png, id=654, 733.5405pt x 512.8761pt>
 File: figures/acuity/baseline_va_distribution.png Graphic file (type png)
 <use figures/acuity/baseline_va_distribution.png>
 Package luatex.def Info: figures/acuity/baseline_va_distribution.png  used on input line 9.
@@ -890,29 +905,42 @@ Package luatex.def Info: figures/acuity/baseline_va_distribution.png  used on in
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[5]
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[6<./figures/acuity/baseline_va_distribution.png>] [7]) (./main.bbl [8]) [9] [10] [11] (./main.aux)
+[13] [14<./figures/acuity/baseline_va_distribution.png>]) (./sections/mortality-estimation.tex [15] [16]) (./sections/data-availability-challenges.tex [17] [18]) (./sections/long-term-aflibercept-data.tex [19] [20] [21]) (./sections/implications-for-simulation.tex [22] [23]) (./sections/simulation-parameters-summary.tex
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[24]
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[25]) (./main.bbl [26] [27]) [28] [29] [30] [31] (./main.aux)
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 06EE31E9308638D8BEE01300D95B90F9;4799.
+(rerunfilecheck)             Checksum: FE98817A5AE3F66D17E9886643FF9D51;25952.
 )
 
 Here is how much of LuaTeX's memory you used:
- 20620 strings out of 478285
- 156557,1977958 words of node,token memory allocated
- 608 words of node memory still in use:
-   7 hlist, 2 vlist, 2 rule, 1 local_par, 4 glue, 5 kern, 1 penalty, 3 glyph, 21 attribute, 57 glue_spec, 12 attribute_list, 1 write, 1 pdf_action nodes
-   avail lists: 1:1,2:3614,3:704,4:138,5:696,6:326,7:13096,8:41,9:2185,10:27,11:919
- 40118 multiletter control sequences out of 65536+600000
- 58 fonts using 21205671 bytes
- 89i,17n,115p,996b,500s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman6-regular.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman7-regular.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman10-italic.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm-math/latinmodern-math.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman10-bold.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm-math/latinmodern-math.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman12-bold.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman9-regular.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman9-bold.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman12-regular.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman17-regular.otf>
-Output written on main.pdf (11 pages, 407820 bytes).
+ 20995 strings out of 478285
+ 195703,1977958 words of node,token memory allocated
+ 631 words of node memory still in use:
+   7 hlist, 2 vlist, 2 rule, 1 local_par, 4 glue, 4 kern, 1 penalty, 1 margin_kern, 4 glyph, 25 attribute, 58 glue_spec, 14 attribute_list, 1 write, 1 pdf_action nodes
+   avail lists: 1:1,2:5425,3:759,4:142,5:890,6:342,7:16293,8:41,9:2551,10:27,11:1053
+ 40258 multiletter control sequences out of 65536+600000
+ 58 fonts using 21205583 bytes
+ 89i,17n,115p,996b,510s stack positions out of 10000i,1000n,20000p,200000b,200000s
+</usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman6-regular.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman10-italic.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm-math/latinmodern-math.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman7-regular.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman10-bold.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm-math/latinmodern-math.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman10-regular.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman12-bold.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman9-regular.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman9-bold.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman12-regular.otf></usr/local/texlive/2023/texmf-dist/fonts/opentype/public/lm/lmroman17-regular.otf>
+Output written on main.pdf (31 pages, 472281 bytes).
 
-PDF statistics: 306 PDF objects out of 1000 (max. 8388607)
- 252 compressed objects within 3 object streams
- 60 named destinations out of 1000 (max. 131072)
- 185 words of extra memory for PDF output out of 10000 (max. 100000000)
+PDF statistics: 890 PDF objects out of 1000 (max. 8388607)
+ 810 compressed objects within 9 object streams
+ 239 named destinations out of 1000 (max. 131072)
+ 993 words of extra memory for PDF output out of 10000 (max. 100000000)
 

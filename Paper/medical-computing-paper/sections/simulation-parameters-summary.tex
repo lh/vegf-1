@@ -1,0 +1,145 @@
+% !TEX root = ../main.tex
+
+\section{Summary of Simulation Parameters from Literature}
+
+\subsection{Core Treatment Parameters}
+
+\subsubsection{Injection Frequency Distribution}
+Based on the systematic review of long-term aflibercept studies, the following injection frequency parameters should be incorporated into the simulation model:
+
+\begin{table}[h]
+\centering
+\caption{Annual Injection Frequencies for Aflibercept (Real-World Data)}
+\begin{tabular}{lcc}
+\hline
+Year & Mean Injections & Range/SD \\
+\hline
+Year 1 & 7.0 & 6.8--7.7 \\
+Year 2 & 3.3 & 2.5--4.0 \\
+Years 3--5 & 3.2 & 2.7--3.8 \\
+\hline
+\end{tabular}
+\end{table}
+
+\paragraph{Critical Finding:} The bimodal distribution observed by \citet{nishikawaFourYearOutcomeAflibercept2019} suggests two distinct patient phenotypes:
+\begin{itemize}
+    \item Low-need cohort: Minimal injections after loading phase (approximately 30\% of patients)
+    \item High-need cohort: Continuous regular injections throughout treatment period
+\end{itemize}
+
+\subsubsection{Treatment Thresholds}
+\begin{itemize}
+    \item \textbf{Minimum effective dose}: $\geq$5 injections annually to maintain visual gains \citep{kimImpactInjectionFrequency2020}
+    \item \textbf{Cumulative dose effect}: Patients receiving $\geq$20 injections over 5 years show 8.0 letters better VA than those receiving $<$20 injections (p=0.001)
+\end{itemize}
+
+\subsection{Clinical Outcome Trajectories}
+
+\subsubsection{Visual Acuity Evolution}
+\begin{table}[h]
+\centering
+\caption{Mean Visual Acuity Change from Baseline (ETDRS Letters)}
+\begin{tabular}{lccc}
+\hline
+Timepoint & Mean Change & 95\% CI & Source \\
+\hline
+Month 3 & +7.0 & -- & Loading phase response \\
+Year 1 & +5.5 & +3 to +8 & Multiple studies \\
+Year 2 & +2.0 & 0 to +4 & Decline begins \\
+Year 3 & +0.5 & -2 to +3 & Near baseline \\
+Year 4 & -1.0 & -3 to +1 & Below baseline \\
+Year 5 & -2.9 & -5 to 0 & \citet{kimImpactInjectionFrequency2020} \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Treatment Response Categories}
+Based on the literature, patients should be stratified into response categories:
+\begin{enumerate}
+    \item \textbf{Good responders} (30\%): Gain $\geq$10 letters, maintain with minimal treatment
+    \item \textbf{Moderate responders} (50\%): Gain 0--9 letters, require continuous treatment
+    \item \textbf{Poor responders} (20\%): Lose letters despite treatment
+\end{enumerate}
+
+\subsection{Discontinuation and Attrition Parameters}
+
+\subsubsection{Cumulative Discontinuation Rates}
+\begin{table}[h]
+\centering
+\caption{Cumulative Discontinuation Rates by Year}
+\begin{tabular}{lcc}
+\hline
+Timepoint & Discontinuation Rate & Primary Reasons \\
+\hline
+Year 1 & 10--15\% & Early non-response \\
+Year 2 & 25--30\% & Treatment burden \\
+Year 3 & 35--43\% & Multiple factors \\
+Year 4 & 40--45\% & Disease stability/futility \\
+Year 5 & 45--50\% & Cumulative attrition \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Discontinuation Categories}
+\begin{itemize}
+    \item \textbf{Planned discontinuation} (30\%): Disease stability, good visual outcome
+    \item \textbf{Administrative discontinuation} (40\%): Lost to follow-up, patient choice
+    \item \textbf{Medical discontinuation} (30\%): Treatment futility, adverse events, death
+\end{itemize}
+
+\subsection{Disease Progression Parameters}
+
+\subsubsection{Complication Development Rates}
+\begin{table}[h]
+\centering
+\caption{Cumulative Rates of Disease Complications}
+\begin{tabular}{lcccc}
+\hline
+Complication & Year 1 & Year 3 & Year 5 & Year 10* \\
+\hline
+Geographic atrophy & 5\% & 12\% & 20\% & 49\% \\
+Fibrosis/scarring & 3\% & 8\% & 15\% & 25\% \\
+Subretinal hemorrhage & 2\% & 5\% & 8\% & 12\% \\
+\hline
+\multicolumn{5}{l}{*Extrapolated from ranibizumab data} \\
+\end{tabular}
+\end{table}
+
+\subsection{Real-World vs Clinical Trial Gap}
+
+The literature consistently demonstrates a substantial efficacy-effectiveness gap:
+\begin{itemize}
+    \item \textbf{Clinical trials}: +8--10 letters at 1 year, maintained at 2 years
+    \item \textbf{Real-world}: +1--3 letters at 1 year, declining thereafter
+    \item \textbf{Key driver}: Undertreatment (7.3 vs 10+ injections in year 1)
+\end{itemize}
+
+\subsection{Simulation Model Recommendations}
+
+\subsubsection{Essential Parameters to Model}
+\begin{enumerate}
+    \item \textbf{Patient heterogeneity}: Implement distinct phenotypes based on treatment need
+    \item \textbf{Treatment intensity}: Model as primary driver of outcomes
+    \item \textbf{Time-dependent effects}: Incorporate declining treatment effectiveness
+    \item \textbf{Competing risks}: Include mortality, geographic atrophy, and fibrosis
+\end{enumerate}
+
+\subsubsection{Uncertainty Quantification}
+Given data limitations beyond 5 years, the following parameters require sensitivity analysis:
+\begin{itemize}
+    \item Long-term visual acuity trajectory (years 6--10)
+    \item Geographic atrophy progression rate with aflibercept
+    \item Impact of biosimilar adoption on treatment patterns
+    \item Treatment discontinuation rates in stable patients
+\end{itemize}
+
+\subsubsection{Validation Targets}
+The simulation should reproduce:
+\begin{itemize}
+    \item Year 1 injection frequency: 7.0 $\pm$ 0.7
+    \item Year 1 VA gain: +5.5 $\pm$ 2.5 letters
+    \item 5-year retention rate: 50--60\%
+    \item 5-year mean VA change: -3 to 0 letters
+\end{itemize}
+
+These parameters provide a quantitative framework for implementing realistic aflibercept treatment patterns in the ABS simulation engine, with clear targets for calibration and validation.

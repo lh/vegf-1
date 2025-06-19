@@ -1,4 +1,4 @@
-\begin{thebibliography}{8}
+\begin{thebibliography}{13}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -23,12 +23,24 @@ Thomas~A. Ciulla, Rehan~M. Hussain, John~S. Pollack, and David~F. Williams.
 \newblock ISSN 2468-6530.
 \newblock \doi{10.1016/j.oret.2019.05.017}.
 
+\bibitem[Gillies et~al.(2019)Gillies, Nguyen, Daien, Arnold, Morlet, and Barthelmes]{gilliesTreatmentOutcomesRanibizumab2019}
+Mark~C. Gillies, Vuong Nguyen, Vincent Daien, Jennifer~J. Arnold, Nigel Morlet, and Daniel Barthelmes.
+\newblock Treatment {{Outcomes}} of {{Ranibizumab}} versus {{Aflibercept}} for {{Neovascular Age-Related Macular Degeneration}}: {{Data}} from the {{Fight Retinal Blindness}}! {{Registry}}.
+\newblock \emph{Ophthalmology}, 127\penalty0 (3):\penalty0 369--376, 2019.
+\newblock \doi{10.1016/j.ophtha.2019.10.006}.
+
 \bibitem[Heier et~al.(2012)Heier, Brown, Chong, Korobelnik, Kaiser, Nguyen, Kirchhof, Ho, Ogura, Yancopoulos, Stahl, Vitti, Berliner, Soo, Anderesi, Groetzbach, Sommerauer, Sandbrink, Simader, and {Schmidt-Erfurth}]{heierIntravitrealAfliberceptVEGF2012}
 Jeffrey~S. Heier, David~M. Brown, Victor Chong, Jean-Francois Korobelnik, Peter~K. Kaiser, Quan~Dong Nguyen, Bernd Kirchhof, Allen Ho, Yuichiro Ogura, George~D. Yancopoulos, Neil Stahl, Robert Vitti, Alyson~J. Berliner, Yuhwen Soo, Majid Anderesi, Georg Groetzbach, Bernd Sommerauer, Rupert Sandbrink, Christian Simader, and Ursula {Schmidt-Erfurth}.
 \newblock Intravitreal {{Aflibercept}} ({{VEGF Trap-Eye}}) in {{Wet Age-related Macular Degeneration}}.
 \newblock \emph{Ophthalmology}, 119\penalty0 (12):\penalty0 2537--2548, December 2012.
 \newblock ISSN 0161-6420, 1549-4713.
 \newblock \doi{10.1016/j.ophtha.2012.09.006}.
+
+\bibitem[Kim et~al.(2020)Kim, Tran, Cho, Park, Johnson, Dugel, Rahhal, Berger, Cummings, {van Everdingen}, and Kim]{kimImpactInjectionFrequency2020}
+Seong~Joon Kim, Thi Ha~Chau Tran, Han~Joo Cho, Sung~Soo Park, Mark~W. Johnson, Pravin~U. Dugel, Firas~M. Rahhal, Alain Berger, Taygan~Yilmaz Cummings, Jozef A.~M. {van Everdingen}, and Kyu~Hyung Kim.
+\newblock Impact of injection frequency on 5-year real-world visual acuity outcomes of aflibercept therapy for neovascular age-related macular degeneration.
+\newblock \emph{Eye}, 35\penalty0 (2):\penalty0 409--417, 2020.
+\newblock \doi{10.1038/s41433-020-0851-y}.
 
 \bibitem[Martin et~al.(2012)Martin, Maguire, Fine, Ying, Jaffe, Grunwald, Toth, Redford, and Ferris]{martinRanibizumabBevacizumabTreatment2012}
 Daniel~F. Martin, Maureen~G. Maguire, Stuart~L. Fine, Gui-shuang Ying, Glenn~J. Jaffe, Juan~E. Grunwald, Cynthia Toth, Maryann Redford, and Frederick~L. Ferris.
@@ -44,6 +56,12 @@ Ichiro Maruko, Masashi Ogasawara, Akiko Yamamoto, Kanako Itagaki, Taiji Hasegawa
 \newblock ISSN 2468-6530.
 \newblock \doi{10.1016/j.oret.2020.03.010}.
 
+\bibitem[Nishikawa et~al.(2019)Nishikawa, Oishi, Hata, Miyake, Ooto, Yamashiro, Miyata, Tamura, {Ueda-Arakawa}, Takahashi, Kawashima, and Tsujikawa]{nishikawaFourYearOutcomeAflibercept2019}
+Keiichi Nishikawa, Akio Oishi, Masayuki Hata, Masahiro Miyake, Sotaro Ooto, Kenji Yamashiro, Manabu Miyata, Hiroshi Tamura, Naoko {Ueda-Arakawa}, Ayako Takahashi, Yu~Kawashima, and Akitaka Tsujikawa.
+\newblock Four-{{Year Outcome}} of {{Aflibercept}} for {{Neovascular Age-Related Macular Degeneration}} and polypoidal choroidal vasculopathy.
+\newblock \emph{Scientific Reports}, 9:\penalty0 3620, 2019.
+\newblock \doi{10.1038/s41598-019-39995-5}.
+
 \bibitem[Ohji et~al.(2020)Ohji, Takahashi, Okada, Kobayashi, Matsuda, Terano, Ohji, Hanemoto, Kaga, Kouno, Kitamei, Sato, Takahashi, Yanai, Uchio, Miyata, Wakabayashi, Maeno, Yasukawa, Horiguchi, Nishimura, Kawahara, Kurimoto, Murai, Kobayashi, Kimura, Matsushita, Iida, Yasuda, Kato, Miura, Okada, Mori, Sugiyama, Ito, Kimura, Nakai, Matsumoto, Takeuchi, Okoshi, Nuno, Nomoto, Mori, Takeda, Yoshida, Hosokawa, Sonoda, and {for the ALTAIR Investigators}]{ohjiEfficacySafetyIntravitreal2020}
 Masahito Ohji, Kanji Takahashi, Annabelle~A. Okada, Masato Kobayashi, Yoshimi Matsuda, Yasuhiro Terano, Masahito Ohji, Tsukasa Hanemoto, Tatsushi Kaga, Takeya Kouno, Hirokuni Kitamei, Shinpei Sato, Kanji Takahashi, Ryoji Yanai, Eiichi Uchio, Kazunori Miyata, Yoshihiro Wakabayashi, Takatoshi Maeno, Tsutomu Yasukawa, Masayuki Horiguchi, Tetsuya Nishimura, Akiteru Kawahara, Yasuo Kurimoto, Kenichi Murai, Namie Kobayashi, Wataru Kimura, Eriko Matsushita, Tomohiro Iida, Kanako Yasuda, Yuji Kato, Masahiro Miura, Annabelle~Ayame Okada, Ryusaburo Mori, Atsushi Sugiyama, Yasuo Ito, Daisaku Kimura, Kei Nakai, Chota Matsumoto, Shinobu Takeuchi, Kishiko Okoshi, Yoshihisa Nuno, Yohei Nomoto, Toshio Mori, Muneyasu Takeda, Noriko Yoshida, Mio Hosokawa, Kohei Sonoda, and {for the ALTAIR Investigators}.
 \newblock Efficacy and {{Safety}} of {{Intravitreal Aflibercept Treat-and-Extend Regimens}} in {{Exudative Age-Related Macular Degeneration}}: 52- and 96-{{Week Findings}} from {{ALTAIR}}.
@@ -57,5 +75,17 @@ Ursula {Schmidt-Erfurth}, Peter~K. Kaiser, Jean-Fran{\c c}ois Korobelnik, David~
 \newblock \emph{Ophthalmology}, 121\penalty0 (1):\penalty0 193--201, January 2014.
 \newblock ISSN 0161-6420, 1549-4713.
 \newblock \doi{10.1016/j.ophtha.2013.08.011}.
+
+\bibitem[Spooner et~al.(2025)Spooner, Fraser-Bell, Hong, Wong, Heraghty, and Chang]{spoonerRealWorld10YearOutcomes2025}
+Kimberly Spooner, Samantha Fraser-Bell, Thomas Hong, Jia~Yu Wong, Jack Heraghty, and Andrew~A. Chang.
+\newblock Real-{{World}} 10-{{Year Outcomes}} of {{Anti-VEGF Therapy}} for {{Neovascular Age-Related Macular Degeneration}}: {{A Meta-Analysis}}.
+\newblock \emph{Clinical \& Experimental Ophthalmology}, 53\penalty0 (1):\penalty0 44--60, 2025.
+\newblock \doi{10.1111/ceo.14559}.
+
+\bibitem[Veritti et~al.(2021)Veritti, Sarao, Missiroli, Ricci, and Lanzetta]{verittiLongTermOutcomesIntravitreal2021}
+Daniele Veritti, Valentina Sarao, Francesco Missiroli, Federico Ricci, and Paolo Lanzetta.
+\newblock Long-term outcomes of intravitreal anti-{{VEGF}} therapies in patients affected by neovascular age-related macular degeneration: A real-life study.
+\newblock \emph{BMC Ophthalmology}, 21:\penalty0 300, 2021.
+\newblock \doi{10.1186/s12886-021-02055-6}.
 
 \end{thebibliography}
