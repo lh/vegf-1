@@ -106,37 +106,7 @@ def auto_save_protocol(selected_file, protocol_type):
                 except:
                     pass
         
-        # Update clinical improvements if edited
-        if 'clinical_improvements' in data:
-            # Handle both standard and time-based suffixes
-            ci_fields = [
-                ('edit_ci_enabled', 'enabled'),
-                ('edit_ci_loading_phase', 'use_loading_phase'),
-                ('edit_ci_time_disc', 'use_time_based_discontinuation'),
-                ('edit_ci_response_vision', 'use_response_based_vision'),
-                ('edit_ci_baseline_dist', 'use_baseline_distribution'),
-                ('edit_ci_response_hetero', 'use_response_heterogeneity')
-            ]
-            
-            # Also check for time-based (_tb suffix) fields
-            ci_fields_tb = [
-                ('edit_ci_enabled_tb', 'enabled'),
-                ('edit_ci_loading_phase_tb', 'use_loading_phase'),
-                ('edit_ci_time_disc_tb', 'use_time_based_discontinuation'),
-                ('edit_ci_response_vision_tb', 'use_response_based_vision'),
-                ('edit_ci_baseline_dist_tb', 'use_baseline_distribution'),
-                ('edit_ci_response_hetero_tb', 'use_response_heterogeneity')
-            ]
-            
-            # Check both sets of fields
-            all_fields = ci_fields + ci_fields_tb
-            
-            for session_key, yaml_key in all_fields:
-                if session_key in st.session_state:
-                    new_val = st.session_state[session_key]
-                    if new_val != data['clinical_improvements'].get(yaml_key):
-                        data['clinical_improvements'][yaml_key] = new_val
-                        changes_made = True
+        # Note: Clinical improvements are now handled by forms, not auto-save
         
         # Save if changes were made
         if changes_made:
@@ -581,41 +551,7 @@ with col1:
                             if 'baseline_vision' in data:
                                 del data['baseline_vision']
                     
-                    # Update clinical improvements if edited
-                    if 'clinical_improvements' in data:
-                        # Check for standard protocol CI fields
-                        if 'edit_ci_enabled' in st.session_state:
-                            data['clinical_improvements']['enabled'] = st.session_state.edit_ci_enabled
-                            
-                            # Only update feature flags if improvements are enabled
-                            if st.session_state.edit_ci_enabled:
-                                if 'edit_ci_loading_phase' in st.session_state:
-                                    data['clinical_improvements']['use_loading_phase'] = st.session_state.edit_ci_loading_phase
-                                if 'edit_ci_time_disc' in st.session_state:
-                                    data['clinical_improvements']['use_time_based_discontinuation'] = st.session_state.edit_ci_time_disc
-                                if 'edit_ci_response_vision' in st.session_state:
-                                    data['clinical_improvements']['use_response_based_vision'] = st.session_state.edit_ci_response_vision
-                                if 'edit_ci_baseline_dist' in st.session_state:
-                                    data['clinical_improvements']['use_baseline_distribution'] = st.session_state.edit_ci_baseline_dist
-                                if 'edit_ci_response_hetero' in st.session_state:
-                                    data['clinical_improvements']['use_response_heterogeneity'] = st.session_state.edit_ci_response_hetero
-                        
-                        # Check for time-based protocol CI fields
-                        elif 'edit_ci_enabled_tb' in st.session_state:
-                            data['clinical_improvements']['enabled'] = st.session_state.edit_ci_enabled_tb
-                            
-                            # Only update feature flags if improvements are enabled
-                            if st.session_state.edit_ci_enabled_tb:
-                                if 'edit_ci_loading_phase_tb' in st.session_state:
-                                    data['clinical_improvements']['use_loading_phase'] = st.session_state.edit_ci_loading_phase_tb
-                                if 'edit_ci_time_disc_tb' in st.session_state:
-                                    data['clinical_improvements']['use_time_based_discontinuation'] = st.session_state.edit_ci_time_disc_tb
-                                if 'edit_ci_response_vision_tb' in st.session_state:
-                                    data['clinical_improvements']['use_response_based_vision'] = st.session_state.edit_ci_response_vision_tb
-                                if 'edit_ci_baseline_dist_tb' in st.session_state:
-                                    data['clinical_improvements']['use_baseline_distribution'] = st.session_state.edit_ci_baseline_dist_tb
-                                if 'edit_ci_response_hetero_tb' in st.session_state:
-                                    data['clinical_improvements']['use_response_heterogeneity'] = st.session_state.edit_ci_response_hetero_tb
+                    # Note: Clinical improvements are now saved through forms in the CI tab
                     
                     # Save the updated data
                     with open(selected_file, 'w') as f:
@@ -2391,88 +2327,105 @@ try:
             is_enabled = improvements.get('enabled', False)
             
             if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
-                # Editable clinical improvements
-                # Use a container to group the master toggle separately
-                with st.container():
+                # Editable clinical improvements - using a form to prevent tab jumping
+                with st.form("clinical_improvements_form"):
                     st.markdown("**Master Toggle**")
-                    # Add the on_change back with the master toggle
-                    enabled = st.checkbox("Enable Clinical Improvements", value=is_enabled, 
-                                        key="edit_ci_enabled",
-                                        on_change=lambda: auto_save_protocol(selected_file, protocol_type))
-                
-                if enabled:
-                    st.info("When enabled, these improvements make the simulation more realistic based on real-world clinical data.")
+                    enabled = st.checkbox("Enable Clinical Improvements", value=is_enabled)
                     
-                    # Individual feature toggles
-                    col1, col2 = st.columns(2)
-                    
-                    with col1:
-                        st.markdown("**Treatment Patterns**")
-                        loading_phase = st.checkbox(
-                            "Loading Phase", 
-                            value=improvements.get('use_loading_phase', False),
-                            key="edit_ci_loading_phase",
-                            help="First 3 injections at monthly intervals",
-                            on_change=lambda: auto_save_protocol(selected_file, protocol_type)
-                        )
+                    if enabled:
+                        st.info("When enabled, these improvements make the simulation more realistic based on real-world clinical data.")
                         
-                        time_based_disc = st.checkbox(
-                            "Time-Based Discontinuation",
-                            value=improvements.get('use_time_based_discontinuation', False),
-                            key="edit_ci_time_disc",
-                            help="Realistic annual discontinuation rates: 12.5% Y1, increasing to 45% Y5",
-                            on_change=lambda: auto_save_protocol(selected_file, protocol_type)
-                        )
-                    
-                    with col2:
-                        st.markdown("**Vision Dynamics**")
-                        response_based = st.checkbox(
-                            "Response-Based Vision",
-                            value=improvements.get('use_response_based_vision', False),
-                            key="edit_ci_response_vision",
-                            help="Vision gains during loading, then maintenance/decline phases",
-                            on_change=lambda: auto_save_protocol(selected_file, protocol_type)
-                        )
+                        # Individual feature toggles
+                        col1, col2 = st.columns(2)
                         
-                        baseline_dist = st.checkbox(
-                            "Realistic Baseline Distribution",
-                            value=improvements.get('use_baseline_distribution', False),
-                            key="edit_ci_baseline_dist",
-                            help="Normal distribution: mean 55, SD 15 (instead of uniform)",
-                            on_change=lambda: auto_save_protocol(selected_file, protocol_type)
-                        )
+                        with col1:
+                            st.markdown("**Treatment Patterns**")
+                            loading_phase = st.checkbox(
+                                "Loading Phase", 
+                                value=improvements.get('use_loading_phase', False),
+                                help="First 3 injections at monthly intervals"
+                            )
+                            
+                            time_based_disc = st.checkbox(
+                                "Time-Based Discontinuation",
+                                value=improvements.get('use_time_based_discontinuation', False),
+                                help="Realistic annual discontinuation rates: 12.5% Y1, increasing to 45% Y5"
+                            )
                         
-                        response_hetero = st.checkbox(
-                            "Response Heterogeneity",
-                            value=improvements.get('use_response_heterogeneity', False),
-                            key="edit_ci_response_hetero",
-                            help="30% good responders, 50% average, 20% poor",
-                            on_change=lambda: auto_save_protocol(selected_file, protocol_type)
-                        )
-                    
-                    # Show current settings
-                    st.markdown("---")
-                    st.markdown("**Active Improvements:**")
-                    active_features = []
-                    if loading_phase:
-                        active_features.append("• Loading phase (3 monthly injections)")
-                    if time_based_disc:
-                        active_features.append("• Realistic discontinuation rates")
-                    if response_based:
-                        active_features.append("• Response-based vision changes")
-                    if baseline_dist:
-                        active_features.append("• Normal baseline distribution")
-                    if response_hetero:
-                        active_features.append("• Patient response heterogeneity")
-                    
-                    if active_features:
-                        for feature in active_features:
-                            st.caption(feature)
+                        with col2:
+                            st.markdown("**Vision Dynamics**")
+                            response_based = st.checkbox(
+                                "Response-Based Vision",
+                                value=improvements.get('use_response_based_vision', False),
+                                help="Vision gains during loading, then maintenance/decline phases"
+                            )
+                            
+                            baseline_dist = st.checkbox(
+                                "Realistic Baseline Distribution",
+                                value=improvements.get('use_baseline_distribution', False),
+                                help="Normal distribution: mean 55, SD 15 (instead of uniform)"
+                            )
+                            
+                            response_hetero = st.checkbox(
+                                "Response Heterogeneity",
+                                value=improvements.get('use_response_heterogeneity', False),
+                                help="30% good responders, 50% average, 20% poor"
+                            )
+                        
+                        # Show current settings
+                        st.markdown("---")
+                        st.markdown("**Settings to Apply:**")
+                        active_features = []
+                        if loading_phase:
+                            active_features.append("• Loading phase (3 monthly injections)")
+                        if time_based_disc:
+                            active_features.append("• Realistic discontinuation rates")
+                        if response_based:
+                            active_features.append("• Response-based vision changes")
+                        if baseline_dist:
+                            active_features.append("• Normal baseline distribution")
+                        if response_hetero:
+                            active_features.append("• Patient response heterogeneity")
+                        
+                        if active_features:
+                            for feature in active_features:
+                                st.caption(feature)
+                        else:
+                            st.caption("No improvements selected")
+                            
                     else:
-                        st.caption("No improvements selected")
-                        
-                else:
-                    st.warning("Clinical improvements are disabled. Enable to use realistic simulation features.")
+                        st.warning("Clinical improvements will be disabled.")
+                    
+                    # Form submit button
+                    col1, col2, col3 = st.columns([1, 1, 1])
+                    with col2:
+                        submitted = st.form_submit_button("💾 Apply Changes", use_container_width=True, type="primary")
+                    
+                    if submitted:
+                        # Save the clinical improvements settings
+                        try:
+                            with open(selected_file) as f:
+                                data = yaml.safe_load(f)
+                            
+                            # Update clinical improvements
+                            data['clinical_improvements']['enabled'] = enabled
+                            if enabled:
+                                data['clinical_improvements']['use_loading_phase'] = loading_phase
+                                data['clinical_improvements']['use_time_based_discontinuation'] = time_based_disc
+                                data['clinical_improvements']['use_response_based_vision'] = response_based
+                                data['clinical_improvements']['use_baseline_distribution'] = baseline_dist
+                                data['clinical_improvements']['use_response_heterogeneity'] = response_hetero
+                            
+                            # Save the file
+                            with open(selected_file, 'w') as f:
+                                yaml.dump(data, f, sort_keys=False, default_flow_style=False)
+                            
+                            st.success("✅ Clinical improvements settings saved!")
+                            # Force a rerun to show updated values
+                            st.rerun()
+                            
+                        except Exception as e:
+                            st.error(f"Failed to save: {str(e)}")
                     
             else:
                 # Read-only display
@@ -2535,88 +2488,105 @@ try:
             is_enabled = improvements.get('enabled', False)
             
             if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
-                # Editable clinical improvements for time-based
-                # Use a container to group the master toggle separately
-                with st.container():
+                # Editable clinical improvements for time-based - using a form to prevent tab jumping
+                with st.form("clinical_improvements_form_tb"):
                     st.markdown("**Master Toggle**")
-                    # Add the on_change back with the master toggle
-                    enabled = st.checkbox("Enable Clinical Improvements", value=is_enabled, 
-                                        key="edit_ci_enabled_tb",
-                                        on_change=lambda: auto_save_protocol(selected_file, protocol_type))
-                
-                if enabled:
-                    st.info("When enabled, these improvements make the time-based simulation more realistic.")
+                    enabled = st.checkbox("Enable Clinical Improvements", value=is_enabled)
                     
-                    # Individual feature toggles
-                    col1, col2 = st.columns(2)
-                    
-                    with col1:
-                        st.markdown("**Treatment Patterns**")
-                        loading_phase = st.checkbox(
-                            "Loading Phase", 
-                            value=improvements.get('use_loading_phase', False),
-                            key="edit_ci_loading_phase_tb",
-                            help="First 3 injections at monthly intervals",
-                            on_change=lambda: auto_save_protocol(selected_file, protocol_type)
-                        )
+                    if enabled:
+                        st.info("When enabled, these improvements make the time-based simulation more realistic.")
                         
-                        time_based_disc = st.checkbox(
-                            "Time-Based Discontinuation",
-                            value=improvements.get('use_time_based_discontinuation', False),
-                            key="edit_ci_time_disc_tb",
-                            help="Realistic annual discontinuation rates: 12.5% Y1, increasing to 45% Y5",
-                            on_change=lambda: auto_save_protocol(selected_file, protocol_type)
-                        )
-                    
-                    with col2:
-                        st.markdown("**Vision Dynamics**")
-                        response_based = st.checkbox(
-                            "Response-Based Vision",
-                            value=improvements.get('use_response_based_vision', False),
-                            key="edit_ci_response_vision_tb",
-                            help="Vision gains during loading, then maintenance/decline phases",
-                            on_change=lambda: auto_save_protocol(selected_file, protocol_type)
-                        )
+                        # Individual feature toggles
+                        col1, col2 = st.columns(2)
                         
-                        baseline_dist = st.checkbox(
-                            "Realistic Baseline Distribution",
-                            value=improvements.get('use_baseline_distribution', False),
-                            key="edit_ci_baseline_dist_tb",
-                            help="Normal distribution: mean 55, SD 15 (instead of uniform)",
-                            on_change=lambda: auto_save_protocol(selected_file, protocol_type)
-                        )
+                        with col1:
+                            st.markdown("**Treatment Patterns**")
+                            loading_phase = st.checkbox(
+                                "Loading Phase", 
+                                value=improvements.get('use_loading_phase', False),
+                                help="First 3 injections at monthly intervals"
+                            )
+                            
+                            time_based_disc = st.checkbox(
+                                "Time-Based Discontinuation",
+                                value=improvements.get('use_time_based_discontinuation', False),
+                                help="Realistic annual discontinuation rates: 12.5% Y1, increasing to 45% Y5"
+                            )
                         
-                        response_hetero = st.checkbox(
-                            "Response Heterogeneity",
-                            value=improvements.get('use_response_heterogeneity', False),
-                            key="edit_ci_response_hetero_tb",
-                            help="30% good responders, 50% average, 20% poor",
-                            on_change=lambda: auto_save_protocol(selected_file, protocol_type)
-                        )
-                    
-                    # Show current settings
-                    st.markdown("---")
-                    st.markdown("**Active Improvements:**")
-                    active_features = []
-                    if loading_phase:
-                        active_features.append("• Loading phase (3 monthly injections)")
-                    if time_based_disc:
-                        active_features.append("• Realistic discontinuation rates")
-                    if response_based:
-                        active_features.append("• Response-based vision changes")
-                    if baseline_dist:
-                        active_features.append("• Normal baseline distribution")
-                    if response_hetero:
-                        active_features.append("• Patient response heterogeneity")
-                    
-                    if active_features:
-                        for feature in active_features:
-                            st.caption(feature)
+                        with col2:
+                            st.markdown("**Vision Dynamics**")
+                            response_based = st.checkbox(
+                                "Response-Based Vision",
+                                value=improvements.get('use_response_based_vision', False),
+                                help="Vision gains during loading, then maintenance/decline phases"
+                            )
+                            
+                            baseline_dist = st.checkbox(
+                                "Realistic Baseline Distribution",
+                                value=improvements.get('use_baseline_distribution', False),
+                                help="Normal distribution: mean 55, SD 15 (instead of uniform)"
+                            )
+                            
+                            response_hetero = st.checkbox(
+                                "Response Heterogeneity",
+                                value=improvements.get('use_response_heterogeneity', False),
+                                help="30% good responders, 50% average, 20% poor"
+                            )
+                        
+                        # Show current settings
+                        st.markdown("---")
+                        st.markdown("**Settings to Apply:**")
+                        active_features = []
+                        if loading_phase:
+                            active_features.append("• Loading phase (3 monthly injections)")
+                        if time_based_disc:
+                            active_features.append("• Realistic discontinuation rates")
+                        if response_based:
+                            active_features.append("• Response-based vision changes")
+                        if baseline_dist:
+                            active_features.append("• Normal baseline distribution")
+                        if response_hetero:
+                            active_features.append("• Patient response heterogeneity")
+                        
+                        if active_features:
+                            for feature in active_features:
+                                st.caption(feature)
+                        else:
+                            st.caption("No improvements selected")
+                            
                     else:
-                        st.caption("No improvements selected")
-                        
-                else:
-                    st.warning("Clinical improvements are disabled. Enable to use realistic simulation features.")
+                        st.warning("Clinical improvements will be disabled.")
+                    
+                    # Form submit button
+                    col1, col2, col3 = st.columns([1, 1, 1])
+                    with col2:
+                        submitted = st.form_submit_button("💾 Apply Changes", use_container_width=True, type="primary")
+                    
+                    if submitted:
+                        # Save the clinical improvements settings
+                        try:
+                            with open(selected_file) as f:
+                                data = yaml.safe_load(f)
+                            
+                            # Update clinical improvements
+                            data['clinical_improvements']['enabled'] = enabled
+                            if enabled:
+                                data['clinical_improvements']['use_loading_phase'] = loading_phase
+                                data['clinical_improvements']['use_time_based_discontinuation'] = time_based_disc
+                                data['clinical_improvements']['use_response_based_vision'] = response_based
+                                data['clinical_improvements']['use_baseline_distribution'] = baseline_dist
+                                data['clinical_improvements']['use_response_heterogeneity'] = response_hetero
+                            
+                            # Save the file
+                            with open(selected_file, 'w') as f:
+                                yaml.dump(data, f, sort_keys=False, default_flow_style=False)
+                            
+                            st.success("✅ Clinical improvements settings saved!")
+                            # Force a rerun to show updated values
+                            st.rerun()
+                            
+                        except Exception as e:
+                            st.error(f"Failed to save: {str(e)}")
                     
             else:
                 # Read-only display for time-based
