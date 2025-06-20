@@ -77,6 +77,50 @@ baseline_vision_distribution:
   std: 10
   min: 20
   max: 90
+
+# Clinical improvements - optional enhancements for realism
+# Set enabled: true to activate all improvements
+clinical_improvements:
+  enabled: false
+  use_loading_phase: true
+  use_time_based_discontinuation: true
+  use_response_based_vision: true
+  use_baseline_distribution: false
+  use_response_heterogeneity: true
+  loading_phase_parameters:
+    loading_injections: 3
+    loading_interval_days: 28
+  discontinuation_parameters:
+    annual_probabilities:
+      1: 0.125
+      2: 0.15
+      3: 0.12
+      4: 0.08
+      5: 0.075
+  vision_response_parameters:
+    loading:
+      mean: 3.0
+      std: 1.0
+    year1:
+      mean: 0.5
+      std: 0.5
+    year2:
+      mean: 0.0
+      std: 0.5
+    year3plus:
+      mean: -0.2
+      std: 0.3
+  response_types:
+    good:
+      probability: 0.3
+      multiplier: 1.2
+    average:
+      probability: 0.5
+      multiplier: 1.0
+    poor:
+      probability: 0.2
+      multiplier: 0.6
+
 discontinuation_rules:
   poor_vision_threshold: 35
   poor_vision_probability: 0.1

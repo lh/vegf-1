@@ -106,6 +106,24 @@ def auto_save_protocol(selected_file, protocol_type):
                 except:
                     pass
         
+        # Update clinical improvements if edited
+        if 'clinical_improvements' in data:
+            ci_fields = [
+                ('edit_ci_enabled', 'enabled'),
+                ('edit_ci_loading_phase', 'use_loading_phase'),
+                ('edit_ci_time_disc', 'use_time_based_discontinuation'),
+                ('edit_ci_response_vision', 'use_response_based_vision'),
+                ('edit_ci_baseline_dist', 'use_baseline_distribution'),
+                ('edit_ci_response_hetero', 'use_response_heterogeneity')
+            ]
+            
+            for session_key, yaml_key in ci_fields:
+                if session_key in st.session_state:
+                    new_val = st.session_state[session_key]
+                    if new_val != data['clinical_improvements'].get(yaml_key):
+                        data['clinical_improvements'][yaml_key] = new_val
+                        changes_made = True
+        
         # Save if changes were made
         if changes_made:
             # Add modified timestamp
@@ -549,6 +567,23 @@ with col1:
                             if 'baseline_vision' in data:
                                 del data['baseline_vision']
                     
+                    # Update clinical improvements if edited
+                    if 'clinical_improvements' in data and 'edit_ci_enabled' in st.session_state:
+                        data['clinical_improvements']['enabled'] = st.session_state.edit_ci_enabled
+                        
+                        # Only update feature flags if improvements are enabled
+                        if st.session_state.edit_ci_enabled:
+                            if 'edit_ci_loading_phase' in st.session_state:
+                                data['clinical_improvements']['use_loading_phase'] = st.session_state.edit_ci_loading_phase
+                            if 'edit_ci_time_disc' in st.session_state:
+                                data['clinical_improvements']['use_time_based_discontinuation'] = st.session_state.edit_ci_time_disc
+                            if 'edit_ci_response_vision' in st.session_state:
+                                data['clinical_improvements']['use_response_based_vision'] = st.session_state.edit_ci_response_vision
+                            if 'edit_ci_baseline_dist' in st.session_state:
+                                data['clinical_improvements']['use_baseline_distribution'] = st.session_state.edit_ci_baseline_dist
+                            if 'edit_ci_response_hetero' in st.session_state:
+                                data['clinical_improvements']['use_response_heterogeneity'] = st.session_state.edit_ci_response_hetero
+                    
                     # Save the updated data
                     with open(selected_file, 'w') as f:
                         yaml.dump(data, f, sort_keys=False, default_flow_style=False)
@@ -899,13 +934,26 @@ try:
             "Parameter Files"
         ])
     else:
-        tab1, tab2, tab3, tab4, tab5 = st.tabs([
-            "Timing Parameters", 
-            "Disease Transitions", 
-            "Vision Model",
-            "Population",
-            "Discontinuation"
-        ])
+        # Check if protocol has clinical improvements
+        has_improvements = hasattr(spec, 'clinical_improvements') and spec.clinical_improvements is not None
+        
+        if has_improvements:
+            tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+                "Timing Parameters", 
+                "Disease Transitions", 
+                "Vision Model",
+                "Population",
+                "Discontinuation",
+                "Clinical Improvements"
+            ])
+        else:
+            tab1, tab2, tab3, tab4, tab5 = st.tabs([
+                "Timing Parameters", 
+                "Disease Transitions", 
+                "Vision Model",
+                "Population",
+                "Discontinuation"
+            ])
     
     with tab1:
         st.subheader("Treatment Timing Parameters")
@@ -2275,6 +2323,146 @@ try:
                 
                 if 'discontinuation_types' in rules:
                     st.markdown("**Discontinuation Types:** " + ", ".join(rules['discontinuation_types']))
+    
+    # Clinical Improvements tab - only for standard protocols with improvements (tab6)
+    if protocol_type != "time_based" and has_improvements:
+        with tab6:
+            st.subheader("Clinical Improvements")
+            
+            improvements = spec.clinical_improvements
+            is_enabled = improvements.get('enabled', False)
+            
+            if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
+                # Editable clinical improvements
+                st.markdown("**Master Toggle**")
+                enabled = st.checkbox("Enable Clinical Improvements", value=is_enabled, key="edit_ci_enabled", 
+                                    on_change=lambda: auto_save_protocol(selected_file, protocol_type))
+                
+                if enabled:
+                    st.info("When enabled, these improvements make the simulation more realistic based on real-world clinical data.")
+                    
+                    # Individual feature toggles
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown("**Treatment Patterns**")
+                        loading_phase = st.checkbox(
+                            "Loading Phase", 
+                            value=improvements.get('use_loading_phase', False),
+                            key="edit_ci_loading_phase",
+                            help="First 3 injections at monthly intervals",
+                            on_change=lambda: auto_save_protocol(selected_file, protocol_type)
+                        )
+                        
+                        time_based_disc = st.checkbox(
+                            "Time-Based Discontinuation",
+                            value=improvements.get('use_time_based_discontinuation', False),
+                            key="edit_ci_time_disc",
+                            help="Realistic annual discontinuation rates: 12.5% Y1, increasing to 45% Y5",
+                            on_change=lambda: auto_save_protocol(selected_file, protocol_type)
+                        )
+                    
+                    with col2:
+                        st.markdown("**Vision Dynamics**")
+                        response_based = st.checkbox(
+                            "Response-Based Vision",
+                            value=improvements.get('use_response_based_vision', False),
+                            key="edit_ci_response_vision",
+                            help="Vision gains during loading, then maintenance/decline phases",
+                            on_change=lambda: auto_save_protocol(selected_file, protocol_type)
+                        )
+                        
+                        baseline_dist = st.checkbox(
+                            "Realistic Baseline Distribution",
+                            value=improvements.get('use_baseline_distribution', False),
+                            key="edit_ci_baseline_dist",
+                            help="Normal distribution: mean 55, SD 15 (instead of uniform)",
+                            on_change=lambda: auto_save_protocol(selected_file, protocol_type)
+                        )
+                        
+                        response_hetero = st.checkbox(
+                            "Response Heterogeneity",
+                            value=improvements.get('use_response_heterogeneity', False),
+                            key="edit_ci_response_hetero",
+                            help="30% good responders, 50% average, 20% poor",
+                            on_change=lambda: auto_save_protocol(selected_file, protocol_type)
+                        )
+                    
+                    # Show current settings
+                    st.markdown("---")
+                    st.markdown("**Active Improvements:**")
+                    active_features = []
+                    if loading_phase:
+                        active_features.append("• Loading phase (3 monthly injections)")
+                    if time_based_disc:
+                        active_features.append("• Realistic discontinuation rates")
+                    if response_based:
+                        active_features.append("• Response-based vision changes")
+                    if baseline_dist:
+                        active_features.append("• Normal baseline distribution")
+                    if response_hetero:
+                        active_features.append("• Patient response heterogeneity")
+                    
+                    if active_features:
+                        for feature in active_features:
+                            st.caption(feature)
+                    else:
+                        st.caption("No improvements selected")
+                        
+                else:
+                    st.warning("Clinical improvements are disabled. Enable to use realistic simulation features.")
+                    
+            else:
+                # Read-only display
+                if is_enabled:
+                    st.success("**Clinical Improvements: ENABLED**")
+                    
+                    # Show which features are active
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown("**Treatment Patterns**")
+                        if improvements.get('use_loading_phase', False):
+                            st.metric("Loading Phase", "Active", help="3 monthly loading injections")
+                        else:
+                            st.metric("Loading Phase", "Inactive")
+                            
+                        if improvements.get('use_time_based_discontinuation', False):
+                            st.metric("Time-Based Discontinuation", "Active", help="12.5% Y1 → 45% Y5")
+                        else:
+                            st.metric("Time-Based Discontinuation", "Inactive")
+                    
+                    with col2:
+                        st.markdown("**Vision Dynamics**")
+                        if improvements.get('use_response_based_vision', False):
+                            st.metric("Response-Based Vision", "Active", help="Loading → Maintenance → Decline")
+                        else:
+                            st.metric("Response-Based Vision", "Inactive")
+                            
+                        if improvements.get('use_baseline_distribution', False):
+                            st.metric("Realistic Baseline", "Active", help="Normal(55, 15)")
+                        else:
+                            st.metric("Realistic Baseline", "Inactive")
+                            
+                        if improvements.get('use_response_heterogeneity', False):
+                            st.metric("Response Heterogeneity", "Active", help="Good/Average/Poor responders")
+                        else:
+                            st.metric("Response Heterogeneity", "Inactive")
+                    
+                    # Summary of impact
+                    st.markdown("---")
+                    st.info("""
+                    **Impact of Clinical Improvements:**
+                    - More realistic patient trajectories matching clinical trial data
+                    - Better representation of real-world treatment patterns
+                    - Improved accuracy for health economic modeling
+                    - Validated against aflibercept clinical studies
+                    """)
+                    
+                else:
+                    st.warning("**Clinical Improvements: DISABLED**")
+                    st.caption("This protocol uses the standard simulation model without clinical improvements.")
+                    st.caption("To enable improvements, edit a temporary copy of this protocol.")
     
     # Subtle reminder for temp protocols
     if protocol_type == "temp":

@@ -56,6 +56,9 @@ class ProtocolSpecification:
     # Optional: Advanced baseline vision distribution
     baseline_vision_distribution: Optional[Dict[str, Any]] = None
     
+    # Optional: Clinical improvements for enhanced realism
+    clinical_improvements: Optional[Dict[str, Any]] = None
+    
     @classmethod
     def from_yaml(cls, filepath: Path) -> 'ProtocolSpecification':
         """
@@ -91,6 +94,7 @@ class ProtocolSpecification:
             'vision_change_model', 'treatment_effect_on_transitions',
             'baseline_vision_distribution', 'discontinuation_rules'
         ]
+        # Note: clinical_improvements is optional
         
         missing = [f for f in required_fields if f not in data]
         if missing:
@@ -147,6 +151,11 @@ class ProtocolSpecification:
             baseline_std = (baseline_max - baseline_min) / (2 * 1.732)  # std for uniform dist
         else:
             raise ValueError(f"Unknown baseline vision distribution type: {dist_type}")
+        
+        # Validate clinical improvements if present
+        clinical_improvements = data.get('clinical_improvements')
+        if clinical_improvements:
+            _validate_clinical_improvements(clinical_improvements)
             
         return cls(
             name=data['name'],
@@ -170,7 +179,8 @@ class ProtocolSpecification:
             discontinuation_rules=data['discontinuation_rules'],
             source_file=str(filepath.absolute()),
             load_timestamp=datetime.now().isoformat(),
-            checksum=checksum
+            checksum=checksum,
+            clinical_improvements=clinical_improvements
         )
     
     def to_audit_log(self) -> Dict[str, Any]:
@@ -229,6 +239,47 @@ class ProtocolSpecification:
         
         with open(filepath, 'w') as f:
             yaml.dump(data, f, sort_keys=False, default_flow_style=False)
+
+
+def _validate_clinical_improvements(improvements: Dict[str, Any]) -> None:
+    """Validate clinical improvements configuration."""
+    if not isinstance(improvements, dict):
+        raise ValueError("clinical_improvements must be a dictionary")
+    
+    # Check enabled flag
+    if 'enabled' not in improvements:
+        raise ValueError("clinical_improvements must have 'enabled' field")
+    
+    # If enabled, validate feature flags
+    if improvements.get('enabled'):
+        feature_flags = [
+            'use_loading_phase',
+            'use_time_based_discontinuation', 
+            'use_response_based_vision',
+            'use_baseline_distribution',
+            'use_response_heterogeneity'
+        ]
+        
+        for flag in feature_flags:
+            if flag not in improvements:
+                raise ValueError(f"clinical_improvements missing feature flag: {flag}")
+    
+    # Validate parameter sections if present
+    if 'loading_phase_parameters' in improvements:
+        params = improvements['loading_phase_parameters']
+        if 'loading_injections' not in params or 'loading_interval_days' not in params:
+            raise ValueError("loading_phase_parameters must have loading_injections and loading_interval_days")
+    
+    if 'discontinuation_parameters' in improvements:
+        params = improvements['discontinuation_parameters']
+        if 'annual_probabilities' not in params:
+            raise ValueError("discontinuation_parameters must have annual_probabilities")
+        
+        # Validate probabilities are reasonable
+        probs = params['annual_probabilities']
+        for year, prob in probs.items():
+            if not 0 <= prob <= 1:
+                raise ValueError(f"Discontinuation probability for year {year} must be between 0 and 1")
 
 
 def _validate_disease_transitions(transitions: Dict[str, Dict[str, float]]) -> None:
