@@ -14,6 +14,7 @@ from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSp
 from simulation_v2.core.disease_model_time_based import DiseaseModelTimeBased
 from simulation_v2.core.protocol import StandardProtocol
 from simulation_v2.engines.abs_engine_time_based import ABSEngineTimeBased
+from simulation_v2.clinical_improvements import ClinicalImprovements
 
 
 class ABSEngineTimeBasedWithSpecs(ABSEngineTimeBased):
@@ -31,7 +32,8 @@ class ABSEngineTimeBasedWithSpecs(ABSEngineTimeBased):
         protocol_spec: TimeBasedProtocolSpecification,
         n_patients: int,
         seed: Optional[int] = None,
-        baseline_vision_distribution: Optional[Any] = None
+        baseline_vision_distribution: Optional[Any] = None,
+        clinical_improvements: Optional[ClinicalImprovements] = None
     ):
         """
         Initialize with protocol specification.
@@ -42,8 +44,11 @@ class ABSEngineTimeBasedWithSpecs(ABSEngineTimeBased):
             protocol_spec: Full protocol specification with parameters
             n_patients: Number of patients to simulate
             seed: Random seed
+            baseline_vision_distribution: Optional baseline vision distribution
+            clinical_improvements: Optional clinical improvements configuration
         """
         self.protocol_spec = protocol_spec
+        self.clinical_improvements = clinical_improvements
         
         # Load vision parameters if available
         self._load_vision_parameters()

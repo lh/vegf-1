@@ -1,44 +1,24 @@
-# Eylea Time-Based T&T Protocol
-# Fixed dosing: 3 monthly loading doses, then bimonthly forever
-# Uses time-based disease progression model
-
-# Metadata
-name: "Eylea time based T&T"
-version: "1.0"
-created_date: "2025-01-16"
-author: "Clinical Team"
-description: "Fixed dosing protocol with time-based disease progression: 3 monthly loading doses then bimonthly forever"
-
-# Model type indicator
-model_type: "time_based"
-transition_model: "fortnightly"
+name: Eylea time based T&T
+version: '1.0'
+created_date: '2025-01-16'
+author: Clinical Team
+description: 'Fixed dosing protocol with time-based disease progression: 3 monthly
+  loading doses then bimonthly forever'
+model_type: time_based
+transition_model: fortnightly
 update_interval_days: 14
-
-# Protocol parameters - FIXED dosing (not treat-and-extend)
-protocol_type: "fixed"
-
-# Loading dose phase
-loading_dose_injections: 3  # Number of initial monthly injections
-loading_dose_interval_days: 28  # Monthly (4 weeks) during loading
-
-# Fixed dosing phase (after loading) - bimonthly
-min_interval_days: 56  # 8 weeks (2 months)
-max_interval_days: 56  # 8 weeks - no extension
-extension_days: 0  # No extension - fixed schedule
-shortening_days: 0  # No shortening - fixed schedule
-
-# Visit type specification
-# Note: Full clinic visits vs injection-only visits may be specified in future versions
-# Currently all visits include full assessment
-
-# Reference to parameter files (relative to this file)
-disease_transitions_file: "parameters/disease_transitions.yaml"
-treatment_effect_file: "parameters/treatment_effect.yaml"
-vision_parameters_file: "parameters/vision.yaml"
-discontinuation_parameters_file: "parameters/discontinuation.yaml"  # Standard file already has 20 letter threshold
-demographics_parameters_file: "parameters/demographics.yaml"
-
-# Beta distribution with threshold effect - UK real-world data (DEFAULT)
+protocol_type: fixed
+loading_dose_injections: 3
+loading_dose_interval_days: 28
+min_interval_days: 56
+max_interval_days: 56
+extension_days: 0
+shortening_days: 0
+disease_transitions_file: parameters/disease_transitions.yaml
+treatment_effect_file: parameters/treatment_effect.yaml
+vision_parameters_file: parameters/vision.yaml
+discontinuation_parameters_file: parameters/discontinuation.yaml
+demographics_parameters_file: parameters/demographics.yaml
 baseline_vision_distribution:
   type: beta_with_threshold
   alpha: 3.5
@@ -47,35 +27,67 @@ baseline_vision_distribution:
   max: 98
   threshold: 70
   threshold_reduction: 0.6
-
-# These are placeholders for compatibility - actual values come from parameter files
 disease_transitions:
-  NAIVE: {NAIVE: 0.0, STABLE: 0.3, ACTIVE: 0.6, HIGHLY_ACTIVE: 0.1}
-  STABLE: {NAIVE: 0.0, STABLE: 0.975, ACTIVE: 0.025, HIGHLY_ACTIVE: 0.0}
-  ACTIVE: {NAIVE: 0.0, STABLE: 0.05, ACTIVE: 0.90, HIGHLY_ACTIVE: 0.05}
-  HIGHLY_ACTIVE: {NAIVE: 0.0, STABLE: 0.01, ACTIVE: 0.04, HIGHLY_ACTIVE: 0.95}
-
-# Placeholder vision change model for compatibility
+  NAIVE:
+    NAIVE: 0.0
+    STABLE: 0.3
+    ACTIVE: 0.6
+    HIGHLY_ACTIVE: 0.1
+  STABLE:
+    NAIVE: 0.0
+    STABLE: 0.975
+    ACTIVE: 0.025
+    HIGHLY_ACTIVE: 0.0
+  ACTIVE:
+    NAIVE: 0.0
+    STABLE: 0.05
+    ACTIVE: 0.9
+    HIGHLY_ACTIVE: 0.05
+  HIGHLY_ACTIVE:
+    NAIVE: 0.0
+    STABLE: 0.01
+    ACTIVE: 0.04
+    HIGHLY_ACTIVE: 0.95
 vision_change_model:
-  naive_treated: {mean: 0.0, std: 1.0}
-  naive_untreated: {mean: -1.0, std: 1.0}
-  stable_treated: {mean: 1.0, std: 1.0}
-  stable_untreated: {mean: -0.5, std: 1.0}
-  active_treated: {mean: -1.0, std: 2.0}
-  active_untreated: {mean: -3.0, std: 2.0}
-  highly_active_treated: {mean: -2.0, std: 2.0}
-  highly_active_untreated: {mean: -5.0, std: 3.0}
-
-# Placeholder treatment effect for compatibility
+  naive_treated:
+    mean: 0.0
+    std: 1.0
+  naive_untreated:
+    mean: -1.0
+    std: 1.0
+  stable_treated:
+    mean: 1.0
+    std: 1.0
+  stable_untreated:
+    mean: -0.5
+    std: 1.0
+  active_treated:
+    mean: -1.0
+    std: 2.0
+  active_untreated:
+    mean: -3.0
+    std: 2.0
+  highly_active_treated:
+    mean: -2.0
+    std: 2.0
+  highly_active_untreated:
+    mean: -5.0
+    std: 3.0
 treatment_effect_on_transitions:
   STABLE:
-    multipliers: {STABLE: 1.1, ACTIVE: 0.9}
+    multipliers:
+      STABLE: 1.1
+      ACTIVE: 0.9
   ACTIVE:
-    multipliers: {STABLE: 2.0, ACTIVE: 0.8, HIGHLY_ACTIVE: 0.5}
+    multipliers:
+      STABLE: 2.0
+      ACTIVE: 0.8
+      HIGHLY_ACTIVE: 0.5
   HIGHLY_ACTIVE:
-    multipliers: {STABLE: 2.0, ACTIVE: 1.5, HIGHLY_ACTIVE: 0.75}
-
-# Placeholder discontinuation rules - actual values in parameter file
+    multipliers:
+      STABLE: 2.0
+      ACTIVE: 1.5
+      HIGHLY_ACTIVE: 0.75
 discontinuation_rules:
   poor_vision_threshold: 20
   poor_vision_probability: 0.8
@@ -83,3 +95,43 @@ discontinuation_rules:
   high_injection_probability: 0.02
   long_treatment_months: 60
   long_treatment_probability: 0.05
+clinical_improvements:
+  enabled: false
+  use_loading_phase: true
+  use_time_based_discontinuation: true
+  use_response_based_vision: true
+  use_baseline_distribution: false
+  use_response_heterogeneity: true
+  loading_phase_parameters:
+    loading_injections: 3
+    loading_interval_days: 28
+  discontinuation_parameters:
+    annual_probabilities:
+      1: 0.125
+      2: 0.15
+      3: 0.12
+      4: 0.08
+      5: 0.075
+  vision_response_parameters:
+    loading:
+      mean: 3.0
+      std: 1.0
+    year1:
+      mean: 0.5
+      std: 0.5
+    year2:
+      mean: 0.0
+      std: 0.5
+    year3plus:
+      mean: -0.2
+      std: 0.3
+  response_types:
+    good:
+      probability: 0.3
+      multiplier: 1.2
+    average:
+      probability: 0.5
+      multiplier: 1.0
+    poor:
+      probability: 0.2
+      multiplier: 0.6
