@@ -71,7 +71,7 @@ def auto_save_protocol(selected_file, protocol_type):
     """Auto-save changes to temporary protocol files."""
     if protocol_type != "temp" or not st.session_state.get('edit_mode', False):
         return
-        
+    
     try:
         # Load the current YAML data
         with open(selected_file) as f:
@@ -964,44 +964,53 @@ try:
         has_improvements = hasattr(spec, 'clinical_improvements') and spec.clinical_improvements is not None
         
         if has_improvements:
-            tabs = st.tabs([
+            tab_names = [
                 "Timing Parameters",
                 "Model Type",
                 "Population",
                 "Parameter Files",
                 "Clinical Improvements"
-            ])
+            ]
+            # Create tabs with preserved selection
+            tabs = st.tabs(tab_names)
             tab1, tab2, tab3, tab4, tab5 = tabs
+            
         else:
-            tabs = st.tabs([
+            tab_names = [
                 "Timing Parameters",
                 "Model Type",
                 "Population",
                 "Parameter Files"
-            ])
+            ]
+            tabs = st.tabs(tab_names)
             tab1, tab2, tab3, tab4 = tabs
     else:
         # Check if protocol has clinical improvements
         has_improvements = hasattr(spec, 'clinical_improvements') and spec.clinical_improvements is not None
         
         if has_improvements:
-            tabs = st.tabs([
+            tab_names = [
                 "Timing Parameters", 
                 "Disease Transitions", 
                 "Vision Model",
                 "Population",
                 "Discontinuation",
                 "Clinical Improvements"
-            ])
+            ]
+            # Create tabs with preserved selection
+            tabs = st.tabs(tab_names)
             tab1, tab2, tab3, tab4, tab5, tab6 = tabs
+            
+            # Set active tab to Clinical Improvements if we're editing CI fields
         else:
-            tabs = st.tabs([
+            tab_names = [
                 "Timing Parameters", 
                 "Disease Transitions", 
                 "Vision Model",
                 "Population",
                 "Discontinuation"
-            ])
+            ]
+            tabs = st.tabs(tab_names)
             tab1, tab2, tab3, tab4, tab5 = tabs
     
     with tab1:
@@ -2383,9 +2392,13 @@ try:
             
             if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
                 # Editable clinical improvements
-                st.markdown("**Master Toggle**")
-                enabled = st.checkbox("Enable Clinical Improvements", value=is_enabled, key="edit_ci_enabled", 
-                                    on_change=lambda: auto_save_protocol(selected_file, protocol_type))
+                # Use a container to group the master toggle separately
+                with st.container():
+                    st.markdown("**Master Toggle**")
+                    # Add the on_change back with the master toggle
+                    enabled = st.checkbox("Enable Clinical Improvements", value=is_enabled, 
+                                        key="edit_ci_enabled",
+                                        on_change=lambda: auto_save_protocol(selected_file, protocol_type))
                 
                 if enabled:
                     st.info("When enabled, these improvements make the simulation more realistic based on real-world clinical data.")
@@ -2523,9 +2536,13 @@ try:
             
             if st.session_state.get('edit_mode', False) and selected_file.parent == TEMP_DIR:
                 # Editable clinical improvements for time-based
-                st.markdown("**Master Toggle**")
-                enabled = st.checkbox("Enable Clinical Improvements", value=is_enabled, key="edit_ci_enabled_tb", 
-                                    on_change=lambda: auto_save_protocol(selected_file, protocol_type))
+                # Use a container to group the master toggle separately
+                with st.container():
+                    st.markdown("**Master Toggle**")
+                    # Add the on_change back with the master toggle
+                    enabled = st.checkbox("Enable Clinical Improvements", value=is_enabled, 
+                                        key="edit_ci_enabled_tb",
+                                        on_change=lambda: auto_save_protocol(selected_file, protocol_type))
                 
                 if enabled:
                     st.info("When enabled, these improvements make the time-based simulation more realistic.")
@@ -2670,3 +2687,4 @@ col1, col2, col3 = st.columns([1, 1, 1])
 with col2:
     from ape.components.ui.ape_logo import display_ape_logo
     display_ape_logo(width=50)
+
