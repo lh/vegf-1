@@ -6,7 +6,7 @@ NO DEFAULTS - all parameters must come from protocol specification.
 
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 import random
 
@@ -20,6 +20,7 @@ from simulation_v2.engines.des_engine import DESEngine
 from simulation_v2.engines.abs_engine_time_based_with_specs import ABSEngineTimeBasedWithSpecs
 from simulation_v2.models.baseline_vision_distributions import DistributionFactory
 from simulation_v2.serialization.parquet_writer import serialize_patient_visits
+from simulation_v2.clinical_improvements import ClinicalImprovements
 
 
 class SimulationRunner:
@@ -34,6 +35,33 @@ class SimulationRunner:
         """
         self.spec = protocol_spec
         self.audit_log: List[Dict[str, Any]] = []
+        
+        # Initialize clinical improvements if specified and enabled
+        self.clinical_improvements = None
+        if (hasattr(self.spec, 'clinical_improvements') and 
+            self.spec.clinical_improvements and 
+            self.spec.clinical_improvements.get('enabled')):
+            # Import here to avoid circular dependency
+            from simulation_v2.clinical_improvements import ClinicalImprovements
+            
+            # Create improvements config from protocol
+            improvements_data = self.spec.clinical_improvements.copy()
+            # Remove the 'enabled' flag as it's not part of the config class
+            improvements_data.pop('enabled', None)
+            
+            # Create config with protocol parameters
+            self.clinical_improvements = ClinicalImprovements()
+            # Update with protocol-specific settings
+            for key, value in improvements_data.items():
+                if hasattr(self.clinical_improvements, key):
+                    setattr(self.clinical_improvements, key, value)
+            
+            # Log that improvements are enabled
+            self.audit_log.append({
+                'event': 'clinical_improvements_enabled',
+                'timestamp': datetime.now().isoformat(),
+                'improvements': improvements_data
+            })
         
         # Log specification load
         self.audit_log.append({
@@ -110,7 +138,7 @@ class SimulationRunner:
             shortening_days=self.spec.shortening_days
         )
         
-        # Create appropriate engine
+        # Create appropriate engine with clinical improvements
         if engine_type.lower() == 'abs':
             if is_time_based:
                 engine = ABSEngineTimeBasedWithSpecs(
@@ -118,7 +146,8 @@ class SimulationRunner:
                     protocol=protocol,
                     protocol_spec=self.spec,
                     n_patients=n_patients,
-                    seed=seed
+                    seed=seed,
+                    clinical_improvements=self.clinical_improvements
                 )
             else:
                 engine = ABSEngineWithSpecs(
@@ -126,7 +155,8 @@ class SimulationRunner:
                     protocol=protocol,
                     protocol_spec=self.spec,
                     n_patients=n_patients,
-                    seed=seed
+                    seed=seed,
+                    clinical_improvements=self.clinical_improvements
                 )
         elif engine_type.lower() == 'des':
             if is_time_based:
@@ -137,7 +167,8 @@ class SimulationRunner:
                     protocol=protocol,
                     protocol_spec=self.spec,
                     n_patients=n_patients,
-                    seed=seed
+                    seed=seed,
+                    clinical_improvements=self.clinical_improvements
                 )
         else:
             raise ValueError(f"Unknown engine type: {engine_type}")
@@ -187,10 +218,12 @@ class ABSEngineWithSpecs(ABSEngine):
         protocol: StandardProtocol,
         protocol_spec: ProtocolSpecification,
         n_patients: int,
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
+        clinical_improvements: Optional[ClinicalImprovements] = None
     ):
         """Initialize with protocol spec for parameters."""
         self.protocol_spec = protocol_spec
+        self.clinical_improvements = clinical_improvements
         
         # Create baseline vision distribution from spec
         baseline_vision_distribution = DistributionFactory.create_from_protocol_spec(protocol_spec)
@@ -205,6 +238,24 @@ class ABSEngineWithSpecs(ABSEngine):
         )
         
     # Note: _sample_baseline_vision is now handled by parent class using baseline_vision_distribution
+    
+    def _create_patient_with_improvements(self, patient_id: str, baseline_vision: int, 
+                                         enrollment_date: datetime = None) -> Patient:
+        """Create patient with optional clinical improvements wrapper."""
+        # Create base patient
+        patient = Patient(
+            patient_id=patient_id,
+            baseline_vision=baseline_vision,
+            visit_metadata_enhancer=self.visit_metadata_enhancer,
+            enrollment_date=enrollment_date
+        )
+        
+        # Apply clinical improvements wrapper if enabled
+        if self.clinical_improvements:
+            from ..clinical_improvements import ImprovedPatientWrapper
+            patient = ImprovedPatientWrapper(patient, self.clinical_improvements)
+            
+        return patient
         
     def _calculate_vision_change(
         self, 
@@ -250,6 +301,125 @@ class ABSEngineWithSpecs(ABSEngine):
                     return True
                     
         return False
+    
+    def run(self, duration_years: float, start_date: Optional[datetime] = None) -> SimulationResults:
+        """
+        Override run to use clinical improvements for patient creation.
+        
+        This is a minimal override that just replaces the patient creation line.
+        """
+        if start_date is None:
+            start_date = datetime(2024, 1, 1)
+            
+        end_date = start_date + timedelta(days=int(duration_years * 365.25))
+        
+        # Generate patient arrival schedule
+        self.patient_arrival_schedule = self._generate_arrival_schedule(start_date, end_date)
+        
+        # Schedule visits for existing and arriving patients
+        visit_schedule: Dict[str, datetime] = {}
+            
+        # Run simulation
+        current_date = start_date
+        total_injections = 0
+        arrival_index = 0  # Track position in arrival schedule
+        
+        while current_date <= end_date:
+            # Process new patient arrivals for today
+            while (arrival_index < len(self.patient_arrival_schedule) and 
+                   self.patient_arrival_schedule[arrival_index][0].date() <= current_date.date()):
+                arrival_date, patient_id = self.patient_arrival_schedule[arrival_index]
+                
+                # Create new patient WITH IMPROVEMENTS
+                baseline_vision = self._sample_baseline_vision()
+                patient = self._create_patient_with_improvements(
+                    patient_id,
+                    baseline_vision,
+                    enrollment_date=arrival_date
+                )
+                self.patients[patient_id] = patient
+                self.enrollment_dates[patient_id] = arrival_date
+                
+                # Schedule initial visit for start of next day after enrollment
+                next_day = arrival_date.date() + timedelta(days=1)
+                visit_schedule[patient_id] = datetime.combine(next_day, datetime.min.time())
+                
+                arrival_index += 1
+            
+            # Process patients scheduled for today
+            patients_today = [
+                pid for pid, visit_date in visit_schedule.items()
+                if visit_date.date() == current_date.date()
+            ]
+            
+            for patient_id in patients_today:
+                patient = self.patients[patient_id]
+                
+                if patient.is_discontinued:
+                    # Skip discontinued patients
+                    continue
+                    
+                # Disease progression
+                new_state = self.disease_model.progress(
+                    patient.current_state,
+                    days_since_injection=patient.days_since_last_injection_at(current_date)
+                )
+                
+                # Treatment decision
+                should_treat = self.protocol.should_treat(patient, current_date)
+                
+                # Vision change (simplified model)
+                vision_change = self._calculate_vision_change(
+                    patient.current_state,
+                    new_state,
+                    should_treat
+                )
+                new_vision = max(0, min(100, patient.current_vision + vision_change))
+                
+                # Record visit
+                patient.record_visit(
+                    date=current_date,
+                    disease_state=new_state,
+                    treatment_given=should_treat,
+                    vision=new_vision
+                )
+                
+                if should_treat:
+                    total_injections += 1
+                    
+                # Schedule next visit
+                next_visit = self.protocol.next_visit_date(patient, current_date, should_treat)
+                visit_schedule[patient_id] = next_visit
+                
+                # Check for discontinuation (simplified)
+                if self._should_discontinue(patient, current_date):
+                    patient.discontinue(current_date, "planned")
+                    
+            # Advance time
+            current_date += timedelta(days=1)
+            
+        # Calculate final statistics
+        final_visions = [p.current_vision for p in self.patients.values()]
+        discontinued = sum(1 for p in self.patients.values() if p.is_discontinued)
+        actual_patient_count = len(self.patients)
+        
+        # Handle edge case of zero patients
+        if actual_patient_count == 0:
+            final_vision_mean = 0.0
+            final_vision_std = 0.0
+            discontinuation_rate = 0.0
+        else:
+            final_vision_mean = sum(final_visions) / len(final_visions)
+            final_vision_std = self._calculate_std(final_visions)
+            discontinuation_rate = discontinued / actual_patient_count
+        
+        return SimulationResults(
+            total_injections=total_injections,
+            patient_histories=self.patients,
+            final_vision_mean=final_vision_mean,
+            final_vision_std=final_vision_std,
+            discontinuation_rate=discontinuation_rate
+        )
 
 
 class DESEngineWithSpecs(DESEngine):
@@ -261,10 +431,12 @@ class DESEngineWithSpecs(DESEngine):
         protocol: StandardProtocol,
         protocol_spec: ProtocolSpecification,
         n_patients: int,
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
+        clinical_improvements: Optional[ClinicalImprovements] = None
     ):
         """Initialize with protocol spec for parameters."""
         self.protocol_spec = protocol_spec
+        self.clinical_improvements = clinical_improvements
         
         # Create baseline vision distribution from spec
         baseline_vision_distribution = DistributionFactory.create_from_protocol_spec(protocol_spec)

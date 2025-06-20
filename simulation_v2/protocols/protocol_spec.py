@@ -56,6 +56,9 @@ class ProtocolSpecification:
     # Optional: Advanced baseline vision distribution
     baseline_vision_distribution: Optional[Dict[str, Any]] = None
     
+    # Optional: Clinical improvements for enhanced realism
+    clinical_improvements: Optional[Dict[str, Any]] = None
+    
     @classmethod
     def from_yaml(cls, filepath: Path) -> 'ProtocolSpecification':
         """
@@ -168,6 +171,7 @@ class ProtocolSpecification:
             baseline_vision_max=baseline_max,
             baseline_vision_distribution=data['baseline_vision_distribution'],
             discontinuation_rules=data['discontinuation_rules'],
+            clinical_improvements=data.get('clinical_improvements'),
             source_file=str(filepath.absolute()),
             load_timestamp=datetime.now().isoformat(),
             checksum=checksum
@@ -193,7 +197,7 @@ class ProtocolSpecification:
         Returns:
             Dictionary ready for YAML serialization
         """
-        return {
+        data = {
             'name': self.name,
             'version': self.version,
             'created_date': self.created_date,
@@ -216,6 +220,12 @@ class ProtocolSpecification:
             'baseline_vision_distribution': self.baseline_vision_distribution,
             'discontinuation_rules': self.discontinuation_rules
         }
+        
+        # Include clinical improvements if present
+        if self.clinical_improvements is not None:
+            data['clinical_improvements'] = self.clinical_improvements
+        
+        return data
     
     def save_as_yaml(self, filepath: Path) -> None:
         """
