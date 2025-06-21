@@ -178,7 +178,7 @@ When making changes to the codebase, always run the following tests before commi
 
 # Simulation Management and Performance
 
-## Recent Improvements (2025-01-24)
+## Recent Improvements (2025-06-21)
 
 ### Recruitment Modes
 - **Fixed Total Mode**: Specify total patients, system calculates monthly rate

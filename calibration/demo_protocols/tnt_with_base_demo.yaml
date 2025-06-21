@@ -116,7 +116,7 @@ clinical_improvements:
       std: 1.0
 name: Aflibercept T&T Demo
 version: '1.0'
-created_date: '2025-01-24'
+created_date: '2025-06-21'
 author: Demo
 description: T&T protocol using base config
 protocol_type: fixed_interval

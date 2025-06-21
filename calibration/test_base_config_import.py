@@ -97,7 +97,7 @@ def create_demo_protocols():
     tae_with_base = merge_configs(base, {
         'name': 'Aflibercept T&E Demo',
         'version': '1.0',
-        'created_date': '2025-01-24',
+        'created_date': '2025-06-21',
         'author': 'Demo',
         'description': 'T&E protocol using base config',
         'protocol_type': 'treat_and_extend',
@@ -116,7 +116,7 @@ def create_demo_protocols():
     tnt_with_base = merge_configs(base, {
         'name': 'Aflibercept T&T Demo',
         'version': '1.0',
-        'created_date': '2025-01-24',
+        'created_date': '2025-06-21',
         'author': 'Demo',
         'description': 'T&T protocol using base config',
         'protocol_type': 'fixed_interval',
