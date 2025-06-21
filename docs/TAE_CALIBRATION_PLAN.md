@@ -33,10 +33,20 @@ The current T&E protocol is severely underperforming:
    - Shows TAE effectiveness in practice
 
 ### Year 1 Targets
+
+#### Standard T&E (4-week minimum)
 - **Vision gain**: 6-7 letters
 - **Injections**: 7-8 (after 3 loading doses)
 - **Patients stable at 12w+**: 40-45%
 - **Vision maintenance** (losing <15 letters): >90%
+- **Patients needing <8w intervals**: ~23%
+
+#### NHS T&E (8-week minimum)
+- **Vision gain**: 5-6 letters (slightly lower)
+- **Injections**: 6-7 (fewer short intervals)
+- **Patients stable at 12w+**: 40-45%
+- **Vision maintenance** (losing <15 letters): >85%
+- **Persistent fluid**: Higher in ~23% of patients
 
 ### Year 2 Targets
 - **Vision**: 5-6 letters from baseline

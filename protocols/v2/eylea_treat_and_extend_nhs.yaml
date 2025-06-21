@@ -1,0 +1,114 @@
+name: Eylea Treat and Extend - NHS
+version: '1.0'
+created_date: '2025-01-21'
+author: Clinical Team
+description: NHS-specific treat-and-extend protocol with 8-week minimum interval after loading phase
+protocol_type: treat_and_extend
+
+# NHS constraint: minimum 8 weeks between injections after loading
+min_interval_days: 56  # 8 weeks (NHS minimum)
+max_interval_days: 112  # 16 weeks
+extension_days: 14      # Extend by 2 weeks
+shortening_days: 14     # Shorten by 2 weeks
+
+# Disease transitions - same as standard T&E
+disease_transitions:
+  NAIVE:
+    NAIVE: 0.0
+    STABLE: 0.3
+    ACTIVE: 0.6
+    HIGHLY_ACTIVE: 0.1
+  STABLE:
+    NAIVE: 0.0
+    STABLE: 0.85
+    ACTIVE: 0.15
+    HIGHLY_ACTIVE: 0.0
+  ACTIVE:
+    NAIVE: 0.0
+    STABLE: 0.2
+    ACTIVE: 0.7
+    HIGHLY_ACTIVE: 0.1
+  HIGHLY_ACTIVE:
+    NAIVE: 0.0
+    STABLE: 0.05
+    ACTIVE: 0.15
+    HIGHLY_ACTIVE: 0.8
+
+# Treatment effects - same as standard
+treatment_effect_on_transitions:
+  NAIVE:
+    multipliers: {}
+  STABLE:
+    multipliers:
+      STABLE: 1.1
+      ACTIVE: 0.9
+  ACTIVE:
+    multipliers:
+      STABLE: 2.0
+      ACTIVE: 0.8
+      HIGHLY_ACTIVE: 0.5
+  HIGHLY_ACTIVE:
+    multipliers:
+      STABLE: 2.0
+      ACTIVE: 1.5
+      HIGHLY_ACTIVE: 0.75
+
+# Vision change model - same as standard
+vision_change_model:
+  naive_treated:
+    mean: 2
+    std: 2
+  naive_untreated:
+    mean: -2
+    std: 2
+  stable_treated:
+    mean: 0.5
+    std: 1
+  stable_untreated:
+    mean: -0.5
+    std: 1
+  active_treated:
+    mean: -1
+    std: 2
+  active_untreated:
+    mean: -3
+    std: 2
+  highly_active_treated:
+    mean: -2
+    std: 2
+  highly_active_untreated:
+    mean: -5
+    std: 3
+
+# Baseline vision distribution
+baseline_vision_distribution:
+  type: normal
+  mean: 55
+  std: 15
+  min: 20
+  max: 85
+
+# Discontinuation rules
+discontinuation_rules:
+  poor_vision_threshold: 35
+  poor_vision_probability: 0.1
+  high_injection_count: 20
+  high_injection_probability: 0.05
+  long_treatment_months: 60
+  long_treatment_probability: 0.02
+  discontinuation_types:
+  - planned
+  - adverse
+  - ineffective
+
+# Loading phase configuration
+loading_phase:
+  enabled: true
+  doses: 3
+  interval_days: 28  # Monthly during loading
+
+# NHS-specific notes
+nhs_constraints:
+  comment: "NHS protocols typically maintain 8-week minimum intervals after loading phase"
+  rationale: "Resource constraints and clinic capacity"
+  expected_impact: "May undertreat some patients who would benefit from 4-6 week intervals"
