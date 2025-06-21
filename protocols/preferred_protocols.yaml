@@ -1,0 +1,43 @@
+# Preferred Protocol Configuration
+# Defines which protocols should be highlighted or used as defaults in the UI
+
+preferred_protocols:
+  time_based:
+    - name: "Aflibercept Time-Based T&E (8-week minimum)"
+      path: "protocols/v2_time_based/aflibercept_tae_8week_min_time_based.yaml"
+      description: "NHS-compliant T&E with 8-week minimum interval"
+      category: "Treat and Extend"
+      is_default: true
+      
+    - name: "Aflibercept Time-Based T&T (Fixed q8w)"
+      path: "protocols/v2_time_based/aflibercept_treat_and_treat_time_based.yaml"
+      description: "Fixed 8-week dosing (VIEW extended)"
+      category: "Treat and Treat"
+      is_default: true
+
+  visit_based:
+    - name: "Aflibercept T&E (8-week minimum)"
+      path: "protocols/v2/aflibercept_tae_8week_min_full.yaml"
+      description: "Visit-based T&E protocol"
+      category: "Treat and Extend"
+      is_default: false
+      
+    - name: "Aflibercept T&T (Fixed q8w)"
+      path: "protocols/v2/aflibercept_treat_and_treat_full.yaml"
+      description: "Visit-based fixed dosing"
+      category: "Treat and Treat"
+      is_default: false
+
+# UI display settings
+ui_settings:
+  show_preferred_first: true
+  mark_preferred_with_star: true
+  default_selection: "Aflibercept Time-Based T&E (8-week minimum)"
+  preferred_label: "⭐ Recommended"
+  
+# Comparison settings
+comparison_pairs:
+  - name: "T&E vs T&T Comparison"
+    protocol_1: "protocols/v2_time_based/aflibercept_tae_8week_min_time_based.yaml"
+    protocol_2: "protocols/v2_time_based/aflibercept_treat_and_treat_time_based.yaml"
+    description: "Compare adaptive T&E with fixed T&T dosing strategies"

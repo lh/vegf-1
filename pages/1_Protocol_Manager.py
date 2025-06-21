@@ -66,6 +66,18 @@ from ape.utils.carbon_button_helpers import (
     navigation_button
 )
 
+# Load preferred protocols configuration
+def load_preferred_protocols():
+    """Load the preferred protocols configuration."""
+    config_path = Path("protocols/preferred_protocols.yaml")
+    if config_path.exists():
+        try:
+            with open(config_path) as f:
+                return yaml.safe_load(f)
+        except Exception:
+            return None
+    return None
+
 # Auto-save functionality for temporary protocols
 def auto_save_protocol(selected_file, protocol_type):
     """Auto-save changes to temporary protocol files."""
@@ -262,6 +274,24 @@ for f in time_based_files:
 for f in temp_files:
     protocol_files.append((f, "temp"))
 
+# Load preferred protocols configuration
+if 'preferred_config' not in st.session_state:
+    st.session_state.preferred_config = load_preferred_protocols()
+
+# Sort protocols to show preferred first
+if st.session_state.preferred_config and st.session_state.preferred_config.get('ui_settings', {}).get('show_preferred_first', True):
+    preferred_stems = set()
+    for category in ['time_based', 'visit_based']:
+        for pref in st.session_state.preferred_config.get('preferred_protocols', {}).get(category, []):
+            preferred_stems.add(Path(pref['path']).stem)
+    
+    # Sort with preferred first, then by type, then alphabetically
+    protocol_files.sort(key=lambda x: (
+        0 if x[0].stem in preferred_stems else 1,  # Preferred first
+        x[1] != "time_based",  # Time-based before standard
+        x[0].stem  # Then alphabetical
+    ))
+
 if not protocol_files:
     # Centered upload prompt
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -283,12 +313,27 @@ st.subheader("Select Protocol")
 def format_protocol(file_info):
     file, ptype = file_info
     name = file.stem
+    
+    # Base formatting
     if ptype == "temp":
-        return f"{name} (temporary)"
+        formatted = f"{name} (temporary)"
     elif ptype == "time_based":
-        return f"{name} [TIME-BASED]"
+        formatted = f"{name} [TIME-BASED]"
     else:
-        return f"{name} [STANDARD]"
+        formatted = f"{name} [STANDARD]"
+    
+    # Check if this is a preferred protocol
+    if st.session_state.preferred_config:
+        preferred_stems = set()
+        for category in ['time_based', 'visit_based']:
+            for pref in st.session_state.preferred_config.get('preferred_protocols', {}).get(category, []):
+                pref_stem = Path(pref['path']).stem
+                if pref_stem == name:
+                    if (category == 'time_based' and ptype == "time_based") or \
+                       (category == 'visit_based' and ptype == "standard"):
+                        return f"⭐ {formatted}"
+    
+    return formatted
 
 # Try to maintain selection across reruns
 if 'selected_protocol_name' in st.session_state:
@@ -299,7 +344,16 @@ if 'selected_protocol_name' in st.session_state:
             default_index = i
             break
 else:
+    # Default to first preferred protocol if available
     default_index = 0
+    if st.session_state.preferred_config:
+        default_name = st.session_state.preferred_config.get('ui_settings', {}).get('default_selection')
+        if default_name:
+            # Try to find by partial match
+            for i, (file, ptype) in enumerate(protocol_files):
+                if file.stem in default_name or default_name.startswith(file.stem):
+                    default_index = i
+                    break
 
 # Select protocol on its own line
 selected_item = st.selectbox(
@@ -319,6 +373,10 @@ if selected_item:
 else:
     selected_file = None
     protocol_type = None
+
+# Show info about preferred protocols
+if st.session_state.preferred_config and st.session_state.preferred_config.get('ui_settings', {}).get('mark_preferred_with_star', True):
+    st.caption("⭐ indicates recommended protocols for T&E vs T&T comparison studies")
 
 # Action buttons in 4 equal columns
 col1, col2, col3, col4 = st.columns(4)
