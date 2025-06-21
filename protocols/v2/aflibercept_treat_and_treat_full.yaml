@@ -1,0 +1,158 @@
+# Aflibercept Treat-and-Treat Protocol (Fixed q8w) - Full Version
+# VIEW protocol extended indefinitely - all fields included
+
+name: "Aflibercept T&T (Fixed q8w)"
+version: "1.0"
+created_date: "2025-01-24"
+author: "Calibration Team"
+description: "Fixed 8-week dosing (VIEW 2q8 extended indefinitely) with minimal monitoring"
+
+# Protocol type - fixed interval dosing
+protocol_type: "fixed_interval"
+
+# Fixed intervals - no adaptation
+min_interval_days: 56      # 8 weeks always
+max_interval_days: 56      # 8 weeks always
+extension_days: 0          # No extension (fixed protocol)
+shortening_days: 0         # No shortening (fixed protocol)
+
+# Disease state transitions - identical to T&E for fair comparison
+disease_transitions:
+  NAIVE:
+    NAIVE: 0.0
+    STABLE: 0.45      # 45% achieve stability after loading
+    ACTIVE: 0.45      # 45% remain active
+    HIGHLY_ACTIVE: 0.10
+  STABLE:
+    NAIVE: 0.0
+    STABLE: 0.88      # High retention when stable
+    ACTIVE: 0.12      # Some recurrence
+    HIGHLY_ACTIVE: 0.0
+  ACTIVE:
+    NAIVE: 0.0
+    STABLE: 0.35      # Can improve with treatment
+    ACTIVE: 0.55      # Many remain active
+    HIGHLY_ACTIVE: 0.10
+  HIGHLY_ACTIVE:
+    NAIVE: 0.0
+    STABLE: 0.10
+    ACTIVE: 0.30
+    HIGHLY_ACTIVE: 0.60
+
+# Treatment effect on disease transitions - identical to T&E
+treatment_effect_on_transitions:
+  NAIVE:
+    multipliers: {}
+  STABLE:
+    multipliers:
+      STABLE: 1.2      # 20% more likely to stay stable
+      ACTIVE: 0.8      # 20% less likely to become active
+  ACTIVE:
+    multipliers:
+      STABLE: 2.5      # 2.5x more likely to become stable
+      ACTIVE: 0.7      # 30% less likely to stay active
+      HIGHLY_ACTIVE: 0.5  # 50% less likely to worsen
+  HIGHLY_ACTIVE:
+    multipliers:
+      STABLE: 2.0      # Twice as likely to improve dramatically
+      ACTIVE: 1.8      # 80% more likely to improve
+      HIGHLY_ACTIVE: 0.6  # 40% less likely to remain severe
+
+# Vision change model - identical to T&E
+vision_change_model:
+  naive_treated:
+    mean: 3.0
+    std: 2.0
+  naive_untreated:
+    mean: -3.0
+    std: 2.0
+  stable_treated:
+    mean: 1.5
+    std: 1.5
+  stable_untreated:
+    mean: -0.5
+    std: 1.0
+  active_treated:
+    mean: 0.5
+    std: 2.0
+  active_untreated:
+    mean: -3.0
+    std: 2.0
+  highly_active_treated:
+    mean: -0.5
+    std: 2.0
+  highly_active_untreated:
+    mean: -5.0
+    std: 3.0
+
+# Baseline vision distribution - identical to T&E
+baseline_vision_distribution:
+  type: normal
+  mean: 55
+  std: 15
+  min: 20
+  max: 85
+
+# Discontinuation rules - identical to T&E
+discontinuation_rules:
+  poor_vision_threshold: 35
+  poor_vision_probability: 0.05
+  high_injection_count: 25
+  high_injection_probability: 0.02
+  long_treatment_months: 60
+  long_treatment_probability: 0.02
+  discontinuation_types: ['planned', 'adverse', 'ineffective']
+
+# Clinical improvements - standard response distribution
+clinical_improvements:
+  enabled: true
+  use_loading_phase: true
+  use_time_based_discontinuation: true
+  use_response_based_vision: true
+  use_baseline_distribution: false
+  use_response_heterogeneity: true
+  
+  # Standard response distribution (VIEW-like)
+  # Response type doesn't affect intervals in fixed protocol
+  response_types:
+    good:
+      probability: 0.30    # 30% good responders
+      multiplier: 1.8      # Better vision gains
+    average:
+      probability: 0.50    # 50% average responders
+      multiplier: 1.0      # Normal vision gains
+    poor:
+      probability: 0.20    # 20% poor responders
+      multiplier: 0.5      # Reduced vision gains
+  
+  # Discontinuation probabilities - identical to T&E
+  discontinuation_probabilities:
+    1: 0.10   # 10% Year 1
+    2: 0.15   # 15% Year 2 
+    3: 0.12   # 12% Year 3
+    4: 0.08   # 8% Year 4
+    5: 0.075  # 7.5% Year 5+
+  
+  # Vision response parameters - identical to T&E
+  vision_response_params:
+    loading:
+      mean: 4.0
+      std: 1.5
+    year1:
+      mean: 1.0
+      std: 1.0
+    year2:
+      mean: 0.0
+      std: 1.0
+    year3plus:
+      mean: -0.3
+      std: 1.0
+
+# Target outcomes for validation
+target_outcomes:
+  year1:
+    mean_bcva_change: 7.5    # 7-8 letters expected (better than T&E)
+    mean_injections: 7.5     # Fixed 7.5 injections
+  year2:
+    mean_bcva_change: 7.0    # Maintained efficacy
+    cumulative_injections: 13.5  # 6 more in year 2
