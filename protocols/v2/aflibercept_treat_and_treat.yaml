@@ -1,0 +1,75 @@
+# Aflibercept Treat-and-Treat Protocol (Fixed q8w)
+# VIEW protocol extended indefinitely - uses shared base configuration
+
+name: "Aflibercept T&T (Fixed q8w)"
+version: "1.0"
+created_date: "2025-01-24"
+author: "Calibration Team"
+description: "Fixed 8-week dosing (VIEW 2q8 extended indefinitely) with minimal monitoring"
+
+# Protocol type - fixed interval dosing
+protocol_type: "fixed_interval"
+
+# Fixed intervals - no adaptation
+min_interval_days: 56      # 8 weeks always
+max_interval_days: 56      # 8 weeks always
+extension_days: 0          # No extension (fixed protocol)
+shortening_days: 0         # No shortening (fixed protocol)
+
+# Loading phase - standard 3 monthly doses (identical to T&E)
+loading_phase:
+  enabled: true
+  doses: 3
+  interval_days: 28  # Monthly during loading (weeks 0, 4, 8)
+
+# Import base configuration from Python module
+# This ensures identical disease model and vision parameters with T&E protocol
+import_base_config: true
+base_config_module: "simulation_v2.protocols.base_configs"
+base_config_name: "aflibercept"
+
+# Protocol-specific overrides
+# T&T has same patient mix but no interval adaptation
+
+# Clinical improvements - same as base but emphasize fixed nature
+clinical_improvements:
+  enabled: true
+  use_loading_phase: true
+  use_time_based_discontinuation: true
+  use_response_based_vision: true
+  use_baseline_distribution: false
+  use_response_heterogeneity: true
+  
+  # Same response distribution as base (VIEW-like)
+  # But response type doesn't affect intervals (fixed protocol)
+  response_types:
+    good:
+      probability: 0.30    # 30% good responders
+      multiplier: 1.8      # Better vision gains
+    average:
+      probability: 0.50    # 50% average responders
+      multiplier: 1.0      # Normal vision gains
+    poor:
+      probability: 0.20    # 20% poor responders
+      multiplier: 0.5      # Reduced vision gains
+
+# Minimal monitoring assumption for T&T
+# Less frequent OCT, mainly safety checks
+monitoring:
+  oct_frequency: "quarterly"  # vs monthly for T&E
+  safety_visits_only: false   # Still full visits but less imaging
+
+# Target outcomes for validation
+target_outcomes:
+  year1:
+    mean_bcva_change: 7.5    # 7-8 letters expected (better than T&E)
+    mean_injections: 7.5     # Fixed 7.5 injections
+  year2:
+    mean_bcva_change: 7.0    # Maintained efficacy
+    cumulative_injections: 13.5  # 6 more in year 2
+
+# Notes for implementation:
+# - Uses shared base configuration from base_configs.py
+# - No treatment adaptation - always treat at 8 weeks
+# - Same patient population as T&E for fair comparison
+# - Patients on q8w schedule should have identical outcomes in both protocols

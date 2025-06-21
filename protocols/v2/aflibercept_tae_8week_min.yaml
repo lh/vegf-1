@@ -1,0 +1,69 @@
+# Aflibercept Treat-and-Extend Protocol with 8-week Minimum
+# For comparing with fixed T&T protocol - uses shared base configuration
+
+name: "Aflibercept T&E (8-week minimum)"
+version: "1.0"
+created_date: "2025-01-24"
+author: "Calibration Team"
+description: "Treat-and-extend protocol with NHS-compliant 8-week minimum interval"
+
+# Protocol type - treat and extend
+protocol_type: "treat_and_extend"
+
+# T&E intervals - NHS constraint of 8-week minimum
+min_interval_days: 56      # 8 weeks (NHS minimum)
+max_interval_days: 112     # 16 weeks maximum
+extension_days: 14         # Extend by 2 weeks if stable
+shortening_days: 14        # Shorten by 2 weeks if active
+
+# Loading phase - standard 3 monthly doses
+loading_phase:
+  enabled: true
+  doses: 3
+  interval_days: 28  # Monthly during loading
+
+# Import base configuration from Python module
+# This ensures identical disease model and vision parameters with T&T protocol
+import_base_config: true
+base_config_module: "simulation_v2.protocols.base_configs"
+base_config_name: "aflibercept"
+
+# Protocol-specific overrides (minimal - most comes from base)
+# Only override what's specific to T&E behavior
+
+# Response heterogeneity specific to T&E
+# 60% optimal responders (can extend), 40% suboptimal (shorter intervals)
+clinical_improvements:
+  enabled: true
+  use_loading_phase: true
+  use_time_based_discontinuation: true
+  use_response_based_vision: true
+  use_baseline_distribution: false
+  use_response_heterogeneity: true
+  
+  # T&E-specific response distribution (from cost calculator)
+  response_types:
+    good:
+      probability: 0.60    # 60% optimal responders who can extend
+      multiplier: 1.8      # Better vision gains
+    average:
+      probability: 0.30    # 30% moderate responders
+      multiplier: 1.0      # Normal vision gains
+    poor:
+      probability: 0.10    # 10% poor responders
+      multiplier: 0.5      # Reduced vision gains
+
+# Target outcomes for validation
+target_outcomes:
+  year1:
+    mean_bcva_change: 6.0    # 5-6 letters expected
+    mean_injections: 7.5     # 7-8 injections
+  year2:
+    mean_bcva_change: 5.0    # Slight decline from peak
+    cumulative_injections: 12.5  # ~5 in year 2
+
+# Notes for implementation:
+# - Uses shared base configuration from base_configs.py
+# - T&E decisions based on disease state at previous visit
+# - Responder types affect ability to extend intervals
+# - Good responders more likely to achieve longer intervals

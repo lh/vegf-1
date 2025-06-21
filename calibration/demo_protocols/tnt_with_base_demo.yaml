@@ -1,0 +1,126 @@
+disease_transitions:
+  NAIVE:
+    NAIVE: 0.0
+    STABLE: 0.45
+    ACTIVE: 0.45
+    HIGHLY_ACTIVE: 0.1
+  STABLE:
+    NAIVE: 0.0
+    STABLE: 0.88
+    ACTIVE: 0.12
+    HIGHLY_ACTIVE: 0.0
+  ACTIVE:
+    NAIVE: 0.0
+    STABLE: 0.35
+    ACTIVE: 0.55
+    HIGHLY_ACTIVE: 0.1
+  HIGHLY_ACTIVE:
+    NAIVE: 0.0
+    STABLE: 0.1
+    ACTIVE: 0.3
+    HIGHLY_ACTIVE: 0.6
+treatment_effect_on_transitions:
+  NAIVE:
+    multipliers: {}
+  STABLE:
+    multipliers:
+      STABLE: 1.2
+      ACTIVE: 0.8
+  ACTIVE:
+    multipliers:
+      STABLE: 2.5
+      ACTIVE: 0.7
+      HIGHLY_ACTIVE: 0.5
+  HIGHLY_ACTIVE:
+    multipliers:
+      STABLE: 2.0
+      ACTIVE: 1.8
+      HIGHLY_ACTIVE: 0.6
+vision_change_model:
+  naive_treated:
+    mean: 3.0
+    std: 2.0
+  naive_untreated:
+    mean: -3.0
+    std: 2.0
+  stable_treated:
+    mean: 1.5
+    std: 1.5
+  stable_untreated:
+    mean: -0.5
+    std: 1.0
+  active_treated:
+    mean: 0.5
+    std: 2.0
+  active_untreated:
+    mean: -3.0
+    std: 2.0
+  highly_active_treated:
+    mean: -0.5
+    std: 2.0
+  highly_active_untreated:
+    mean: -5.0
+    std: 3.0
+baseline_vision_distribution:
+  type: normal
+  mean: 55
+  std: 15
+  min: 20
+  max: 85
+discontinuation_rules:
+  poor_vision_threshold: 35
+  poor_vision_probability: 0.05
+  high_injection_count: 25
+  high_injection_probability: 0.02
+  long_treatment_months: 60
+  long_treatment_probability: 0.02
+  discontinuation_types:
+  - planned
+  - adverse
+  - ineffective
+clinical_improvements:
+  enabled: true
+  use_loading_phase: true
+  use_time_based_discontinuation: true
+  use_response_based_vision: true
+  use_baseline_distribution: false
+  use_response_heterogeneity: true
+  response_types:
+    good:
+      probability: 0.3
+      multiplier: 1.8
+    average:
+      probability: 0.5
+      multiplier: 1.0
+    poor:
+      probability: 0.2
+      multiplier: 0.5
+  discontinuation_probabilities:
+    1: 0.1
+    2: 0.15
+    3: 0.12
+    4: 0.08
+    5: 0.075
+  vision_response_params:
+    loading:
+      mean: 4.0
+      std: 1.5
+    year1:
+      mean: 1.0
+      std: 1.0
+    year2:
+      mean: 0.0
+      std: 1.0
+    year3plus:
+      mean: -0.3
+      std: 1.0
+name: Aflibercept T&T Demo
+version: '1.0'
+created_date: '2025-01-24'
+author: Demo
+description: T&T protocol using base config
+protocol_type: fixed_interval
+min_interval_days: 56
+max_interval_days: 56
+extension_days: 0
+shortening_days: 0
