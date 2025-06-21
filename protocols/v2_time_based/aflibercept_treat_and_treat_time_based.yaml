@@ -1,0 +1,103 @@
+# Aflibercept Time-Based T&T Protocol (Fixed q8w)
+# Time-based disease progression with visit-based measurements
+
+# Metadata
+name: "Aflibercept Time-Based T&T (Fixed q8w)"
+version: "1.0"
+created_date: "2025-06-21"
+author: "Calibration Team"
+description: "Time-based fixed dosing protocol: VIEW 2q8 extended indefinitely with minimal monitoring"
+
+# Model type indicator - TIME-BASED
+model_type: "time_based"
+transition_model: "fortnightly"
+update_interval_days: 14  # Disease state updates every 2 weeks
+
+# Protocol parameters - FIXED dosing (not treat-and-extend)
+protocol_type: "fixed"
+
+# Loading dose phase
+loading_dose_injections: 3  # Number of initial monthly injections
+loading_dose_interval_days: 28  # Monthly (4 weeks) during loading
+
+# Fixed dosing phase (after loading) - bimonthly
+min_interval_days: 56  # 8 weeks always
+max_interval_days: 56  # 8 weeks - no extension
+extension_days: 0      # No extension - fixed schedule
+shortening_days: 0     # No shortening - fixed schedule
+
+# Reference to parameter files (relative to this file)
+disease_transitions_file: "parameters/disease_transitions.yaml"
+treatment_effect_file: "parameters/treatment_effect.yaml"
+vision_parameters_file: "parameters/vision.yaml"
+discontinuation_parameters_file: "parameters/discontinuation.yaml"
+demographics_parameters_file: "parameters/demographics.yaml"
+
+# Baseline vision distribution - UK real-world (identical to T&E)
+baseline_vision_distribution:
+  type: beta_with_threshold
+  alpha: 3.5
+  beta: 2.0
+  min: 5
+  max: 98
+  threshold: 70
+  threshold_reduction: 0.6
+
+# Clinical improvements - standard response distribution
+clinical_improvements:
+  enabled: true
+  use_loading_phase: true
+  use_time_based_discontinuation: true
+  use_response_based_vision: true
+  use_baseline_distribution: false  # Use protocol's beta distribution
+  use_response_heterogeneity: true
+  
+  # Standard response distribution (VIEW-like)
+  # Response type doesn't affect intervals in fixed protocol
+  response_types:
+    good:
+      probability: 0.30    # 30% good responders
+      multiplier: 1.8      # Better vision gains
+    average:
+      probability: 0.50    # 50% average responders
+      multiplier: 1.0      # Normal vision gains
+    poor:
+      probability: 0.20    # 20% poor responders
+      multiplier: 0.5      # Reduced vision gains
+  
+  # Discontinuation probabilities - identical to T&E
+  discontinuation_probabilities:
+    1: 0.10   # 10% Year 1
+    2: 0.15   # 15% Year 2 
+    3: 0.12   # 12% Year 3
+    4: 0.08   # 8% Year 4
+    5: 0.075  # 7.5% Year 5+
+  
+  # Vision response parameters - identical to T&E
+  vision_response_params:
+    loading:
+      mean: 4.0
+      std: 1.5
+    year1:
+      mean: 1.0
+      std: 1.0
+    year2:
+      mean: 0.0
+      std: 1.0
+    year3plus:
+      mean: -0.3
+      std: 1.0
+
+# Minimal monitoring assumption for T&T
+monitoring:
+  oct_frequency: "quarterly"  # vs monthly for T&E
+  safety_visits_only: false   # Still full visits but less imaging
+
+# Target outcomes for validation
+target_outcomes:
+  year1:
+    mean_bcva_change: 7.5    # 7-8 letters expected (better than T&E)
+    mean_injections: 7.5     # Fixed 7.5 injections
+  year2:
+    mean_bcva_change: 7.0    # Maintained efficacy
+    cumulative_injections: 13.5  # 6 more in year 2
