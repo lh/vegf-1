@@ -1,0 +1,126 @@
+name: VIEW 2q8 Fixed Dosing - Improved
+version: '2.0'
+created_date: '2025-01-26'
+author: Calibration Team
+description: Fixed dosing protocol based on VIEW trials with improved parameters to
+  match clinical outcomes
+protocol_type: fixed_interval
+min_interval_days: 56
+max_interval_days: 112
+extension_days: 0
+shortening_days: 0
+loading_phase:
+  enabled: true
+  doses: 3
+  interval_days: 28
+disease_transitions:
+  NAIVE:
+    NAIVE: 0.0
+    STABLE: 0.55
+    ACTIVE: 0.4
+    HIGHLY_ACTIVE: 0.05
+  STABLE:
+    NAIVE: 0.0
+    STABLE: 0.9
+    ACTIVE: 0.1
+    HIGHLY_ACTIVE: 0.0
+  ACTIVE:
+    NAIVE: 0.0
+    STABLE: 0.45
+    ACTIVE: 0.5
+    HIGHLY_ACTIVE: 0.05
+  HIGHLY_ACTIVE:
+    NAIVE: 0.0
+    STABLE: 0.1
+    ACTIVE: 0.3
+    HIGHLY_ACTIVE: 0.6
+treatment_effect_on_transitions:
+  NAIVE:
+    multipliers: {}
+  STABLE:
+    multipliers:
+      STABLE: 1.2
+      ACTIVE: 0.8
+  ACTIVE:
+    multipliers:
+      STABLE: 3.0
+      ACTIVE: 0.6
+      HIGHLY_ACTIVE: 0.2
+  HIGHLY_ACTIVE:
+    multipliers:
+      STABLE: 2.0
+      ACTIVE: 1.8
+      HIGHLY_ACTIVE: 0.6
+vision_change_model:
+  naive_treated:
+    mean: 4.5
+    std: 2
+  naive_untreated:
+    mean: -3
+    std: 2
+  stable_treated:
+    mean: 2.5
+    std: 1.5
+  stable_untreated:
+    mean: -0.5
+    std: 1
+  active_treated:
+    mean: 1.5
+    std: 2
+  active_untreated:
+    mean: -3
+    std: 2
+  highly_active_treated:
+    mean: 0.5
+    std: 2
+  highly_active_untreated:
+    mean: -5
+    std: 3
+baseline_vision_distribution:
+  type: normal
+  mean: 53.7
+  std: 13.4
+  min: 20
+  max: 85
+discontinuation_rules:
+  poor_vision_threshold: 20
+  poor_vision_probability: 0.02
+  high_injection_count: 999
+  high_injection_probability: 0.0
+  long_treatment_months: 24
+  long_treatment_probability: 0.005
+  discontinuation_types:
+  - planned
+  - adverse
+  - ineffective
+clinical_improvements:
+  enabled: true
+  use_loading_phase: true
+  use_time_based_discontinuation: false
+  use_response_based_vision: true
+  use_baseline_distribution: false
+  use_response_heterogeneity: true
+  response_types:
+    good:
+      probability: 0.31
+      multiplier: 2.5
+    average:
+      probability: 0.64
+      multiplier: 1.5
+    poor:
+      probability: 0.05
+      multiplier: 0.5
+  discontinuation_probabilities:
+    1: 0.125
+    2: 0.15
+    3: 0.12
+    4: 0.08
+    5: 0.075
+target_outcomes:
+  year1:
+    mean_bcva_change: 8.4
+    vision_maintenance_rate: 0.954
+    gainers_15_plus_rate: 0.31
+    mean_injections: 7.5
+  year2:
+    mean_injections: 11.2

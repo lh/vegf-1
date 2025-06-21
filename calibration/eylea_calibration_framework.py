@@ -173,12 +173,25 @@ class EyleaCalibrationFramework:
             transition_probabilities=spec.disease_transitions,
             treatment_effect_multipliers=spec.treatment_effect_on_transitions
         )
-        protocol = StandardProtocol(
-            min_interval_days=spec.min_interval_days,
-            max_interval_days=spec.max_interval_days,
-            extension_days=spec.extension_days,
-            shortening_days=spec.shortening_days
-        )
+        
+        # Check if this is a fixed interval protocol
+        if spec.protocol_type == 'fixed_interval':
+            # Use fixed interval protocol for VIEW 2q8 style
+            from calibration.fixed_interval_protocol import FixedIntervalProtocol
+            loading_config = spec.to_yaml_dict().get('loading_phase', {})
+            protocol = FixedIntervalProtocol(
+                loading_doses=loading_config.get('doses', 3),
+                loading_interval_days=loading_config.get('interval_days', 28),
+                maintenance_interval_days=spec.min_interval_days
+            )
+        else:
+            # Use standard treat-and-extend protocol
+            protocol = StandardProtocol(
+                min_interval_days=spec.min_interval_days,
+                max_interval_days=spec.max_interval_days,
+                extension_days=spec.extension_days,
+                shortening_days=spec.shortening_days
+            )
         
         # Check if clinical improvements are enabled
         clinical_improvements = None
