@@ -30,6 +30,10 @@ input_data/*
 *.sql
 *.parquet
 
+# Sensitive files
+docs/literature/wAMD cost calculator v1.0 FINAL.xlsx
+docs/literature/*cost calculator*.xlsx
+
 # Generated HTML files from markdown
 *.html
 *_files/

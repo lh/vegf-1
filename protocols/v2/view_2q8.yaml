@@ -1,0 +1,170 @@
+# VIEW 2q8 Protocol - Aflibercept Fixed Dosing
+# Based on VIEW 1/2 trials: 3 monthly loading doses then every 8 weeks
+
+name: "VIEW 2q8 Fixed Dosing"
+version: "1.0"
+created_date: "2025-01-21"
+author: "Calibration Team"
+description: "Fixed dosing protocol based on VIEW trials: 3 monthly loading doses then 2mg every 8 weeks"
+
+# Protocol type - fixed dosing, not treat-and-extend
+protocol_type: "fixed_interval"
+min_interval_days: 56  # 8 weeks for maintenance
+max_interval_days: 56  # Fixed interval, no extension
+extension_days: 0      # No extension in fixed protocol
+shortening_days: 0     # No shortening in fixed protocol
+
+# Special parameters for VIEW 2q8
+loading_phase:
+  enabled: true
+  doses: 3
+  interval_days: 28  # Monthly during loading (weeks 0, 4, 8)
+
+# Disease state transitions - calibrated to achieve VIEW outcomes
+# More optimistic than standard protocols to match trial results
+disease_transitions:
+  NAIVE:
+    NAIVE: 0.0        # Cannot remain naive after first assessment
+    STABLE: 0.45      # 45% achieve stability quickly (higher than standard)
+    ACTIVE: 0.45      # 45% have active disease
+    HIGHLY_ACTIVE: 0.1  # 10% have severe disease
+  STABLE:
+    NAIVE: 0.0        # Cannot return to naive
+    STABLE: 0.90      # 90% remain stable (higher retention)
+    ACTIVE: 0.10      # 10% develop recurrence
+    HIGHLY_ACTIVE: 0.0  # Rare to jump directly to highly active
+  ACTIVE:
+    NAIVE: 0.0        # Cannot return to naive
+    STABLE: 0.35      # 35% achieve stability with treatment (more responsive)
+    ACTIVE: 0.60      # 60% remain active
+    HIGHLY_ACTIVE: 0.05  # 5% progress to highly active (lower progression)
+  HIGHLY_ACTIVE:
+    NAIVE: 0.0        # Cannot return to naive
+    STABLE: 0.10      # 10% achieve stability
+    ACTIVE: 0.30      # 30% improve to active
+    HIGHLY_ACTIVE: 0.60  # 60% remain highly active
+
+# Treatment effect on disease transitions
+# Stronger effect to match VIEW outcomes
+treatment_effect_on_transitions:
+  NAIVE:
+    multipliers: {}
+  STABLE:
+    # Treatment strongly maintains stability
+    multipliers:
+      STABLE: 1.2     # 20% more likely to stay stable
+      ACTIVE: 0.8     # 20% less likely to become active
+  ACTIVE:
+    # Treatment strongly promotes improvement
+    multipliers:
+      STABLE: 2.5     # 2.5x more likely to become stable
+      ACTIVE: 0.7     # 30% less likely to stay active
+      HIGHLY_ACTIVE: 0.3  # 70% less likely to worsen
+  HIGHLY_ACTIVE:
+    # Treatment effect present but limited
+    multipliers:
+      STABLE: 2.0     # Twice as likely to improve dramatically
+      ACTIVE: 1.8     # 80% more likely to improve
+      HIGHLY_ACTIVE: 0.6  # 40% less likely to remain severe
+
+# Vision change model - calibrated to achieve +8.4 letters mean at Week 52
+vision_change_model:
+  # During loading phase (months 0-3), vision improves rapidly
+  naive_treated:
+    mean: 3    # Strong initial response
+    std: 2
+  naive_untreated:
+    mean: -3   # Untreated naive patients lose vision
+    std: 2
+  stable_treated:
+    mean: 1.5  # Continued improvement when stable
+    std: 1.5
+  stable_untreated:
+    mean: -0.5  # Slight decline without treatment
+    std: 1
+  active_treated:
+    mean: 0.5   # Slight improvement even when active
+    std: 2
+  active_untreated:
+    mean: -3    # Significant loss without treatment
+    std: 2
+  highly_active_treated:
+    mean: -0.5  # Minimal loss with treatment
+    std: 2
+  highly_active_untreated:
+    mean: -5    # Severe loss without treatment
+    std: 3
+
+# Baseline vision distribution based on VIEW trials
+baseline_vision_distribution:
+  type: normal
+  mean: 53.7      # Average of VIEW 1 (55.7) and VIEW 2 (51.6)
+  std: 13.4       # Average of VIEW 1 (12.8) and VIEW 2 (13.9)
+  min: 20         # Protocol minimum
+  max: 85         # Protocol maximum
+
+# Discontinuation rules - very low in clinical trials
+discontinuation_rules:
+  # Poor vision criteria
+  poor_vision_threshold: 20        # Very low threshold
+  poor_vision_probability: 0.02    # 2% chance per visit when below threshold
+  
+  # High injection burden criteria - not applicable for fixed protocol
+  high_injection_count: 999        # Effectively disabled
+  high_injection_probability: 0.0  # No burden-based discontinuation
+  
+  # Long treatment duration criteria - minimal in trials
+  long_treatment_months: 24        # 2 years
+  long_treatment_probability: 0.005 # 0.5% chance per visit after duration
+  
+  # Types of discontinuation
+  discontinuation_types:
+    - "planned"      # Patient/doctor decision
+    - "adverse"      # Due to adverse events
+    - "ineffective"  # Treatment not working
+
+# Clinical improvements for enhanced realism
+clinical_improvements:
+  enabled: true
+  use_loading_phase: true
+  use_time_based_discontinuation: false  # Use protocol discontinuation rules
+  use_response_based_vision: true
+  use_baseline_distribution: false  # Use protocol distribution
+  use_response_heterogeneity: true
+  
+  # Response types calibrated to match VIEW outcomes
+  response_types:
+    good:
+      probability: 0.31    # ~31% gain ≥15 letters
+      multiplier: 2.0      # Strong response
+    average:
+      probability: 0.64    # ~64% gain 0-14 letters  
+      multiplier: 1.2      # Moderate response
+    poor:
+      probability: 0.05    # ~5% lose vision (100% - 95% maintenance rate)
+      multiplier: 0.3      # Poor response
+  
+  # Vision response parameters for different phases
+  vision_response_params:
+    loading:
+      mean: 3.5    # Strong improvement during loading
+      std: 1.5
+    year1:
+      mean: 0.8    # Continued but slower improvement
+      std: 1.0
+    year2:
+      mean: 0.0    # Stable in year 2
+      std: 1.0
+    year3plus:
+      mean: -0.3   # Slight decline after year 2
+      std: 1.0
+
+# Target outcomes for validation (from VIEW trials)
+target_outcomes:
+  year1:
+    mean_bcva_change: 8.4        # Average of VIEW 1 (7.9) and VIEW 2 (8.9)
+    vision_maintenance_rate: 0.954  # 95.4% average
+    gainers_15_plus_rate: 0.310    # 31.0% average
+    mean_injections: 7.5
+  year2:
+    mean_injections: 11.2        # Cumulative by week 96

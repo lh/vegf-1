@@ -1,0 +1,135 @@
+name: Eylea Treat and Extend
+version: '1.0'
+created_date: '2024-01-15'
+author: Clinical Team
+description: Standard treat-and-extend protocol for Eylea (aflibercept) based on clinical
+  trial data
+protocol_type: treat_and_extend
+min_interval_days: 56
+max_interval_days: 112
+extension_days: 14
+shortening_days: 14
+disease_transitions:
+  NAIVE:
+    NAIVE: 0.0
+    STABLE: 0.3
+    ACTIVE: 0.6
+    HIGHLY_ACTIVE: 0.1
+  STABLE:
+    NAIVE: 0.0
+    STABLE: 0.85
+    ACTIVE: 0.15
+    HIGHLY_ACTIVE: 0.0
+  ACTIVE:
+    NAIVE: 0.0
+    STABLE: 0.2
+    ACTIVE: 0.7
+    HIGHLY_ACTIVE: 0.1
+  HIGHLY_ACTIVE:
+    NAIVE: 0.0
+    STABLE: 0.05
+    ACTIVE: 0.15
+    HIGHLY_ACTIVE: 0.8
+treatment_effect_on_transitions:
+  NAIVE:
+    multipliers: {}
+  STABLE:
+    multipliers:
+      STABLE: 1.1
+      ACTIVE: 0.9
+  ACTIVE:
+    multipliers:
+      STABLE: 2.0
+      ACTIVE: 0.8
+      HIGHLY_ACTIVE: 0.5
+  HIGHLY_ACTIVE:
+    multipliers:
+      STABLE: 2.0
+      ACTIVE: 1.5
+      HIGHLY_ACTIVE: 0.75
+vision_change_model:
+  naive_treated:
+    mean: 0
+    std: 1
+  naive_untreated:
+    mean: -2
+    std: 2
+  stable_treated:
+    mean: 1
+    std: 1
+  stable_untreated:
+    mean: 0
+    std: 1
+  active_treated:
+    mean: -1
+    std: 2
+  active_untreated:
+    mean: -3
+    std: 2
+  highly_active_treated:
+    mean: -2
+    std: 2
+  highly_active_untreated:
+    mean: -5
+    std: 3
+baseline_vision_distribution:
+  type: normal
+  mean: 70
+  std: 10
+  min: 20
+  max: 90
+discontinuation_rules:
+  poor_vision_threshold: 35
+  poor_vision_probability: 0.1
+  high_injection_count: 20
+  high_injection_probability: 0.02
+  long_treatment_months: 36
+  long_treatment_probability: 0.01
+  discontinuation_types:
+  - planned
+  - adverse
+  - ineffective
+mortality:
+  enabled: true
+  base_annual_rate: 0.078
+  monthly_rate: 0.0065
+  age_adjustment:
+    enabled: true
+    reference_age: 89.5
+    min_age: 70
+    max_age: 106
+    comment: Mortality risk doubles approximately every 8 years
+  treatment_gap_multipliers:
+    regular: 1.0
+    short_gap: 1.22
+    long_gap: 1.34
+    discontinued: 1.37
+    comment: Multipliers based on observed mortality by treatment pattern
+  data_source: Real-world Eylea patient data (n=1,775, 2007-2025)
+  notes:
+  - Based on 7.8 deaths per 100 patient-years
+  - 'Average age at death: 89.5 years'
+  - Treatment gaps significantly increase mortality risk
+clinical_improvements:
+  enabled: true
+  use_loading_phase: true
+  use_time_based_discontinuation: true
+  use_response_based_vision: true
+  use_baseline_distribution: true
+  use_response_heterogeneity: true
+  response_types:
+    good:
+      probability: 0.35
+      multiplier: 2.0
+    average:
+      probability: 0.5
+      multiplier: 1.0
+    poor:
+      probability: 0.2
+      multiplier: 0.5
+  discontinuation_probabilities:
+    1: 0.08
+    2: 0.15
+    3: 0.12
+    4: 0.08
+    5: 0.075
