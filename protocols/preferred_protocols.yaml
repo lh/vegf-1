@@ -15,18 +15,7 @@ preferred_protocols:
       category: "Treat and Treat"
       is_default: true
 
-  visit_based:
-    - name: "Aflibercept T&E (8-week minimum)"
-      path: "protocols/v2/aflibercept_tae_8week_min_full.yaml"
-      description: "Visit-based T&E protocol"
-      category: "Treat and Extend"
-      is_default: false
-      
-    - name: "Aflibercept T&T (Fixed q8w)"
-      path: "protocols/v2/aflibercept_treat_and_treat_full.yaml"
-      description: "Visit-based fixed dosing"
-      category: "Treat and Treat"
-      is_default: false
+  visit_based: []  # No visit-based protocols are preferred
 
 # UI display settings
 ui_settings:
