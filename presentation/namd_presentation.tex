@@ -6,6 +6,8 @@
 \usepackage{tikz}
 \usepackage{amsmath}
 \usepackage{xcolor}
+\usepackage{url}
+
 
 % Define NHS colors
 \definecolor{nhsblue}{RGB}{0,94,184}
@@ -23,9 +25,9 @@
 
 \title{Agent-Based Simulation for Neovascular AMD Treatment Planning}
 \subtitle{Optimizing Anti-VEGF Therapy Protocols in the NHS}
-\author{Your Name\\Consultant Ophthalmologist}
-\institute{Your NHS Trust}
-\date{\today}
+\author{Luke Herbert\\Consultant Ophthalmologist}
+\institute{Surrey and Sussex Healthcare NHS Trust}
+\date{24th June 2025}
 
 \begin{document}
 
@@ -145,22 +147,23 @@
 \section{The Cost Challenge}
 
 \begin{frame}{NHS Annual Treatment Costs}
+\small % Reduce font size for this slide
 \begin{table}
 \centering
 \begin{tabular}{lrr}
 \toprule
 Treatment Area & Annual NHS Spend & Patient Numbers \\
 \midrule
-\alert{Wet AMD (Anti-VEGF)} & \alert{£600-800 million} & 700,000+ total \\
-& & 39,800 new/year \\
+\alert{Wet AMD (Anti-VEGF)} & \alert{£600-800 million} & 39,800 new/year \\
+& & ~200,000 on treatment \\
 Cataract Surgery & £320-480 million & 400,000/year \\
 Hip Replacement & £500-700 million & 100,000/year \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\vspace{0.3cm}
-\begin{alertblock}{Key Insight: Cost per QALY}
+\vspace{0.2cm} % Reduced spacing
+\begin{alertblock}{Cost per QALY}
 \begin{itemize}
     \item Cataract surgery: £1,964 per QALY (exceptional value)
     \item Hip replacement: £2,128 per QALY (strong value)
@@ -168,11 +171,11 @@ Hip Replacement & £500-700 million & 100,000/year \\
 \end{itemize}
 \end{alertblock}
 
-\begin{block}{Current Anti-VEGF Drug Costs (2024 list prices)}
+\vspace{0.2cm} % Add small space between blocks
+\begin{block}{Anti-VEGF Drug Costs (2024 list prices)}
 \begin{itemize}
-    \item Aflibercept (Eylea): £816 per injection
-    \item Generic aflibercept: Coming soon (expected 50\% reduction)
-    \item Patients need 8-10 injections year 1, then 4-5/year ongoing
+    \item Aflibercept (Eylea): £816 per injection, soon generic aflibercept (expected 50\% reduction)
+    \item Patients need repeated injections, 4 to 7 a year 
 \end{itemize}
 \end{block}
 
@@ -228,15 +231,16 @@ Hip Replacement & £500-700 million & 100,000/year \\
 \vspace{0.5cm}
 \centering
 \begin{tikzpicture}
-    \node[draw,nhsblue,thick,minimum width=3cm] at (0,0) {Excel Model};
-    \node[draw,nhsgreen,thick,minimum width=3cm] at (6,0) {Agent-Based Model};
-    \draw[->,thick] (3,0) -- (4.5,0);
-    \node at (3.75,0.3) {Evolution};
+    \node[draw,nhsblue,thick,minimum width=3cm] (excel) at (0,0) {Excel Model};
+    \node[draw,nhsgreen,thick,minimum width=3cm] (agent) at (7,0) {Agent-Based Model};
+    \draw[->,thick] (excel.east) -- node[above] {Evolution} (agent.west);
 \end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Real-World Complexity in Our Simulation}
-\begin{alertblock}{What Simple Models Miss}
+\small % Reduce font size for this slide
+\begin{alertblock}{}
+\vskip0.2cm
 \begin{columns}[T]
 \column{0.5\textwidth}
 \textbf{Simple Models Assume:}
@@ -250,13 +254,14 @@ Hip Replacement & £500-700 million & 100,000/year \\
 \column{0.5\textwidth}
 \textbf{Our Simulation Includes:}
 \begin{itemize}
-    \item \alert{Vision distribution at baseline}
-    \item \alert{Real discontinuation patterns}
-    \item \alert{Treatment gaps and delays}
+    \item Vision distribution at baseline
+    \item Real discontinuation patterns
+    \item Treatment gaps and delays
     \item Individual patient trajectories
 \end{itemize}
 \end{columns}
 \end{alertblock}
+
 
 \begin{block}{Why This Matters}
 \begin{itemize}
@@ -268,10 +273,10 @@ Hip Replacement & £500-700 million & 100,000/year \\
 \end{block}
 
 \centering
-\textbf{Result: Evidence-based insights, not theoretical averages}
+\textbf{What we want: Evidence-based insights}
 \end{frame}
 
-\section{Our Solution}
+\section{The Model: AMD Protocol Explorer}
 
 \begin{frame}{Application Architecture}
 \centering
@@ -312,6 +317,37 @@ Demonstration includes:
 \end{itemize}
 \end{frame}
 
+\begin{frame}{Economic Analysis Features}
+\begin{columns}[T]
+\column{0.5\textwidth}
+\textbf{Cost Tracking:}
+\begin{itemize}
+    \item Flexible drug costs (£800 default)
+    \item NHS reference visit costs
+    \item Component breakdown
+    \item Real-time calculation
+\end{itemize}
+
+\column{0.5\textwidth}
+\textbf{Workload Analysis:}
+\begin{itemize}
+    \item Injection workload tracking
+    \item Decision-maker capacity
+    \item Monthly utilization patterns
+    \item Resource planning metrics
+\end{itemize}
+\end{columns}
+
+\vspace{0.5cm}
+\begin{block}{Protocol Comparison}
+T\&E: Fewer visits, higher cost per visit (£350)\\
+T\&T: More visits, lower cost per visit (£140 nurse-led)
+\end{block}
+
+\vspace{0.3cm}
+\textbf{Key Output:} Cost per vision year saved: £14,800-15,200
+\end{frame}
+
 \section{Key Insights}
 
 \begin{frame}{What We've Learned}
@@ -320,7 +356,7 @@ Demonstration includes:
 \textbf{Model Reveals:}
 \begin{itemize}
     \item Treatment pattern impacts
-    \item Resource utilization peaks
+    \item Resource utilisation peaks
     \item Patient outcome distributions
     \item Protocol efficiency metrics
 \end{itemize}
@@ -341,19 +377,20 @@ Cost calculator module in development for full economic analysis
 \end{alertblock}
 \end{frame}
 
-\begin{frame}{Thank You}
+\begin{frame}{Thank you for listening}
 \centering
-\Large
-Questions?
+
 
 \vspace{1cm}
 \normalsize
 \textbf{Contact:}\\
-your.email@nhs.net
+l.herbert@nhs.net
 
 \vspace{0.5cm}
 \textbf{Project Repository:}\\
-\url{https://github.com/yourusername/namd-simulation}
+\texttt{https://github.com/lh/vegf-1}\\
+\textbf{Live app:}\\
+\texttt{https://vegf-1.streamlit.app}
 
 \vspace{0.5cm}
 \textbf{Acknowledgments:}\\
