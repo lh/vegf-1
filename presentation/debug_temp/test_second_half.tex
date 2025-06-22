@@ -29,150 +29,6 @@
 
 \begin{document}
 
-\maketitle
-
-% Acknowledgments in title frame note
-\begin{frame}{Acknowledgments}
-\begin{itemize}
-    \item Health Service Modelling Associates (HSMA) team
-    \item Finance Director and IT Director
-    \item NHS England Pharmacy \& Clinical Support Team
-\end{itemize}
-\end{frame}
-
-\section{Understanding Neovascular AMD}
-
-\begin{frame}{What is Neovascular AMD (NAMD)?}
-\begin{columns}[T]
-\column{0.5\textwidth}
-\begin{itemize}
-    \item Leading cause of central vision loss
-    \item Cannot read or recognize faces
-    \item Leads to legal blindness if untreated
-    \item Affects quality of life severely
-\end{itemize}
-
-\column{0.5\textwidth}
-\begin{figure}
-    \centering
-    \includegraphics[width=0.8\textwidth]{logMAR_chart_explainer.png}
-    \vspace{0.3cm}
-    \includegraphics[width=0.8\textwidth]{namd_angiography.png}
-\end{figure}
-\end{columns}
-\end{frame}
-
-\begin{frame}{The Biology Behind NAMD}
-\begin{columns}[T]
-\column{0.6\textwidth}
-\textbf{Disease Process:}
-\begin{itemize}
-    \item Aging eye environment
-    \item Increased VEGF (Vascular Endothelial Growth Factor)
-    \item Abnormal blood vessel growth
-    \item Leakage, fibrosis, and bleeding
-\end{itemize}
-
-\column{0.4\textwidth}
-\begin{exampleblock}{VEGF?}
-
-  VEGF is like fertiliser for blood vessels. Anti-VEGF is something that removes the fertiliser.
-
-  As VEGF keeps being made we have to keep removing it.
-  \end{exampleblock}
-\end{columns}
-\end{frame}
-
-\begin{frame}{Revolutionary Treatment: Anti-VEGF Therapy}
-\begin{columns}[T]
-\column{0.6\textwidth}
-\textbf{How it works:}
-\begin{itemize}
-    \item Antibodies or similar molecules bind to VEGF
-    \item Remove growth factor from eye
-    \item Stop abnormal vessel growth
-\end{itemize}
-
-\vspace{0.5cm}
-\alert{\textbf{The Challenge:}}
-\begin{itemize}
-    \item Molecules cleared over time
-    \item Requires repeated injections
-    \item Optimal frequency unknown
-\end{itemize}
-
-\column{0.4\textwidth}
-\begin{figure}
-    \centering
-    \begin{tikzpicture}[scale=0.7]
-        % VEGF binding diagram
-        \node[circle,draw,nhsred,thick,minimum size=1cm] (vegf) at (0,2) {VEGF};
-        \node[draw,nhsblue,thick,minimum width=1.5cm] (ab) at (0,0) {Anti-vegf};
-        \draw[->,thick] (vegf) -- (ab);
-        \node[right] at (1.5,1) {Binding};
-    \end{tikzpicture}
-\end{figure}
-\end{columns}
-\end{frame}
-
-\begin{frame}{Real-World Treatment Challenges}
-\begin{alertblock}{Why Patients Stop Treatment}
-\begin{itemize}
-    \item \textbf{Mortality}: Elderly population (average age 80+)
-    \item \textbf{Frailty}: Too unwell to attend monthly appointments
-    \item \textbf{Treatment failure}: Vision deteriorates despite therapy
-    \item \textbf{NHS capacity}: Limited appointment availability
-\end{itemize}
-\end{alertblock}
-
-\begin{block}{Discontinuation Rates}
-\begin{itemize}
-    \item Year 1: 10-15\% stop treatment
-    \item Year 2: Additional 10-15\%
-    \item By Year 5: Only 50-60\% still on treatment
-\end{itemize}
-\end{block}
-
-\centering
-\textbf{Critical Question: How do we optimise treatment for those who remain?}
-\end{frame}
-
-\section{The Cost Challenge}
-
-\begin{frame}{NHS Annual Treatment Costs}
-\begin{table}
-\centering
-\begin{tabular}{lrr}
-\toprule
-Treatment Area & Annual NHS Spend & Annual Patient Numbers \\
-\midrule
-\alert{Wet AMD (Anti-VEGF)} & \alert{£600-800 million} & 40,000 new, ~200,000 continuing \\
-Cataract Surgery & £320-480 million & 400,000 \\
-Hip Replacement & £500-700 million & 100,000 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\vspace{0.3cm}
-\begin{alertblock}{Cost per QALY}
-\begin{itemize}
-    \item Cataract surgery: £1,964 per QALY (exceptional value)
-    \item Hip replacement: £2,128 per QALY (strong value)
-    \item \alert{Wet AMD: £58,047 per QALY (3x NICE threshold)}
-\end{itemize}
-\end{alertblock}
-
-\begin{block}{Current Anti-VEGF Drug Costs (2024 list prices)}
-\begin{itemize}
-    \item Aflibercept (Eylea): £816 a dose, generic soon maybe £400
-    \item Patients need 7-10 injections year 1, then 4-6/year ongoing
-\end{itemize}
-\end{block}
-
-\centering
-\textbf{Challenge: £1.2-1.5 billion projected cost by 2035}
-\end{frame}
-
 \section{Why Model?}
 
 \begin{frame}{The Need for Modeling}
@@ -271,10 +127,10 @@ Hip Replacement & £500-700 million & 100,000 \\
 
 \vspace{0.5cm}
 \begin{tikzpicture}[scale=0.8]
-    \node[draw,nhsblue,thick,minimum width=3cm,minimum height=1.5cm] (proto) at (0,3) {Protocol Management};
-    \node[draw,nhsblue,thick,minimum width=3cm,minimum height=1.5cm] (sim) at (5,3) {Simulation Engine};
-    \node[draw,nhsblue,thick,minimum width=3cm,minimum height=1.5cm] (analysis) at (0,0) {Analysis \& Visualization};
-    \node[draw,nhsblue,thick,minimum width=3cm,minimum height=1.5cm] (compare) at (5,0) {Protocol Comparison};
+    \node[draw,nhsblue,thick,minimum width=3cm,minimum height=1.5cm] (proto) at (0,3) {Protocol\\Management};
+    \node[draw,nhsblue,thick,minimum width=3cm,minimum height=1.5cm] (sim) at (5,3) {Simulation\\Engine};
+    \node[draw,nhsblue,thick,minimum width=3cm,minimum height=1.5cm] (analysis) at (0,0) {Analysis \&\\Visualization};
+    \node[draw,nhsblue,thick,minimum width=3cm,minimum height=1.5cm] (compare) at (5,0) {Protocol\\Comparison};
     
     \draw[->,thick] (proto) -- (sim);
     \draw[->,thick] (sim) -- (analysis);
