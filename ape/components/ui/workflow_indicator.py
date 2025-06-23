@@ -37,9 +37,11 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
             
             if idx < current_idx:
                 # Completed step - clickable with ghost Carbon button
+                # Use invisible icon for workload button only
+                button_icon = 'invisible' if step_id == "workload" else None
                 if navigation_button(
                     display_label,
-                    icon_name=None,  # Disable auto-icon since we're using our own
+                    icon_name=button_icon,  # Invisible for workload, None for others
                     key=f"workflow_{step_id}",
                     full_width=True,
                     help_text="Click to go back",
@@ -52,11 +54,14 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                 if step_id == "simulation" and current_step == "simulation":
                     display_label = "Run Simulation"
                 
+                # Use invisible icon for workload button only
+                button_icon = 'invisible' if step_id == "workload" else None
+                
                 if on_current_action:
                     # Make it an action button
                     if navigation_button(
                         display_label,
-                        icon_name=None,  # Disable auto-icon since we're using our own
+                        icon_name=button_icon,  # Invisible for workload, None for others
                         key=f"workflow_action_{step_id}",
                         full_width=True,
                         button_type="primary",
@@ -67,7 +72,7 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                     # Just show as current (disabled)
                     navigation_button(
                         display_label,
-                        icon_name=None,  # Disable auto-icon since we're using our own
+                        icon_name=button_icon,  # Invisible for workload, None for others
                         key=f"workflow_current_{step_id}",
                         full_width=True,
                         button_type="primary",
