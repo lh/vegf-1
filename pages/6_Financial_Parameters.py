@@ -15,6 +15,7 @@ import json
 from datetime import datetime
 from typing import Dict, Any, Optional
 import copy
+import pandas as pd
 
 from ape.utils.carbon_button_helpers import ape_button
 from ape.utils.startup_redirect import handle_page_startup
@@ -235,9 +236,117 @@ elif available_configs:
     # Create tabs for different sections based on config type
     if 'drug_costs' in config or 'visit_components' in config:
         # New format (cost configs)
-        tabs = st.tabs(["Drug Costs", "Visit Components", "Visit Types", "Special Events", "Validation", "Export"])
+        tabs = st.tabs(["Summary", "Drug Costs", "Visit Components", "Visit Types", "Special Events", "Validation", "Export"])
         
-        with tabs[0]:  # Drug Costs
+        with tabs[0]:  # Summary
+            st.subheader("Cost Summary")
+            st.write("Overview of all costs in this configuration")
+            
+            # Create columns for different cost categories
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # Drug Costs Summary
+                st.markdown("### Drug Costs")
+                drug_costs = st.session_state.edited_config.get('drug_costs', {})
+                if drug_costs:
+                    drug_df_data = []
+                    for drug_id, cost in sorted(drug_costs.items()):
+                        drug_df_data.append({
+                            'Drug': drug_id.replace('_', ' ').title(),
+                            'Cost (£)': f"£{cost:,.0f}"
+                        })
+                    drug_df = pd.DataFrame(drug_df_data)
+                    st.dataframe(drug_df, hide_index=True, use_container_width=True)
+                else:
+                    st.info("No drug costs defined")
+                
+                # Visit Components Summary
+                st.markdown("### Visit Components")
+                components = st.session_state.edited_config.get('visit_components', {})
+                if components:
+                    comp_df_data = []
+                    for comp_id, cost in sorted(components.items()):
+                        comp_df_data.append({
+                            'Component': comp_id.replace('_', ' ').title(),
+                            'Cost (£)': f"£{cost:,.0f}"
+                        })
+                    comp_df = pd.DataFrame(comp_df_data)
+                    st.dataframe(comp_df, hide_index=True, use_container_width=True)
+                else:
+                    st.info("No visit components defined")
+            
+            with col2:
+                # Visit Types Summary
+                st.markdown("### Visit Types")
+                visit_types = st.session_state.edited_config.get('visit_types', {})
+                if visit_types:
+                    visit_df_data = []
+                    for visit_name, visit_info in sorted(visit_types.items()):
+                        visit_df_data.append({
+                            'Visit Type': visit_name.replace('_', ' ').title(),
+                            'Total Cost (£)': f"£{visit_info.get('total_cost', 0):,.0f}",
+                            'Decision Maker': '✓' if visit_info.get('decision_maker', False) else ''
+                        })
+                    visit_df = pd.DataFrame(visit_df_data)
+                    st.dataframe(visit_df, hide_index=True, use_container_width=True)
+                else:
+                    st.info("No visit types defined")
+                
+                # Special Events Summary
+                st.markdown("### Special Events")
+                special_events = st.session_state.edited_config.get('special_events', {})
+                if special_events:
+                    event_df_data = []
+                    for event_id, cost in sorted(special_events.items()):
+                        event_df_data.append({
+                            'Event': event_id.replace('_', ' ').title(),
+                            'Cost (£)': f"£{cost:,.0f}"
+                        })
+                    event_df = pd.DataFrame(event_df_data)
+                    st.dataframe(event_df, hide_index=True, use_container_width=True)
+                else:
+                    st.info("No special events defined")
+            
+            # Cost Statistics
+            st.divider()
+            st.markdown("### Cost Statistics")
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            # Calculate totals
+            total_drug_costs = sum(drug_costs.values()) if drug_costs else 0
+            avg_drug_cost = total_drug_costs / len(drug_costs) if drug_costs else 0
+            
+            total_visit_costs = sum(v.get('total_cost', 0) for v in visit_types.values()) if visit_types else 0
+            avg_visit_cost = total_visit_costs / len(visit_types) if visit_types else 0
+            
+            with col1:
+                st.metric("Drug Types", len(drug_costs))
+                st.metric("Avg Drug Cost", f"£{avg_drug_cost:,.0f}")
+            
+            with col2:
+                st.metric("Visit Types", len(visit_types))
+                st.metric("Avg Visit Cost", f"£{avg_visit_cost:,.0f}")
+            
+            with col3:
+                st.metric("Components", len(components))
+                st.metric("Special Events", len(special_events))
+            
+            with col4:
+                # Find min/max costs
+                if drug_costs:
+                    min_drug = min(drug_costs.values())
+                    max_drug = max(drug_costs.values())
+                    st.metric("Drug Cost Range", f"£{min_drug} - £{max_drug}")
+                if visit_types:
+                    visit_costs = [v.get('total_cost', 0) for v in visit_types.values()]
+                    if visit_costs:
+                        min_visit = min(visit_costs)
+                        max_visit = max(visit_costs)
+                        st.metric("Visit Cost Range", f"£{min_visit} - £{max_visit}")
+        
+        with tabs[1]:  # Drug Costs
             st.subheader("Drug Costs")
             st.write("Cost per administration (including VAT)")
             
@@ -282,7 +391,7 @@ elif available_configs:
                         st.session_state.edited_config['drug_costs'][new_drug_id] = new_drug_cost
                         st.rerun()
         
-        with tabs[1]:  # Visit Components
+        with tabs[2]:  # Visit Components
             st.subheader("Visit Components")
             st.write("Individual cost components that make up visits")
             
@@ -306,7 +415,7 @@ elif available_configs:
                         st.session_state.edited_config['visit_components'] = {}
                     st.session_state.edited_config['visit_components'][comp_id] = new_cost
         
-        with tabs[2]:  # Visit Types
+        with tabs[3]:  # Visit Types
             st.subheader("Visit Types")
             st.write("Complete visit definitions with component breakdowns")
             
@@ -346,7 +455,7 @@ elif available_configs:
                     )
                     st.session_state.edited_config['visit_types'][visit_name]['decision_maker'] = requires_dm
         
-        with tabs[3]:  # Special Events
+        with tabs[4]:  # Special Events
             st.subheader("Special Events")
             st.write("Costs for special circumstances")
             
@@ -370,7 +479,7 @@ elif available_configs:
                         st.session_state.edited_config['special_events'] = {}
                     st.session_state.edited_config['special_events'][event_id] = new_cost
         
-        with tabs[4]:  # Validation
+        with tabs[5]:  # Validation
             st.subheader("Validation Targets")
             st.write("Expected values for model validation")
             
@@ -379,7 +488,7 @@ elif available_configs:
             # Display validation data as JSON for now
             st.json(validation)
         
-        with tabs[5]:  # Export
+        with tabs[6]:  # Export
             st.subheader("Export Configuration")
             
             col1, col2 = st.columns(2)
@@ -406,9 +515,122 @@ elif available_configs:
     
     else:
         # Old format (resources) - NHS Standard Resources style
-        tabs = st.tabs(["Roles", "Visit Requirements", "Procedures", "Drugs", "Session Parameters", "Export"])
+        tabs = st.tabs(["Summary", "Roles", "Visit Requirements", "Procedures", "Drugs", "Session Parameters", "Export"])
         
-        with tabs[0]:  # Roles
+        with tabs[0]:  # Summary
+            st.subheader("Cost Summary")
+            st.write("Overview of all costs and resources in this configuration")
+            
+            # Create columns for different cost categories
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # Procedures Summary
+                st.markdown("### Procedure Costs")
+                procedures = st.session_state.edited_config.get('costs', {}).get('procedures', {})
+                if procedures:
+                    proc_df_data = []
+                    for proc_name, proc_info in sorted(procedures.items()):
+                        proc_df_data.append({
+                            'Procedure': proc_name.replace('_', ' ').title(),
+                            'HRG Code': proc_info.get('hrg_code', ''),
+                            'Cost (£)': f"£{proc_info.get('unit_cost', 0):,.0f}"
+                        })
+                    proc_df = pd.DataFrame(proc_df_data)
+                    st.dataframe(proc_df, hide_index=True, use_container_width=True)
+                else:
+                    st.info("No procedures defined")
+                
+                # Drugs Summary
+                st.markdown("### Drug Costs")
+                drugs = st.session_state.edited_config.get('costs', {}).get('drugs', {})
+                if drugs:
+                    drug_df_data = []
+                    for drug_id, drug_info in sorted(drugs.items()):
+                        drug_df_data.append({
+                            'Drug': drug_info.get('name', drug_id),
+                            'Cost (£)': f"£{drug_info.get('unit_cost', 0):,.0f}",
+                            'Generic Cost': f"£{drug_info.get('expected_generic_cost', 0):,.0f}" if 'expected_generic_cost' in drug_info else '-'
+                        })
+                    drug_df = pd.DataFrame(drug_df_data)
+                    st.dataframe(drug_df, hide_index=True, use_container_width=True)
+                else:
+                    st.info("No drugs defined")
+            
+            with col2:
+                # Roles Summary
+                st.markdown("### Staff Roles")
+                roles = st.session_state.edited_config.get('resources', {}).get('roles', {})
+                if roles:
+                    role_df_data = []
+                    for role_name, role_info in sorted(roles.items()):
+                        role_df_data.append({
+                            'Role': role_name.replace('_', ' ').title(),
+                            'Capacity/Session': role_info.get('capacity_per_session', 0)
+                        })
+                    role_df = pd.DataFrame(role_df_data)
+                    st.dataframe(role_df, hide_index=True, use_container_width=True)
+                else:
+                    st.info("No roles defined")
+                
+                # Visit Requirements Summary
+                st.markdown("### Visit Requirements")
+                visits = st.session_state.edited_config.get('resources', {}).get('visit_requirements', {})
+                if visits:
+                    visit_df_data = []
+                    for visit_type, visit_info in sorted(visits.items()):
+                        visit_df_data.append({
+                            'Visit Type': visit_type.replace('_', ' ').title(),
+                            'Duration (min)': visit_info.get('duration_minutes', 0),
+                            'Staff Needed': sum(visit_info.get('roles_needed', {}).values())
+                        })
+                    visit_df = pd.DataFrame(visit_df_data)
+                    st.dataframe(visit_df, hide_index=True, use_container_width=True)
+                else:
+                    st.info("No visit requirements defined")
+            
+            # Cost Statistics
+            st.divider()
+            st.markdown("### Cost Statistics")
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            # Calculate statistics
+            if procedures:
+                proc_costs = [p.get('unit_cost', 0) for p in procedures.values()]
+                avg_proc_cost = sum(proc_costs) / len(proc_costs) if proc_costs else 0
+                min_proc_cost = min(proc_costs) if proc_costs else 0
+                max_proc_cost = max(proc_costs) if proc_costs else 0
+            else:
+                avg_proc_cost = min_proc_cost = max_proc_cost = 0
+            
+            if drugs:
+                drug_costs = [d.get('unit_cost', 0) for d in drugs.values()]
+                avg_drug_cost = sum(drug_costs) / len(drug_costs) if drug_costs else 0
+                min_drug_cost = min(drug_costs) if drug_costs else 0
+                max_drug_cost = max(drug_costs) if drug_costs else 0
+            else:
+                avg_drug_cost = min_drug_cost = max_drug_cost = 0
+            
+            with col1:
+                st.metric("Procedures", len(procedures))
+                st.metric("Avg Procedure Cost", f"£{avg_proc_cost:,.0f}")
+            
+            with col2:
+                st.metric("Drugs", len(drugs))
+                st.metric("Avg Drug Cost", f"£{avg_drug_cost:,.0f}")
+            
+            with col3:
+                st.metric("Roles", len(roles))
+                st.metric("Visit Types", len(visits))
+            
+            with col4:
+                if procedures:
+                    st.metric("Procedure Range", f"£{min_proc_cost} - £{max_proc_cost}")
+                if drugs:
+                    st.metric("Drug Range", f"£{min_drug_cost} - £{max_drug_cost}")
+        
+        with tabs[1]:  # Roles
             st.subheader("Staff Roles and Capacities")
             
             roles = config.get('resources', {}).get('roles', {})
@@ -440,7 +662,7 @@ elif available_configs:
                         )
                         st.session_state.edited_config['resources']['roles'][role_name]['description'] = new_desc
         
-        with tabs[1]:  # Visit Requirements
+        with tabs[2]:  # Visit Requirements
             st.subheader("Visit Type Requirements")
             
             visits = config.get('resources', {}).get('visit_requirements', {})
@@ -484,7 +706,7 @@ elif available_configs:
                             st.session_state.edited_config['resources']['visit_requirements'][visit_type]['roles_needed'] = {}
                         st.session_state.edited_config['resources']['visit_requirements'][visit_type]['roles_needed'][role] = new_count
         
-        with tabs[2]:  # Procedures
+        with tabs[3]:  # Procedures
             st.subheader("Procedure Costs")
             
             procedures = config.get('costs', {}).get('procedures', {})
@@ -523,7 +745,7 @@ elif available_configs:
                     st.session_state.edited_config['costs']['procedures'][proc_name]['unit_cost'] = new_cost
                     st.session_state.edited_config['costs']['procedures'][proc_name]['description'] = new_desc
         
-        with tabs[3]:  # Drugs
+        with tabs[4]:  # Drugs
             st.subheader("Drug Costs")
             
             drugs = config.get('costs', {}).get('drugs', {})
@@ -568,7 +790,7 @@ elif available_configs:
                     if new_generic is not None:
                         st.session_state.edited_config['costs']['drugs'][drug_id]['expected_generic_cost'] = new_generic
         
-        with tabs[4]:  # Session Parameters
+        with tabs[5]:  # Session Parameters
             st.subheader("Session Parameters")
             
             session = config.get('resources', {}).get('session_parameters', {})
@@ -609,7 +831,7 @@ elif available_configs:
             st.session_state.edited_config['resources']['session_parameters']['sessions_per_day'] = new_sessions
             st.session_state.edited_config['resources']['session_parameters']['working_days'] = selected_days
         
-        with tabs[5]:  # Export
+        with tabs[6]:  # Export
             st.subheader("Export Configuration")
             
             col1, col2 = st.columns(2)
