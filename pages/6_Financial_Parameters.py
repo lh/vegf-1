@@ -213,9 +213,12 @@ if available_configs:
     if st.session_state.edited_config is None or st.session_state.get('last_selected_path') != selected_path:
         st.session_state.edited_config = copy.deepcopy(config)
         st.session_state.last_selected_path = selected_path
+        # Clear any confirm_delete state when switching configs
+        if 'confirm_delete' in st.session_state:
+            del st.session_state.confirm_delete
     
     # Configuration header
-    col1, col2 = st.columns([3, 1])
+    col1, col2, col3 = st.columns([3, 1, 1])
     with col1:
         # Use the edited config's name if available, otherwise fall back to original
         display_name = st.session_state.edited_config.get('metadata', {}).get('name', selected_path.stem)
@@ -227,6 +230,27 @@ if available_configs:
                 # Reload the config to ensure consistency
                 config = load_financial_config(selected_path)
                 st.session_state.edited_config = copy.deepcopy(config)
+    with col3:
+        # Check if this is a default config (in resources folder or specific protected configs)
+        is_default = (
+            selected_path.parent == RESOURCE_DIR or 
+            selected_path.stem in ['nhs_standard_resources', 'nhs_hrg_aligned_2025', 'aflibercept_2mg_nhs_2025']
+        )
+        
+        if not is_default:
+            if ape_button("Delete", key="delete_config", is_secondary_action=True):
+                if st.session_state.get('confirm_delete'):
+                    # Actually delete
+                    try:
+                        selected_path.unlink()
+                        st.success(f"Deleted '{display_name}'")
+                        del st.session_state.confirm_delete
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error deleting configuration: {e}")
+                else:
+                    st.session_state.confirm_delete = True
+                    st.warning("Click Delete again to confirm")
     
     # Metadata section
     if 'metadata' in config:
@@ -236,7 +260,7 @@ if available_configs:
     # Create tabs for different sections based on config type
     if 'drug_costs' in config or 'visit_components' in config:
         # New format (cost configs)
-        tabs = st.tabs(["Summary", "Drug Costs", "Visit Components", "Visit Types", "Special Events", "Validation", "Export"])
+        tabs = st.tabs(["Summary", "Drug Costs", "Visit Components", "Visit Types", "Special Events", "Validation", "Import/Export"])
         
         with tabs[0]:  # Summary
             st.subheader("Cost Summary")
@@ -622,8 +646,12 @@ if available_configs:
             # Display validation data as JSON for now
             st.json(validation)
         
-        with tabs[6]:  # Export
-            st.subheader("Export Configuration")
+        with tabs[6]:  # Import/Export
+            st.subheader("Import/Export Configuration")
+            
+            # Export section
+            st.markdown("### Export")
+            st.write("Download the current configuration")
             
             col1, col2 = st.columns(2)
             
@@ -633,7 +661,7 @@ if available_configs:
                 st.download_button(
                     label="Download as YAML",
                     data=yaml_str,
-                    file_name=f"{selected_path.stem}_edited.yaml",
+                    file_name=f"{selected_path.stem}.yaml",
                     mime="text/yaml"
                 )
             
@@ -643,13 +671,80 @@ if available_configs:
                 st.download_button(
                     label="Download as JSON",
                     data=json_str,
-                    file_name=f"{selected_path.stem}_edited.json",
+                    file_name=f"{selected_path.stem}.json",
                     mime="application/json"
                 )
+            
+            # Import section
+            st.divider()
+            st.markdown("### Import")
+            st.write("Upload a configuration file to import")
+            
+            uploaded_file = st.file_uploader(
+                "Choose a file",
+                type=['yaml', 'yml', 'json'],
+                help="Upload a YAML or JSON configuration file"
+            )
+            
+            if uploaded_file is not None:
+                try:
+                    # Read the uploaded file
+                    file_contents = uploaded_file.read()
+                    
+                    # Parse based on file type
+                    if uploaded_file.name.endswith('.json'):
+                        imported_config = json.loads(file_contents)
+                    else:  # YAML
+                        imported_config = yaml.safe_load(file_contents)
+                    
+                    # Show preview
+                    st.write("**Preview of imported configuration:**")
+                    with st.expander("Show imported data", expanded=True):
+                        st.json(imported_config)
+                    
+                    # Import options
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("Replace Current Config", type="primary"):
+                            st.session_state.edited_config = imported_config
+                            st.success("Configuration replaced! Remember to save changes.")
+                            st.rerun()
+                    
+                    with col2:
+                        if st.button("Save as New Config"):
+                            # Generate a unique name
+                            base_name = uploaded_file.name.rsplit('.', 1)[0]
+                            safe_name = "".join(c for c in base_name if c.isalnum() or c in (' ', '-', '_')).rstrip()
+                            
+                            # Check if name exists and append number if needed
+                            new_path = COST_CONFIG_DIR / f"{safe_name}.yaml"
+                            counter = 1
+                            while new_path.exists():
+                                new_path = COST_CONFIG_DIR / f"{safe_name}_{counter}.yaml"
+                                counter += 1
+                            
+                            # Update metadata
+                            if 'metadata' not in imported_config:
+                                imported_config['metadata'] = {}
+                            imported_config['metadata']['name'] = new_path.stem
+                            imported_config['metadata']['imported'] = datetime.now().isoformat()
+                            imported_config['metadata']['imported_from'] = uploaded_file.name
+                            
+                            # Save the new config
+                            if save_financial_config(imported_config, new_path):
+                                st.success(f"Saved as new configuration: {new_path.stem}")
+                                st.balloons()
+                                # Select the new config
+                                st.session_state.select_config = f"Cost Config: {new_path.stem}"
+                                st.rerun()
+                            
+                except Exception as e:
+                    st.error(f"Error importing file: {e}")
+                    st.write("Please ensure the file is a valid YAML or JSON configuration.")
     
     else:
         # Old format (resources) - NHS Standard Resources style
-        tabs = st.tabs(["Summary", "Roles", "Visit Requirements", "Procedures", "Drugs", "Session Parameters", "Export"])
+        tabs = st.tabs(["Summary", "Roles", "Visit Requirements", "Procedures", "Drugs", "Session Parameters", "Import/Export"])
         
         with tabs[0]:  # Summary
             st.subheader("Cost Summary")
@@ -965,8 +1060,12 @@ if available_configs:
             st.session_state.edited_config['resources']['session_parameters']['sessions_per_day'] = new_sessions
             st.session_state.edited_config['resources']['session_parameters']['working_days'] = selected_days
         
-        with tabs[6]:  # Export
-            st.subheader("Export Configuration")
+        with tabs[6]:  # Import/Export
+            st.subheader("Import/Export Configuration")
+            
+            # Export section
+            st.markdown("### Export")
+            st.write("Download the current configuration")
             
             col1, col2 = st.columns(2)
             
@@ -976,7 +1075,7 @@ if available_configs:
                 st.download_button(
                     label="Download as YAML",
                     data=yaml_str,
-                    file_name=f"{selected_path.stem}_edited.yaml",
+                    file_name=f"{selected_path.stem}.yaml",
                     mime="text/yaml"
                 )
             
@@ -986,9 +1085,87 @@ if available_configs:
                 st.download_button(
                     label="Download as JSON",
                     data=json_str,
-                    file_name=f"{selected_path.stem}_edited.json",
+                    file_name=f"{selected_path.stem}.json",
                     mime="application/json"
                 )
+            
+            # Import section
+            st.divider()
+            st.markdown("### Import")
+            st.write("Upload a configuration file to import")
+            
+            uploaded_file = st.file_uploader(
+                "Choose a file",
+                type=['yaml', 'yml', 'json'],
+                help="Upload a YAML or JSON configuration file",
+                key="old_format_uploader"  # Different key to avoid conflicts
+            )
+            
+            if uploaded_file is not None:
+                try:
+                    # Read the uploaded file
+                    file_contents = uploaded_file.read()
+                    
+                    # Parse based on file type
+                    if uploaded_file.name.endswith('.json'):
+                        imported_config = json.loads(file_contents)
+                    else:  # YAML
+                        imported_config = yaml.safe_load(file_contents)
+                    
+                    # Show preview
+                    st.write("**Preview of imported configuration:**")
+                    with st.expander("Show imported data", expanded=True):
+                        st.json(imported_config)
+                    
+                    # Import options
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("Replace Current Config", type="primary", key="old_replace"):
+                            st.session_state.edited_config = imported_config
+                            st.success("Configuration replaced! Remember to save changes.")
+                            st.rerun()
+                    
+                    with col2:
+                        if st.button("Save as New Config", key="old_save_new"):
+                            # Generate a unique name
+                            base_name = uploaded_file.name.rsplit('.', 1)[0]
+                            safe_name = "".join(c for c in base_name if c.isalnum() or c in (' ', '-', '_')).rstrip()
+                            
+                            # Determine which directory to save to based on format
+                            if 'resources' in imported_config:
+                                # Old format - save to resources
+                                save_dir = RESOURCE_DIR
+                                prefix = "Resources: "
+                            else:
+                                # New format - save to cost_configs
+                                save_dir = COST_CONFIG_DIR
+                                prefix = "Cost Config: "
+                            
+                            # Check if name exists and append number if needed
+                            new_path = save_dir / f"{safe_name}.yaml"
+                            counter = 1
+                            while new_path.exists():
+                                new_path = save_dir / f"{safe_name}_{counter}.yaml"
+                                counter += 1
+                            
+                            # Update metadata
+                            if 'metadata' not in imported_config:
+                                imported_config['metadata'] = {}
+                            imported_config['metadata']['name'] = new_path.stem
+                            imported_config['metadata']['imported'] = datetime.now().isoformat()
+                            imported_config['metadata']['imported_from'] = uploaded_file.name
+                            
+                            # Save the new config
+                            if save_financial_config(imported_config, new_path):
+                                st.success(f"Saved as new configuration: {new_path.stem}")
+                                st.balloons()
+                                # Select the new config
+                                st.session_state.select_config = f"{prefix}{new_path.stem}"
+                                st.rerun()
+                            
+                except Exception as e:
+                    st.error(f"Error importing file: {e}")
+                    st.write("Please ensure the file is a valid YAML or JSON configuration.")
 
 else:
     st.info("No financial configurations found. Click 'New Config' in the sidebar to create one.")
