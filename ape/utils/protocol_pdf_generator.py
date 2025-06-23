@@ -14,10 +14,15 @@ import io
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
-from reportlab.platypus import KeepTogether, Flowable
+from reportlab.platypus import KeepTogether, Flowable, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+
+# For creating distribution plots
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
+import matplotlib.pyplot as plt
 
 
 class HRFlowable(Flowable):
@@ -221,12 +226,16 @@ def generate_protocol_pdf(spec, is_time_based: bool) -> bytes:
     if hasattr(spec, 'baseline_vision_distribution'):
         dist = spec.baseline_vision_distribution
         
+        # Create two columns for distribution info and plot
+        dist_col_data = []
+        
         # If it's a dict (time-based protocols)
         if isinstance(dist, dict):
             dist_type = dist.get('type', 'unknown')
-            elements.append(Paragraph(f"<b>Distribution Type:</b> {dist_type.replace('_', ' ').title()}", normal_style))
             
+            # Left column - parameters
             dist_params = []
+            dist_params.append(["Type:", dist_type.replace('_', ' ').title()])
             
             # Common parameters
             if 'mean' in dist:
@@ -235,9 +244,9 @@ def generate_protocol_pdf(spec, is_time_based: bool) -> bytes:
                 dist_params.append(["Mean:", f"{spec.baseline_vision_mean:.1f} letters"])
                 
             if 'std' in dist:
-                dist_params.append(["Standard Deviation:", f"{dist['std']:.1f} letters"])
+                dist_params.append(["Std Dev:", f"{dist['std']:.1f} letters"])
             elif hasattr(spec, 'baseline_vision_std'):
-                dist_params.append(["Standard Deviation:", f"{spec.baseline_vision_std:.1f} letters"])
+                dist_params.append(["Std Dev:", f"{spec.baseline_vision_std:.1f} letters"])
                 
             # Distribution-specific parameters
             if 'alpha' in dist:
@@ -261,13 +270,13 @@ def generate_protocol_pdf(spec, is_time_based: bool) -> bytes:
                 
         else:
             # Object form (older protocols)
-            if hasattr(dist, 'name'):
-                elements.append(Paragraph(f"<b>Distribution Type:</b> {dist.name}", normal_style))
-            
             dist_params = []
+            if hasattr(dist, 'name'):
+                dist_params.append(["Type:", dist.name])
+            
             if hasattr(dist, 'mean') and hasattr(dist, 'std'):
                 dist_params.append(["Mean:", f"{dist.mean:.1f} letters"])
-                dist_params.append(["Standard Deviation:", f"{dist.std:.1f} letters"])
+                dist_params.append(["Std Dev:", f"{dist.std:.1f} letters"])
             elif hasattr(dist, 'alpha') and hasattr(dist, 'beta'):
                 dist_params.append(["Alpha:", f"{dist.alpha:.2f}"])
                 dist_params.append(["Beta:", f"{dist.beta:.2f}"])
@@ -278,14 +287,54 @@ def generate_protocol_pdf(spec, is_time_based: bool) -> bytes:
                 dist_params.append(["Maximum:", f"{dist.max_value} letters"])
             if hasattr(dist, 'threshold'):
                 dist_params.append(["Threshold:", f"{dist.threshold} letters"])
-            
+        
+        # Create the parameter table
         if dist_params:
-            dist_table = Table(dist_params, colWidths=[2*inch, 3*inch])
-            dist_table.setStyle(TableStyle([
+            param_table = Table(dist_params, colWidths=[1.2*inch, 1.8*inch])
+            param_table.setStyle(TableStyle([
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, -1), 9),
-                ('LEFTPADDING', (0, 0), (-1, -1), 24),
+                ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+                ('RIGHTPADDING', (0, 0), (0, -1), 6),
             ]))
-            elements.append(dist_table)
+            
+            # Try to create distribution plot
+            try:
+                from ape.utils.vision_distribution_viz import create_compact_vision_distribution_plot
+                
+                # Create the plot
+                fig = create_compact_vision_distribution_plot(
+                    dist if isinstance(dist, dict) else {
+                        'type': getattr(dist, 'name', 'normal').lower(),
+                        'mean': getattr(dist, 'mean', 70),
+                        'std': getattr(dist, 'std', 10),
+                        'min': getattr(dist, 'min_value', 20),
+                        'max': getattr(dist, 'max_value', 90)
+                    },
+                    figsize=(3, 2),
+                    show_stats=False
+                )
+                
+                # Save to temporary buffer
+                img_buffer = io.BytesIO()
+                fig.savefig(img_buffer, format='png', bbox_inches='tight', pad_inches=0.1)
+                img_buffer.seek(0)
+                plt.close(fig)
+                
+                # Create image flowable
+                img = Image(img_buffer, width=3*inch, height=2*inch)
+                
+                # Create two-column layout
+                dist_col_data = [[param_table, img]]
+                dist_table = Table(dist_col_data, colWidths=[3*inch, 3.5*inch])
+                dist_table.setStyle(TableStyle([
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ]))
+                elements.append(dist_table)
+                
+            except Exception:
+                # If plot fails, just show the parameters
+                elements.append(param_table)
     
     # Parameter Files (for time-based protocols)
     if is_time_based and hasattr(spec, 'disease_transitions_file'):
@@ -343,31 +392,160 @@ def generate_protocol_pdf(spec, is_time_based: bool) -> bytes:
                 ('BACKGROUND', (0, 1), (0, -1), colors.HexColor('#e5e7eb')),
             ]))
             elements.append(trans_table)
+            
+        # Try to load and display treatment effects
+        treatment_data = load_parameter_file(spec, 'treatment_effect_file')
+        if treatment_data and 'treatment_multipliers' in treatment_data:
+            elements.append(Spacer(1, 0.3*inch))
+            elements.append(Paragraph("Treatment Effect Multipliers", subheading_style))
+            
+            multipliers = treatment_data['treatment_multipliers']
+            effect_data = []
+            
+            for from_state in states:
+                if from_state in multipliers:
+                    state_mults = multipliers[from_state]
+                    # Handle nested structure with 'multipliers' key
+                    if isinstance(state_mults, dict) and 'multipliers' in state_mults:
+                        state_mults = state_mults['multipliers']
+                    
+                    for to_state, mult in state_mults.items():
+                        if mult != 1.0:  # Only show non-neutral effects
+                            effect_desc = "↑" if mult > 1.0 else "↓"
+                            effect_data.append([
+                                f"{from_state} → {to_state}",
+                                f"×{mult:.2f} {effect_desc}"
+                            ])
+            
+            if effect_data:
+                effect_table = Table(effect_data, colWidths=[3*inch, 2*inch])
+                effect_table.setStyle(TableStyle([
+                    ('FONTSIZE', (0, 0), (-1, -1), 9),
+                    ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+                ]))
+                elements.append(effect_table)
+                
+        # Try to load and display vision parameters
+        vision_data = load_parameter_file(spec, 'vision_parameters_file')
+        if vision_data:
+            elements.append(Spacer(1, 0.3*inch))
+            elements.append(Paragraph("Vision Change Parameters", subheading_style))
+            
+            # Create a summary table of vision changes
+            vision_summary = []
+            
+            # Handle fortnightly vision decline data
+            if 'vision_decline_fortnightly' in vision_data:
+                decline = vision_data['vision_decline_fortnightly']
+                
+                # Show a few key states
+                for state in ['STABLE', 'ACTIVE', 'HIGHLY_ACTIVE']:
+                    if state in decline:
+                        untreated = decline[state].get('untreated', {})
+                        treated = decline[state].get('treated', {})
+                        
+                        vision_summary.append([
+                            f"{state}:",
+                            f"Untreated: {untreated.get('mean', 0):.1f} ± {untreated.get('std', 0):.1f}",
+                            f"Treated: {treated.get('mean', 0):.1f} ± {treated.get('std', 0):.1f}"
+                        ])
+                
+                if vision_summary:
+                    # Add header
+                    vision_summary.insert(0, ["Disease State", "Fortnightly Change (letters)", ""])
+                    
+            # Handle improvement parameters
+            if 'vision_improvement' in vision_data:
+                improvement = vision_data['vision_improvement']
+                if 'improvement_probability' in improvement:
+                    vision_summary.append(["", "", ""])  # Spacer
+                    vision_summary.append(["Improvement Probability:", "", ""])
+                    for state, prob in improvement['improvement_probability'].items():
+                        vision_summary.append([f"  {state}:", f"{prob*100:.0f}% chance", ""])
+                        
+            if vision_summary:
+                vision_table = Table(vision_summary, colWidths=[1.8*inch, 2.2*inch, 2*inch])
+                vision_table.setStyle(TableStyle([
+                    ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+                    ('FONTNAME', (0, 1), (0, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 9),
+                    ('SPAN', (1, 0), (2, 0)),
+                    ('ALIGN', (1, 0), (2, 0), 'CENTER'),
+                    ('LEFTPADDING', (0, 1), (0, -1), 12),
+                ]))
+                elements.append(vision_table)
     
     # Discontinuation Rules
-    if hasattr(spec, 'discontinuation_rules'):
+    discontinuation_data = None
+    if is_time_based and hasattr(spec, 'discontinuation_parameters_file'):
+        discontinuation_data = load_parameter_file(spec, 'discontinuation_parameters_file')
+    
+    if discontinuation_data or hasattr(spec, 'discontinuation_rules'):
         elements.append(PageBreak())
         elements.append(Paragraph("Discontinuation Rules", heading_style))
         elements.append(HRFlowable(6.5*inch, thickness=0.5, color=colors.grey))
         elements.append(Spacer(1, 0.2*inch))
         
-        rules = spec.discontinuation_rules
-        if hasattr(rules, 'poor_response_criteria'):
-            elements.append(Paragraph("<b>Poor Response Criteria:</b>", subheading_style))
-            criteria = rules.poor_response_criteria
-            criteria_data = []
-            if hasattr(criteria, 'months_to_check'):
-                criteria_data.append(["Check at:", f"{criteria.months_to_check} months"])
-            if hasattr(criteria, 'va_loss_threshold'):
-                criteria_data.append(["VA Loss Threshold:", f"{criteria.va_loss_threshold} letters"])
+        if discontinuation_data:
+            # Use loaded parameter data
+            disc_params = discontinuation_data.get('discontinuation_parameters', {})
+            
+            disc_table_data = []
+            
+            # Poor response
+            if 'poor_response' in disc_params:
+                pr = disc_params['poor_response']
+                disc_table_data.append(["Poor Response:", ""])
+                disc_table_data.append(["  Check at:", f"{pr.get('months_to_check', 'N/A')} months"])
+                disc_table_data.append(["  VA Loss:", f"≥ {pr.get('va_loss_threshold', 'N/A')} letters"])
+                disc_table_data.append(["", ""])
                 
-            if criteria_data:
-                criteria_table = Table(criteria_data, colWidths=[2*inch, 3*inch])
-                criteria_table.setStyle(TableStyle([
+            # Non-response
+            if 'non_response' in disc_params:
+                nr = disc_params['non_response']
+                disc_table_data.append(["Non-Response:", ""])
+                disc_table_data.append(["  Check at:", f"{nr.get('months_to_check', 'N/A')} months"])
+                disc_table_data.append(["  VA Gain:", f"< {nr.get('va_gain_threshold', 'N/A')} letters"])
+                disc_table_data.append(["", ""])
+                
+            # Attrition
+            if 'attrition' in disc_params:
+                attr = disc_params['attrition']
+                disc_table_data.append(["Attrition:", f"{attr.get('base_probability_per_visit', 0)*100:.1f}% per visit"])
+                
+            # Administrative
+            if 'administrative' in disc_params:
+                admin = disc_params['administrative']
+                disc_table_data.append(["Administrative:", f"{admin.get('probability_per_visit', 0)*100:.1f}% per visit"])
+                
+            if disc_table_data:
+                disc_table = Table(disc_table_data, colWidths=[2*inch, 3*inch])
+                disc_table.setStyle(TableStyle([
+                    ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
                     ('FONTSIZE', (0, 0), (-1, -1), 9),
-                    ('LEFTPADDING', (0, 0), (-1, -1), 24),
+                    ('LEFTPADDING', (1, 0), (1, -1), 24),
                 ]))
-                elements.append(criteria_table)
+                elements.append(disc_table)
+                
+        elif hasattr(spec, 'discontinuation_rules'):
+            # Fall back to old style
+            rules = spec.discontinuation_rules
+            if hasattr(rules, 'poor_response_criteria'):
+                elements.append(Paragraph("<b>Poor Response Criteria:</b>", subheading_style))
+                criteria = rules.poor_response_criteria
+                criteria_data = []
+                if hasattr(criteria, 'months_to_check'):
+                    criteria_data.append(["Check at:", f"{criteria.months_to_check} months"])
+                if hasattr(criteria, 'va_loss_threshold'):
+                    criteria_data.append(["VA Loss Threshold:", f"{criteria.va_loss_threshold} letters"])
+                    
+                if criteria_data:
+                    criteria_table = Table(criteria_data, colWidths=[2*inch, 3*inch])
+                    criteria_table.setStyle(TableStyle([
+                        ('FONTSIZE', (0, 0), (-1, -1), 9),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 24),
+                    ]))
+                    elements.append(criteria_table)
     
     # Weekend Working Settings
     elements.append(Spacer(1, 0.3*inch))

@@ -1,5 +1,6 @@
 \beamer@sectionintoc {1}{Understanding Neovascular AMD}{3}{0}{1}
-\beamer@sectionintoc {2}{The Cost Challenge}{8}{0}{2}
-\beamer@sectionintoc {3}{Why Model?}{10}{0}{3}
-\beamer@sectionintoc {4}{Our Solution}{14}{0}{4}
-\beamer@sectionintoc {5}{Key Insights}{17}{0}{5}
+\beamer@sectionintoc {2}{Hope}{6}{0}{2}
+\beamer@sectionintoc {3}{The Cost Challenge}{9}{0}{3}
+\beamer@sectionintoc {4}{Why Model?}{11}{0}{4}
+\beamer@sectionintoc {5}{Our Solution}{15}{0}{5}
+\beamer@sectionintoc {6}{Key Insights}{18}{0}{6}
