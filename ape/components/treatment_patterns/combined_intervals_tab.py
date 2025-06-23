@@ -36,7 +36,7 @@ def render_combined_intervals_tab(results, stats, params):
     """)
     
     # 1. Summary Statistics (from former tab 8)
-    st.subheader("📊 Summary Statistics")
+    st.subheader("Summary Statistics")
     
     total_patients = stats['patient_count']
     total_injections = stats.get('total_injections', 0)
@@ -119,7 +119,7 @@ def render_combined_intervals_tab(results, stats, params):
         st.markdown("---")
         
         # 4. Patient Gap Analysis (full width)
-        st.subheader("🔍 Patient Gap Analysis")
+        st.subheader("Patient Gap Analysis")
         st.caption("Categorizes patients by their maximum treatment gap")
         
         if len(visits_df) > 0:
@@ -156,7 +156,7 @@ def render_combined_intervals_tab(results, stats, params):
         
         # 5. Key Insights
         st.markdown("---")
-        st.subheader("💡 Key Insights")
+        st.subheader("Key Insights")
         
         col1, col2 = st.columns(2)
         
