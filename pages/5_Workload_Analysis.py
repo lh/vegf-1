@@ -361,12 +361,26 @@ st.dataframe(staffing_df, use_container_width=True, hide_index=True)
 
 # Export functionality
 st.header("Export Data")
-col1, col2 = st.columns(2)
 
-with col1:
-    if ape_button("Export Workload Summary", key="export_workload", button_type="secondary"):
+# Create an expander for export options
+with st.expander("Export Options", expanded=False):
+    st.write("Download workload and economic analysis data for further analysis or reporting.")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Workload Summary Export
+        st.markdown("#### Workload Summary")
+        st.write("Complete workload analysis including daily patterns, bottlenecks, and resource utilization.")
+        
         # Create export data
         export_data = {
+            'simulation_info': {
+                'protocol': sim_data['protocol']['name'],
+                'n_patients': sim_data['parameters']['n_patients'],
+                'duration_years': sim_data['parameters']['duration_years'],
+                'seed': sim_data['parameters'].get('seed', 'N/A')
+            },
             'summary': workload_summary,
             'total_costs': resource_tracker.get_total_costs(),
             'bottlenecks': [
@@ -374,7 +388,9 @@ with col1:
                     'date': b['date'].isoformat(),
                     'role': b['role'],
                     'sessions_needed': b['sessions_needed'],
-                    'overflow': b['overflow']
+                    'sessions_available': b['sessions_available'],
+                    'overflow': b['overflow'],
+                    'procedures_affected': b['procedures_affected']
                 }
                 for b in bottlenecks
             ],
@@ -384,18 +400,26 @@ with col1:
                     'usage': dict(resource_tracker.daily_usage[date])
                 }
                 for date in all_dates
-            ]
+            ],
+            'export_timestamp': datetime.now().isoformat()
         }
         
-        # Save to file
-        export_path = sim_data['results'].data_path / "workload_analysis.json"
-        with open(export_path, 'w') as f:
-            json.dump(export_data, f, indent=2)
+        # Convert to JSON string
+        json_str = json.dumps(export_data, indent=2)
         
-        st.success(f"Exported to {export_path}")
-
-with col2:
-    if ape_button("Export Cost Details", key="export_costs", button_type="secondary"):
+        st.download_button(
+            label="Download Workload Summary (JSON)",
+            data=json_str,
+            file_name=f"workload_summary_{sim_data['results'].metadata.sim_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+            mime="application/json",
+            key="download_workload_json"
+        )
+    
+    with col2:
+        # Cost Details Export
+        st.markdown("#### Visit Cost Details")
+        st.write("Detailed cost breakdown for each visit including procedures and medications.")
+        
         # Create cost details for each visit
         visit_details = []
         for visit in resource_tracker.visits:
@@ -409,9 +433,14 @@ with col2:
                 **visit['costs']
             })
         
-        # Save to CSV
+        # Convert to DataFrame and CSV
         visit_df = pd.DataFrame(visit_details)
-        export_path = sim_data['results'].data_path / "visit_costs.csv"
-        visit_df.to_csv(export_path, index=False)
+        csv_str = visit_df.to_csv(index=False)
         
-        st.success(f"Exported to {export_path}")
+        st.download_button(
+            label="Download Cost Details (CSV)",
+            data=csv_str,
+            file_name=f"visit_costs_{sim_data['results'].metadata.sim_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            mime="text/csv",
+            key="download_costs_csv"
+        )
