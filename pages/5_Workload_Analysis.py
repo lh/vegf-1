@@ -291,8 +291,8 @@ with tab1:
                 avg_demand = workload_summary['average_daily_demand'][selected_role]
                 st.metric("Average Daily Demand", f"{avg_demand:.1f} procedures")
     
-    # Resource Utilization
-    st.header("Resource Utilization")
+    # Resource Utilisation
+    st.header("Resource Utilisation")
     
     # Create utilization summary
     utilization_data = []
@@ -324,13 +324,19 @@ with tab1:
         max_daily_capacity = capacity_per_session * sessions_per_day
         utilization = (avg_demand / max_daily_capacity * 100) if max_daily_capacity > 0 else 0
         
+        # Calculate weekly sessions requirement
+        # Assuming 5 working days per week (standard NHS working week)
+        weekly_demand = avg_demand * 5  # Average procedures per week
+        weekly_sessions_needed = weekly_demand / capacity_per_session if capacity_per_session > 0 else 0
+        
         utilization_data.append({
             'Role': role,
             'Peak Daily Demand': peak_demand,
             'Average Daily Demand': f"{avg_demand:.1f}",
+            'Weekly Sessions Needed': f"{weekly_sessions_needed:.1f}",
             'Peak Sessions Needed': f"{peak_sessions_needed:.1f}",
             'Average Sessions/Day': f"{avg_sessions_needed:.1f}",
-            'Utilization %': f"{utilization:.0f}%",
+            'Utilisation %': f"{utilization:.0f}%",
             'Total Sessions': total_sessions
         })
     
