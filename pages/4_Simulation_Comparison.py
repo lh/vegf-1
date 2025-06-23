@@ -984,9 +984,46 @@ def prepare_vision_data(histories):
     
     return stats
 
+def create_standardized_vision_plot(ax, vision_data, title, color='blue', show_ci=True, show_thresholds=True, max_month=None):
+    """Create a standardized vision plot with consistent formatting."""
+    # Main line
+    ax.plot(vision_data['Month'], vision_data['mean'], color=color, linewidth=2, label='Mean Vision')
+    
+    # Confidence intervals
+    if show_ci:
+        ax.fill_between(vision_data['Month'], 
+                      vision_data['ci_lower'], 
+                      vision_data['ci_upper'],
+                      alpha=0.3, color=color, label='95% CI')
+    
+    # Clinical thresholds - no labels
+    if show_thresholds:
+        ax.axhline(y=70, color='gray', linestyle='--', alpha=0.5)
+        ax.axhline(y=20, color='darkred', linestyle='--', alpha=0.5)
+    
+    # Formatting
+    ax.set_xlabel('Time (months)')
+    ax.set_ylabel('Vision (ETDRS Letters)')
+    ax.set_title(title)
+    
+    # Fixed axis ranges
+    ax.set_xlim(0, max_month)
+    ax.set_ylim(0, 85)
+    
+    # Grid
+    ax.grid(True, alpha=0.3)
+    
+    # Legend
+    ax.legend(fontsize=8, loc='upper right')
+
 # Prepare data
 vision_data_a = prepare_vision_data(histories_a)
 vision_data_b = prepare_vision_data(histories_b)
+
+# Calculate max month across both simulations for consistent x-axis
+max_month_a = vision_data_a['Month'].max() if len(vision_data_a) > 0 else 60
+max_month_b = vision_data_b['Month'].max() if len(vision_data_b) > 0 else 60
+max_month = max(max_month_a, max_month_b)
 
 # Create visualizations based on view mode
 if view_mode == "Side-by-Side":
@@ -995,57 +1032,32 @@ if view_mode == "Side-by-Side":
     # Simulation A
     with col1:
         fig, ax = plt.subplots(figsize=(6, 4))
-        
-        # Main line
-        ax.plot(vision_data_a['Month'], vision_data_a['mean'], 'b-', linewidth=2, label='Mean Vision')
-        
-        # Confidence intervals
-        if show_ci:
-            ax.fill_between(vision_data_a['Month'], 
-                          vision_data_a['ci_lower'], 
-                          vision_data_a['ci_upper'],
-                          alpha=0.3, color='blue', label='95% CI')
-        
-        # Clinical thresholds
-        if show_thresholds:
-            ax.axhline(y=70, color='orange', linestyle='--', alpha=0.5, label='NICE Threshold')
-        
-        ax.set_xlabel('Month')
-        ax.set_ylabel('Vision (ETDRS Letters)')
-        ax.set_title(f'Simulation A: {sim_a["protocol"]}')
-        ax.set_ylim(0, 85)
-        ax.grid(True, alpha=0.3)
-        ax.legend(fontsize=8)
-        
+        create_standardized_vision_plot(
+            ax, 
+            vision_data_a, 
+            f'Simulation A: {sim_a["protocol"]}',
+            color='blue',
+            show_ci=show_ci,
+            show_thresholds=show_thresholds,
+            max_month=max_month
+        )
         st.pyplot(fig)
+        plt.close(fig)
     
     # Simulation B
     with col2:
         fig, ax = plt.subplots(figsize=(6, 4))
-        
-        # Main line
-        ax.plot(vision_data_b['Month'], vision_data_b['mean'], 'orange', linewidth=2, label='Mean Vision')
-        
-        # Confidence intervals
-        if show_ci:
-            ax.fill_between(vision_data_b['Month'], 
-                          vision_data_b['ci_lower'], 
-                          vision_data_b['ci_upper'],
-                          alpha=0.3, color='orange', label='95% CI')
-        
-        # Clinical thresholds
-        if show_thresholds:
-            ax.axhline(y=70, color='orange', linestyle='--', alpha=0.5, label='NICE Threshold')
-            ax.axhline(y=20, color='darkred', linestyle='--', alpha=0.5, label='Legal Blindness')
-        
-        ax.set_xlabel('Month')
-        ax.set_ylabel('Vision (ETDRS Letters)')
-        ax.set_title(f'Simulation B: {sim_b["protocol"]}')
-        ax.set_ylim(0, 85)
-        ax.grid(True, alpha=0.3)
-        ax.legend(fontsize=8)
-        
+        create_standardized_vision_plot(
+            ax, 
+            vision_data_b, 
+            f'Simulation B: {sim_b["protocol"]}',
+            color='orange',
+            show_ci=show_ci,
+            show_thresholds=show_thresholds,
+            max_month=max_month
+        )
         st.pyplot(fig)
+        plt.close(fig)
 
 elif view_mode == "Overlay":
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -1065,18 +1077,21 @@ elif view_mode == "Overlay":
                       vision_data_b['ci_upper'],
                       alpha=0.2, color='orange')
     
-    # Clinical thresholds
+    # Clinical thresholds - no labels
     if show_thresholds:
-        ax.axhline(y=70, color='gray', linestyle='--', alpha=0.5, label='NICE Threshold')
+        ax.axhline(y=70, color='gray', linestyle='--', alpha=0.5)
+        ax.axhline(y=20, color='darkred', linestyle='--', alpha=0.5)
     
-    ax.set_xlabel('Month')
+    ax.set_xlabel('Time (months)')
     ax.set_ylabel('Vision (ETDRS Letters)')
     ax.set_title('Visual Acuity Comparison')
+    ax.set_xlim(0, max_month)
     ax.set_ylim(0, 85)
     ax.grid(True, alpha=0.3)
     ax.legend()
     
     st.pyplot(fig)
+    plt.close(fig)
 
 else:  # Difference mode
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -1106,13 +1121,15 @@ else:  # Difference mode
     # Zero line
     ax.axhline(y=0, color='black', linestyle='-', alpha=0.5)
     
-    ax.set_xlabel('Month')
+    ax.set_xlabel('Time (months)')
     ax.set_ylabel('Vision Difference (ETDRS Letters)')
     ax.set_title('Difference in Visual Acuity (B - A)')
+    ax.set_xlim(0, max_month)
     ax.grid(True, alpha=0.3)
     ax.legend()
     
     st.pyplot(fig)
+    plt.close(fig)
 
 # Injection Frequency Distribution
 st.subheader("Injection Frequency Distribution")
