@@ -692,7 +692,10 @@ with col2:
                     yaml.dump(data, f, sort_keys=False, default_flow_style=False)
                 
                 # Validate the new file can be loaded
-                if protocol_type == "time_based":
+                # Check if the original protocol is time-based
+                is_time_based = protocol_type == "time_based" or data.get('model_type') == 'time_based'
+                
+                if is_time_based:
                     from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSpecification
                     test_spec = TimeBasedProtocolSpecification.from_yaml(save_path)
                 else:
@@ -891,12 +894,22 @@ if st.session_state.get('show_delete', False):
 # Import functionality removed - now in Simulations page
 
 # Import time-based protocol spec if needed
-if protocol_type == "time_based":
+if protocol_type == "time_based" or protocol_type == "temp":
     from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSpecification
 
 # Load selected protocol
 try:
-    if protocol_type == "time_based":
+    # For temp protocols, check if they're actually time-based by looking at the file content
+    is_time_based_protocol = protocol_type == "time_based"
+    
+    if protocol_type == "temp":
+        # Check if this is actually a time-based protocol
+        with open(selected_file, 'r') as f:
+            data = yaml.safe_load(f)
+            if data.get('model_type') == 'time_based':
+                is_time_based_protocol = True
+    
+    if is_time_based_protocol:
         # Load as time-based protocol
         spec = TimeBasedProtocolSpecification.from_yaml(selected_file)
         st.session_state.current_protocol = {
