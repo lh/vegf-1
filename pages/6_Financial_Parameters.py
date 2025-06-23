@@ -251,12 +251,20 @@ if available_configs:
                 drug_costs = st.session_state.edited_config.get('drug_costs', {})
                 if drug_costs:
                     drug_df_data = []
-                    for drug_id, cost in sorted(drug_costs.items()):
-                        # Skip non-numeric entries like 'default_drug'
-                        if isinstance(cost, (int, float)):
+                    for drug_id, cost_data in sorted(drug_costs.items()):
+                        # Handle both simple numeric values and nested objects
+                        if isinstance(cost_data, dict):
+                            # Nested format with unit_cost
+                            cost_value = cost_data.get('unit_cost', 0)
                             drug_df_data.append({
                                 'Drug': drug_id.replace('_', ' ').title(),
-                                'Cost (£)': f"£{cost:,.0f}"
+                                'Cost (£)': f"£{cost_value:,.0f}"
+                            })
+                        elif isinstance(cost_data, (int, float)):
+                            # Simple numeric format
+                            drug_df_data.append({
+                                'Drug': drug_id.replace('_', ' ').title(),
+                                'Cost (£)': f"£{cost_data:,.0f}"
                             })
                     if drug_df_data:
                         drug_df = pd.DataFrame(drug_df_data)
@@ -287,10 +295,23 @@ if available_configs:
                 visit_types = st.session_state.edited_config.get('visit_types', {})
                 if visit_types:
                     visit_df_data = []
+                    components = st.session_state.edited_config.get('visit_components', {})
                     for visit_name, visit_info in sorted(visit_types.items()):
+                        # Calculate total from components if not explicitly set
+                        calculated_total = 0
+                        if 'components' in visit_info:
+                            calculated_total = sum(components.get(comp, 0) for comp in visit_info['components'])
+                        
+                        # Get the total cost - check both 'total_cost' and 'total_override'
+                        total_cost = visit_info.get('total_cost', visit_info.get('total_override'))
+                        if total_cost is None:
+                            total_cost = calculated_total
+                        else:
+                            total_cost = float(total_cost)
+                            
                         visit_df_data.append({
                             'Visit Type': visit_name.replace('_', ' ').title(),
-                            'Total Cost (£)': f"£{visit_info.get('total_cost', 0):,.0f}",
+                            'Total Cost (£)': f"£{total_cost:,.0f}",
                             'Decision Maker': '✓' if visit_info.get('decision_maker', False) else ''
                         })
                     visit_df = pd.DataFrame(visit_df_data)
@@ -319,10 +340,18 @@ if available_configs:
             
             col1, col2, col3, col4 = st.columns(4)
             
-            # Calculate totals (handle string values)
+            # Calculate totals (handle different formats)
             if drug_costs:
-                # Only include numeric values in calculations
-                drug_values = [float(v) for v in drug_costs.values() if isinstance(v, (int, float))]
+                drug_values = []
+                for cost_data in drug_costs.values():
+                    if isinstance(cost_data, dict):
+                        # Nested format with unit_cost
+                        drug_values.append(float(cost_data.get('unit_cost', 0)))
+                    elif isinstance(cost_data, (int, float)):
+                        # Simple numeric format
+                        drug_values.append(float(cost_data))
+                    # Skip non-numeric entries
+                    
                 numeric_drug_count = len(drug_values)
                 total_drug_costs = sum(drug_values)
                 avg_drug_cost = total_drug_costs / numeric_drug_count if numeric_drug_count > 0 else 0
@@ -332,10 +361,27 @@ if available_configs:
                 total_drug_costs = avg_drug_cost = 0
             
             if visit_types:
-                visit_costs = [float(v.get('total_cost', 0)) if isinstance(v.get('total_cost', 0), (int, float)) else 0 for v in visit_types.values()]
+                visit_costs = []
+                components = st.session_state.edited_config.get('visit_components', {})
+                for visit_info in visit_types.values():
+                    # Calculate total from components if not explicitly set
+                    calculated_total = 0
+                    if 'components' in visit_info:
+                        calculated_total = sum(components.get(comp, 0) for comp in visit_info['components'])
+                    
+                    # Get the total cost - check both 'total_cost' and 'total_override'
+                    total_cost = visit_info.get('total_cost', visit_info.get('total_override'))
+                    if total_cost is None:
+                        total_cost = calculated_total
+                    else:
+                        total_cost = float(total_cost)
+                    
+                    visit_costs.append(total_cost)
+                    
                 total_visit_costs = sum(visit_costs)
                 avg_visit_cost = total_visit_costs / len(visit_costs) if visit_costs else 0
             else:
+                visit_costs = []
                 total_visit_costs = avg_visit_cost = 0
             
             with col1:
@@ -368,32 +414,54 @@ if available_configs:
             drug_costs = config.get('drug_costs', {})
             
             # Create a container for drug costs
-            for drug_id, cost in drug_costs.items():
-                # Skip non-numeric entries like 'default_drug'
-                if not isinstance(cost, (int, float)):
+            for drug_id, cost_data in drug_costs.items():
+                # Handle both simple numeric values and nested objects
+                if isinstance(cost_data, dict):
+                    # Nested format with unit_cost, list_price, etc.
+                    cost_value = cost_data.get('unit_cost', 0)
+                    list_price = cost_data.get('list_price', None)
+                elif isinstance(cost_data, (int, float)):
+                    # Simple numeric format
+                    cost_value = cost_data
+                    list_price = None
+                else:
+                    # Skip non-numeric entries like 'default_drug'
                     continue
-                col1, col2, col3 = st.columns([3, 2, 1])
+                    
+                col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
                 with col1:
                     drug_display = drug_id.replace('_', ' ').title()
                     st.text_input("Drug", value=drug_display, key=f"drug_name_{drug_id}", disabled=True)
                 with col2:
-                    # Ensure cost is numeric for the input
-                    cost_value = float(cost) if isinstance(cost, (int, float, str)) else 0
                     new_cost = st.number_input(
-                        "Cost (£)", 
-                        value=cost_value, 
+                        "Unit Cost (£)", 
+                        value=float(cost_value), 
                         min_value=0, 
                         step=1,
                         key=f"drug_cost_{drug_id}"
                     )
-                    # Update edited config
-                    if 'drug_costs' not in st.session_state.edited_config:
-                        st.session_state.edited_config['drug_costs'] = {}
-                    st.session_state.edited_config['drug_costs'][drug_id] = new_cost
                 with col3:
+                    if list_price is not None:
+                        st.text_input("List Price (£)", value=f"£{list_price:,.0f}", key=f"list_price_{drug_id}", disabled=True)
+                    else:
+                        st.text("")  # Empty space
+                with col4:
                     if st.button("Remove", key=f"del_drug_{drug_id}"):
                         del st.session_state.edited_config['drug_costs'][drug_id]
                         st.rerun()
+                        
+                # Update edited config - preserve the structure
+                if 'drug_costs' not in st.session_state.edited_config:
+                    st.session_state.edited_config['drug_costs'] = {}
+                    
+                if isinstance(cost_data, dict):
+                    # Preserve the nested structure
+                    if drug_id not in st.session_state.edited_config['drug_costs']:
+                        st.session_state.edited_config['drug_costs'][drug_id] = cost_data.copy()
+                    st.session_state.edited_config['drug_costs'][drug_id]['unit_cost'] = new_cost
+                else:
+                    # Simple numeric format
+                    st.session_state.edited_config['drug_costs'][drug_id] = new_cost
             
             # Add new drug
             st.divider()
@@ -442,18 +510,34 @@ if available_configs:
             visit_types = config.get('visit_types', {})
             
             for visit_name, visit_info in visit_types.items():
-                with st.expander(f"{visit_name.replace('_', ' ').title()} - Total: £{visit_info.get('total_cost', 0)}"):
+                # Calculate total from components if not explicitly set
+                components = config.get('visit_components', {})
+                calculated_total = 0
+                if 'components' in visit_info:
+                    calculated_total = sum(components.get(comp, 0) for comp in visit_info['components'])
+                
+                # Get the total cost - check both 'total_cost' and 'total_override'
+                total_cost = visit_info.get('total_cost', visit_info.get('total_override'))
+                if total_cost is None:
+                    total_cost = calculated_total
+                else:
+                    total_cost = float(total_cost)
+                
+                with st.expander(f"{visit_name.replace('_', ' ').title()} - Total: £{total_cost:,.0f}"):
                     # Display components
                     if 'components' in visit_info:
                         st.write("**Components:**")
+                        component_total = 0
                         for comp in visit_info['components']:
                             comp_cost = components.get(comp, 0)
+                            component_total += comp_cost
                             st.write(f"- {comp.replace('_', ' ').title()}: £{comp_cost}")
+                        st.write(f"**Component Total: £{component_total}**")
                     
                     # Edit total cost
                     new_total = st.number_input(
                         "Total Cost Override", 
-                        value=visit_info.get('total_cost', 0),
+                        value=total_cost,
                         min_value=0,
                         step=1,
                         key=f"visit_total_{visit_name}",
