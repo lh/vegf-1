@@ -1195,6 +1195,336 @@ else:  # Difference mode
     plt.close(fig)
 
 # ==================================================================
+# FINANCIAL COMPARISON
+# ==================================================================
+
+st.markdown("---")
+st.markdown("### Financial Analysis")
+
+# Import cost tracking functionality
+from ape.components.cost_tracking.cost_config import CostConfig
+from ape.core.resources.resource_tracker import ResourceTracker
+from ape.components.treatment_patterns.discontinued_utils import get_discontinued_patients
+from pathlib import Path
+
+# Get available cost configs
+COST_CONFIG_DIR = Path("protocols/cost_configs")
+available_configs = [f.stem for f in COST_CONFIG_DIR.glob("*.yaml") if f.is_file()]
+
+# Financial configuration selection
+col1, col2, col3 = st.columns([2, 2, 1])
+
+with col1:
+    config_a = st.selectbox(
+        "Cost Configuration for Simulation A",
+        options=available_configs,
+        index=available_configs.index("nhs_standard_2025") if "nhs_standard_2025" in available_configs else 0,
+        key="cost_config_a"
+    )
+
+with col2:
+    config_b = st.selectbox(
+        "Cost Configuration for Simulation B", 
+        options=available_configs,
+        index=available_configs.index("nhs_standard_2025") if "nhs_standard_2025" in available_configs else 0,
+        key="cost_config_b"
+    )
+
+with col3:
+    use_same_config = st.checkbox("Use same", value=True, key="same_cost_config")
+    
+if use_same_config:
+    config_b = config_a
+
+# Load cost configurations
+try:
+    cost_config_a = CostConfig.from_yaml(COST_CONFIG_DIR / f"{config_a}.yaml")
+    cost_config_b = CostConfig.from_yaml(COST_CONFIG_DIR / f"{config_b}.yaml")
+    
+    # Get default drug costs
+    default_drug_cost_a = cost_config_a.drug_costs.get('aflibercept_2mg', 457)
+    if isinstance(default_drug_cost_a, dict):
+        default_drug_cost_a = default_drug_cost_a.get('unit_cost', 457)
+    
+    default_drug_cost_b = cost_config_b.drug_costs.get('aflibercept_2mg', 457)
+    if isinstance(default_drug_cost_b, dict):
+        default_drug_cost_b = default_drug_cost_b.get('unit_cost', 457)
+    
+except Exception as e:
+    st.error(f"Error loading cost configurations: {str(e)}")
+    cost_config_a = None
+    cost_config_b = None
+    default_drug_cost_a = 457
+    default_drug_cost_b = 457
+
+# Drug cost adjustment section
+if cost_config_a and cost_config_b:
+    st.markdown("#### Drug Cost Adjustments")
+    
+    # Toggle for shared vs individual adjustments
+    adjustment_mode = st.radio(
+        "Adjustment Mode",
+        ["Shared slider", "Individual sliders"],
+        horizontal=True,
+        key="cost_adjustment_mode"
+    )
+    
+    if adjustment_mode == "Shared slider":
+        # Single slider for both simulations
+        new_drug_cost = st.slider(
+            "Intravitreal Drug Cost per Dose (£)",
+            min_value=50,
+            max_value=1500,
+            value=int(default_drug_cost_a),
+            step=10,
+            key="shared_drug_cost"
+        )
+        new_drug_cost_a = new_drug_cost
+        new_drug_cost_b = new_drug_cost
+    else:
+        # Individual sliders
+        col1, col2 = st.columns(2)
+        with col1:
+            new_drug_cost_a = st.slider(
+                f"Drug Cost A ({sim_a['memorable_name']}) £",
+                min_value=50,
+                max_value=1500,
+                value=int(default_drug_cost_a),
+                step=10,
+                key="drug_cost_a"
+            )
+        with col2:
+            new_drug_cost_b = st.slider(
+                f"Drug Cost B ({sim_b['memorable_name']}) £",
+                min_value=50,
+                max_value=1500,
+                value=int(default_drug_cost_b),
+                step=10,
+                key="drug_cost_b"
+            )
+    
+    # Calculate financial outcomes using existing resource tracker logic
+    def calculate_costs_with_tracker(sim_data, cost_config, new_drug_cost, default_drug_cost):
+        """Calculate costs using ResourceTracker similar to workload analysis."""
+        try:
+            # Create resource tracker
+            resource_tracker = ResourceTracker(
+                config_path=cost_config.config_path if hasattr(cost_config, 'config_path') else None,
+                cost_config=cost_config
+            )
+            
+            # Get visits from simulation results
+            visits_df = pd.read_parquet(sim_data['path'] / "visits.parquet")
+            
+            # Track each visit
+            for _, visit in visits_df.iterrows():
+                visit_date = pd.to_datetime(visit['date'])
+                
+                # Determine visit type based on injection
+                if visit.get('injected', False):
+                    resource_tracker.track_visit({
+                        'date': visit_date,
+                        'visit_type': 'injection_visit_standard',
+                        'role': 'nurse'
+                    })
+                else:
+                    resource_tracker.track_visit({
+                        'date': visit_date,
+                        'visit_type': 'monitoring_visit_standard',
+                        'role': 'technician'
+                    })
+            
+            # Get total costs
+            original_costs = resource_tracker.get_total_costs()
+            
+            # Count total injections
+            total_injections = int(visits_df['injected'].sum())
+            
+            # Calculate drug cost adjustment
+            drug_cost_diff = new_drug_cost - default_drug_cost
+            drug_cost_adjustment = drug_cost_diff * total_injections
+            
+            # Apply adjustment
+            adjusted_costs = original_costs.copy()
+            if 'drug' in adjusted_costs:
+                adjusted_costs['drug'] = adjusted_costs['drug'] + drug_cost_adjustment
+                adjusted_costs['total'] = adjusted_costs['total'] + drug_cost_adjustment
+            
+            # Get workload summary
+            workload_summary = resource_tracker.get_workload_summary()
+            
+            return {
+                'costs': adjusted_costs,
+                'original_costs': original_costs,
+                'workload_summary': workload_summary,
+                'total_injections': total_injections,
+                'resource_tracker': resource_tracker
+            }
+            
+        except Exception as e:
+            st.error(f"Error calculating costs: {str(e)}")
+            return None
+    
+    # Calculate costs for both simulations
+    costs_a = calculate_costs_with_tracker(sim_a, cost_config_a, new_drug_cost_a, default_drug_cost_a)
+    costs_b = calculate_costs_with_tracker(sim_b, cost_config_b, new_drug_cost_b, default_drug_cost_b)
+    
+    if costs_a and costs_b:
+        # Display key financial metrics
+        st.markdown("#### Key Financial Metrics")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric(
+                "Total Cost A",
+                f"£{costs_a['costs']['total']:,.0f}",
+                delta=None
+            )
+            st.metric(
+                "Total Cost B",
+                f"£{costs_b['costs']['total']:,.0f}",
+                delta=f"£{costs_b['costs']['total'] - costs_a['costs']['total']:+,.0f}"
+            )
+        
+        with col2:
+            cost_per_patient_a = costs_a['costs']['total'] / len(histories_a)
+            cost_per_patient_b = costs_b['costs']['total'] / len(histories_b)
+            
+            st.metric(
+                "Cost per Patient A",
+                f"£{cost_per_patient_a:,.0f}",
+                delta=None
+            )
+            st.metric(
+                "Cost per Patient B",
+                f"£{cost_per_patient_b:,.0f}",
+                delta=f"£{cost_per_patient_b - cost_per_patient_a:+,.0f}"
+            )
+        
+        with col3:
+            # Calculate cost per vision maintained (sight preserved)
+            # Using same logic as workload analysis
+            try:
+                # Load patient data for vision outcomes
+                patients_df_a = pd.read_parquet(sim_a['path'] / "patients.parquet")
+                patients_df_b = pd.read_parquet(sim_b['path'] / "patients.parquet")
+                
+                # Count patients maintaining vision (not discontinued and vision loss ≤ 10)
+                active_a = patients_df_a[patients_df_a['discontinued'] == False]
+                vision_maintained_a = len(active_a[active_a['final_vision'] >= active_a['baseline_vision'] - 10])
+                
+                active_b = patients_df_b[patients_df_b['discontinued'] == False]
+                vision_maintained_b = len(active_b[active_b['final_vision'] >= active_b['baseline_vision'] - 10])
+                
+                if vision_maintained_a > 0:
+                    cost_per_maintained_a = costs_a['costs']['total'] / vision_maintained_a
+                else:
+                    cost_per_maintained_a = float('inf')
+                    
+                if vision_maintained_b > 0:
+                    cost_per_maintained_b = costs_b['costs']['total'] / vision_maintained_b
+                else:
+                    cost_per_maintained_b = float('inf')
+                
+                st.metric(
+                    "Cost per Sight Preserved A",
+                    f"£{cost_per_maintained_a:,.0f}" if cost_per_maintained_a != float('inf') else "N/A",
+                    delta=None
+                )
+                st.metric(
+                    "Cost per Sight Preserved B",
+                    f"£{cost_per_maintained_b:,.0f}" if cost_per_maintained_b != float('inf') else "N/A",
+                    delta=f"£{cost_per_maintained_b - cost_per_maintained_a:+,.0f}" if cost_per_maintained_a != float('inf') and cost_per_maintained_b != float('inf') else None
+                )
+                
+            except Exception as e:
+                st.metric("Cost per Sight Preserved A", "N/A")
+                st.metric("Cost per Sight Preserved B", "N/A")
+        
+        # Sessions per week comparison
+        st.markdown("#### Weekly Staffing Requirements")
+        
+        # Create comparison table
+        sessions_data = []
+        
+        # Get sessions data from both simulations
+        for label, costs_data, sim_info in [("Simulation A", costs_a, sim_a), ("Simulation B", costs_b, sim_b)]:
+            workload = costs_data['workload_summary']
+            for role in ['nurse', 'technician', 'consultant']:
+                if role in workload['average_daily_demand']:
+                    avg_daily = workload['average_daily_demand'][role]
+                    # Assuming 5 working days per week and standard capacity
+                    capacity_per_session = {'nurse': 10, 'technician': 15, 'consultant': 8}.get(role, 10)
+                    weekly_sessions = (avg_daily * 5) / capacity_per_session
+                    
+                    sessions_data.append({
+                        'Simulation': sim_info['memorable_name'],
+                        'Role': role.capitalize(),
+                        'Avg Daily Demand': f"{avg_daily:.1f}",
+                        'Weekly Sessions': f"{weekly_sessions:.1f}"
+                    })
+        
+        if sessions_data:
+            sessions_df = pd.DataFrame(sessions_data)
+            
+            # Pivot for better comparison
+            pivot_df = sessions_df.pivot(index='Role', columns='Simulation', values='Weekly Sessions')
+            st.dataframe(pivot_df, use_container_width=True)
+        
+        # Cost breakdown comparison
+        st.markdown("#### Cost Breakdown Comparison")
+        
+        # Create side-by-side pie charts
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5), facecolor='white')
+        
+        # Helper function to create pie chart
+        def create_cost_pie(ax, costs, title, color_scheme):
+            categories = []
+            values = []
+            colors = []
+            
+            if 'drug' in costs and costs['drug'] > 0:
+                categories.append('Drug')
+                values.append(costs['drug'])
+                colors.append('#FF6B6B')
+            if 'injection_procedure' in costs and costs['injection_procedure'] > 0:
+                categories.append('Injection')
+                values.append(costs['injection_procedure'])
+                colors.append('#4ECDC4')
+            if 'consultation' in costs and costs['consultation'] > 0:
+                categories.append('Consultation')
+                values.append(costs['consultation'])
+                colors.append('#45B7D1')
+            if 'oct_scan' in costs and costs['oct_scan'] > 0:
+                categories.append('OCT Scan')
+                values.append(costs['oct_scan'])
+                colors.append('#96CEB4')
+            
+            if categories:
+                wedges, texts, autotexts = ax.pie(values, labels=categories, colors=colors, 
+                                                  autopct='%1.1f%%', startangle=90)
+                
+                # Style the text
+                for text in texts:
+                    text.set_fontsize(10)
+                    text.set_color('#333333')
+                for autotext in autotexts:
+                    autotext.set_color('white')
+                    autotext.set_fontsize(9)
+                    autotext.set_weight('bold')
+                
+                ax.set_title(title, fontsize=12, color='#333333', pad=20)
+        
+        # Create pies for both simulations
+        create_cost_pie(ax1, costs_a['costs'], sim_a['memorable_name'], 'Blues')
+        create_cost_pie(ax2, costs_b['costs'], sim_b['memorable_name'], 'Oranges')
+        
+        plt.tight_layout()
+        st.pyplot(fig)
+        plt.close(fig)
+
+# ==================================================================
 # TREATMENT FLOW ANALYSIS
 # ==================================================================
 
