@@ -185,6 +185,16 @@ def render_enhanced_parameter_inputs() -> Tuple[str, Dict[str, Any], int]:
     # Extract seed for return value compatibility
     seed = recruitment_params['seed']
     
+    # Add resource tracking checkbox
+    st.write("**Additional Options:**")
+    enable_resource_tracking = st.checkbox(
+        "Enable Resource Tracking",
+        value=st.session_state.get('enable_resource_tracking', True),
+        help="Track resource usage and costs for workload and economic analysis",
+        key="enable_resource_tracking"
+    )
+    recruitment_params['enable_resource_tracking'] = enable_resource_tracking
+    
     return engine_type, recruitment_params, seed
 
 

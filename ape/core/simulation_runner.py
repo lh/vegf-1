@@ -13,6 +13,8 @@ from simulation_v2.core.simulation_runner import SimulationRunner as V2Simulatio
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
 from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSpecification
 from simulation_v2.core.time_based_simulation_runner import TimeBasedSimulationRunner
+from simulation_v2.core.time_based_simulation_runner_with_resources import TimeBasedSimulationRunnerWithResources
+from simulation_v2.economics.resource_tracker import load_resource_config
 
 from .results.factory import ResultsFactory
 from .results.base import SimulationResults
@@ -28,20 +30,33 @@ class SimulationRunner:
     - Tracking runtime and audit logs
     """
     
-    def __init__(self, protocol_spec):
+    def __init__(self, protocol_spec, enable_resource_tracking=False):
         """
         Initialize with protocol specification.
         
         Args:
             protocol_spec: Protocol specification to use (standard or time-based)
+            enable_resource_tracking: Whether to enable resource tracking
         """
         self.protocol_spec = protocol_spec
+        self.enable_resource_tracking = enable_resource_tracking
         
         # Create appropriate runner based on protocol type
         if isinstance(protocol_spec, TimeBasedProtocolSpecification):
-            self.v2_runner = TimeBasedSimulationRunner(protocol_spec)
+            if enable_resource_tracking:
+                # Load default resource configuration
+                resource_config_path = Path(__file__).parent.parent.parent / "protocols" / "resources" / "nhs_standard_resources.yaml"
+                self.v2_runner = TimeBasedSimulationRunnerWithResources(
+                    protocol_spec,
+                    resource_config_path=str(resource_config_path)
+                )
+            else:
+                self.v2_runner = TimeBasedSimulationRunner(protocol_spec)
             self.is_time_based = True
         else:
+            # Resource tracking only supported for time-based simulations currently
+            if enable_resource_tracking:
+                print("⚠️ Resource tracking only supported for time-based simulations")
             self.v2_runner = V2SimulationRunner(protocol_spec)
             self.is_time_based = False
         
@@ -53,7 +68,8 @@ class SimulationRunner:
         seed: int,
         show_progress: bool = True,
         recruitment_mode: str = "Fixed Total",
-        patient_arrival_rate: Optional[float] = None
+        patient_arrival_rate: Optional[float] = None,
+        enable_resource_tracking: Optional[bool] = None
     ) -> SimulationResults:
         """
         Run simulation and return results in Parquet format.

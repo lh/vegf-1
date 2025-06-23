@@ -332,5 +332,73 @@ class ParquetWriter:
             'chunk_size': self.chunk_size
         }
         
+        # Check if resource tracking data is available
+        if hasattr(raw_results, 'resource_tracker'):
+            # Save resource tracking data separately
+            self._write_resource_tracking_data(raw_results.resource_tracker)
+            metadata['has_resource_tracking'] = True
+        else:
+            metadata['has_resource_tracking'] = False
+        
         df = pd.DataFrame([metadata])
         df.to_parquet(self.output_dir / 'metadata.parquet', index=False)
+    
+    def _write_resource_tracking_data(self, resource_tracker: Any) -> None:
+        """Write resource tracking data to separate files."""
+        import json
+        
+        # Write workload summary
+        workload_summary = resource_tracker.get_workload_summary()
+        with open(self.output_dir / 'workload_summary.json', 'w') as f:
+            json.dump(workload_summary, f, indent=2)
+        
+        # Write cost breakdown
+        cost_breakdown = resource_tracker.get_total_costs()
+        with open(self.output_dir / 'cost_breakdown.json', 'w') as f:
+            json.dump(cost_breakdown, f, indent=2)
+        
+        # Write bottlenecks
+        bottlenecks = resource_tracker.identify_bottlenecks()
+        bottleneck_data = [
+            {
+                'date': b['date'].isoformat(),
+                'role': b['role'],
+                'sessions_needed': b['sessions_needed'],
+                'sessions_available': b['sessions_available'],
+                'overflow': b['overflow'],
+                'procedures_affected': b['procedures_affected']
+            }
+            for b in bottlenecks
+        ]
+        with open(self.output_dir / 'bottlenecks.json', 'w') as f:
+            json.dump(bottleneck_data, f, indent=2)
+        
+        # Write daily usage data
+        daily_usage_data = []
+        for date in resource_tracker.get_all_dates_with_visits():
+            daily_usage_data.append({
+                'date': date.isoformat(),
+                'usage': dict(resource_tracker.daily_usage[date])
+            })
+        
+        daily_usage_df = pd.DataFrame(daily_usage_data)
+        if not daily_usage_df.empty:
+            daily_usage_df.to_parquet(self.output_dir / 'daily_resource_usage.parquet', index=False)
+        
+        # Write visits with costs
+        visit_records = []
+        for visit in resource_tracker.visits:
+            record = {
+                'date': visit['date'].isoformat(),
+                'patient_id': visit['patient_id'],
+                'visit_type': visit['visit_type'],
+                'injection_given': visit['injection_given'],
+                'oct_performed': visit['oct_performed'],
+                'total_cost': sum(visit['costs'].values()),
+                **visit['costs']  # Include individual cost components
+            }
+            visit_records.append(record)
+        
+        if visit_records:
+            visits_with_costs_df = pd.DataFrame(visit_records)
+            visits_with_costs_df.to_parquet(self.output_dir / 'visits_with_costs.parquet', index=False)

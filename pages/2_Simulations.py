@@ -321,7 +321,8 @@ if st.session_state.get('simulation_running', False):
         
         progress_bar.progress(5)
         status_text.caption("Initializing...")
-        runner = SimulationRunner(spec)
+        enable_resource_tracking = recruitment_params.get('enable_resource_tracking', False)
+        runner = SimulationRunner(spec, enable_resource_tracking=enable_resource_tracking)
         
         # Check memory feasibility (optional)
         if st.session_state.get('check_memory_limits', True):
@@ -400,7 +401,8 @@ if st.session_state.get('simulation_running', False):
                 duration_years=recruitment_params['duration_years'],
                 seed=recruitment_params['seed'],
                 show_progress=False,  # We have our own progress bar
-                recruitment_mode="Fixed Total"
+                recruitment_mode="Fixed Total",
+                enable_resource_tracking=enable_resource_tracking
             )
         else:
             # Constant Rate Mode - use expected total as n_patients for now
@@ -413,7 +415,8 @@ if st.session_state.get('simulation_running', False):
                 seed=recruitment_params['seed'],
                 show_progress=False,  # We have our own progress bar
                 recruitment_mode="Constant Rate",
-                patient_arrival_rate=recruitment_params['recruitment_rate']
+                patient_arrival_rate=recruitment_params['recruitment_rate'],
+                enable_resource_tracking=enable_resource_tracking
             )
         
         # Stop the progress thread
