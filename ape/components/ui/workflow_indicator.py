@@ -101,9 +101,11 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                         st.switch_page(page)
                 else:
                     # Disabled future step (only Analysis without results)
+                    # Use invisible icon for workload button only
+                    button_icon = 'invisible' if step_id == "workload" else None
                     navigation_button(
                         display_label,
-                        icon_name=None,  # Disable auto-icon since we're using our own
+                        icon_name=button_icon,  # Invisible for workload, None for others
                         key=f"workflow_future_{step_id}",
                         full_width=True,
                         button_type="ghost",
