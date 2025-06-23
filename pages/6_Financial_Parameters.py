@@ -238,7 +238,7 @@ if available_configs:
         )
         
         if not is_default:
-            if ape_button("Delete", key="delete_config", is_secondary_action=True):
+            if ape_button("Delete", key="delete_config", button_type="danger"):
                 if st.session_state.get('confirm_delete'):
                     # Actually delete
                     try:
