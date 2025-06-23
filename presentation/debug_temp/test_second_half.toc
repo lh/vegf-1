@@ -1,3 +1,0 @@
-\beamer@sectionintoc {1}{Why Model?}{1}{0}{1}
-\beamer@sectionintoc {2}{Our Solution}{5}{0}{2}
-\beamer@sectionintoc {3}{Key Insights}{8}{0}{3}

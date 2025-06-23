@@ -1,0 +1,117 @@
+# NHS Standard Resource Configuration
+# Defines roles, capacities, and visit requirements for economic analysis
+# Based on typical NHS ophthalmology clinic configurations
+
+# Resource role definitions
+resources:
+  roles:
+    injector:
+      capacity_per_session: 14
+      description: "Administers intravitreal injections"
+      
+    injector_assistant:
+      capacity_per_session: 14
+      description: "Assists with injection procedure setup and patient care"
+      
+    vision_tester:
+      capacity_per_session: 20
+      description: "Performs visual acuity testing (ETDRS charts)"
+      
+    oct_operator:
+      capacity_per_session: 16
+      description: "Operates OCT scanner for retinal imaging"
+      
+    decision_maker:
+      capacity_per_session: 12
+      description: "Clinical decision making (consultant/senior clinician)"
+
+  # Visit type definitions with resource requirements
+  visit_requirements:
+    injection_only:
+      roles_needed:
+        injector: 1
+        injector_assistant: 1
+      duration_minutes: 15
+      description: "Standard injection visit without assessment"
+      
+    decision_with_injection:
+      roles_needed:
+        vision_tester: 1
+        oct_operator: 1
+        decision_maker: 1
+        injector: 1
+        injector_assistant: 1
+      duration_minutes: 30
+      description: "Full assessment with injection (T&E style)"
+      
+    decision_only:
+      roles_needed:
+        vision_tester: 1
+        oct_operator: 1
+        decision_maker: 1
+      duration_minutes: 20
+      description: "Assessment only (post-loading or annual review)"
+
+  # Session parameters
+  session_parameters:
+    session_duration_hours: 4
+    sessions_per_day: 2  # morning and afternoon
+    working_days: ["Mon", "Tue", "Wed", "Thu", "Fri"]
+    
+# Cost configuration (HRG-aligned)
+costs:
+  # Procedure costs
+  procedures:
+    intravitreal_injection:
+      hrg_code: "BZ23Z"
+      unit_cost: 134
+      description: "Intravitreal injection procedure"
+      
+    outpatient_assessment:
+      hrg_code: "WF01B"
+      unit_cost: 75
+      description: "Ophthalmology outpatient attendance"
+      
+    oct_scan:
+      hrg_code: "Diagnostic imaging"
+      unit_cost: 110
+      description: "Optical coherence tomography scan"
+  
+  # Drug costs (2024 NHS list prices)
+  drugs:
+    aflibercept_2mg:
+      name: "Aflibercept 2mg (Eylea)"
+      unit_cost: 816
+      expected_generic_cost: 400  # Anticipated biosimilar price
+      
+    aflibercept_8mg:
+      name: "Aflibercept 8mg (Eylea HD)"
+      unit_cost: 1200  # Estimated
+      
+# Capacity constraints
+capacity_constraints:
+  # Maximum patients per session by visit type
+  max_per_session:
+    injection_only: 14      # Limited by injector capacity
+    decision_with_injection: 12  # Limited by decision maker
+    decision_only: 12       # Limited by decision maker
+    
+  # Booking rules
+  booking_rules:
+    allow_overbooking: false
+    max_overbook_percentage: 0
+    
+# Reporting categories
+reporting:
+  workload_categories:
+    - "Total sessions required"
+    - "Peak daily demand"
+    - "Resource utilization rate"
+    - "Bottleneck identification"
+    
+  cost_categories:
+    - "Drug costs"
+    - "Procedure costs"
+    - "Assessment costs"
+    - "Total cost per patient"
+    - "Cost per vision year saved"
