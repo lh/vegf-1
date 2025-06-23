@@ -18,41 +18,84 @@ class TestWeekdayScheduler:
     
     def test_adjust_to_weekday_already_weekday(self):
         """Test that weekdays are not adjusted."""
+        scheduler = WeekdayScheduler()
+        
         # Monday
         monday = datetime(2024, 1, 1)
-        assert WeekdayScheduler.adjust_to_weekday(monday) == monday
+        assert scheduler.adjust_to_weekday(monday) == monday
         
         # Friday
         friday = datetime(2024, 1, 5)
-        assert WeekdayScheduler.adjust_to_weekday(friday) == friday
+        assert scheduler.adjust_to_weekday(friday) == friday
     
     def test_adjust_saturday_prefer_earlier(self):
         """Test Saturday adjustment preferring Friday."""
+        scheduler = WeekdayScheduler()
         saturday = datetime(2024, 1, 6)  # Saturday
-        adjusted = WeekdayScheduler.adjust_to_weekday(saturday, prefer_earlier=True)
+        adjusted = scheduler.adjust_to_weekday(saturday, prefer_earlier=True)
         assert adjusted.weekday() == 4  # Friday
         assert adjusted == datetime(2024, 1, 5)
     
     def test_adjust_saturday_prefer_later(self):
         """Test Saturday adjustment preferring Monday."""
+        scheduler = WeekdayScheduler()
         saturday = datetime(2024, 1, 6)  # Saturday
-        adjusted = WeekdayScheduler.adjust_to_weekday(saturday, prefer_earlier=False)
+        adjusted = scheduler.adjust_to_weekday(saturday, prefer_earlier=False)
         assert adjusted.weekday() == 0  # Monday
         assert adjusted == datetime(2024, 1, 8)
     
     def test_adjust_sunday_prefer_earlier(self):
         """Test Sunday adjustment preferring Friday."""
+        scheduler = WeekdayScheduler()
         sunday = datetime(2024, 1, 7)  # Sunday
-        adjusted = WeekdayScheduler.adjust_to_weekday(sunday, prefer_earlier=True)
+        adjusted = scheduler.adjust_to_weekday(sunday, prefer_earlier=True)
         assert adjusted.weekday() == 4  # Friday
         assert adjusted == datetime(2024, 1, 5)
     
     def test_adjust_sunday_prefer_later(self):
         """Test Sunday adjustment preferring Monday."""
+        scheduler = WeekdayScheduler()
         sunday = datetime(2024, 1, 7)  # Sunday
-        adjusted = WeekdayScheduler.adjust_to_weekday(sunday, prefer_earlier=False)
+        adjusted = scheduler.adjust_to_weekday(sunday, prefer_earlier=False)
         assert adjusted.weekday() == 0  # Monday
         assert adjusted == datetime(2024, 1, 8)
+    
+    def test_saturday_allowed(self):
+        """Test that Saturday is not adjusted when allowed."""
+        scheduler = WeekdayScheduler(allow_saturday=True, allow_sunday=False)
+        saturday = datetime(2024, 1, 6)  # Saturday
+        assert scheduler.adjust_to_weekday(saturday) == saturday
+        assert scheduler.is_working_day(saturday) is True
+        
+        # But Sunday should still be adjusted
+        sunday = datetime(2024, 1, 7)  # Sunday
+        adjusted = scheduler.adjust_to_weekday(sunday, prefer_earlier=True)
+        assert adjusted.weekday() == 5  # Saturday (allowed)
+        assert scheduler.is_working_day(sunday) is False
+    
+    def test_sunday_allowed(self):
+        """Test that Sunday is not adjusted when allowed."""
+        scheduler = WeekdayScheduler(allow_saturday=False, allow_sunday=True)
+        sunday = datetime(2024, 1, 7)  # Sunday
+        assert scheduler.adjust_to_weekday(sunday) == sunday
+        assert scheduler.is_working_day(sunday) is True
+        
+        # But Saturday should still be adjusted
+        saturday = datetime(2024, 1, 6)  # Saturday
+        adjusted = scheduler.adjust_to_weekday(saturday, prefer_earlier=False)
+        assert adjusted.weekday() == 6  # Sunday (allowed)
+        assert scheduler.is_working_day(saturday) is False
+    
+    def test_both_weekends_allowed(self):
+        """Test that both weekend days allowed."""
+        scheduler = WeekdayScheduler(allow_saturday=True, allow_sunday=True)
+        saturday = datetime(2024, 1, 6)
+        sunday = datetime(2024, 1, 7)
+        
+        assert scheduler.adjust_to_weekday(saturday) == saturday
+        assert scheduler.adjust_to_weekday(sunday) == sunday
+        assert scheduler.is_working_day(saturday) is True
+        assert scheduler.is_working_day(sunday) is True
     
     def test_interval_flexibility_loading_phase(self):
         """Test flexibility for loading phase visits."""
@@ -85,32 +128,35 @@ class TestWeekdayScheduler:
     
     def test_schedule_next_visit_simple(self):
         """Test basic next visit scheduling."""
+        scheduler = WeekdayScheduler()
         # Start on Monday
         current = datetime(2024, 1, 1)  # Monday
         
         # 4 weeks later would be Monday
-        next_visit = WeekdayScheduler.schedule_next_visit(current, 28, 1)
+        next_visit = scheduler.schedule_next_visit(current, 28, 1)
         assert next_visit.weekday() < 5
         assert next_visit == datetime(2024, 1, 29)  # Monday
     
     def test_schedule_next_visit_weekend_adjustment(self):
         """Test visit scheduling when target falls on weekend."""
+        scheduler = WeekdayScheduler()
         # Start on Friday
         current = datetime(2024, 1, 5)  # Friday
         
         # 4 weeks later would be Saturday
-        next_visit = WeekdayScheduler.schedule_next_visit(current, 28, 1, prefer_earlier=True)
+        next_visit = scheduler.schedule_next_visit(current, 28, 1, prefer_earlier=True)
         assert next_visit.weekday() == 4  # Friday
         assert next_visit == datetime(2024, 2, 2)  # Friday (one day earlier)
     
     def test_schedule_respects_flexibility(self):
         """Test that scheduling respects interval flexibility."""
+        scheduler = WeekdayScheduler()
         # Start on Monday
         current = datetime(2024, 1, 1)  # Monday
         
         # Try to schedule 8 weeks + 3 days (would be Thursday to Sunday)
         # Should end up on Friday (within 8-9 week range)
-        next_visit = WeekdayScheduler.schedule_next_visit(current, 59, 5)
+        next_visit = scheduler.schedule_next_visit(current, 59, 5)
         assert next_visit.weekday() < 5
         
         # Check it's within allowed range

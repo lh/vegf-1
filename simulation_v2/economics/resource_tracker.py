@@ -16,12 +16,15 @@ from pathlib import Path
 class ResourceTracker:
     """Track resource usage during simulation."""
     
-    def __init__(self, resource_config: Dict[str, Any]):
+    def __init__(self, resource_config: Dict[str, Any], 
+                 allow_saturday: bool = False, allow_sunday: bool = False):
         """
         Initialize resource tracker with configuration.
         
         Args:
             resource_config: Dictionary containing roles, visit requirements, etc.
+            allow_saturday: Whether Saturday working is allowed
+            allow_sunday: Whether Sunday working is allowed
         """
         if not resource_config:
             raise ValueError("Resource configuration cannot be empty")
@@ -30,6 +33,8 @@ class ResourceTracker:
         self.visit_requirements = resource_config['resources']['visit_requirements']
         self.session_parameters = resource_config['resources']['session_parameters']
         self.costs = resource_config['costs']
+        self.allow_saturday = allow_saturday
+        self.allow_sunday = allow_sunday
         
         # Daily usage tracking: date -> role -> count
         self.daily_usage = defaultdict(lambda: defaultdict(int))
@@ -75,8 +80,12 @@ class ResourceTracker:
         if visit_type not in self.visit_requirements:
             raise KeyError(f"Unknown visit type: {visit_type}")
             
-        if visit_date.weekday() >= 5:  # Saturday = 5, Sunday = 6
-            raise ValueError(f"Visit scheduled on weekend: {visit_date}")
+        # Check if visit is on allowed working day
+        weekday = visit_date.weekday()
+        if weekday == 5 and not self.allow_saturday:  # Saturday
+            raise ValueError(f"Visit scheduled on Saturday: {visit_date}")
+        elif weekday == 6 and not self.allow_sunday:  # Sunday
+            raise ValueError(f"Visit scheduled on Sunday: {visit_date}")
         
         # Get resource requirements for this visit type
         requirements = self.visit_requirements[visit_type]['roles_needed']

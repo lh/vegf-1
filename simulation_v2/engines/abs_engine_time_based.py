@@ -120,8 +120,15 @@ class ABSEngineTimeBased(ABSEngine):
                 self.patient_actual_vision[patient_id] = float(baseline_vision)
                 self.patient_vision_ceiling[patient_id] = min(85, int(baseline_vision * 1.1))
                 
-                # Schedule first visit at enrollment date (already normalized to midnight)
-                visit_schedule[patient_id] = normalized_arrival_date
+                # Schedule first visit
+                # Check if we should adjust to weekday for first visit
+                first_visit_date = normalized_arrival_date
+                if hasattr(self, 'protocol') and hasattr(self.protocol, 'scheduler'):
+                    # If protocol has weekday scheduling, use it for first visit
+                    first_visit_date = self.protocol.scheduler.adjust_to_weekday(
+                        normalized_arrival_date, prefer_earlier=True
+                    )
+                visit_schedule[patient_id] = first_visit_date
                 
                 arrival_index += 1
             

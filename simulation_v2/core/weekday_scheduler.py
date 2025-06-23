@@ -12,33 +12,54 @@ from typing import Tuple
 class WeekdayScheduler:
     """Handle weekend-aware visit scheduling."""
     
-    @staticmethod
-    def adjust_to_weekday(date: datetime, prefer_earlier: bool = True) -> datetime:
+    def __init__(self, allow_saturday: bool = False, allow_sunday: bool = False):
         """
-        Adjust a date to the nearest weekday.
+        Initialize scheduler with weekend working configuration.
+        
+        Args:
+            allow_saturday: Whether Saturday visits are allowed
+            allow_sunday: Whether Sunday visits are allowed
+        """
+        self.allow_saturday = allow_saturday
+        self.allow_sunday = allow_sunday
+    
+    def adjust_to_weekday(self, date: datetime, prefer_earlier: bool = True) -> datetime:
+        """
+        Adjust a date to the nearest allowed working day.
         
         Args:
             date: Original scheduled date
-            prefer_earlier: If True, prefer Friday over Monday for Saturday
+            prefer_earlier: If True, prefer Friday over Monday for adjustments
             
         Returns:
-            Adjusted date on a weekday
+            Adjusted date on an allowed working day
         """
         weekday = date.weekday()
         
+        # Check if current day is allowed
         if weekday < 5:  # Monday (0) to Friday (4)
             return date
         elif weekday == 5:  # Saturday
-            if prefer_earlier:
+            if self.allow_saturday:
+                return date
+            elif prefer_earlier:
                 # Move to Friday
                 return date - timedelta(days=1)
             else:
-                # Move to Monday
-                return date + timedelta(days=2)
+                # Move to Monday (or Sunday if allowed)
+                if self.allow_sunday:
+                    return date + timedelta(days=1)  # Sunday
+                else:
+                    return date + timedelta(days=2)  # Monday
         else:  # Sunday (6)
-            if prefer_earlier:
-                # Move to Friday (2 days back)
-                return date - timedelta(days=2)
+            if self.allow_sunday:
+                return date
+            elif prefer_earlier:
+                # Move to Saturday (if allowed) or Friday
+                if self.allow_saturday:
+                    return date - timedelta(days=1)  # Saturday
+                else:
+                    return date - timedelta(days=2)  # Friday
             else:
                 # Move to Monday
                 return date + timedelta(days=1)
@@ -72,9 +93,8 @@ class WeekdayScheduler:
             target_days = target_interval_weeks * 7
             return (target_days - 7, target_days + 7)
     
-    @classmethod
     def schedule_next_visit(
-        cls,
+        self,
         current_date: datetime,
         target_interval_days: int,
         visit_number: int,
@@ -97,10 +117,10 @@ class WeekdayScheduler:
         
         # Get flexibility range
         target_weeks = round(target_interval_days / 7)
-        min_days, max_days = cls.get_interval_flexibility(visit_number, target_weeks)
+        min_days, max_days = self.get_interval_flexibility(visit_number, target_weeks)
         
         # Adjust to weekday
-        adjusted_date = cls.adjust_to_weekday(target_date, prefer_earlier)
+        adjusted_date = self.adjust_to_weekday(target_date, prefer_earlier)
         
         # Check if adjustment is within flexibility range
         actual_interval = (adjusted_date - current_date).days
@@ -109,7 +129,7 @@ class WeekdayScheduler:
             return adjusted_date
         elif actual_interval < min_days:
             # Too early, try the other direction
-            adjusted_date = cls.adjust_to_weekday(target_date, prefer_earlier=False)
+            adjusted_date = self.adjust_to_weekday(target_date, prefer_earlier=False)
             actual_interval = (adjusted_date - current_date).days
             
             if actual_interval <= max_days:
@@ -117,13 +137,18 @@ class WeekdayScheduler:
             else:
                 # Still outside range, use minimum allowed
                 min_date = current_date + timedelta(days=min_days)
-                return cls.adjust_to_weekday(min_date, prefer_earlier=False)
+                return self.adjust_to_weekday(min_date, prefer_earlier=False)
         else:
             # Too late, use maximum allowed
             max_date = current_date + timedelta(days=max_days)
-            return cls.adjust_to_weekday(max_date, prefer_earlier=True)
+            return self.adjust_to_weekday(max_date, prefer_earlier=True)
     
-    @staticmethod
-    def is_weekday(date: datetime) -> bool:
-        """Check if a date is a weekday (Monday-Friday)."""
-        return date.weekday() < 5
+    def is_working_day(self, date: datetime) -> bool:
+        """Check if a date is an allowed working day."""
+        weekday = date.weekday()
+        if weekday < 5:  # Monday-Friday
+            return True
+        elif weekday == 5:  # Saturday
+            return self.allow_saturday
+        else:  # Sunday
+            return self.allow_sunday

@@ -75,6 +75,11 @@ class TimeBasedProtocolSpecification:
     # Optional: Advanced baseline vision distribution
     baseline_vision_distribution: Optional[Dict[str, Any]] = None
     
+    # Weekend working configuration
+    allow_saturday_visits: bool = False
+    allow_sunday_visits: bool = False
+    prefer_weekday_for_first_visit: bool = True  # Whether to adjust first visit to weekday
+    
     @classmethod
     def from_yaml(cls, filepath: Path) -> 'TimeBasedProtocolSpecification':
         """
@@ -187,6 +192,9 @@ class TimeBasedProtocolSpecification:
             vision_parameters_file=data['vision_parameters_file'],
             discontinuation_parameters_file=data['discontinuation_parameters_file'],
             demographics_parameters_file=data.get('demographics_parameters_file'),
+            allow_saturday_visits=data.get('allow_saturday_visits', False),
+            allow_sunday_visits=data.get('allow_sunday_visits', False),
+            prefer_weekday_for_first_visit=data.get('prefer_weekday_for_first_visit', True),
             source_file=str(filepath.absolute()),
             load_timestamp=datetime.now().isoformat(),
             checksum=checksum

@@ -67,16 +67,20 @@ class WeekdayAwareProtocol(Protocol):
 class WeekdayStandardProtocol(StandardProtocol):
     """Standard protocol with built-in weekday scheduling."""
     
-    def __init__(self, *args, prefer_earlier: bool = True, **kwargs):
+    def __init__(self, *args, prefer_earlier: bool = True, 
+                 allow_saturday: bool = False, allow_sunday: bool = False, **kwargs):
         """
         Initialize with weekday scheduling.
         
         Args:
             *args, **kwargs: Arguments for StandardProtocol
             prefer_earlier: Whether to prefer Friday over Monday
+            allow_saturday: Whether Saturday visits are allowed
+            allow_sunday: Whether Sunday visits are allowed
         """
         super().__init__(*args, **kwargs)
-        self.scheduler = WeekdayScheduler()
+        self.scheduler = WeekdayScheduler(allow_saturday=allow_saturday, 
+                                         allow_sunday=allow_sunday)
         self.prefer_earlier = prefer_earlier
         self._visit_counter = {}
     
@@ -104,16 +108,20 @@ class WeekdayStandardProtocol(StandardProtocol):
 class WeekdayLoadingDoseProtocol(LoadingDoseProtocol):
     """Loading dose protocol with built-in weekday scheduling."""
     
-    def __init__(self, *args, prefer_earlier: bool = True, **kwargs):
+    def __init__(self, *args, prefer_earlier: bool = True,
+                 allow_saturday: bool = False, allow_sunday: bool = False, **kwargs):
         """
         Initialize with weekday scheduling.
         
         Args:
             *args, **kwargs: Arguments for LoadingDoseProtocol
             prefer_earlier: Whether to prefer Friday over Monday
+            allow_saturday: Whether Saturday visits are allowed
+            allow_sunday: Whether Sunday visits are allowed
         """
         super().__init__(*args, **kwargs)
-        self.scheduler = WeekdayScheduler()
+        self.scheduler = WeekdayScheduler(allow_saturday=allow_saturday,
+                                         allow_sunday=allow_sunday)
         self.prefer_earlier = prefer_earlier
         self._visit_counter = {}
     

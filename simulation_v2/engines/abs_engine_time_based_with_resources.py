@@ -36,17 +36,24 @@ class ABSEngineTimeBasedWithResources(ABSEngineTimeBasedWithParams):
         super().__init__(*args, **kwargs)
         
         # Initialize resource tracking
+        # Get weekend working configuration from protocol spec if available
+        allow_saturday = False
+        allow_sunday = False
+        if hasattr(self, 'protocol_spec'):
+            allow_saturday = getattr(self.protocol_spec, 'allow_saturday_visits', False)
+            allow_sunday = getattr(self.protocol_spec, 'allow_sunday_visits', False)
+        
         if resource_config:
-            self.resource_tracker = ResourceTracker(resource_config)
+            self.resource_tracker = ResourceTracker(resource_config, allow_saturday, allow_sunday)
         elif resource_config_path:
             config = load_resource_config(resource_config_path)
-            self.resource_tracker = ResourceTracker(config)
+            self.resource_tracker = ResourceTracker(config, allow_saturday, allow_sunday)
         else:
             # Default to NHS standard resources
             default_path = Path(__file__).parent.parent.parent / 'protocols' / 'resources' / 'nhs_standard_resources.yaml'
             if default_path.exists():
                 config = load_resource_config(str(default_path))
-                self.resource_tracker = ResourceTracker(config)
+                self.resource_tracker = ResourceTracker(config, allow_saturday, allow_sunday)
             else:
                 self.resource_tracker = None
         

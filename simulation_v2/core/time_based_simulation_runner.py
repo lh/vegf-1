@@ -99,7 +99,9 @@ class TimeBasedSimulationRunner:
                 max_interval_days=self.spec.max_interval_days,
                 extension_days=self.spec.extension_days,
                 shortening_days=self.spec.shortening_days,
-                prefer_earlier=True  # Prefer Friday over Monday for weekend adjustments
+                prefer_earlier=True,  # Prefer Friday over Monday for weekend adjustments
+                allow_saturday=self.spec.allow_saturday_visits,
+                allow_sunday=self.spec.allow_sunday_visits
             )
         else:
             protocol = WeekdayStandardProtocol(
@@ -107,7 +109,9 @@ class TimeBasedSimulationRunner:
                 max_interval_days=self.spec.max_interval_days,
                 extension_days=self.spec.extension_days,
                 shortening_days=self.spec.shortening_days,
-                prefer_earlier=True  # Prefer Friday over Monday for weekend adjustments
+                prefer_earlier=True,  # Prefer Friday over Monday for weekend adjustments
+                allow_saturday=self.spec.allow_saturday_visits,
+                allow_sunday=self.spec.allow_sunday_visits
             )
         
         # Create baseline vision distribution from spec
