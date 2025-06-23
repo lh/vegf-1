@@ -308,6 +308,107 @@ with tab2:
         # Use vectorized stats
         st.metric("Mean Vision Change", f"{StyleConstants.format_vision(mean_change)} letters")
         st.metric("Patients Improved", f"{StyleConstants.format_count(np.sum(vision_changes > 0))}/{StyleConstants.format_count(len(vision_changes))}")
+    
+    # Add warning about discontinued patients
+    st.warning("⚠️ **Important Note**: The above analysis includes all patients, using their last recorded vision as 'final' vision. "
+               "For patients who discontinued treatment early, this 'final' vision may be from months or years before the simulation ended, "
+               "which can create a misleading picture of treatment outcomes.")
+    
+    # Alternative view - only patients active at end
+    st.subheader("Alternative View: Active Patients Only")
+    st.write("This analysis includes only patients who remained active through the entire simulation period.")
+    
+    # Get discontinued patient information
+    try:
+        from ape.components.treatment_patterns.discontinued_utils import get_discontinued_patients
+        
+        # Get all patients and their discontinuation status
+        discontinued_info = get_discontinued_patients(results)
+        
+        # Get vision trajectory data again
+        vision_df_full = results.get_vision_trajectory_df(sample_size=None)
+        
+        # Identify patients who were still active at the end
+        active_patient_ids = {str(pid) for pid, info in discontinued_info.items() if not info['discontinued']}
+        
+        # Filter vision data for only active patients
+        vision_df_active = vision_df_full[vision_df_full['patient_id'].astype(str).isin(active_patient_ids)]
+        
+        if len(vision_df_active) > 0:
+            # Calculate statistics for active patients only
+            active_patient_stats = vision_df_active.groupby('patient_id')['vision'].agg(['first', 'last']).reset_index()
+            
+            active_baseline_visions = active_patient_stats['first'].values
+            active_final_visions = active_patient_stats['last'].values
+            active_vision_changes = active_final_visions - active_baseline_visions
+            n_active_patients = len(active_patient_stats)
+            
+            # Display count of active vs discontinued
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Total Patients", f"{stats['patient_count']:,}")
+            with col2:
+                st.metric("Active at End", f"{n_active_patients:,}")
+            with col3:
+                retention_rate = (n_active_patients / stats['patient_count']) * 100
+                st.metric("Retention Rate", f"{retention_rate:.1f}%")
+            
+            # Vision distribution plots for active patients
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # Vision distribution chart - active patients only
+                chart = (ChartBuilder('Vision Distribution: Baseline vs Final (Active Patients Only)')
+                        .with_labels(xlabel='Vision (ETDRS letters)', ylabel='Number of Patients')
+                        .with_vision_axis('x')
+                        .with_count_axis('y')
+                        .plot(lambda ax, colors: [
+                            ax.hist(active_baseline_visions, bins=20, alpha=0.6, label='Baseline', 
+                                   color=colors['primary'], edgecolor=colors['neutral'], linewidth=1.5),
+                            ax.hist(active_final_visions, bins=20, alpha=0.6, label='Final', 
+                                   color=colors['secondary'], edgecolor=colors['neutral'], linewidth=1.5)
+                        ])
+                        .with_legend(loc='upper left')
+                        .build())
+                st.pyplot(chart.figure)
+                
+            with col2:
+                # Vision change chart - active patients only
+                active_mean_change = np.mean(active_vision_changes)
+                active_formatted_mean = StyleConstants.format_vision(active_mean_change)
+                
+                chart = (ChartBuilder('Distribution of Vision Changes (Active Patients Only)')
+                        .with_labels(xlabel='Vision Change (ETDRS letters)', ylabel='Number of Patients')
+                        .with_count_axis('y')
+                        .plot(lambda ax, colors: 
+                              ax.hist(active_vision_changes, bins=20, color=colors['success'], 
+                                     alpha=0.7, edgecolor=colors['neutral'], linewidth=1.5))
+                        .add_reference_line(0, 'No change', 'vertical', 'secondary')
+                        .add_reference_line(active_mean_change, f'Mean: {active_formatted_mean}', 'vertical', 'primary')
+                        .build())
+                st.pyplot(chart.figure)
+            
+            # Summary statistics for active patients
+            st.subheader("Vision Statistics (Active Patients Only)")
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("Mean Baseline Vision", f"{StyleConstants.format_vision(np.mean(active_baseline_visions))} letters")
+                st.metric("Std Baseline Vision", f"{StyleConstants.format_statistic(np.std(active_baseline_visions))} letters")
+                
+            with col2:
+                st.metric("Mean Final Vision", f"{StyleConstants.format_vision(np.mean(active_final_visions))} letters")
+                st.metric("Std Final Vision", f"{StyleConstants.format_statistic(np.std(active_final_visions))} letters")
+                
+            with col3:
+                st.metric("Mean Vision Change", f"{StyleConstants.format_vision(active_mean_change)} letters")
+                st.metric("Patients Improved", f"{StyleConstants.format_count(np.sum(active_vision_changes > 0))}/{StyleConstants.format_count(n_active_patients)}")
+                
+        else:
+            st.info("No patients remained active through the entire simulation period.")
+            
+    except Exception as e:
+        st.error(f"Unable to analyze active patients separately: {str(e)}")
 
 
 with tab3:
