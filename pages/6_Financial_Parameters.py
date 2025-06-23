@@ -84,11 +84,18 @@ with st.sidebar:
     available_configs = get_available_configs()
     
     if available_configs:
+        # Determine default selection
+        if 'select_config' in st.session_state and st.session_state['select_config'] in available_configs:
+            default_index = list(available_configs.keys()).index(st.session_state['select_config'])
+            del st.session_state['select_config']  # Clear after use
+        else:
+            default_index = 0
+            
         selected_config_name = st.selectbox(
             "Select Configuration",
             options=list(available_configs.keys()),
-            help="Choose a financial parameter set to view or edit",
-            key="config_selector"
+            index=default_index,
+            help="Choose a financial parameter set to view or edit"
         )
         
         selected_path = available_configs[selected_config_name]
@@ -182,8 +189,8 @@ if st.session_state.get('create_new', False):
                 if save_financial_config(config, new_path):
                     st.success(f"Created new configuration: {new_name}")
                     st.session_state['create_new'] = False
-                    # Set the newly created config to be selected
-                    st.session_state['config_selector'] = f"Cost Config: {safe_name}"
+                    # Set a flag to select the newly created config
+                    st.session_state['select_config'] = f"Cost Config: {safe_name}"
                     st.rerun()
             else:
                 st.error("Please enter a configuration name")
