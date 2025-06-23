@@ -76,21 +76,26 @@ class TimeBasedSimulationRunnerWithResources(TimeBasedSimulationRunner):
         )
         
         # Create protocol with loading dose if specified
+        # Use weekday-aware protocols to avoid weekend scheduling
+        from simulation_v2.core.weekday_protocol import WeekdayLoadingDoseProtocol, WeekdayStandardProtocol
+        
         if self.spec.loading_dose_injections:
-            protocol = LoadingDoseProtocol(
+            protocol = WeekdayLoadingDoseProtocol(
                 loading_dose_injections=self.spec.loading_dose_injections,
                 loading_dose_interval_days=self.spec.loading_dose_interval_days,
                 min_interval_days=self.spec.min_interval_days,
                 max_interval_days=self.spec.max_interval_days,
                 extension_days=self.spec.extension_days,
-                shortening_days=self.spec.shortening_days
+                shortening_days=self.spec.shortening_days,
+                prefer_earlier=True  # Prefer Friday over Monday for weekend adjustments
             )
         else:
-            protocol = StandardProtocol(
+            protocol = WeekdayStandardProtocol(
                 min_interval_days=self.spec.min_interval_days,
                 max_interval_days=self.spec.max_interval_days,
                 extension_days=self.spec.extension_days,
-                shortening_days=self.spec.shortening_days
+                shortening_days=self.spec.shortening_days,
+                prefer_earlier=True  # Prefer Friday over Monday for weekend adjustments
             )
         
         # Create baseline vision distribution from spec
