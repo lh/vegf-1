@@ -1303,97 +1303,103 @@ if cost_config_a and cost_config_b:
                 key="drug_cost_b"
             )
     
-    # Calculate financial outcomes using existing resource tracker logic
+    # Calculate financial outcomes using simulation data directly
     def calculate_costs_with_tracker(sim_data, cost_config, new_drug_cost, default_drug_cost):
-        """Calculate costs using ResourceTracker similar to workload analysis."""
+        """Calculate costs similar to workload analysis page."""
         try:
-            # Create resource config for ResourceTracker
-            # ResourceTracker expects a specific config structure
-            resource_config = {
-                'resources': {
-                    'roles': {
-                        'nurse': {'capacity_per_session': 10},
-                        'technician': {'capacity_per_session': 15},
-                        'consultant': {'capacity_per_session': 8}
-                    },
-                    'visit_requirements': {
-                        'injection_visit_standard': [
-                            {'role': 'nurse', 'count': 1}
-                        ],
-                        'monitoring_visit_standard': [
-                            {'role': 'technician', 'count': 1}
-                        ]
-                    },
-                    'session_parameters': {
-                        'sessions_per_day': 2
-                    }
-                },
-                'costs': {
-                    'visit_types': {
-                        'injection_visit_standard': {
-                            'drug_cost': new_drug_cost,
-                            'procedure_cost': 285,
-                            'total_cost': new_drug_cost + 285
-                        },
-                        'monitoring_visit_standard': {
-                            'drug_cost': 0,
-                            'procedure_cost': 150,
-                            'total_cost': 150
-                        }
+            # Load the simulation using ResultsFactory to get resource tracker
+            from ape.core.results.factory import ResultsFactory
+            results = ResultsFactory.load_results(sim_data['path'])
+            
+            # Check if simulation has resource tracking
+            resource_tracker = None
+            if hasattr(results, 'resource_tracker'):
+                resource_tracker = results.resource_tracker
+            elif hasattr(results, '_raw_results') and hasattr(results._raw_results, 'resource_tracker'):
+                resource_tracker = results._raw_results.resource_tracker
+            
+            if resource_tracker:
+                # Use existing resource tracker's data
+                # Helper function from workload analysis
+                def safe_call_method(resource_tracker, method_name, default=None):
+                    """Safely call a method on resource_tracker, handling SimpleNamespace wrapper."""
+                    if hasattr(resource_tracker, method_name):
+                        return getattr(resource_tracker, method_name)()
+                    elif hasattr(resource_tracker, '__dict__'):
+                        rt_dict = resource_tracker.__dict__
+                        if method_name == 'get_total_costs':
+                            return rt_dict.get('total_costs', default or {'total': 0, 'drug': 0})
+                        elif method_name == 'get_workload_summary':
+                            return rt_dict.get('workload_summary', default or {})
+                    return default
+                
+                # Get original costs and workload
+                original_costs = safe_call_method(resource_tracker, 'get_total_costs', {'total': 0, 'drug': 0})
+                workload_summary = safe_call_method(resource_tracker, 'get_workload_summary', {})
+                
+                # Count injections from visits
+                if hasattr(resource_tracker, '__dict__'):
+                    visits = resource_tracker.__dict__.get('visits', [])
+                else:
+                    visits = getattr(resource_tracker, 'visits', [])
+                
+                total_injections = sum(1 for v in visits if v.get('injection_given', False))
+                
+                # Calculate drug cost adjustment
+                drug_cost_diff = new_drug_cost - default_drug_cost
+                drug_cost_adjustment = drug_cost_diff * total_injections
+                
+                # Apply adjustment
+                adjusted_costs = original_costs.copy()
+                if 'drug' in adjusted_costs:
+                    adjusted_costs['drug'] = adjusted_costs.get('drug', 0) + drug_cost_adjustment
+                    adjusted_costs['total'] = adjusted_costs.get('total', 0) + drug_cost_adjustment
+                
+                return {
+                    'costs': adjusted_costs,
+                    'original_costs': original_costs,
+                    'workload_summary': workload_summary,
+                    'total_injections': total_injections,
+                    'resource_tracker': resource_tracker
+                }
+            else:
+                # Fallback: calculate basic costs from visits data
+                visits_df = pd.read_parquet(sim_data['path'] / "visits.parquet")
+                total_injections = int(visits_df['injected'].sum())
+                total_visits = len(visits_df)
+                
+                # Basic cost calculation
+                drug_costs = total_injections * new_drug_cost
+                # Assume injection visits cost more than monitoring
+                injection_visits = int(visits_df['injected'].sum())
+                monitoring_visits = total_visits - injection_visits
+                procedure_costs = (injection_visits * 285) + (monitoring_visits * 150)
+                
+                costs = {
+                    'drug': drug_costs,
+                    'injection_procedure': injection_visits * 285,
+                    'consultation': monitoring_visits * 150,
+                    'total': drug_costs + procedure_costs
+                }
+                
+                # Basic workload summary
+                workload_summary = {
+                    'total_visits': total_visits,
+                    'total_injections': total_injections,
+                    'average_daily_demand': {
+                        'nurse': injection_visits / (sim_data['duration'] * 30.44),
+                        'technician': monitoring_visits / (sim_data['duration'] * 30.44),
+                        'consultant': 0
                     }
                 }
-            }
-            
-            # Create resource tracker
-            resource_tracker = ResourceTracker(resource_config)
-            
-            # Get visits from simulation results
-            visits_df = pd.read_parquet(sim_data['path'] / "visits.parquet")
-            
-            # Track each visit
-            for _, visit in visits_df.iterrows():
-                visit_date = pd.to_datetime(visit['date'])
                 
-                # Determine visit type based on injection
-                if visit.get('injected', False):
-                    resource_tracker.track_visit({
-                        'date': visit_date,
-                        'visit_type': 'injection_visit_standard',
-                        'role': 'nurse'
-                    })
-                else:
-                    resource_tracker.track_visit({
-                        'date': visit_date,
-                        'visit_type': 'monitoring_visit_standard',
-                        'role': 'technician'
-                    })
-            
-            # Get total costs
-            original_costs = resource_tracker.get_total_costs()
-            
-            # Count total injections
-            total_injections = int(visits_df['injected'].sum())
-            
-            # Calculate drug cost adjustment
-            drug_cost_diff = new_drug_cost - default_drug_cost
-            drug_cost_adjustment = drug_cost_diff * total_injections
-            
-            # Apply adjustment
-            adjusted_costs = original_costs.copy()
-            if 'drug' in adjusted_costs:
-                adjusted_costs['drug'] = adjusted_costs['drug'] + drug_cost_adjustment
-                adjusted_costs['total'] = adjusted_costs['total'] + drug_cost_adjustment
-            
-            # Get workload summary
-            workload_summary = resource_tracker.get_workload_summary()
-            
-            return {
-                'costs': adjusted_costs,
-                'original_costs': original_costs,
-                'workload_summary': workload_summary,
-                'total_injections': total_injections,
-                'resource_tracker': resource_tracker
-            }
+                return {
+                    'costs': costs,
+                    'original_costs': costs,
+                    'workload_summary': workload_summary,
+                    'total_injections': total_injections,
+                    'resource_tracker': None
+                }
             
         except Exception as e:
             st.error(f"Error calculating costs: {str(e)}")
