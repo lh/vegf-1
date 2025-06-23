@@ -102,7 +102,7 @@ is_large_dataset = stats['patient_count'] > 1000
 # Create tabs for different analyses - Patient Journey first as it's the most visual
 tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
     "Patient Journey Visualisation", 
-    "Treatment Flow",
+    "Cohort Flow",
     "Vision Outcomes", 
     "Patient Trajectories", 
     "Treatment Intervals & Gaps",
@@ -245,8 +245,8 @@ with tab1:
         """)
 
 with tab2:
-    # PATIENT STATES (was tab4)
-    st.header("Patient Treatment Flow")
+    # COHORT FLOW (was tab4)
+    st.header("Cohort Flow")
     st.markdown("Comprehensive view of patient cohort flow through different treatment states over time.")
     
     # Import cache helper
