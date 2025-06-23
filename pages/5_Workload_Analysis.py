@@ -364,7 +364,7 @@ st.header("Export Data")
 col1, col2 = st.columns(2)
 
 with col1:
-    if ape_button("Export Workload Summary", variant="secondary"):
+    if ape_button("Export Workload Summary", key="export_workload", button_type="secondary"):
         # Create export data
         export_data = {
             'summary': workload_summary,
@@ -395,7 +395,7 @@ with col1:
         st.success(f"Exported to {export_path}")
 
 with col2:
-    if ape_button("Export Cost Details", variant="secondary"):
+    if ape_button("Export Cost Details", key="export_costs", button_type="secondary"):
         # Create cost details for each visit
         visit_details = []
         for visit in resource_tracker.visits:
