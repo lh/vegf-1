@@ -24,7 +24,6 @@ from visualization.color_system import SEMANTIC_COLORS, ALPHAS
 
 st.set_page_config(
     page_title="Workload & Economic Analysis",
-    page_icon="📊",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -71,7 +70,7 @@ if not has_resource_tracking:
     st.stop()
 
 # Main title
-st.title("📊 Workload & Economic Analysis")
+st.title("Workload & Economic Analysis")
 
 # Show simulation context
 with st.expander("Simulation Details", expanded=False):
