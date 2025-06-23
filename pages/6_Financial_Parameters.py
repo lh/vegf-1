@@ -252,12 +252,17 @@ if available_configs:
                 if drug_costs:
                     drug_df_data = []
                     for drug_id, cost in sorted(drug_costs.items()):
-                        drug_df_data.append({
-                            'Drug': drug_id.replace('_', ' ').title(),
-                            'Cost (£)': f"£{cost:,.0f}"
-                        })
-                    drug_df = pd.DataFrame(drug_df_data)
-                    st.dataframe(drug_df, hide_index=True, use_container_width=True)
+                        # Skip non-numeric entries like 'default_drug'
+                        if isinstance(cost, (int, float)):
+                            drug_df_data.append({
+                                'Drug': drug_id.replace('_', ' ').title(),
+                                'Cost (£)': f"£{cost:,.0f}"
+                            })
+                    if drug_df_data:
+                        drug_df = pd.DataFrame(drug_df_data)
+                        st.dataframe(drug_df, hide_index=True, use_container_width=True)
+                    else:
+                        st.info("No drug costs defined")
                 else:
                     st.info("No drug costs defined")
                 
@@ -269,7 +274,7 @@ if available_configs:
                     for comp_id, cost in sorted(components.items()):
                         comp_df_data.append({
                             'Component': comp_id.replace('_', ' ').title(),
-                            'Cost (£)': f"£{cost:,.0f}"
+                            'Cost (£)': f"£{float(cost):,.0f}" if isinstance(cost, (int, float)) else f"£{cost}"
                         })
                     comp_df = pd.DataFrame(comp_df_data)
                     st.dataframe(comp_df, hide_index=True, use_container_width=True)
@@ -301,7 +306,7 @@ if available_configs:
                     for event_id, cost in sorted(special_events.items()):
                         event_df_data.append({
                             'Event': event_id.replace('_', ' ').title(),
-                            'Cost (£)': f"£{cost:,.0f}"
+                            'Cost (£)': f"£{float(cost):,.0f}" if isinstance(cost, (int, float)) else f"£{cost}"
                         })
                     event_df = pd.DataFrame(event_df_data)
                     st.dataframe(event_df, hide_index=True, use_container_width=True)
@@ -314,15 +319,27 @@ if available_configs:
             
             col1, col2, col3, col4 = st.columns(4)
             
-            # Calculate totals
-            total_drug_costs = sum(drug_costs.values()) if drug_costs else 0
-            avg_drug_cost = total_drug_costs / len(drug_costs) if drug_costs else 0
+            # Calculate totals (handle string values)
+            if drug_costs:
+                # Only include numeric values in calculations
+                drug_values = [float(v) for v in drug_costs.values() if isinstance(v, (int, float))]
+                numeric_drug_count = len(drug_values)
+                total_drug_costs = sum(drug_values)
+                avg_drug_cost = total_drug_costs / numeric_drug_count if numeric_drug_count > 0 else 0
+            else:
+                drug_values = []
+                numeric_drug_count = 0
+                total_drug_costs = avg_drug_cost = 0
             
-            total_visit_costs = sum(v.get('total_cost', 0) for v in visit_types.values()) if visit_types else 0
-            avg_visit_cost = total_visit_costs / len(visit_types) if visit_types else 0
+            if visit_types:
+                visit_costs = [float(v.get('total_cost', 0)) if isinstance(v.get('total_cost', 0), (int, float)) else 0 for v in visit_types.values()]
+                total_visit_costs = sum(visit_costs)
+                avg_visit_cost = total_visit_costs / len(visit_costs) if visit_costs else 0
+            else:
+                total_visit_costs = avg_visit_cost = 0
             
             with col1:
-                st.metric("Drug Types", len(drug_costs))
+                st.metric("Drug Types", numeric_drug_count)
                 st.metric("Avg Drug Cost", f"£{avg_drug_cost:,.0f}")
             
             with col2:
@@ -335,16 +352,14 @@ if available_configs:
             
             with col4:
                 # Find min/max costs
-                if drug_costs:
-                    min_drug = min(drug_costs.values())
-                    max_drug = max(drug_costs.values())
-                    st.metric("Drug Cost Range", f"£{min_drug} - £{max_drug}")
-                if visit_types:
-                    visit_costs = [v.get('total_cost', 0) for v in visit_types.values()]
-                    if visit_costs:
-                        min_visit = min(visit_costs)
-                        max_visit = max(visit_costs)
-                        st.metric("Visit Cost Range", f"£{min_visit} - £{max_visit}")
+                if drug_costs and drug_values:
+                    min_drug = min(drug_values)
+                    max_drug = max(drug_values)
+                    st.metric("Drug Cost Range", f"£{min_drug:,.0f} - £{max_drug:,.0f}")
+                if visit_types and visit_costs:
+                    min_visit = min(visit_costs)
+                    max_visit = max(visit_costs)
+                    st.metric("Visit Cost Range", f"£{min_visit:,.0f} - £{max_visit:,.0f}")
         
         with tabs[1]:  # Drug Costs
             st.subheader("Drug Costs")
@@ -354,14 +369,19 @@ if available_configs:
             
             # Create a container for drug costs
             for drug_id, cost in drug_costs.items():
+                # Skip non-numeric entries like 'default_drug'
+                if not isinstance(cost, (int, float)):
+                    continue
                 col1, col2, col3 = st.columns([3, 2, 1])
                 with col1:
                     drug_display = drug_id.replace('_', ' ').title()
                     st.text_input("Drug", value=drug_display, key=f"drug_name_{drug_id}", disabled=True)
                 with col2:
+                    # Ensure cost is numeric for the input
+                    cost_value = float(cost) if isinstance(cost, (int, float, str)) else 0
                     new_cost = st.number_input(
                         "Cost (£)", 
-                        value=cost, 
+                        value=cost_value, 
                         min_value=0, 
                         step=1,
                         key=f"drug_cost_{drug_id}"
