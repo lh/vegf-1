@@ -1202,7 +1202,7 @@ st.markdown("---")
 st.markdown("### Financial Analysis")
 
 # Import cost tracking functionality
-from ape.components.cost_tracking.cost_config import CostConfig
+from simulation_v2.economics.cost_config import CostConfig
 from ape.core.resources.resource_tracker import ResourceTracker
 from ape.components.treatment_patterns.discontinued_utils import get_discontinued_patients
 from pathlib import Path
