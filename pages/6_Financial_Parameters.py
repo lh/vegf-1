@@ -84,9 +84,18 @@ with st.sidebar:
     available_configs = get_available_configs()
     
     if available_configs:
+        # Check if we should select a newly created config
+        if 'newly_created_config' in st.session_state and st.session_state['newly_created_config'] in available_configs:
+            default_index = list(available_configs.keys()).index(st.session_state['newly_created_config'])
+            # Clear the flag after using it
+            del st.session_state['newly_created_config']
+        else:
+            default_index = 0
+            
         selected_config_name = st.selectbox(
             "Select Configuration",
             options=list(available_configs.keys()),
+            index=default_index,
             help="Choose a financial parameter set to view or edit"
         )
         
@@ -165,6 +174,8 @@ if st.session_state.get('create_new', False):
                 if save_financial_config(config, new_path):
                     st.success(f"Created new configuration: {new_name}")
                     st.session_state['create_new'] = False
+                    # Set the newly created config to be selected
+                    st.session_state['newly_created_config'] = f"Cost Config: {safe_name}"
                     st.rerun()
             else:
                 st.error("Please enter a configuration name")
@@ -186,7 +197,9 @@ elif available_configs:
     # Configuration header
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.header(config.get('metadata', {}).get('name', selected_path.stem))
+        # Use the edited config's name if available, otherwise fall back to original
+        display_name = st.session_state.edited_config.get('metadata', {}).get('name', selected_path.stem)
+        st.header(display_name)
     with col2:
         if ape_button("Save Changes", key="save_changes", is_primary_action=True):
             if save_financial_config(st.session_state.edited_config, selected_path):
