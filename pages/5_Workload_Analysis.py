@@ -333,10 +333,10 @@ with tab1:
             'Role': role,
             'Peak Daily Demand': peak_demand,
             'Average Daily Demand': f"{avg_demand:.1f}",
-            'Weekly Sessions Needed': f"{weekly_sessions_needed:.1f}",
-            'Peak Sessions Needed': f"{peak_sessions_needed:.1f}",
+            'Peak Daily Sessions': f"{peak_sessions_needed:.1f}",
             'Average Sessions/Day': f"{avg_sessions_needed:.1f}",
             'Utilisation %': f"{utilization:.0f}%",
+            'Weekly Sessions Needed': f"{weekly_sessions_needed:.1f}",
             'Total Sessions': total_sessions
         })
     
