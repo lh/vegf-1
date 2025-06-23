@@ -21,6 +21,15 @@
 
 \metroset{progressbar=frametitle,sectionpage=progressbar,numbering=fraction}
 
+% Command for watermark apes
+\newcommand{\apewatermark}[1]{%
+    \vspace*{\fill}
+    \hfill
+    \includegraphics[height=2.5cm,opacity=0.15]{#1}
+    \hspace{0.5cm}
+    \vspace{0.5cm}
+}
+
 \title{Agent-Based Simulation for Neovascular AMD Treatment Planning}
 \subtitle{Optimizing Anti-VEGF Therapy Protocols in the NHS}
 \author{Luke Herbert\\Consultant Ophthalmologist}
@@ -184,6 +193,7 @@ Hip Replacement & £500-700 million & 100,000 \\
 
 \centering
 \textbf{Challenge: £1.2-1.5 billion projected cost by 2035}
+\apewatermark{sad_ape_watermark.png}
 \end{frame}
 
 \section{Why Model?}

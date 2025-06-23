@@ -25,3 +25,6 @@ streamlit-carbon-button>=0.1.0  # Carbon design buttons for Streamlit
 haikunator>=2.1.0  # For memorable simulation names
 pendulum>=3.0.0  # For human-friendly datetime formatting
 psutil>=5.9.0  # For memory monitoring
+
+# PDF Generation
+reportlab>=4.0.0  # For protocol PDF reports
