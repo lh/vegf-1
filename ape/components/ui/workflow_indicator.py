@@ -88,9 +88,11 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                         st.switch_page(page)
                 # Analysis and Workload buttons are only enabled if we have results
                 elif step_id in ["analysis", "workload"] and has_results:
+                    # Use invisible icon for workload button only
+                    button_icon = 'invisible' if step_id == "workload" else None
                     if navigation_button(
                         display_label,
-                        icon_name=None,  # Disable auto-icon since we're using our own
+                        icon_name=button_icon,  # Invisible for workload, auto-detect for others
                         key=f"workflow_{step_id}",
                         full_width=True,
                         help_text="View analysis results" if step_id == "analysis" else "View workload and economic analysis",

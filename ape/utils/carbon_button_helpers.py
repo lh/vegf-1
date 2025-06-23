@@ -15,6 +15,10 @@ CARBON_AVAILABLE = True
 # Icon mapping based on available Carbon icons (260 total in v1.3.0)
 # Maps semantic names to actual CarbonIcons
 ICON_MAP = {
+    # Special icons
+    'invisible': CarbonIcons.INVISIBLE,
+    'blank': CarbonIcons.INVISIBLE,
+    
     # Navigation
     'home': CarbonIcons.HOME,
     'settings': CarbonIcons.SETTINGS,
