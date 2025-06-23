@@ -171,7 +171,7 @@ if all_dates:
         x=plot_df['date'],
         y=plot_df['count'],
         name='Daily Count',
-        marker_color=SEMANTIC_COLORS['injection_visits'],
+        marker_color=SEMANTIC_COLORS['primary'],  # Use primary color for workload data
         opacity=0.8
     ))
     
