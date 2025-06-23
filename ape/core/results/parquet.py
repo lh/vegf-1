@@ -134,6 +134,8 @@ class ParquetResults(SimulationResults):
                         if role not in daily_usage[date]:
                             return 0.0
                         daily_count = daily_usage[date][role]
+                        if daily_count is None:
+                            return 0.0
                         role_info = tracker.roles.get(role)
                         if not role_info:
                             raise ValueError(f"Role '{role}' not found in tracker.roles")

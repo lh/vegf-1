@@ -19,6 +19,12 @@ All project tests organized by type.
   - Performance regression tests
   - Visual regression tests
 
+- **Key Integration Tests**:
+  - `test_workload_integration.py` - Full end-to-end workload analysis test
+    - Simulates exactly what the UI does
+    - Tests resource tracking, cost calculation, and workload analysis
+    - Validates data persistence and loading
+
 ## Running Tests
 
 ```bash
@@ -38,6 +44,12 @@ pytest tests/unit/test_clinical_model.py
 
 # Run in verbose mode
 pytest -v
+
+# Run workload integration test (full simulation)
+python tests/test_workload_integration.py
+
+# Run workload integration test with pytest (smaller dataset)
+pytest tests/test_workload_integration.py::test_workload_with_smaller_dataset -v
 ```
 
 ## Test Organization
