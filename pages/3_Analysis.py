@@ -102,7 +102,7 @@ is_large_dataset = stats['patient_count'] > 1000
 # Create tabs for different analyses - Patient Journey first as it's the most visual
 tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
     "Patient Journey Visualisation", 
-    "Patient States",
+    "Treatment Flow",
     "Vision Outcomes", 
     "Patient Trajectories", 
     "Treatment Intervals & Gaps",
