@@ -1027,6 +1027,14 @@ def create_standardized_vision_plot(ax, vision_data, title, color='blue', show_c
     ax.set_xlim(0, max_month)
     ax.set_ylim(0, 85)
     
+    # Set x-axis ticks at yearly intervals (0, 12, 24, 36, 48, 60)
+    # Calculate how many years we need based on max_month
+    years_needed = int(np.ceil(max_month / 12))
+    x_ticks = [i * 12 for i in range(years_needed + 1)]
+    # Only include ticks up to max_month
+    x_ticks = [tick for tick in x_ticks if tick <= max_month]
+    ax.set_xticks(x_ticks)
+    
     # Remove grid or make it very subtle
     ax.grid(True, alpha=0.1, linewidth=0.5, color='#cccccc')
     
