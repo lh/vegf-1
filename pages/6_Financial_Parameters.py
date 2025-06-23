@@ -94,17 +94,8 @@ with st.sidebar:
         
         st.divider()
         
-        # Quick actions
-        st.subheader("Quick Actions")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            if ape_button("New Config", key="new_config", full_width=True):
-                st.session_state['create_new'] = True
-        
-        with col2:
-            if ape_button("Duplicate", key="duplicate", full_width=True):
-                st.session_state['duplicate_config'] = selected_path
+        if ape_button("New Config", key="new_config", full_width=True):
+            st.session_state['create_new'] = True
     else:
         st.warning("No configurations found")
         if ape_button("Create First Config", key="create_first", full_width=True):
@@ -114,17 +105,20 @@ with st.sidebar:
 if st.session_state.get('create_new', False):
     st.header("Create New Financial Configuration")
     
-    # Template selection
-    template_options = {
-        "NHS Standard Resources": "protocols/resources/nhs_standard_resources.yaml",
-        "NHS HRG-Aligned 2025": "protocols/cost_configs/nhs_hrg_aligned_2025.yaml",
-        "Empty Template": None
-    }
+    # Build template options including all existing configs
+    template_options = {}
+    
+    # Add all available configurations
+    for config_name, config_path in get_available_configs().items():
+        template_options[config_name] = str(config_path)
+    
+    # Add empty template option
+    template_options["Empty Template"] = None
     
     selected_template = st.selectbox(
         "Start from template",
         options=list(template_options.keys()),
-        help="Choose a template to start from"
+        help="Choose an existing configuration as a template"
     )
     
     new_name = st.text_input("Configuration Name", placeholder="e.g., Custom NHS Configuration")
@@ -137,6 +131,14 @@ if st.session_state.get('create_new', False):
                 if template_options[selected_template]:
                     template_path = Path(template_options[selected_template])
                     config = load_financial_config(template_path)
+                    
+                    # Update metadata to reflect this is a new config based on template
+                    if 'metadata' not in config:
+                        config['metadata'] = {}
+                    config['metadata']['name'] = new_name
+                    config['metadata']['created'] = datetime.now().isoformat()
+                    config['metadata']['based_on'] = selected_template
+                    config['metadata']['source'] = str(template_path)
                 else:
                     # Create empty template
                     config = {
@@ -170,41 +172,6 @@ if st.session_state.get('create_new', False):
     with col2:
         if ape_button("Cancel", key="cancel_create"):
             st.session_state['create_new'] = False
-            st.rerun()
-
-elif st.session_state.get('duplicate_config'):
-    source_path = st.session_state['duplicate_config']
-    st.header(f"Duplicate Configuration: {source_path.stem}")
-    
-    new_name = st.text_input("New Configuration Name", value=f"{source_path.stem}_copy")
-    
-    col1, col2, col3 = st.columns([1, 1, 3])
-    with col1:
-        if ape_button("Duplicate", key="confirm_duplicate", is_primary_action=True):
-            if new_name:
-                # Load source configuration
-                config = load_financial_config(source_path)
-                
-                # Update metadata
-                if 'metadata' in config:
-                    config['metadata']['name'] = new_name
-                    config['metadata']['created'] = datetime.now().isoformat()
-                    config['metadata']['source'] = str(source_path)
-                
-                # Save duplicate
-                safe_name = new_name.lower().replace(' ', '_').replace('-', '_')
-                new_path = COST_CONFIG_DIR / f"{safe_name}.yaml"
-                
-                if save_financial_config(config, new_path):
-                    st.success(f"Duplicated configuration: {new_name}")
-                    del st.session_state['duplicate_config']
-                    st.rerun()
-            else:
-                st.error("Please enter a configuration name")
-    
-    with col2:
-        if ape_button("Cancel", key="cancel_duplicate"):
-            del st.session_state['duplicate_config']
             st.rerun()
 
 elif available_configs:
