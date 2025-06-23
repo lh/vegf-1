@@ -436,8 +436,8 @@ if available_configs:
                     new_cost = st.number_input(
                         "Unit Cost (£)", 
                         value=float(cost_value), 
-                        min_value=0, 
-                        step=1,
+                        min_value=0.0, 
+                        step=1.0,
                         key=f"drug_cost_{drug_id}"
                     )
                 with col3:
@@ -470,7 +470,7 @@ if available_configs:
             with col1:
                 new_drug_id = st.text_input("Drug ID", key="new_drug_id", placeholder="e.g., eylea_2mg")
             with col2:
-                new_drug_cost = st.number_input("Cost (£)", min_value=0, step=1, key="new_drug_cost")
+                new_drug_cost = st.number_input("Cost (£)", min_value=0.0, step=1.0, key="new_drug_cost")
             with col3:
                 if ape_button("Add", key="add_drug"):
                     if new_drug_id:
@@ -493,9 +493,9 @@ if available_configs:
                 with col2:
                     new_cost = st.number_input(
                         "Cost (£)", 
-                        value=cost, 
-                        min_value=0, 
-                        step=1, 
+                        value=float(cost), 
+                        min_value=0.0, 
+                        step=1.0, 
                         key=f"comp_cost_{comp_id}"
                     )
                     # Update edited config
@@ -537,9 +537,9 @@ if available_configs:
                     # Edit total cost
                     new_total = st.number_input(
                         "Total Cost Override", 
-                        value=total_cost,
-                        min_value=0,
-                        step=1,
+                        value=float(total_cost),
+                        min_value=0.0,
+                        step=1.0,
                         key=f"visit_total_{visit_name}",
                         help="Leave as calculated sum or override with custom total"
                     )
@@ -573,9 +573,9 @@ if available_configs:
                 with col2:
                     new_cost = st.number_input(
                         "Cost (£)", 
-                        value=cost, 
-                        min_value=0, 
-                        step=1, 
+                        value=float(cost), 
+                        min_value=0.0, 
+                        step=1.0, 
                         key=f"event_cost_{event_id}"
                     )
                     # Update edited config
@@ -826,9 +826,9 @@ if available_configs:
                         )
                         new_cost = st.number_input(
                             "Unit Cost (£)",
-                            value=proc_info.get('unit_cost', 0),
-                            min_value=0,
-                            step=1,
+                            value=float(proc_info.get('unit_cost', 0)),
+                            min_value=0.0,
+                            step=1.0,
                             key=f"proc_cost_{proc_name}"
                         )
                     with col2:
@@ -865,18 +865,18 @@ if available_configs:
                         )
                         new_cost = st.number_input(
                             "Unit Cost (£)",
-                            value=drug_info.get('unit_cost', 0),
-                            min_value=0,
-                            step=1,
+                            value=float(drug_info.get('unit_cost', 0)),
+                            min_value=0.0,
+                            step=1.0,
                             key=f"drug_unit_cost_{drug_id}"
                         )
                     with col2:
                         if 'expected_generic_cost' in drug_info:
                             new_generic = st.number_input(
                                 "Expected Generic/Biosimilar Cost (£)",
-                                value=drug_info.get('expected_generic_cost', 0),
-                                min_value=0,
-                                step=1,
+                                value=float(drug_info.get('expected_generic_cost', 0)),
+                                min_value=0.0,
+                                step=1.0,
                                 key=f"drug_generic_{drug_id}"
                             )
                         else:
