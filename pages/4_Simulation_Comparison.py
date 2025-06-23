@@ -1027,37 +1027,47 @@ max_month = max(max_month_a, max_month_b)
 
 # Create visualizations based on view mode
 if view_mode == "Side-by-Side":
+    # Create both figures first to ensure identical sizing
+    fig_a, ax_a = plt.subplots(figsize=(7, 5), dpi=80)
+    fig_b, ax_b = plt.subplots(figsize=(7, 5), dpi=80)
+    
+    # Create both plots with identical parameters
+    create_standardized_vision_plot(
+        ax_a, 
+        vision_data_a, 
+        '',  # No title
+        color='blue',
+        show_ci=show_ci,
+        show_thresholds=show_thresholds,
+        max_month=max_month
+    )
+    
+    create_standardized_vision_plot(
+        ax_b, 
+        vision_data_b, 
+        '',  # No title
+        color='orange',
+        show_ci=show_ci,
+        show_thresholds=show_thresholds,
+        max_month=max_month
+    )
+    
+    # Apply tight layout to both
+    fig_a.tight_layout()
+    fig_b.tight_layout()
+    
+    # Now display them in columns
     col1, col2 = st.columns(2)
     
-    # Simulation A
     with col1:
-        fig, ax = plt.subplots(figsize=(6, 4))
-        create_standardized_vision_plot(
-            ax, 
-            vision_data_a, 
-            f'Simulation A: {sim_a["protocol"]}',
-            color='blue',
-            show_ci=show_ci,
-            show_thresholds=show_thresholds,
-            max_month=max_month
-        )
-        st.pyplot(fig)
-        plt.close(fig)
+        st.pyplot(fig_a)
     
-    # Simulation B
     with col2:
-        fig, ax = plt.subplots(figsize=(6, 4))
-        create_standardized_vision_plot(
-            ax, 
-            vision_data_b, 
-            f'Simulation B: {sim_b["protocol"]}',
-            color='orange',
-            show_ci=show_ci,
-            show_thresholds=show_thresholds,
-            max_month=max_month
-        )
-        st.pyplot(fig)
-        plt.close(fig)
+        st.pyplot(fig_b)
+    
+    # Close both figures
+    plt.close(fig_a)
+    plt.close(fig_b)
 
 elif view_mode == "Overlay":
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -1084,7 +1094,7 @@ elif view_mode == "Overlay":
     
     ax.set_xlabel('Time (months)')
     ax.set_ylabel('Vision (ETDRS Letters)')
-    ax.set_title('Visual Acuity Comparison')
+    # No title - redundant with page context
     ax.set_xlim(0, max_month)
     ax.set_ylim(0, 85)
     ax.grid(True, alpha=0.3)
@@ -1123,10 +1133,10 @@ else:  # Difference mode
     
     ax.set_xlabel('Time (months)')
     ax.set_ylabel('Vision Difference (ETDRS Letters)')
-    ax.set_title('Difference in Visual Acuity (B - A)')
+    # Title shows in legend
     ax.set_xlim(0, max_month)
     ax.grid(True, alpha=0.3)
-    ax.legend()
+    ax.legend(title='Difference (B - A)')
     
     st.pyplot(fig)
     plt.close(fig)
