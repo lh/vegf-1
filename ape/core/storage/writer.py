@@ -347,6 +347,15 @@ class ParquetWriter:
         """Write resource tracking data to separate files."""
         import json
         
+        # Save resource configuration (roles and capacities)
+        resource_config = {
+            'roles': resource_tracker.roles,
+            'session_parameters': resource_tracker.session_parameters,
+            'visit_requirements': resource_tracker.visit_requirements
+        }
+        with open(self.output_dir / 'resource_config.json', 'w') as f:
+            json.dump(resource_config, f, indent=2)
+        
         # Write workload summary
         workload_summary = resource_tracker.get_workload_summary()
         with open(self.output_dir / 'workload_summary.json', 'w') as f:

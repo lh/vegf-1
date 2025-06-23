@@ -95,6 +95,21 @@ class ParquetResults(SimulationResults):
                             b['date'] = datetime.fromisoformat(b['date']).date()
                         tracker.identify_bottlenecks = lambda: bottlenecks
                 
+                # Load resource configuration
+                resource_config_file = self.data_path / 'resource_config.json'
+                if resource_config_file.exists():
+                    with open(resource_config_file, 'r') as f:
+                        resource_config = json.load(f)
+                        tracker.roles = resource_config.get('roles', {})
+                        tracker.session_parameters = resource_config.get('session_parameters', {})
+                        tracker.visit_requirements = resource_config.get('visit_requirements', {})
+                else:
+                    # If config file doesn't exist, raise error instead of using defaults
+                    raise FileNotFoundError(
+                        f"Resource configuration file not found at {resource_config_file}. "
+                        "This simulation's resource tracking data appears to be incomplete."
+                    )
+                
                 # Load daily usage
                 daily_usage_file = self.data_path / 'daily_resource_usage.parquet'
                 if daily_usage_file.exists():
@@ -111,25 +126,22 @@ class ParquetResults(SimulationResults):
                     tracker.daily_usage = dict(daily_usage)
                     tracker.get_all_dates_with_visits = lambda: sorted(daily_usage.keys())
                     
-                    # Add methods for calculating sessions
-                    tracker.roles = {
-                        'injector': {'capacity_per_session': 14},
-                        'injector_assistant': {'capacity_per_session': 14},
-                        'vision_tester': {'capacity_per_session': 20},
-                        'oct_operator': {'capacity_per_session': 16},
-                        'decision_maker': {'capacity_per_session': 12}
-                    }
-                    tracker.session_parameters = {'sessions_per_day': 2}
-                    
                     def calculate_sessions_needed(date, role):
                         if role not in tracker.roles:
-                            raise ValueError(f"Unknown role: {role}")
+                            raise ValueError(f"Unknown role: {role}. Available roles: {list(tracker.roles.keys())}")
                         if date not in daily_usage:
                             raise ValueError(f"No visit data available for {date}")
                         if role not in daily_usage[date]:
                             return 0.0
                         daily_count = daily_usage[date][role]
-                        capacity = tracker.roles[role]['capacity_per_session']
+                        role_info = tracker.roles.get(role)
+                        if not role_info:
+                            raise ValueError(f"Role '{role}' not found in tracker.roles")
+                        if 'capacity_per_session' not in role_info:
+                            raise ValueError(f"Role '{role}' missing 'capacity_per_session' field")
+                        capacity = role_info['capacity_per_session']
+                        if capacity is None or capacity <= 0:
+                            raise ValueError(f"Invalid capacity for role '{role}': {capacity}")
                         return daily_count / capacity
                     
                     tracker.calculate_sessions_needed = calculate_sessions_needed
