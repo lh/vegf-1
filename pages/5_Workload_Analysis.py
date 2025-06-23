@@ -751,7 +751,7 @@ with st.expander("Export Options", expanded=False):
             st.download_button(
                 label="Download Financial Parameters (PDF)",
                 data=pdf_bytes,
-                file_name=f"financial_parameters_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                file_name=f"financial_parameters_{sim_data['results'].metadata.sim_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
                 mime="application/pdf",
                 key="download_financial_pdf"
             )
