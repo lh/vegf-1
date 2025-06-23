@@ -38,7 +38,6 @@ visit_types:
     - brief_check
     total_override: null
     note: Streamlined loading phase visit
-    total_cost: 190.0
     decision_maker: false
   injection_virtual:
     components:
@@ -46,7 +45,7 @@ visit_types:
     - oct_scan
     - pressure_check
     - virtual_review
-    total_override: null
+    total_override: 285.0
     note: Standard maintenance injection with virtual review
     total_cost: 285.0
     decision_maker: false
@@ -57,7 +56,7 @@ visit_types:
     - visual_acuity_test
     - pressure_check
     - face_to_face_review
-    total_override: null
+    total_override: 380.0
     note: Full assessment with injection
     total_cost: 380.0
     decision_maker: false
@@ -66,7 +65,7 @@ visit_types:
     - oct_scan
     - visual_acuity_test
     - virtual_review
-    total_override: null
+    total_override: 150.0
     note: Assess and extend visit without injection
     total_cost: 150.0
     decision_maker: false
@@ -76,7 +75,7 @@ visit_types:
     - visual_acuity_test
     - pressure_check
     - face_to_face_review
-    total_override: null
+    total_override: 230.0
     note: Full monitoring without injection
     total_cost: 230.0
     decision_maker: false
@@ -87,7 +86,7 @@ visit_types:
     - fluorescein_angiography
     - face_to_face_review
     - consultation
-    total_override: 380
+    total_override: 380.0
     note: Comprehensive initial assessment
     total_cost: 380.0
     decision_maker: false
@@ -98,7 +97,7 @@ visit_types:
     - clinical_exam
     - face_to_face_review
     - consultation
-    total_override: null
+    total_override: 310.0
     note: Annual treatment review
     total_cost: 310.0
     decision_maker: false

@@ -538,16 +538,16 @@ if available_configs:
                         if abs(total_cost - component_total) > 0.01:  # Using small epsilon for float comparison
                             st.info(f"💡 Override active: £{total_cost:,.0f} (calculated: £{component_total:,.0f})")
                     
-                    # Checkbox to use calculated total
-                    use_calculated = st.checkbox(
-                        "Use calculated total from components",
-                        value=abs(total_cost - calculated_total) < 0.01,  # True if they're essentially equal
-                        key=f"use_calc_{visit_name}",
-                        help="When checked, total will automatically update when component costs change"
+                    # Checkbox to override the calculated total
+                    use_override = st.checkbox(
+                        "Override calculated total",
+                        value=abs(total_cost - calculated_total) > 0.01,  # True if they're different
+                        key=f"use_override_{visit_name}",
+                        help="When checked, allows setting a custom total that won't change when components are updated"
                     )
                     
-                    # Edit total cost - only show if not using calculated
-                    if not use_calculated:
+                    # Edit total cost - only show if using override
+                    if use_override:
                         new_total = st.number_input(
                             "Total Cost Override", 
                             value=float(total_cost),
@@ -566,8 +566,8 @@ if available_configs:
                     if visit_name not in st.session_state.edited_config['visit_types']:
                         st.session_state.edited_config['visit_types'][visit_name] = visit_info.copy()
                     
-                    # Store the total - if using calculated, store None or the calculated value
-                    if use_calculated:
+                    # Store the total - if NOT using override, store None or remove stored values
+                    if not use_override:
                         # For configs using 'total_override', set it to None to use calculated
                         if 'total_override' in visit_info:
                             st.session_state.edited_config['visit_types'][visit_name]['total_override'] = None
