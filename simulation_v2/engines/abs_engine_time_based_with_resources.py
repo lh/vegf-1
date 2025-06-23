@@ -207,6 +207,9 @@ class ABSEngineTimeBasedWithResources(ABSEngineTimeBasedWithParams):
         
         # Add resource tracking results
         if self.resource_tracker:
+            # Attach the resource tracker itself for direct access
+            results.resource_tracker = self.resource_tracker
+            
             resource_results = self.get_resource_results()
             
             # Add to results object
