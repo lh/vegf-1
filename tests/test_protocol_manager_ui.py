@@ -6,7 +6,7 @@ from pathlib import Path
 import yaml
 
 # Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Test loading the protocol
 try:

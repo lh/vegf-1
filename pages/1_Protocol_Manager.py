@@ -414,7 +414,7 @@ with col1:
                         data['shortening_days'] = int(st.session_state.edit_shortening)
                     
                     # Update disease transitions if edited (for standard protocols)
-                    if protocol_type != "time_based":
+                    if not is_time_based:
                         states = ['NAIVE', 'STABLE', 'ACTIVE', 'HIGHLY_ACTIVE']
                         for from_state in states:
                             for to_state in states:
@@ -695,9 +695,37 @@ with col2:
                 with open(save_path, 'w') as f:
                     yaml.dump(data, f, sort_keys=False, default_flow_style=False)
                 
-                # Validate the new file can be loaded
                 # Check if the original protocol is time-based
                 is_time_based = protocol_type == "time_based" or data.get('model_type') == 'time_based'
+                
+                # For time-based protocols, copy parameter files if they exist
+                if is_time_based:
+                    param_files = [
+                        'disease_transitions_file',
+                        'treatment_effect_file', 
+                        'vision_parameters_file',
+                        'discontinuation_parameters_file',
+                        'demographics_parameters_file'
+                    ]
+                    
+                    # Create parameters directory in temp if needed
+                    temp_params_dir = TEMP_DIR / "parameters"
+                    temp_params_dir.mkdir(exist_ok=True)
+                    
+                    # Copy each parameter file
+                    original_dir = selected_file.parent
+                    for param_field in param_files:
+                        if param_field in data and data[param_field]:
+                            param_path = Path(data[param_field])
+                            source_file = original_dir / param_path
+                            
+                            if source_file.exists():
+                                # Copy to temp parameters directory
+                                dest_file = temp_params_dir / param_path.name
+                                import shutil
+                                shutil.copy2(source_file, dest_file)
+                
+                # Validate the new file can be loaded
                 
                 if is_time_based:
                     from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSpecification
@@ -843,13 +871,75 @@ if st.session_state.get('show_manage', False):
                 if selected_file.parent == TEMP_DIR:
                     st.markdown("<small style='color: #FFA500;'>Temporary protocol - download to keep it!</small>", unsafe_allow_html=True)
 
-                st.download_button(
-                    label="Download",
-                    data=yaml_str,
-                    file_name=f"{spec.name.lower().replace(' ', '_')}_v{spec.version}.yaml",
-                    mime="text/yaml",
-                    use_container_width=True
-                )
+                # For time-based protocols, offer to download with parameters
+                if is_time_based_protocol and selected_file.parent == TEMP_DIR:
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.download_button(
+                            label="Download Protocol",
+                            data=yaml_str,
+                            file_name=f"{spec.name.lower().replace(' ', '_')}_v{spec.version}.yaml",
+                            mime="text/yaml",
+                            use_container_width=True,
+                            help="Download protocol file only"
+                        )
+                    with col2:
+                        # Create ZIP with protocol and parameters
+                        import zipfile
+                        import io
+                        
+                        zip_buffer = io.BytesIO()
+                        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                            # Add protocol file
+                            zip_file.writestr(f"{spec.name.lower().replace(' ', '_')}_v{spec.version}.yaml", yaml_str)
+                            
+                            # Add parameter files
+                            temp_params_dir = TEMP_DIR / "parameters"
+                            if temp_params_dir.exists():
+                                for param_file in temp_params_dir.glob("*.yaml"):
+                                    with open(param_file, 'r') as f:
+                                        zip_file.writestr(f"parameters/{param_file.name}", f.read())
+                        
+                        zip_buffer.seek(0)
+                        st.download_button(
+                            label="Download with Parameters",
+                            data=zip_buffer.getvalue(),
+                            file_name=f"{spec.name.lower().replace(' ', '_')}_v{spec.version}_complete.zip",
+                            mime="application/zip",
+                            use_container_width=True,
+                            help="Download protocol with all parameter files"
+                        )
+                else:
+                    st.download_button(
+                        label="Download",
+                        data=yaml_str,
+                        file_name=f"{spec.name.lower().replace(' ', '_')}_v{spec.version}.yaml",
+                        mime="text/yaml",
+                        use_container_width=True
+                    )
+                
+                # PDF Export
+                st.markdown("---")
+                st.markdown("**Export as PDF**")
+                if ape_button("Generate PDF Report", key="generate_pdf", icon="document", use_container_width=True):
+                    try:
+                        # Generate PDF content
+                        from ape.utils.protocol_pdf_generator import generate_protocol_pdf
+                        pdf_bytes = generate_protocol_pdf(spec, is_time_based_protocol)
+                        
+                        st.download_button(
+                            label="Download PDF Report",
+                            data=pdf_bytes,
+                            file_name=f"{spec.name.lower().replace(' ', '_')}_v{spec.version}_report.pdf",
+                            mime="application/pdf",
+                            use_container_width=True,
+                            key="download_pdf"
+                        )
+                    except ImportError:
+                        st.info("PDF generation not yet implemented. Coming soon!")
+                    except Exception as e:
+                        st.error(f"Failed to generate PDF: {e}")
+                        
             except:
                 pass  # If spec can't be loaded, just don't show download
 
@@ -878,7 +968,25 @@ if st.session_state.get('show_delete', False):
                     # For safety, require explicit click (no Enter key shortcut for delete)
                     if delete_button(key=f"delete_{selected_file.stem}", full_width=True):
                         try:
+                            # For time-based protocols, also clean up parameter files
+                            with open(selected_file, 'r') as f:
+                                data = yaml.safe_load(f)
+                            
+                            if data.get('model_type') == 'time_based':
+                                # Check if there are parameter files in temp/parameters
+                                temp_params_dir = TEMP_DIR / "parameters"
+                                if temp_params_dir.exists():
+                                    # Get list of all protocols in temp to see if others need these files
+                                    other_protocols = [f for f in TEMP_DIR.glob("*.yaml") if f != selected_file]
+                                    
+                                    # If no other protocols, safe to clean up parameters directory
+                                    if not other_protocols:
+                                        import shutil
+                                        shutil.rmtree(temp_params_dir)
+                            
+                            # Delete the protocol file
                             selected_file.unlink()
+                            
                             # Clear the selection from session state
                             if 'selected_protocol_name' in st.session_state:
                                 del st.session_state.selected_protocol_name
@@ -1900,7 +2008,7 @@ try:
                 st.dataframe(vision_df, use_container_width=True, hide_index=True)
     
     # Population tab - tab4 for standard, handled differently for time-based
-    if protocol_type != "time_based":
+    if not is_time_based_protocol:
         with tab4:
             st.subheader("Patient Population")
             
@@ -2274,7 +2382,7 @@ try:
                         """)
     
     # Discontinuation tab - only for standard protocols (tab5)
-    if protocol_type != "time_based":
+    if not is_time_based_protocol:
         with tab5:
             st.subheader("Discontinuation Rules")
             
