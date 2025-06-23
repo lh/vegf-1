@@ -48,18 +48,25 @@ has_resource_tracking = False
 resource_tracker = None
 
 # Try to get resource tracker from results
-if hasattr(sim_data.get('results'), 'resource_tracker'):
+if sim_data.get('results') and hasattr(sim_data['results'], 'resource_tracker'):
     resource_tracker = sim_data['results'].resource_tracker
-    has_resource_tracking = True
-elif hasattr(sim_data.get('results'), '_raw_results'):
+    has_resource_tracking = resource_tracker is not None
+elif sim_data.get('results') and hasattr(sim_data['results'], '_raw_results'):
     raw_results = sim_data['results']._raw_results
     if hasattr(raw_results, 'resource_tracker'):
         resource_tracker = raw_results.resource_tracker
-        has_resource_tracking = True
+        has_resource_tracking = resource_tracker is not None
 
-if not has_resource_tracking:
+if not has_resource_tracking or resource_tracker is None:
     st.warning("This simulation was run without resource tracking.")
-    st.info("Resource tracking is required for workload and economic analysis.")
+    st.info("To enable resource tracking:")
+    st.markdown("""
+    1. Go to the **Simulation** page
+    2. Check the **Enable Resource Tracking** checkbox
+    3. Run a new simulation
+    
+    Note: Resource tracking is only available for time-based protocols.
+    """)
     
     # Show basic simulation info
     st.subheader("Simulation Information")
@@ -71,7 +78,11 @@ if not has_resource_tracking:
         st.metric("Patients", f"{sim_data['parameters']['n_patients']:,}")
     with col3:
         st.metric("Duration", f"{sim_data['parameters']['duration_years']} years")
-        
+    
+    # Check if this is a time-based protocol
+    if sim_data.get('protocol', {}).get('type') != 'time_based':
+        st.warning("Resource tracking is only available for time-based protocols.")
+    
     st.stop()
 
 # Main title
