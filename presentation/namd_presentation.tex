@@ -21,15 +21,46 @@
 
 \metroset{progressbar=frametitle,sectionpage=progressbar,numbering=fraction}
 
-\title{Agent-Based Simulation for Neovascular AMD Treatment Planning}
-\subtitle{Optimizing Anti-VEGF Therapy Protocols in the NHS}
-\author{Your Name\\Consultant Ophthalmologist}
-\institute{Your NHS Trust}
-\date{\today}
+% Command for watermark apes as background
+\newcommand{\apewatermark}[1]{%
+    \setbeamertemplate{background}{%
+        \begin{tikzpicture}[remember picture,overlay]
+            \node[anchor=south east,inner sep=1cm] at (current page.south east) {
+                \includegraphics[height=3cm]{#1}
+            };
+        \end{tikzpicture}
+    }
+}
+
+\title{AMD Protocol Explorer (APE)}
+\subtitle{Agent-Based Simulation for Neovascular AMD Treatment Planning}
+\author{Luke Herbert\\Consultant Ophthalmologist}
+\institute{Surrey and Sussex Healthcare NHS Trust}
+\date{24th June 2025}
 
 \begin{document}
 
+% Customize title page to add banana ape
+{
+\setbeamertemplate{title page}{
+  \begin{minipage}[b][\paperheight]{\textwidth}
+    \vfill
+    \ifx\inserttitlegraphic\@empty\else\usebeamertemplate*{title graphic}\fi
+    \vfill
+    \ifx\inserttitle\@empty\else\usebeamertemplate*{title}\fi
+    \ifx\insertsubtitle\@empty\else\usebeamertemplate*{subtitle}\fi
+    \usebeamertemplate*{title separator}
+    \ifx\insertauthor\@empty\else\usebeamertemplate*{author}\fi
+    \ifx\insertdate\@empty\else\usebeamertemplate*{date}\fi
+    \ifx\insertinstitute\@empty\else\usebeamertemplate*{institute}\fi
+    \vfill
+    \centering
+    \includegraphics[height=2.5cm]{banana_ape.png}
+    \vspace{0.5cm}
+  \end{minipage}
+}
 \maketitle
+}
 
 % Acknowledgments in title frame note
 \begin{frame}{Acknowledgments}
@@ -54,11 +85,23 @@
 
 \column{0.5\textwidth}
 \begin{figure}
-    % Placeholder for vision comparison image
     \centering
-    \begin{tikzpicture}
-        \node[draw,minimum width=5cm,minimum height=3cm,align=center] {Normal Vision\\vs\\NAMD Vision\\(Image placeholder)};
-    \end{tikzpicture}
+    \includegraphics[width=0.8\textwidth]{logMAR_chart_explainer.png}
+\end{figure}
+\end{columns}
+
+\vspace{0.5cm}
+\begin{columns}[T]
+\column{0.5\textwidth}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{early-namd-b-scan.png}
+\end{figure}
+
+\column{0.5\textwidth}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{later-namd-b-scan.png}
 \end{figure}
 \end{columns}
 \end{frame}
@@ -68,32 +111,39 @@
 \column{0.6\textwidth}
 \textbf{Disease Process:}
 \begin{itemize}
-    \item Aging eye environment changes
+    \item Aging eye environment
+    \item Increased VEGF (Vascular Endothelial Growth Factor)
     \item Abnormal blood vessel growth
     \item Leakage, fibrosis, and bleeding
-    \item Mediated by VEGF (Vascular Endothelial Growth Factor)
 \end{itemize}
 
 \column{0.4\textwidth}
-\begin{figure}
-    \centering
-    \begin{tikzpicture}[scale=0.8]
-        % Simple eye diagram
-        \draw[thick] (0,0) circle (2cm);
-        \draw[thick,nhsred] (0,-0.5) circle (0.8cm);
-        \node at (0,-2.3) {Abnormal vessels};
-        \draw[->,thick,nhsred] (0,-1.3) -- (0,-2.2);
-    \end{tikzpicture}
-\end{figure}
+\begin{exampleblock}{VEGF?}
+
+  VEGF is like fertiliser for blood vessels. Anti-VEGF is something that removes the fertiliser.
+
+  As VEGF keeps being made we have to keep removing it.
+  \end{exampleblock}
 \end{columns}
 \end{frame}
+
+{
+\setbeamertemplate{section page}{
+  \centering
+  \vspace{2cm}
+  {\usebeamerfont{section title}\usebeamercolor[fg]{section title}\insertsection}\\
+  \vspace{1cm}
+  \includegraphics[height=4cm]{hope_ape.png}
+}
+\section{Hope}
+}
 
 \begin{frame}{Revolutionary Treatment: Anti-VEGF Therapy}
 \begin{columns}[T]
 \column{0.6\textwidth}
 \textbf{How it works:}
 \begin{itemize}
-    \item Antibodies bind to VEGF
+    \item Antibodies or similar molecules bind to VEGF
     \item Remove growth factor from eye
     \item Stop abnormal vessel growth
 \end{itemize}
@@ -112,7 +162,7 @@
     \begin{tikzpicture}[scale=0.7]
         % VEGF binding diagram
         \node[circle,draw,nhsred,thick,minimum size=1cm] (vegf) at (0,2) {VEGF};
-        \node[draw,nhsblue,thick,minimum width=1.5cm] (ab) at (0,0) {Antibody};
+        \node[draw,nhsblue,thick,minimum width=1.5cm] (ab) at (0,0) {Anti-vegf};
         \draw[->,thick] (vegf) -- (ab);
         \node[right] at (1.5,1) {Binding};
     \end{tikzpicture}
@@ -138,29 +188,36 @@
 \end{itemize}
 \end{block}
 
-\centering
-\textbf{Critical Question: How do we optimize treatment for those who remain?}
 \end{frame}
 
+{
+\setbeamertemplate{section page}{
+  \centering
+  \vspace{2cm}
+  {\usebeamerfont{section title}\usebeamercolor[fg]{section title}\insertsection}\\
+  \vspace{1cm}
+  \includegraphics[height=4cm]{sad_ape_watermark.png}
+}
 \section{The Cost Challenge}
+}
 
 \begin{frame}{NHS Annual Treatment Costs}
+\apewatermark{sad_ape_watermark.png}
 \begin{table}
 \centering
 \begin{tabular}{lrr}
 \toprule
-Treatment Area & Annual NHS Spend & Patient Numbers \\
+Treatment Area & Annual NHS Spend & Annual Patient Numbers \\
 \midrule
-\alert{Wet AMD (Anti-VEGF)} & \alert{£600-800 million} & 700,000+ total \\
-& & 39,800 new/year \\
-Cataract Surgery & £320-480 million & 400,000/year \\
-Hip Replacement & £500-700 million & 100,000/year \\
+\alert{Wet AMD (Anti-VEGF)} & \alert{£600-800 million} & 40,000 new, ~200,000 continuing \\
+Cataract Surgery & £320-480 million & 400,000 \\
+Hip Replacement & £500-700 million & 100,000 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \vspace{0.3cm}
-\begin{alertblock}{Key Insight: Cost per QALY}
+\begin{alertblock}{Cost per QALY}
 \begin{itemize}
     \item Cataract surgery: £1,964 per QALY (exceptional value)
     \item Hip replacement: £2,128 per QALY (strong value)
@@ -170,9 +227,8 @@ Hip Replacement & £500-700 million & 100,000/year \\
 
 \begin{block}{Current Anti-VEGF Drug Costs (2024 list prices)}
 \begin{itemize}
-    \item Aflibercept (Eylea): £816 per injection
-    \item Generic aflibercept: Coming soon (expected 50\% reduction)
-    \item Patients need 8-10 injections year 1, then 4-5/year ongoing
+    \item Aflibercept (Eylea): £816 a dose, generic soon maybe £400
+    \item Patients need 7-10 injections year 1, then 4-6/year ongoing
 \end{itemize}
 \end{block}
 
@@ -180,14 +236,26 @@ Hip Replacement & £500-700 million & 100,000/year \\
 \textbf{Challenge: £1.2-1.5 billion projected cost by 2035}
 \end{frame}
 
+% Clear the background for subsequent frames
+\setbeamertemplate{background}{}
+
+{
+\setbeamertemplate{section page}{
+  \centering
+  \vspace{2cm}
+  {\usebeamerfont{section title}\usebeamercolor[fg]{section title}\insertsection}\\
+  \vspace{1cm}
+  \includegraphics[height=4cm]{thoughtful_ape.png}
+}
 \section{Why Model?}
+}
 
 \begin{frame}{The Need for Modeling}
 \begin{columns}[T]
 \column{0.5\textwidth}
 \textbf{Current Challenges:}
 \begin{itemize}
-    \item Treatment controversies
+    \item Complicated and tangled evidence base
     \item Limited real-world data
     \item Complex patient pathways
     \item Resource constraints
@@ -196,10 +264,12 @@ Hip Replacement & £500-700 million & 100,000/year \\
 \column{0.5\textwidth}
 \textbf{Modeling Benefits:}
 \begin{itemize}
-    \item Explore treatment strategies
+    \item Promote discussion
     \item Clarify outcome measures
-    \item Predict resource needs
+    \item Explore treatment strategies
     \item Evidence-based decisions
+    \item Predict resource needs
+    \item Balance drug versus other costs
 \end{itemize}
 \end{columns}
 \end{frame}
@@ -228,15 +298,14 @@ Hip Replacement & £500-700 million & 100,000/year \\
 \vspace{0.5cm}
 \centering
 \begin{tikzpicture}
-    \node[draw,nhsblue,thick,minimum width=3cm] at (0,0) {Excel Model};
-    \node[draw,nhsgreen,thick,minimum width=3cm] at (6,0) {Agent-Based Model};
-    \draw[->,thick] (3,0) -- (4.5,0);
-    \node at (3.75,0.3) {Evolution};
+    \node[draw,nhsblue,thick,minimum width=3cm] (excel) at (0,0) {Excel Model};
+    \node[draw,nhsgreen,thick,minimum width=3cm] (agent) at (7,0) {Agent-Based Model};
+    \draw[->,thick] (excel.east) -- node[above] {Evolution} (agent.west);
 \end{tikzpicture}
 \end{frame}
 
 \begin{frame}{Real-World Complexity in Our Simulation}
-\begin{alertblock}{What Simple Models Miss}
+\begin{alertblock}{}
 \begin{columns}[T]
 \column{0.5\textwidth}
 \textbf{Simple Models Assume:}
@@ -250,14 +319,17 @@ Hip Replacement & £500-700 million & 100,000/year \\
 \column{0.5\textwidth}
 \textbf{Our Simulation Includes:}
 \begin{itemize}
-    \item \alert{Vision distribution at baseline}
-    \item \alert{Real discontinuation patterns}
-    \item \alert{Treatment gaps and delays}
+    \item Vision distribution at baseline
+    \item Real discontinuation patterns
+    \item Treatment gaps and delays
     \item Individual patient trajectories
 \end{itemize}
 \end{columns}
 \end{alertblock}
 
+\vspace{0.5cm}
+\begin{center}
+\begin{minipage}{0.7\textwidth}
 \begin{block}{Why This Matters}
 \begin{itemize}
     \item Captures NHS capacity constraints
@@ -266,32 +338,15 @@ Hip Replacement & £500-700 million & 100,000/year \\
     \item Enables better resource planning
 \end{itemize}
 \end{block}
-
-\centering
-\textbf{Result: Evidence-based insights, not theoretical averages}
+\end{minipage}
+\end{center}
 \end{frame}
 
-\section{Our Solution}
+\section{The APE}
 
 \begin{frame}{Application Architecture}
 \centering
-\textbf{Four Key Modules:}
-
-\vspace{0.5cm}
-\begin{tikzpicture}[scale=0.8]
-    \node[draw,nhsblue,thick,minimum width=3cm,minimum height=1.5cm] (proto) at (0,3) {Protocol\\Management};
-    \node[draw,nhsblue,thick,minimum width=3cm,minimum height=1.5cm] (sim) at (5,3) {Simulation\\Engine};
-    \node[draw,nhsblue,thick,minimum width=3cm,minimum height=1.5cm] (analysis) at (0,0) {Analysis \&\\Visualization};
-    \node[draw,nhsblue,thick,minimum width=3cm,minimum height=1.5cm] (compare) at (5,0) {Protocol\\Comparison};
-    
-    \draw[->,thick] (proto) -- (sim);
-    \draw[->,thick] (sim) -- (analysis);
-    \draw[->,thick] (sim) -- (compare);
-    \draw[->,thick] (analysis) -- (compare);
-\end{tikzpicture}
-
-\vspace{0.5cm}
-\alert{Next: Live demonstration of the application}
+\includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{ape_architecture.png}
 \end{frame}
 
 % Placeholder for screen recording section
@@ -353,7 +408,9 @@ your.email@nhs.net
 
 \vspace{0.5cm}
 \textbf{Project Repository:}\\
-\url{https://github.com/yourusername/namd-simulation}
+\url{https://github.com/lh/vegf-1} \\
+\textbf{Application:}\\
+\url{https://vegf-1.streamlit.app}
 
 \vspace{0.5cm}
 \textbf{Acknowledgments:}\\

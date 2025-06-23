@@ -20,6 +20,7 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
         ('protocol', 'Protocol', 'pages/1_Protocol_Manager.py', None),
         ('simulation', 'Simulation', 'pages/2_Simulations.py', None),  # Removed play icon
         ('analysis', 'Analysis', 'pages/3_Analysis.py', None),
+        ('workload', 'Workload', 'pages/5_Workload_Analysis.py', None),
         ('comparison', 'Compare', 'pages/4_Simulation_Comparison.py', None)
     ]
     
@@ -36,9 +37,11 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
             
             if idx < current_idx:
                 # Completed step - clickable with ghost Carbon button
+                # Use invisible icon for workload button only
+                button_icon = 'invisible' if step_id == "workload" else None
                 if navigation_button(
                     display_label,
-                    icon_name=None,  # Disable auto-icon since we're using our own
+                    icon_name=button_icon,  # Invisible for workload, None for others
                     key=f"workflow_{step_id}",
                     full_width=True,
                     help_text="Click to go back",
@@ -51,11 +54,14 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                 if step_id == "simulation" and current_step == "simulation":
                     display_label = "Run Simulation"
                 
+                # Use invisible icon for workload button only
+                button_icon = 'invisible' if step_id == "workload" else None
+                
                 if on_current_action:
                     # Make it an action button
                     if navigation_button(
                         display_label,
-                        icon_name=None,  # Disable auto-icon since we're using our own
+                        icon_name=button_icon,  # Invisible for workload, None for others
                         key=f"workflow_action_{step_id}",
                         full_width=True,
                         button_type="primary",
@@ -66,7 +72,7 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                     # Just show as current (disabled)
                     navigation_button(
                         display_label,
-                        icon_name=None,  # Disable auto-icon since we're using our own
+                        icon_name=button_icon,  # Invisible for workload, None for others
                         key=f"workflow_current_{step_id}",
                         full_width=True,
                         button_type="primary",
@@ -85,22 +91,26 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                         button_type="secondary"
                     ):
                         st.switch_page(page)
-                # Analysis button is only enabled if we have results
-                elif step_id == "analysis" and has_results:
+                # Analysis and Workload buttons are only enabled if we have results
+                elif step_id in ["analysis", "workload"] and has_results:
+                    # Use invisible icon for workload button only
+                    button_icon = 'invisible' if step_id == "workload" else None
                     if navigation_button(
                         display_label,
-                        icon_name=None,  # Disable auto-icon since we're using our own
+                        icon_name=button_icon,  # Invisible for workload, auto-detect for others
                         key=f"workflow_{step_id}",
                         full_width=True,
-                        help_text="View analysis results",
+                        help_text="View analysis results" if step_id == "analysis" else "View workload and economic analysis",
                         button_type="secondary"
                     ):
                         st.switch_page(page)
                 else:
                     # Disabled future step (only Analysis without results)
+                    # Use invisible icon for workload button only
+                    button_icon = 'invisible' if step_id == "workload" else None
                     navigation_button(
                         display_label,
-                        icon_name=None,  # Disable auto-icon since we're using our own
+                        icon_name=button_icon,  # Invisible for workload, None for others
                         key=f"workflow_future_{step_id}",
                         full_width=True,
                         button_type="ghost",

@@ -185,6 +185,61 @@ def render_enhanced_parameter_inputs() -> Tuple[str, Dict[str, Any], int]:
     # Extract seed for return value compatibility
     seed = recruitment_params['seed']
     
+    # Add resource tracking checkbox
+    st.write("**Additional Options:**")
+    
+    # Create two columns for options
+    opt_col1, opt_col2 = st.columns(2)
+    
+    with opt_col1:
+        enable_resource_tracking = st.checkbox(
+            "Enable Resource Tracking",
+            value=st.session_state.get('enable_resource_tracking', True),
+            help="Track resource usage and costs for workload and economic analysis",
+            key="enable_resource_tracking"
+        )
+        recruitment_params['enable_resource_tracking'] = enable_resource_tracking
+    
+    with opt_col2:
+        if enable_resource_tracking:
+            # Get available financial configurations
+            from pathlib import Path
+            import yaml
+            
+            RESOURCE_DIR = Path("protocols/resources")
+            COST_CONFIG_DIR = Path("protocols/cost_configs")
+            
+            configs = {}
+            # Check resources directory
+            if RESOURCE_DIR.exists():
+                for file in RESOURCE_DIR.glob("*.yaml"):
+                    configs[f"{file.stem}"] = str(file)
+            
+            # Check cost configs directory  
+            if COST_CONFIG_DIR.exists():
+                for file in COST_CONFIG_DIR.glob("*.yaml"):
+                    configs[f"{file.stem}"] = str(file)
+            
+            # Add option to select financial configuration
+            if configs:
+                default_config = "nhs_standard_resources"
+                if default_config not in configs:
+                    default_config = list(configs.keys())[0]
+                
+                selected_config = st.selectbox(
+                    "Financial Configuration",
+                    options=list(configs.keys()),
+                    index=list(configs.keys()).index(default_config) if default_config in configs else 0,
+                    help="Select cost and resource parameters for economic analysis",
+                    key="financial_config"
+                )
+                recruitment_params['financial_config_path'] = configs[selected_config]
+            else:
+                st.warning("No financial configurations found")
+                recruitment_params['financial_config_path'] = None
+        else:
+            recruitment_params['financial_config_path'] = None
+    
     return engine_type, recruitment_params, seed
 
 

@@ -13,6 +13,7 @@ import pandas as pd
 import random
 
 from simulation_v2.protocols.protocol_spec import ProtocolSpecification
+from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSpecification
 from ape.utils.startup_redirect import handle_page_startup
 from simulation_v2.models.baseline_vision_distributions import (
     NormalDistribution, BetaWithThresholdDistribution, UniformDistribution
@@ -83,6 +84,10 @@ def auto_save_protocol(selected_file, protocol_type):
     """Auto-save changes to temporary protocol files."""
     if protocol_type != "temp" or not st.session_state.get('edit_mode', False):
         return
+    
+    # Get the actual protocol type from session state
+    actual_protocol_type = st.session_state.get('current_protocol', {}).get('type', 'standard')
+    is_time_based = actual_protocol_type == 'time_based'
         
     try:
         # Load the current YAML data
@@ -410,7 +415,7 @@ with col1:
                         data['shortening_days'] = int(st.session_state.edit_shortening)
                     
                     # Update disease transitions if edited (for standard protocols)
-                    if protocol_type != "time_based":
+                    if not is_time_based:
                         states = ['NAIVE', 'STABLE', 'ACTIVE', 'HIGHLY_ACTIVE']
                         for from_state in states:
                             for to_state in states:
@@ -486,13 +491,13 @@ with col1:
                                 data['discontinuation_rules']['discontinuation_types'] = types_list
                     
                     # Update population parameters if edited
-                    dist_type_key = 'tb_edit_dist_type' if protocol_type == "time_based" else 'edit_dist_type'
+                    dist_type_key = 'tb_edit_dist_type' if is_time_based else 'edit_dist_type'
                     if dist_type_key in st.session_state:
                         dist_type = st.session_state[dist_type_key]
                         
                         if dist_type == "normal":
                             # Create/update baseline_vision_distribution in new format
-                            prefix = 'tb_edit' if protocol_type == "time_based" else 'edit'
+                            prefix = 'tb_edit' if is_time_based else 'edit'
                             normal_dist = {
                                 'type': 'normal'
                             }
@@ -531,7 +536,7 @@ with col1:
                                 
                         elif dist_type == "beta_with_threshold":
                             # Create/update beta distribution
-                            prefix = 'tb_edit' if protocol_type == "time_based" else 'edit'
+                            prefix = 'tb_edit' if is_time_based else 'edit'
                             beta_dist = {
                                 'type': 'beta_with_threshold'
                             }
@@ -580,7 +585,7 @@ with col1:
                             
                         elif dist_type == "uniform":
                             # Create/update uniform distribution
-                            prefix = 'tb_edit' if protocol_type == "time_based" else 'edit'
+                            prefix = 'tb_edit' if is_time_based else 'edit'
                             uniform_dist = {
                                 'type': 'uniform'
                             }
@@ -691,9 +696,47 @@ with col2:
                 with open(save_path, 'w') as f:
                     yaml.dump(data, f, sort_keys=False, default_flow_style=False)
                 
+                # Check if the original protocol is time-based
+                is_time_based = protocol_type == "time_based" or data.get('model_type') == 'time_based'
+                
+                # For time-based protocols, copy parameter files if they exist
+                if is_time_based:
+                    param_files = [
+                        'disease_transitions_file',
+                        'treatment_effect_file', 
+                        'vision_parameters_file',
+                        'discontinuation_parameters_file',
+                        'demographics_parameters_file'
+                    ]
+                    
+                    # Create unique parameters directory for this protocol
+                    # Use the memorable name to ensure uniqueness
+                    temp_params_dir = TEMP_DIR / f"parameters_{memorable_name}"
+                    temp_params_dir.mkdir(exist_ok=True)
+                    
+                    # Copy each parameter file and update paths in protocol
+                    original_dir = selected_file.parent
+                    for param_field in param_files:
+                        if param_field in data and data[param_field]:
+                            param_path = Path(data[param_field])
+                            source_file = original_dir / param_path
+                            
+                            if source_file.exists():
+                                # Copy to protocol-specific parameters directory
+                                dest_file = temp_params_dir / param_path.name
+                                import shutil
+                                shutil.copy2(source_file, dest_file)
+                                
+                                # Update the path in the protocol to point to the new location
+                                data[param_field] = f"parameters_{memorable_name}/{param_path.name}"
+                    
+                    # Re-save the protocol with updated parameter paths
+                    with open(save_path, 'w') as f:
+                        yaml.dump(data, f, sort_keys=False, default_flow_style=False)
+                
                 # Validate the new file can be loaded
-                if protocol_type == "time_based":
-                    from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSpecification
+                
+                if is_time_based:
                     test_spec = TimeBasedProtocolSpecification.from_yaml(save_path)
                 else:
                     test_spec = ProtocolSpecification.from_yaml(save_path)
@@ -826,25 +869,112 @@ if st.session_state.get('show_manage', False):
             except Exception as e:
                 st.error(f"Failed to upload: {e}")
         
-        # Download section - only show if a protocol is loaded
-        if 'current_protocol' in st.session_state and st.session_state.current_protocol:
+        # Export section
+        st.markdown("---")
+        st.markdown("**Export**")
+        
+        # Only show export options if a protocol is loaded
+        if selected_file and selected_file.exists():
             try:
-                # Get the spec from the selected file
-                spec = ProtocolSpecification.from_yaml(selected_file)
-                yaml_str = yaml.dump(spec.to_yaml_dict(), default_flow_style=False, sort_keys=False)
-
+                # Read the raw YAML first
+                with open(selected_file, 'r') as f:
+                    raw_yaml = f.read()
+                    
+                # Parse to get basic info
+                with open(selected_file, 'r') as f:
+                    yaml_data = yaml.safe_load(f)
+                    
+                protocol_name = yaml_data.get('name', 'protocol').lower().replace(' ', '_')
+                protocol_version = yaml_data.get('version', '1.0')
+                
+                # Determine if this is a time-based protocol
+                is_time_based = yaml_data.get('model_type') == 'time_based' or protocol_type == "time_based"
+                
+                # Show warning for temp protocols
                 if selected_file.parent == TEMP_DIR:
                     st.markdown("<small style='color: #FFA500;'>Temporary protocol - download to keep it!</small>", unsafe_allow_html=True)
-
-                st.download_button(
-                    label="Download",
-                    data=yaml_str,
-                    file_name=f"{spec.name.lower().replace(' ', '_')}_v{spec.version}.yaml",
-                    mime="text/yaml",
-                    use_container_width=True
-                )
-            except:
-                pass  # If spec can't be loaded, just don't show download
+                
+                # Download options
+                if is_time_based and selected_file.parent == TEMP_DIR:
+                    # Time-based temp protocol - offer both single file and ZIP
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.download_button(
+                            label="Download Protocol",
+                            data=raw_yaml,
+                            file_name=f"{protocol_name}_v{protocol_version}.yaml",
+                            mime="text/yaml",
+                            use_container_width=True,
+                            help="Download protocol file only"
+                        )
+                    with col2:
+                        # Create ZIP with protocol and parameters
+                        import zipfile
+                        import io
+                        
+                        zip_buffer = io.BytesIO()
+                        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                            # Add protocol file
+                            zip_file.writestr(f"{protocol_name}_v{protocol_version}.yaml", raw_yaml)
+                            
+                            # Add parameter files if they exist
+                            if 'disease_transitions_file' in yaml_data:
+                                param_path = Path(yaml_data['disease_transitions_file'])
+                                if len(param_path.parts) > 0 and param_path.parts[0].startswith('parameters_'):
+                                    temp_params_dir = TEMP_DIR / param_path.parts[0]
+                                    if temp_params_dir.exists():
+                                        for param_file in temp_params_dir.glob("*.yaml"):
+                                            with open(param_file, 'r') as f:
+                                                zip_file.writestr(f"parameters/{param_file.name}", f.read())
+                        
+                        zip_buffer.seek(0)
+                        st.download_button(
+                            label="Download with Parameters",
+                            data=zip_buffer.getvalue(),
+                            file_name=f"{protocol_name}_v{protocol_version}_complete.zip",
+                            mime="application/zip",
+                            use_container_width=True,
+                            help="Download protocol with all parameter files"
+                        )
+                else:
+                    # Single download button for other protocols
+                    st.download_button(
+                        label="Download Protocol",
+                        data=raw_yaml,
+                        file_name=f"{protocol_name}_v{protocol_version}.yaml",
+                        mime="text/yaml",
+                        use_container_width=True
+                    )
+                
+                # PDF Export
+                st.markdown("---")
+                st.markdown("**Export as PDF**")
+                if ape_button("Generate PDF Report", key="generate_pdf", icon="document", full_width=True):
+                    try:
+                        # Load spec for PDF generation
+                        if is_time_based:
+                            spec = TimeBasedProtocolSpecification.from_yaml(selected_file)
+                        else:
+                            spec = ProtocolSpecification.from_yaml(selected_file)
+                            
+                        from ape.utils.protocol_pdf_generator import generate_protocol_pdf
+                        pdf_bytes = generate_protocol_pdf(spec, is_time_based)
+                        
+                        st.download_button(
+                            label="Download PDF Report",
+                            data=pdf_bytes,
+                            file_name=f"{protocol_name}_v{protocol_version}_report.pdf",
+                            mime="application/pdf",
+                            use_container_width=True,
+                            key="download_pdf"
+                        )
+                    except Exception as e:
+                        st.error(f"Failed to generate PDF: {e}")
+                        
+            except Exception as e:
+                st.error(f"Error in export section: {str(e)}")
+        else:
+            st.info("Select a protocol to see export options")
 
 # Handle duplicate & edit success message
 if st.session_state.get('duplicate_edit_success', False):
@@ -871,7 +1001,26 @@ if st.session_state.get('show_delete', False):
                     # For safety, require explicit click (no Enter key shortcut for delete)
                     if delete_button(key=f"delete_{selected_file.stem}", full_width=True):
                         try:
+                            # For time-based protocols, also clean up parameter files
+                            with open(selected_file, 'r') as f:
+                                data = yaml.safe_load(f)
+                            
+                            if data.get('model_type') == 'time_based':
+                                # Find the protocol-specific parameters directory
+                                # Extract memorable name from filename (last part before .yaml)
+                                filename_parts = selected_file.stem.split('_')
+                                if len(filename_parts) >= 2:
+                                    # Memorable name is typically the last part (e.g., "golden-garnet")
+                                    memorable_name = filename_parts[-1]
+                                    temp_params_dir = TEMP_DIR / f"parameters_{memorable_name}"
+                                    
+                                    if temp_params_dir.exists():
+                                        import shutil
+                                        shutil.rmtree(temp_params_dir)
+                            
+                            # Delete the protocol file
                             selected_file.unlink()
+                            
                             # Clear the selection from session state
                             if 'selected_protocol_name' in st.session_state:
                                 del st.session_state.selected_protocol_name
@@ -890,13 +1039,21 @@ if st.session_state.get('show_delete', False):
 
 # Import functionality removed - now in Simulations page
 
-# Import time-based protocol spec if needed
-if protocol_type == "time_based":
-    from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSpecification
+# Time-based protocol spec is already imported at the top
 
 # Load selected protocol
 try:
-    if protocol_type == "time_based":
+    # For temp protocols, check if they're actually time-based by looking at the file content
+    is_time_based_protocol = protocol_type == "time_based"
+    
+    if protocol_type == "temp":
+        # Check if this is actually a time-based protocol
+        with open(selected_file, 'r') as f:
+            data = yaml.safe_load(f)
+            if data.get('model_type') == 'time_based':
+                is_time_based_protocol = True
+    
+    if is_time_based_protocol:
         # Load as time-based protocol
         spec = TimeBasedProtocolSpecification.from_yaml(selected_file)
         st.session_state.current_protocol = {
@@ -925,7 +1082,7 @@ try:
     if st.session_state.get('edit_mode', False) and protocol_type == "temp":
         st.warning("**Edit Mode** - Changes are saved automatically. Click 'Commit Changes' to finalize your edits.")
     # Show model type indicator for time-based protocols
-    if protocol_type == "time_based":
+    if st.session_state.get('current_protocol', {}).get('type') == 'time_based':
         st.info("**Time-Based Model**: Disease progression updates every 14 days, independent of visit schedule")
     
     # Compact metadata display
@@ -949,7 +1106,7 @@ try:
             st.caption(f"Checksum: {spec.checksum[:8]}...")
     
     # Protocol parameters tabs - different for time-based
-    if protocol_type == "time_based":
+    if is_time_based_protocol:
         tab1, tab2, tab3, tab4 = st.tabs([
             "Timing Parameters",
             "Model Type",
@@ -991,7 +1148,7 @@ try:
                 st.metric("Shortening", f"{spec.shortening_days} days ({spec.shortening_days/7:.1f} weeks)")
     
     # Handle time-based protocol specific tabs
-    if protocol_type == "time_based":
+    if is_time_based_protocol:
         with tab2:
             st.subheader("Model Type")
             st.info("**Time-Based Disease Progression Model**")
@@ -1664,7 +1821,7 @@ try:
                                          f"{admin.get('probability_per_visit', 0.005)*100:.1f}%/visit")
     
     # Only show disease transitions tab for standard protocols
-    elif protocol_type != "time_based":
+    elif not is_time_based_protocol:
         with tab2:
             st.subheader("Disease State Transitions")
             
@@ -1788,7 +1945,9 @@ try:
                     st.caption(f"**{from_state}:** No treatment effects")
     
     # Vision Model tab for standard protocols only
-    if protocol_type != "time_based":
+    # Get the actual protocol type from session state
+    actual_protocol_type = st.session_state.get('current_protocol', {}).get('type', 'standard')
+    if actual_protocol_type != "time_based":
         with tab3:
             st.subheader("Vision Change Model")
             
@@ -1881,7 +2040,7 @@ try:
                 st.dataframe(vision_df, use_container_width=True, hide_index=True)
     
     # Population tab - tab4 for standard, handled differently for time-based
-    if protocol_type != "time_based":
+    if not is_time_based_protocol:
         with tab4:
             st.subheader("Patient Population")
             
@@ -2255,7 +2414,7 @@ try:
                         """)
     
     # Discontinuation tab - only for standard protocols (tab5)
-    if protocol_type != "time_based":
+    if not is_time_based_protocol:
         with tab5:
             st.subheader("Discontinuation Rules")
             

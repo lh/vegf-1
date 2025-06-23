@@ -13,6 +13,7 @@ from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSp
 from simulation_v2.core.disease_model_time_based import DiseaseModelTimeBased
 from simulation_v2.core.protocol import StandardProtocol
 from simulation_v2.core.loading_dose_protocol import LoadingDoseProtocol
+from simulation_v2.core.weekday_protocol import WeekdayLoadingDoseProtocol, WeekdayStandardProtocol
 from simulation_v2.engines.abs_engine_time_based_with_specs import ABSEngineTimeBasedWithSpecs
 from simulation_v2.engines.abs_engine_time_based_with_params import ABSEngineTimeBasedWithParams
 from simulation_v2.engines.abs_engine import SimulationResults
@@ -89,21 +90,28 @@ class TimeBasedSimulationRunner:
         )
         
         # Create protocol with loading dose if specified
+        # Use weekday-aware protocols to avoid weekend scheduling
         if self.spec.loading_dose_injections:
-            protocol = LoadingDoseProtocol(
+            protocol = WeekdayLoadingDoseProtocol(
                 loading_dose_injections=self.spec.loading_dose_injections,
                 loading_dose_interval_days=self.spec.loading_dose_interval_days,
                 min_interval_days=self.spec.min_interval_days,
                 max_interval_days=self.spec.max_interval_days,
                 extension_days=self.spec.extension_days,
-                shortening_days=self.spec.shortening_days
+                shortening_days=self.spec.shortening_days,
+                prefer_earlier=True,  # Prefer Friday over Monday for weekend adjustments
+                allow_saturday=self.spec.allow_saturday_visits,
+                allow_sunday=self.spec.allow_sunday_visits
             )
         else:
-            protocol = StandardProtocol(
+            protocol = WeekdayStandardProtocol(
                 min_interval_days=self.spec.min_interval_days,
                 max_interval_days=self.spec.max_interval_days,
                 extension_days=self.spec.extension_days,
-                shortening_days=self.spec.shortening_days
+                shortening_days=self.spec.shortening_days,
+                prefer_earlier=True,  # Prefer Friday over Monday for weekend adjustments
+                allow_saturday=self.spec.allow_saturday_visits,
+                allow_sunday=self.spec.allow_sunday_visits
             )
         
         # Create baseline vision distribution from spec

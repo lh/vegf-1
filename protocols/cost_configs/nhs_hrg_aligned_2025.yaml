@@ -1,0 +1,122 @@
+# NHS HRG-Aligned Costs 2025
+# Updated to match exact NHS cost calculator values
+
+metadata:
+  name: "NHS HRG-Aligned Costs 2025"
+  currency: "GBP"
+  effective_date: "2025-06-21"
+  version: "2.0"
+  source: "NHS wAMD Cost Calculator & HRG codes"
+
+# Drug costs per administration (including VAT)
+drug_costs:
+  # Aflibercept (Eylea)
+  eylea_2mg_biosimilar: 355    # 64% cost reduction
+  eylea_2mg_originator: 979    # List price
+  eylea_8mg: 1198             # Eylea HD
+  
+  # Ranibizumab (Lucentis)
+  lucentis_originator: 613
+  lucentis_biosimilar: 628
+  
+  # Other anti-VEGF
+  avastin: 50                 # Off-label bevacizumab
+  faricimab: 1028            # Vabysmo
+  
+  # Default for simulation
+  default_drug: "eylea_2mg_biosimilar"
+
+# Component costs (HRG codes)
+visit_components:
+  # Core procedures
+  injection_administration: 134  # HRG BZ86B
+  oct_scan: 110                 # HRG BZ88A
+  visual_acuity_test: 0         # Included in consultation
+  pressure_check: 0             # Included in injection
+  
+  # Consultation types
+  consultant_first: 160         # WF01A first attendance
+  consultant_followup: 75       # WF01A follow-up
+  virtual_review: 50            # Virtual clinic
+  nurse_review: 40              # Nurse-led service
+  
+  # Additional components
+  adverse_event_assessment: 200
+  fluorescein_angiography: 150
+
+# Visit type definitions (updated to match NHS patterns)
+visit_types:
+  # T&E visits - full assessment every time
+  tae_assessment:
+    components: [injection_administration, oct_scan, consultant_followup]
+    total_cost: 319  # 134 + 110 + 75
+    decision_maker: true
+    
+  # T&T visits - mostly nurse-led
+  tnt_injection_only:
+    components: [injection_administration, nurse_review]
+    total_cost: 174  # 134 + 40
+    decision_maker: false
+    
+  # Loading phase visits
+  initial_assessment:
+    components: [injection_administration, oct_scan, consultant_first]
+    total_cost: 404  # 134 + 110 + 160
+    decision_maker: true
+    
+  loading_injection:
+    components: [injection_administration, nurse_review]
+    total_cost: 174  # 134 + 40
+    decision_maker: false
+    
+  loading_final:
+    components: [injection_administration, oct_scan, consultant_followup]
+    total_cost: 319  # 134 + 110 + 75
+    decision_maker: true
+    
+  # Monitoring without injection
+  monitoring_only:
+    components: [oct_scan, consultant_followup]
+    total_cost: 185  # 110 + 75
+    decision_maker: true
+    
+  monitoring_virtual:
+    components: [oct_scan, virtual_review]
+    total_cost: 160  # 110 + 50
+    decision_maker: true
+
+# Special event costs
+special_events:
+  initial_referral: 250
+  discontinuation_admin: 50
+  annual_review: 160          # Annual consultant review
+  adverse_event_mild: 500
+  adverse_event_severe: 2000
+
+# Expected patterns for validation
+validation_targets:
+  # Injection counts by year
+  injections_per_year:
+    tae:
+      year1: 6      # Updated from 7-8
+      year2: 3
+      year3: 3
+    tnt:
+      year1: 7.5    # Fixed schedule
+      year2: 6
+      year3: 6
+      
+  # Total costs per patient
+  annual_costs:
+    biosimilar_pathway:
+      year1: 2400
+      year2: 1200
+    originator_pathway:
+      year1: 6600
+      year2: 3300
+      
+  # Cost per injection episode
+  cost_per_episode:
+    biosimilar_tae: 599    # 355 + 134 + 110
+    originator_tae: 1223   # 979 + 134 + 110
+    biosimilar_tnt: 529    # 355 + 134 + 40

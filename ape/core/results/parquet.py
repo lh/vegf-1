@@ -39,6 +39,10 @@ class ParquetResults(SimulationResults):
         # Initialize reader
         self.reader = ParquetReader(data_path)
         
+        # Load resource tracker if available
+        self.resource_tracker = None
+        self._load_resource_tracker()
+        
         # Load summary statistics from metadata
         summary_path = self.data_path / 'summary_stats.json'
         if summary_path.exists():
@@ -53,6 +57,122 @@ class ParquetResults(SimulationResults):
             # Save for next time
             with open(summary_path, 'w') as f:
                 json.dump(self._summary_stats, f, indent=2)
+    
+    def _load_resource_tracker(self) -> None:
+        """Load resource tracking data if available."""
+        # Check if we have resource tracking data
+        metadata_parquet = self.data_path / 'metadata.parquet'
+        if metadata_parquet.exists():
+            metadata_df = pd.read_parquet(metadata_parquet)
+            if 'has_resource_tracking' in metadata_df.columns and metadata_df['has_resource_tracking'].iloc[0]:
+                # Create a mock resource tracker with the saved data
+                from types import SimpleNamespace
+                
+                tracker = SimpleNamespace()
+                
+                # Load workload summary
+                workload_file = self.data_path / 'workload_summary.json'
+                if workload_file.exists():
+                    with open(workload_file, 'r') as f:
+                        workload_summary = json.load(f)
+                        tracker.get_workload_summary = lambda: workload_summary
+                
+                # Load cost breakdown
+                cost_file = self.data_path / 'cost_breakdown.json'
+                if cost_file.exists():
+                    with open(cost_file, 'r') as f:
+                        costs = json.load(f)
+                        tracker.get_total_costs = lambda: costs
+                
+                # Load bottlenecks
+                bottleneck_file = self.data_path / 'bottlenecks.json'
+                if bottleneck_file.exists():
+                    with open(bottleneck_file, 'r') as f:
+                        bottlenecks = json.load(f)
+                        # Convert date strings back to datetime objects
+                        from datetime import datetime
+                        for b in bottlenecks:
+                            b['date'] = datetime.fromisoformat(b['date']).date()
+                        tracker.identify_bottlenecks = lambda: bottlenecks
+                
+                # Load resource configuration
+                resource_config_file = self.data_path / 'resource_config.json'
+                if resource_config_file.exists():
+                    with open(resource_config_file, 'r') as f:
+                        resource_config = json.load(f)
+                        tracker.roles = resource_config.get('roles', {})
+                        tracker.session_parameters = resource_config.get('session_parameters', {})
+                        tracker.visit_requirements = resource_config.get('visit_requirements', {})
+                else:
+                    # If config file doesn't exist, raise error instead of using defaults
+                    raise FileNotFoundError(
+                        f"Resource configuration file not found at {resource_config_file}. "
+                        "This simulation's resource tracking data appears to be incomplete."
+                    )
+                
+                # Load daily usage
+                daily_usage_file = self.data_path / 'daily_resource_usage.parquet'
+                if daily_usage_file.exists():
+                    daily_df = pd.read_parquet(daily_usage_file)
+                    from collections import defaultdict
+                    from datetime import datetime
+                    
+                    daily_usage = defaultdict(lambda: defaultdict(int))
+                    for _, row in daily_df.iterrows():
+                        date = datetime.fromisoformat(row['date']).date()
+                        for role, count in row['usage'].items():
+                            daily_usage[date][role] = count
+                    
+                    tracker.daily_usage = dict(daily_usage)
+                    tracker.get_all_dates_with_visits = lambda: sorted(daily_usage.keys())
+                    
+                    def calculate_sessions_needed(date, role):
+                        if role not in tracker.roles:
+                            raise ValueError(f"Unknown role: {role}. Available roles: {list(tracker.roles.keys())}")
+                        if date not in daily_usage:
+                            raise ValueError(f"No visit data available for {date}")
+                        if role not in daily_usage[date]:
+                            return 0.0
+                        daily_count = daily_usage[date][role]
+                        if daily_count is None:
+                            return 0.0
+                        role_info = tracker.roles.get(role)
+                        if not role_info:
+                            raise ValueError(f"Role '{role}' not found in tracker.roles")
+                        if 'capacity_per_session' not in role_info:
+                            raise ValueError(f"Role '{role}' missing 'capacity_per_session' field")
+                        capacity = role_info['capacity_per_session']
+                        if capacity is None or capacity <= 0:
+                            raise ValueError(f"Invalid capacity for role '{role}': {capacity}")
+                        return daily_count / capacity
+                    
+                    tracker.calculate_sessions_needed = calculate_sessions_needed
+                
+                # Load visits with costs
+                visits_file = self.data_path / 'visits_with_costs.parquet'
+                if visits_file.exists():
+                    visits_df = pd.read_parquet(visits_file)
+                    visits = []
+                    for _, row in visits_df.iterrows():
+                        visit = {
+                            'date': datetime.fromisoformat(row['date']).date(),
+                            'patient_id': row['patient_id'],
+                            'visit_type': row['visit_type'],
+                            'injection_given': row['injection_given'],
+                            'oct_performed': row['oct_performed'],
+                            'costs': {}
+                        }
+                        # Extract cost components
+                        for col in visits_df.columns:
+                            if col not in ['date', 'patient_id', 'visit_type', 'injection_given', 
+                                         'oct_performed', 'total_cost']:
+                                if pd.notna(row[col]):
+                                    visit['costs'][col] = row[col]
+                        visits.append(visit)
+                    
+                    tracker.visits = visits
+                
+                self.resource_tracker = tracker
                 
     def get_patient_count(self) -> int:
         """Get the total number of patients."""

@@ -1,0 +1,44 @@
+# Example protocol with weekend working enabled
+name: "Aflibercept T&T with Saturday Working"
+version: "1.0"
+author: "Example"
+created_date: "2025-06-23"
+description: "Example protocol showing weekend configuration"
+
+# Model configuration
+model_type: "time_based"
+transition_model: "fortnightly"
+update_interval_days: 14
+
+# Protocol type
+protocol_type: "treat_and_treat"
+
+# Weekend working configuration
+allow_saturday_visits: true
+allow_sunday_visits: false
+prefer_weekday_for_first_visit: true  # Adjust first visit to weekday even with weekend working
+
+# Loading dose configuration
+loading_dose_injections: 3
+loading_dose_interval_days: 28  # 4 weeks
+
+# Post-loading intervals
+min_interval_days: 56   # 8 weeks
+max_interval_days: 112  # 16 weeks
+extension_days: 14      # 2 weeks
+shortening_days: 14     # 2 weeks
+
+# Baseline vision distribution
+baseline_vision_distribution:
+  type: "normal"
+  mean: 55
+  std: 10
+  min: 20
+  max: 85
+
+# Parameter file references (relative paths)
+disease_transitions_file: "parameters/disease_transitions.yaml"
+treatment_effect_file: "parameters/treatment_effect_decay.yaml"
+vision_parameters_file: "parameters/vision.yaml"
+discontinuation_parameters_file: "parameters/discontinuation.yaml"
+demographics_parameters_file: "parameters/demographics_uk.yaml"
