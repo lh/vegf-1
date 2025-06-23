@@ -85,8 +85,18 @@ with st.sidebar:
     
     if available_configs:
         # Check if we should select a newly created config
-        if 'newly_created_config' in st.session_state and st.session_state['newly_created_config'] in available_configs:
-            default_index = list(available_configs.keys()).index(st.session_state['newly_created_config'])
+        if 'newly_created_config' in st.session_state:
+            target_config = st.session_state['newly_created_config']
+            if target_config in available_configs:
+                default_index = list(available_configs.keys()).index(target_config)
+            else:
+                # If not found, try to find it by partial match (in case of naming differences)
+                for idx, key in enumerate(available_configs.keys()):
+                    if target_config.replace("Cost Config: ", "") in key:
+                        default_index = idx
+                        break
+                else:
+                    default_index = 0
             # Clear the flag after using it
             del st.session_state['newly_created_config']
         else:
@@ -142,12 +152,28 @@ if st.session_state.get('create_new', False):
                     config = load_financial_config(template_path)
                     
                     # Update metadata to reflect this is a new config based on template
-                    if 'metadata' not in config:
-                        config['metadata'] = {}
-                    config['metadata']['name'] = new_name
-                    config['metadata']['created'] = datetime.now().isoformat()
-                    config['metadata']['based_on'] = selected_template
-                    config['metadata']['source'] = str(template_path)
+                    # For old format files (starting with 'resources'), we need to restructure
+                    if 'resources' in config and 'metadata' not in config:
+                        # This is an old format file - add metadata at the beginning
+                        old_config = config.copy()
+                        config = {
+                            'metadata': {
+                                'name': new_name,
+                                'created': datetime.now().isoformat(),
+                                'based_on': selected_template,
+                                'source': str(template_path)
+                            }
+                        }
+                        # Add all the original content after metadata
+                        config.update(old_config)
+                    else:
+                        # New format or already has metadata - just update it
+                        if 'metadata' not in config:
+                            config['metadata'] = {}
+                        config['metadata']['name'] = new_name
+                        config['metadata']['created'] = datetime.now().isoformat()
+                        config['metadata']['based_on'] = selected_template
+                        config['metadata']['source'] = str(template_path)
                 else:
                     # Create empty template
                     config = {

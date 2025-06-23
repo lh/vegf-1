@@ -89,3 +89,8 @@ reporting:
   - Assessment costs
   - Total cost per patient
   - Cost per vision year saved
+metadata:
+  name: new
+  created: '2025-06-23T22:31:37.873539'
+  based_on: 'Resources: nhs_standard_resources'
+  source: protocols/resources/nhs_standard_resources.yaml
