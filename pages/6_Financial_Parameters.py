@@ -102,48 +102,27 @@ with st.sidebar:
         
         st.divider()
         
-        if ape_button("New Config", key="new_config", full_width=True):
-            st.session_state['create_new'] = True
-    else:
-        st.warning("No configurations found")
-        if ape_button("Create First Config", key="create_first", full_width=True):
-            st.session_state['create_new'] = True
-
-# Main content area
-if st.session_state.get('create_new', False):
-    st.header("Create New Financial Configuration")
-    
-    # Build template options including all existing configs
-    template_options = {}
-    
-    # Add all available configurations
-    for config_name, config_path in get_available_configs().items():
-        template_options[config_name] = str(config_path)
-    
-    # Add empty template option
-    template_options["Empty Template"] = None
-    
-    selected_template = st.selectbox(
-        "Start from template",
-        options=list(template_options.keys()),
-        help="Choose an existing configuration as a template"
-    )
-    
-    new_name = st.text_input("Configuration Name", placeholder="e.g., Custom NHS Configuration")
-    
-    col1, col2, col3 = st.columns([1, 1, 3])
-    with col1:
-        if ape_button("Create", key="confirm_create", is_primary_action=True):
-            if new_name:
+        # New config section right in the sidebar
+        st.subheader("Create New Config")
+        
+        with st.form("new_config_form"):
+            new_name = st.text_input("Configuration Name", placeholder="e.g., My Custom Config")
+            
+            # Template selection
+            template_options = ["Empty Template"] + list(available_configs.keys())
+            selected_template = st.selectbox("Based on", options=template_options)
+            
+            submitted = st.form_submit_button("Create", type="primary", use_container_width=True)
+            
+            if submitted and new_name:
                 # Load template if selected
-                if template_options[selected_template]:
-                    template_path = Path(template_options[selected_template])
+                if selected_template != "Empty Template":
+                    template_path = available_configs[selected_template]
                     config = load_financial_config(template_path)
                     
-                    # Update metadata to reflect this is a new config based on template
-                    # For old format files (starting with 'resources'), we need to restructure
+                    # Update metadata
                     if 'resources' in config and 'metadata' not in config:
-                        # This is an old format file - add metadata at the beginning
+                        # Old format - restructure
                         old_config = config.copy()
                         config = {
                             'metadata': {
@@ -153,10 +132,9 @@ if st.session_state.get('create_new', False):
                                 'source': str(template_path)
                             }
                         }
-                        # Add all the original content after metadata
                         config.update(old_config)
                     else:
-                        # New format or already has metadata - just update it
+                        # New format or already has metadata
                         if 'metadata' not in config:
                             config['metadata'] = {}
                         config['metadata']['name'] = new_name
@@ -187,20 +165,47 @@ if st.session_state.get('create_new', False):
                 new_path = COST_CONFIG_DIR / f"{safe_name}.yaml"
                 
                 if save_financial_config(config, new_path):
-                    st.success(f"Created new configuration: {new_name}")
-                    st.session_state['create_new'] = False
-                    # Set a flag to select the newly created config
-                    st.session_state['select_config'] = f"Cost Config: {safe_name}"
+                    st.success(f"Created '{new_name}'! Please select it above.")
+                    st.balloons()
                     st.rerun()
-            else:
-                st.error("Please enter a configuration name")
-    
-    with col2:
-        if ape_button("Cancel", key="cancel_create"):
-            st.session_state['create_new'] = False
-            st.rerun()
+    else:
+        st.warning("No configurations found")
+        st.subheader("Create Your First Config")
+        
+        with st.form("first_config_form"):
+            new_name = st.text_input("Configuration Name", placeholder="e.g., My First Config")
+            submitted = st.form_submit_button("Create", type="primary", use_container_width=True)
+            
+            if submitted and new_name:
+                # Create empty template
+                config = {
+                    'metadata': {
+                        'name': new_name,
+                        'created': datetime.now().isoformat(),
+                        'version': '1.0'
+                    },
+                    'resources': {
+                        'roles': {},
+                        'visit_requirements': {},
+                        'session_parameters': {}
+                    },
+                    'costs': {
+                        'procedures': {},
+                        'drugs': {}
+                    }
+                }
+                
+                # Save new configuration
+                safe_name = new_name.lower().replace(' ', '_').replace('-', '_')
+                new_path = COST_CONFIG_DIR / f"{safe_name}.yaml"
+                
+                if save_financial_config(config, new_path):
+                    st.success(f"Created '{new_name}'!")
+                    st.balloons()
+                    st.rerun()
 
-elif available_configs:
+# Main content area
+if available_configs:
     # View/Edit existing configuration
     config = load_financial_config(selected_path)
     
