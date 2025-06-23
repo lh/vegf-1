@@ -332,7 +332,7 @@ with col1:
     st.markdown(f"**Run Date:** {sim_a['date']}")
     
     # Add baseline vision distribution if available
-    if sim_a.get('protocol_config'):
+    if sim_a.get('protocol_config') and sim_a['protocol_config'] is not None:
         dist_config = None
         
         # Check for new format first
@@ -379,7 +379,7 @@ with col2:
     st.markdown(f"**Run Date:** {sim_b['date']}")
     
     # Add baseline vision distribution if available
-    if sim_b.get('protocol_config'):
+    if sim_b.get('protocol_config') and sim_b['protocol_config'] is not None:
         dist_config = None
         
         # Check for new format first
@@ -1307,11 +1307,45 @@ if cost_config_a and cost_config_b:
     def calculate_costs_with_tracker(sim_data, cost_config, new_drug_cost, default_drug_cost):
         """Calculate costs using ResourceTracker similar to workload analysis."""
         try:
+            # Create resource config for ResourceTracker
+            # ResourceTracker expects a specific config structure
+            resource_config = {
+                'resources': {
+                    'roles': {
+                        'nurse': {'capacity_per_session': 10},
+                        'technician': {'capacity_per_session': 15},
+                        'consultant': {'capacity_per_session': 8}
+                    },
+                    'visit_requirements': {
+                        'injection_visit_standard': [
+                            {'role': 'nurse', 'count': 1}
+                        ],
+                        'monitoring_visit_standard': [
+                            {'role': 'technician', 'count': 1}
+                        ]
+                    },
+                    'session_parameters': {
+                        'sessions_per_day': 2
+                    }
+                },
+                'costs': {
+                    'visit_types': {
+                        'injection_visit_standard': {
+                            'drug_cost': new_drug_cost,
+                            'procedure_cost': 285,
+                            'total_cost': new_drug_cost + 285
+                        },
+                        'monitoring_visit_standard': {
+                            'drug_cost': 0,
+                            'procedure_cost': 150,
+                            'total_cost': 150
+                        }
+                    }
+                }
+            }
+            
             # Create resource tracker
-            resource_tracker = ResourceTracker(
-                config_path=cost_config.config_path if hasattr(cost_config, 'config_path') else None,
-                cost_config=cost_config
-            )
+            resource_tracker = ResourceTracker(resource_config)
             
             # Get visits from simulation results
             visits_df = pd.read_parquet(sim_data['path'] / "visits.parquet")
