@@ -245,85 +245,6 @@ with tab1:
         """)
 
 with tab2:
-    # PATIENT STATES (was tab4)
-    st.header("Patient Treatment Flow")
-    st.markdown("Comprehensive view of patient cohort flow through different treatment states over time.")
-    
-    # Import cache helper
-    from ape.components.treatment_patterns.time_series_cache import should_show_week_resolution
-    
-    # Use the new comprehensive streamgraph
-    col1, col2 = st.columns([3, 1])
-    
-    with col2:
-        # Determine available resolutions based on data size
-        n_patients = results.metadata.n_patients
-        duration_years = results.metadata.duration_years
-        
-        if should_show_week_resolution(n_patients, duration_years):
-            resolution_options = ["month", "week", "quarter"]
-            resolution_help = "Choose time resolution"
-        else:
-            resolution_options = ["month", "quarter"]
-            resolution_help = f"Week resolution disabled for performance (large dataset)"
-        
-        time_resolution = st.radio(
-            "Time Resolution",
-            resolution_options,
-            index=0,
-            key="time_res",
-            help=resolution_help
-        )
-        
-        normalize = st.checkbox(
-            "Show as Percentage",
-            value=False,
-            help="Display as percentage of total patients"
-        )
-    
-    # Create the comprehensive visualization
-    with st.spinner("Analyzing patient treatment journeys..."):
-        # Import the new comprehensive streamgraph
-        from ape.visualizations.streamgraph_treatment_states import create_treatment_state_streamgraph
-        
-        # Cache based on simulation ID
-        @st.cache_data
-        def get_comprehensive_streamgraph(sim_id: str, time_res: str, norm: bool):
-            return create_treatment_state_streamgraph(results, time_res, normalize=norm)
-        
-        fig = get_comprehensive_streamgraph(results.metadata.sim_id, time_resolution, normalize)
-    
-    # Display the Plotly figure
-    with col1:
-        # Apply export config
-        from ape.utils.export_config import get_export_config
-        config = get_export_config(filename="patient_treatment_flow")
-        st.plotly_chart(fig, use_container_width=True, config=config)
-    
-    # Show detailed statistics
-    with st.expander("Detailed Statistics"):
-        from ape.visualizations.streamgraph_comprehensive import calculate_patient_cohort_flow
-        states_df, summary_stats = calculate_patient_cohort_flow(results, time_resolution)
-        
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Total Patients", summary_stats['total_patients'])
-        with col2:
-            st.metric("Total Discontinuations", summary_stats['total_discontinuations'])
-        with col3:
-            st.metric("Total Retreatments", summary_stats['total_retreatments'])
-        
-        if summary_stats.get('discontinuation_breakdown'):
-            st.write("**Discontinuation Breakdown:**")
-            for disc_type, count in summary_stats['discontinuation_breakdown'].items():
-                pct = (count / summary_stats['total_patients']) * 100
-                st.write(f"- {disc_type}: {count} ({pct:.1f}%)")
-    
-    # Add note about patient conservation
-    st.caption("*Patient counts are conserved throughout the simulation - total always equals initial population.")
-
-with tab3:
-    # VISION OUTCOMES (was tab2)
     st.header("Vision Outcomes")
     
     # Use vectorized calculation - always use all data since it's fast!
@@ -489,8 +410,8 @@ with tab3:
     except Exception as e:
         st.error(f"Unable to analyze active patients separately: {str(e)}")
 
-with tab4:
-    # PATIENT TRAJECTORIES (was tab3)
+
+with tab3:
     st.header("Patient Trajectories")
     
     # For trajectories, we always need to sample for readability
@@ -598,14 +519,91 @@ with tab4:
     
     st.caption(f"*Showing {n_sample} of {stats['patient_count']:,} total patients")
 
+with tab4:
+    st.header("Patient Treatment Flow")
+    st.markdown("Comprehensive view of patient cohort flow through different treatment states over time.")
+    
+    # Import cache helper
+    from ape.components.treatment_patterns.time_series_cache import should_show_week_resolution
+    
+    # Use the new comprehensive streamgraph
+    col1, col2 = st.columns([3, 1])
+    
+    with col2:
+        # Determine available resolutions based on data size
+        n_patients = results.metadata.n_patients
+        duration_years = results.metadata.duration_years
+        
+        if should_show_week_resolution(n_patients, duration_years):
+            resolution_options = ["month", "week", "quarter"]
+            resolution_help = "Choose time resolution"
+        else:
+            resolution_options = ["month", "quarter"]
+            resolution_help = f"Week resolution disabled for performance (large dataset)"
+        
+        time_resolution = st.radio(
+            "Time Resolution",
+            resolution_options,
+            index=0,
+            key="time_res",
+            help=resolution_help
+        )
+        
+        normalize = st.checkbox(
+            "Show as Percentage",
+            value=False,
+            help="Display as percentage of total patients"
+        )
+    
+    # Create the comprehensive visualization
+    with st.spinner("Analyzing patient treatment journeys..."):
+        # Import the new comprehensive streamgraph
+        from ape.visualizations.streamgraph_treatment_states import create_treatment_state_streamgraph
+        
+        # Cache based on simulation ID
+        @st.cache_data
+        def get_comprehensive_streamgraph(sim_id: str, time_res: str, norm: bool):
+            return create_treatment_state_streamgraph(results, time_res, normalize=norm)
+        
+        fig = get_comprehensive_streamgraph(results.metadata.sim_id, time_resolution, normalize)
+    
+    # Display the Plotly figure
+    with col1:
+        # Apply export config
+        from ape.utils.export_config import get_export_config
+        config = get_export_config(filename="patient_treatment_flow")
+        st.plotly_chart(fig, use_container_width=True, config=config)
+    
+    # Show detailed statistics
+    with st.expander("Detailed Statistics"):
+        from ape.visualizations.streamgraph_comprehensive import calculate_patient_cohort_flow
+        states_df, summary_stats = calculate_patient_cohort_flow(results, time_resolution)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Total Patients", summary_stats['total_patients'])
+        with col2:
+            st.metric("Total Discontinuations", summary_stats['total_discontinuations'])
+        with col3:
+            st.metric("Total Retreatments", summary_stats['total_retreatments'])
+        
+        if summary_stats.get('discontinuation_breakdown'):
+            st.write("**Discontinuation Breakdown:**")
+            for disc_type, count in summary_stats['discontinuation_breakdown'].items():
+                pct = (count / summary_stats['total_patients']) * 100
+                st.write(f"- {disc_type}: {count} ({pct:.1f}%)")
+    
+    # Add note about patient conservation
+    st.caption("*Patient counts are conserved throughout the simulation - total always equals initial population.")
+
 with tab5:
     # Combined Treatment Intervals & Gaps tab
     from ape.components.treatment_patterns.combined_intervals_tab import render_combined_intervals_tab
     render_combined_intervals_tab(results, stats, params)
 
 with tab6:
-    # Types & Frequency (renamed from Clinical Workload Analysis)
-    st.header("Types & Frequency")
+    # Clinical Workload Analysis (new tab)
+    st.header("Clinical Workload Attribution Analysis")
     
     st.markdown("""
     This analysis shows how different patient treatment intensity patterns contribute to clinical workload.
