@@ -15,7 +15,7 @@ from datetime import datetime
 import json
 
 # Add project root to path
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from simulation_v2.protocols.time_based_protocol_spec import TimeBasedProtocolSpecification
 from ape.core.simulation_runner import SimulationRunner
@@ -31,7 +31,8 @@ def run_simulation_with_resources(protocol_name: str, n_patients: int, duration_
     
     # Step 1: Load protocol (as UI does)
     print("\n1. Loading protocol...")
-    protocol_dir = Path(__file__).parent / "protocols" / "v2_time_based"
+    project_root = Path(__file__).parent.parent
+    protocol_dir = project_root / "protocols" / "v2_time_based"
     protocol_file = protocol_dir / f"{protocol_name}.yaml"
     
     if not protocol_file.exists():

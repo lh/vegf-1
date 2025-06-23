@@ -1,0 +1,71 @@
+name: Aflibercept Time-Based T&E (8-week minimum) Copy Copy
+version: 1.0.1
+created_date: '2025-06-23'
+author: Your Name
+description: Copy of Aflibercept Time-Based T&E (8-week minimum) Copy
+model_type: time_based
+transition_model: fortnightly
+update_interval_days: 14
+protocol_type: treat_and_extend
+loading_dose_injections: 3
+loading_dose_interval_days: 28
+min_interval_days: 56
+max_interval_days: 112
+extension_days: 14
+shortening_days: 14
+disease_transitions_file: parameters/disease_transitions.yaml
+treatment_effect_file: parameters/treatment_effect.yaml
+vision_parameters_file: parameters/vision.yaml
+discontinuation_parameters_file: parameters/discontinuation.yaml
+demographics_parameters_file: parameters/demographics.yaml
+baseline_vision_distribution:
+  type: beta_with_threshold
+  alpha: 3.5
+  beta: 2.0
+  min: 5
+  max: 98
+  threshold: 70
+  threshold_reduction: 0.6
+clinical_improvements:
+  enabled: true
+  use_loading_phase: true
+  use_time_based_discontinuation: true
+  use_response_based_vision: true
+  use_baseline_distribution: false
+  use_response_heterogeneity: true
+  response_types:
+    good:
+      probability: 0.6
+      multiplier: 1.8
+    average:
+      probability: 0.3
+      multiplier: 1.0
+    poor:
+      probability: 0.1
+      multiplier: 0.5
+  discontinuation_probabilities:
+    1: 0.1
+    2: 0.15
+    3: 0.12
+    4: 0.08
+    5: 0.075
+  vision_response_params:
+    loading:
+      mean: 4.0
+      std: 1.5
+    year1:
+      mean: 1.0
+      std: 1.0
+    year2:
+      mean: 0.0
+      std: 1.0
+    year3plus:
+      mean: -0.3
+      std: 1.0
+target_outcomes:
+  year1:
+    mean_bcva_change: 6.0
+    mean_injections: 7.5
+  year2:
+    mean_bcva_change: 5.0
+    cumulative_injections: 12.5

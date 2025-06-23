@@ -83,6 +83,10 @@ def auto_save_protocol(selected_file, protocol_type):
     """Auto-save changes to temporary protocol files."""
     if protocol_type != "temp" or not st.session_state.get('edit_mode', False):
         return
+    
+    # Get the actual protocol type from session state
+    actual_protocol_type = st.session_state.get('current_protocol', {}).get('type', 'standard')
+    is_time_based = actual_protocol_type == 'time_based'
         
     try:
         # Load the current YAML data
@@ -486,13 +490,13 @@ with col1:
                                 data['discontinuation_rules']['discontinuation_types'] = types_list
                     
                     # Update population parameters if edited
-                    dist_type_key = 'tb_edit_dist_type' if protocol_type == "time_based" else 'edit_dist_type'
+                    dist_type_key = 'tb_edit_dist_type' if is_time_based else 'edit_dist_type'
                     if dist_type_key in st.session_state:
                         dist_type = st.session_state[dist_type_key]
                         
                         if dist_type == "normal":
                             # Create/update baseline_vision_distribution in new format
-                            prefix = 'tb_edit' if protocol_type == "time_based" else 'edit'
+                            prefix = 'tb_edit' if is_time_based else 'edit'
                             normal_dist = {
                                 'type': 'normal'
                             }
@@ -531,7 +535,7 @@ with col1:
                                 
                         elif dist_type == "beta_with_threshold":
                             # Create/update beta distribution
-                            prefix = 'tb_edit' if protocol_type == "time_based" else 'edit'
+                            prefix = 'tb_edit' if is_time_based else 'edit'
                             beta_dist = {
                                 'type': 'beta_with_threshold'
                             }
@@ -580,7 +584,7 @@ with col1:
                             
                         elif dist_type == "uniform":
                             # Create/update uniform distribution
-                            prefix = 'tb_edit' if protocol_type == "time_based" else 'edit'
+                            prefix = 'tb_edit' if is_time_based else 'edit'
                             uniform_dist = {
                                 'type': 'uniform'
                             }
@@ -938,7 +942,7 @@ try:
     if st.session_state.get('edit_mode', False) and protocol_type == "temp":
         st.warning("**Edit Mode** - Changes are saved automatically. Click 'Commit Changes' to finalize your edits.")
     # Show model type indicator for time-based protocols
-    if protocol_type == "time_based":
+    if st.session_state.get('current_protocol', {}).get('type') == 'time_based':
         st.info("**Time-Based Model**: Disease progression updates every 14 days, independent of visit schedule")
     
     # Compact metadata display
@@ -962,7 +966,7 @@ try:
             st.caption(f"Checksum: {spec.checksum[:8]}...")
     
     # Protocol parameters tabs - different for time-based
-    if protocol_type == "time_based":
+    if is_time_based_protocol:
         tab1, tab2, tab3, tab4 = st.tabs([
             "Timing Parameters",
             "Model Type",
@@ -1004,7 +1008,7 @@ try:
                 st.metric("Shortening", f"{spec.shortening_days} days ({spec.shortening_days/7:.1f} weeks)")
     
     # Handle time-based protocol specific tabs
-    if protocol_type == "time_based":
+    if is_time_based_protocol:
         with tab2:
             st.subheader("Model Type")
             st.info("**Time-Based Disease Progression Model**")
@@ -1677,7 +1681,7 @@ try:
                                          f"{admin.get('probability_per_visit', 0.005)*100:.1f}%/visit")
     
     # Only show disease transitions tab for standard protocols
-    elif protocol_type != "time_based":
+    elif not is_time_based_protocol:
         with tab2:
             st.subheader("Disease State Transitions")
             
@@ -1801,7 +1805,9 @@ try:
                     st.caption(f"**{from_state}:** No treatment effects")
     
     # Vision Model tab for standard protocols only
-    if protocol_type != "time_based":
+    # Get the actual protocol type from session state
+    actual_protocol_type = st.session_state.get('current_protocol', {}).get('type', 'standard')
+    if actual_protocol_type != "time_based":
         with tab3:
             st.subheader("Vision Change Model")
             

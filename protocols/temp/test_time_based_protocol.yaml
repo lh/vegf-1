@@ -1,0 +1,97 @@
+# Aflibercept Time-Based T&E Protocol with 8-week Minimum
+# Time-based disease progression with visit-based measurements
+
+# Metadata
+name: "Aflibercept Time-Based T&E (8-week minimum)"
+version: "1.0"
+created_date: "2025-06-21"
+author: "Calibration Team"
+description: "Time-based T&E protocol with NHS-compliant 8-week minimum interval"
+
+# Model type indicator - TIME-BASED
+model_type: "time_based"
+transition_model: "fortnightly"
+update_interval_days: 14  # Disease state updates every 2 weeks
+
+# Protocol parameters - Treat-and-Extend
+protocol_type: "treat_and_extend"
+
+# Loading dose phase
+loading_dose_injections: 3  # Number of initial monthly injections
+loading_dose_interval_days: 28  # Monthly (4 weeks) during loading
+
+# T&E intervals - NHS constraint of 8-week minimum
+min_interval_days: 56      # 8 weeks (NHS minimum)
+max_interval_days: 112     # 16 weeks maximum
+extension_days: 14         # Extend by 2 weeks if stable
+shortening_days: 14        # Shorten by 2 weeks if active
+
+# Reference to parameter files (relative to this file)
+disease_transitions_file: "parameters/disease_transitions.yaml"
+treatment_effect_file: "parameters/treatment_effect.yaml"
+vision_parameters_file: "parameters/vision.yaml"
+discontinuation_parameters_file: "parameters/discontinuation.yaml"
+demographics_parameters_file: "parameters/demographics.yaml"
+
+# Baseline vision distribution - UK real-world
+baseline_vision_distribution:
+  type: beta_with_threshold
+  alpha: 3.5
+  beta: 2.0
+  min: 5
+  max: 98
+  threshold: 70
+  threshold_reduction: 0.6
+
+# Clinical improvements for enhanced realism
+clinical_improvements:
+  enabled: true
+  use_loading_phase: true
+  use_time_based_discontinuation: true
+  use_response_based_vision: true
+  use_baseline_distribution: false  # Use protocol's beta distribution
+  use_response_heterogeneity: true
+  
+  # T&E-specific: 60% optimal responders (from cost calculator)
+  response_types:
+    good:
+      probability: 0.60    # 60% optimal responders who can extend
+      multiplier: 1.8      # Better vision gains
+    average:
+      probability: 0.30    # 30% moderate responders
+      multiplier: 1.0      # Normal vision gains
+    poor:
+      probability: 0.10    # 10% poor responders
+      multiplier: 0.5      # Reduced vision gains
+  
+  # Discontinuation probabilities
+  discontinuation_probabilities:
+    1: 0.10   # 10% Year 1
+    2: 0.15   # 15% Year 2 
+    3: 0.12   # 12% Year 3
+    4: 0.08   # 8% Year 4
+    5: 0.075  # 7.5% Year 5+
+  
+  # Vision response parameters
+  vision_response_params:
+    loading:
+      mean: 4.0
+      std: 1.5
+    year1:
+      mean: 1.0
+      std: 1.0
+    year2:
+      mean: 0.0
+      std: 1.0
+    year3plus:
+      mean: -0.3
+      std: 1.0
+
+# Target outcomes for validation
+target_outcomes:
+  year1:
+    mean_bcva_change: 6.0    # 5-6 letters expected
+    mean_injections: 7.5     # 7-8 injections
+  year2:
+    mean_bcva_change: 5.0    # Slight decline from peak
+    cumulative_injections: 12.5  # ~5 in year 2
