@@ -20,7 +20,7 @@ from pathlib import Path
 from ape.utils.state_helpers import get_active_simulation
 from ape.utils.startup_redirect import handle_page_startup
 from ape.utils.carbon_button_helpers import ape_button
-from visualization.color_system import SEMANTIC_COLORS, ALPHAS
+from visualization.color_system import COLORS, SEMANTIC_COLORS, ALPHAS
 from ape.components.ui.workflow_indicator import workflow_progress_indicator
 
 st.set_page_config(
@@ -171,7 +171,7 @@ if all_dates:
         x=plot_df['date'],
         y=plot_df['count'],
         name='Daily Count',
-        marker_color=SEMANTIC_COLORS['primary'],  # Use primary color for workload data
+        marker_color=COLORS['primary'],  # Use primary color for workload data
         opacity=0.8
     ))
     
@@ -248,7 +248,7 @@ if cost_categories:
             y=cost_values,
             text=[f"£{v:,.0f}" for v in cost_values],
             textposition='auto',
-            marker_color=SEMANTIC_COLORS['primary']
+            marker_color=COLORS['primary']
         )
     ])
     
