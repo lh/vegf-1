@@ -192,7 +192,7 @@ if all_dates:
         yaxis=dict(
             showgrid=True,
             gridwidth=1,
-            gridcolor=f'rgba(128,128,128,{ALPHAS["grid"]})',
+            gridcolor=f'rgba(128,128,128,{ALPHAS["low"]})',
             zeroline=True,
             zerolinewidth=1,
             zerolinecolor='gray',
@@ -267,7 +267,7 @@ if cost_categories:
         yaxis=dict(
             showgrid=True,
             gridwidth=1,
-            gridcolor=f'rgba(128,128,128,{ALPHAS["grid"]})',
+            gridcolor=f'rgba(128,128,128,{ALPHAS["low"]})',
             zeroline=True,
             zerolinewidth=1,
             zerolinecolor='gray',
