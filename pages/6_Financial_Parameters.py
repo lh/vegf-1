@@ -84,29 +84,11 @@ with st.sidebar:
     available_configs = get_available_configs()
     
     if available_configs:
-        # Check if we should select a newly created config
-        if 'newly_created_config' in st.session_state:
-            target_config = st.session_state['newly_created_config']
-            if target_config in available_configs:
-                default_index = list(available_configs.keys()).index(target_config)
-            else:
-                # If not found, try to find it by partial match (in case of naming differences)
-                for idx, key in enumerate(available_configs.keys()):
-                    if target_config.replace("Cost Config: ", "") in key:
-                        default_index = idx
-                        break
-                else:
-                    default_index = 0
-            # Clear the flag after using it
-            del st.session_state['newly_created_config']
-        else:
-            default_index = 0
-            
         selected_config_name = st.selectbox(
             "Select Configuration",
             options=list(available_configs.keys()),
-            index=default_index,
-            help="Choose a financial parameter set to view or edit"
+            help="Choose a financial parameter set to view or edit",
+            key="config_selector"
         )
         
         selected_path = available_configs[selected_config_name]
@@ -201,7 +183,7 @@ if st.session_state.get('create_new', False):
                     st.success(f"Created new configuration: {new_name}")
                     st.session_state['create_new'] = False
                     # Set the newly created config to be selected
-                    st.session_state['newly_created_config'] = f"Cost Config: {safe_name}"
+                    st.session_state['config_selector'] = f"Cost Config: {safe_name}"
                     st.rerun()
             else:
                 st.error("Please enter a configuration name")
