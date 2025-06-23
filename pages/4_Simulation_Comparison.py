@@ -985,36 +985,57 @@ def prepare_vision_data(histories):
     return stats
 
 def create_standardized_vision_plot(ax, vision_data, title, color='blue', show_ci=True, show_thresholds=True, max_month=None):
-    """Create a standardized vision plot with consistent formatting."""
+    """Create a standardized vision plot with Tufte-style minimalist formatting."""
     # Main line
-    ax.plot(vision_data['Month'], vision_data['mean'], color=color, linewidth=2, label='Mean Vision')
+    ax.plot(vision_data['Month'], vision_data['mean'], color=color, linewidth=2.5, label='Mean Vision')
     
     # Confidence intervals
     if show_ci:
         ax.fill_between(vision_data['Month'], 
                       vision_data['ci_lower'], 
                       vision_data['ci_upper'],
-                      alpha=0.3, color=color, label='95% CI')
+                      alpha=0.15, color=color, label='95% CI')
     
-    # Clinical thresholds - no labels
+    # Clinical thresholds - subtle reference lines
     if show_thresholds:
-        ax.axhline(y=70, color='gray', linestyle='--', alpha=0.5)
-        ax.axhline(y=20, color='darkred', linestyle='--', alpha=0.5)
+        ax.axhline(y=70, color='#999999', linestyle='-', alpha=0.3, linewidth=0.8)
+        ax.axhline(y=20, color='#999999', linestyle='-', alpha=0.3, linewidth=0.8)
+        # Add subtle labels directly on the lines
+        ax.text(max_month * 0.98, 71, '70', ha='right', va='bottom', fontsize=8, color='#666666')
+        ax.text(max_month * 0.98, 21, '20', ha='right', va='bottom', fontsize=8, color='#666666')
     
-    # Formatting
-    ax.set_xlabel('Time (months)')
-    ax.set_ylabel('Vision (ETDRS Letters)')
-    ax.set_title(title)
+    # Remove top and right spines (Tufte style)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    
+    # Make remaining spines subtle
+    ax.spines['left'].set_color('#333333')
+    ax.spines['bottom'].set_color('#333333')
+    ax.spines['left'].set_linewidth(0.8)
+    ax.spines['bottom'].set_linewidth(0.8)
+    
+    # Subtle tick marks
+    ax.tick_params(colors='#333333', width=0.8, length=4)
+    
+    # Labels with better typography
+    ax.set_xlabel('Time (months)', fontsize=10, color='#333333')
+    ax.set_ylabel('Vision (ETDRS Letters)', fontsize=10, color='#333333')
+    if title:
+        ax.set_title(title, fontsize=11, color='#333333', pad=10)
     
     # Fixed axis ranges
     ax.set_xlim(0, max_month)
     ax.set_ylim(0, 85)
     
-    # Grid
-    ax.grid(True, alpha=0.3)
+    # Remove grid or make it very subtle
+    ax.grid(True, alpha=0.1, linewidth=0.5, color='#cccccc')
     
-    # Legend
-    ax.legend(fontsize=8, loc='upper right')
+    # Minimize legend
+    if show_ci:
+        ax.legend(fontsize=8, frameon=False, loc='upper right')
+    else:
+        # Remove legend if only showing mean
+        ax.legend().set_visible(False)
 
 # Prepare data
 vision_data_a = prepare_vision_data(histories_a)
@@ -1028,8 +1049,12 @@ max_month = max(max_month_a, max_month_b)
 # Create visualizations based on view mode
 if view_mode == "Side-by-Side":
     # Create both figures first to ensure identical sizing
-    fig_a, ax_a = plt.subplots(figsize=(7, 5), dpi=80)
-    fig_b, ax_b = plt.subplots(figsize=(7, 5), dpi=80)
+    fig_a, ax_a = plt.subplots(figsize=(7, 5), dpi=80, facecolor='white')
+    fig_b, ax_b = plt.subplots(figsize=(7, 5), dpi=80, facecolor='white')
+    
+    # Set axis background to white
+    ax_a.set_facecolor('white')
+    ax_b.set_facecolor('white')
     
     # Create both plots with identical parameters
     create_standardized_vision_plot(
@@ -1070,41 +1095,53 @@ if view_mode == "Side-by-Side":
     plt.close(fig_b)
 
 elif view_mode == "Overlay":
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(10, 6), facecolor='white')
+    ax.set_facecolor('white')
     
     # Plot both simulations
-    ax.plot(vision_data_a['Month'], vision_data_a['mean'], 'b-', linewidth=2, label=f'A: {sim_a["protocol"]}')
-    ax.plot(vision_data_b['Month'], vision_data_b['mean'], 'orange', linewidth=2, label=f'B: {sim_b["protocol"]}')
+    ax.plot(vision_data_a['Month'], vision_data_a['mean'], color='#1f77b4', linewidth=2.5, label=f'A: {sim_a["protocol"]}')
+    ax.plot(vision_data_b['Month'], vision_data_b['mean'], color='#ff7f0e', linewidth=2.5, label=f'B: {sim_b["protocol"]}')
     
     # Confidence intervals
     if show_ci:
         ax.fill_between(vision_data_a['Month'], 
                       vision_data_a['ci_lower'], 
                       vision_data_a['ci_upper'],
-                      alpha=0.2, color='blue')
+                      alpha=0.15, color='#1f77b4')
         ax.fill_between(vision_data_b['Month'], 
                       vision_data_b['ci_lower'], 
                       vision_data_b['ci_upper'],
-                      alpha=0.2, color='orange')
+                      alpha=0.15, color='#ff7f0e')
     
-    # Clinical thresholds - no labels
+    # Clinical thresholds - subtle
     if show_thresholds:
-        ax.axhline(y=70, color='gray', linestyle='--', alpha=0.5)
-        ax.axhline(y=20, color='darkred', linestyle='--', alpha=0.5)
+        ax.axhline(y=70, color='#999999', linestyle='-', alpha=0.3, linewidth=0.8)
+        ax.axhline(y=20, color='#999999', linestyle='-', alpha=0.3, linewidth=0.8)
+        ax.text(max_month * 0.98, 71, '70', ha='right', va='bottom', fontsize=8, color='#666666')
+        ax.text(max_month * 0.98, 21, '20', ha='right', va='bottom', fontsize=8, color='#666666')
     
-    ax.set_xlabel('Time (months)')
-    ax.set_ylabel('Vision (ETDRS Letters)')
-    # No title - redundant with page context
+    # Tufte styling
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_color('#333333')
+    ax.spines['bottom'].set_color('#333333')
+    ax.spines['left'].set_linewidth(0.8)
+    ax.spines['bottom'].set_linewidth(0.8)
+    ax.tick_params(colors='#333333', width=0.8, length=4)
+    
+    ax.set_xlabel('Time (months)', fontsize=10, color='#333333')
+    ax.set_ylabel('Vision (ETDRS Letters)', fontsize=10, color='#333333')
     ax.set_xlim(0, max_month)
     ax.set_ylim(0, 85)
-    ax.grid(True, alpha=0.3)
-    ax.legend()
+    ax.grid(True, alpha=0.1, linewidth=0.5, color='#cccccc')
+    ax.legend(fontsize=9, frameon=False, loc='upper right')
     
     st.pyplot(fig)
     plt.close(fig)
 
 else:  # Difference mode
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(10, 6), facecolor='white')
+    ax.set_facecolor('white')
     
     # Interpolate to common time points for difference calculation
     common_months = np.sort(list(set(vision_data_a['Month'].tolist()) & set(vision_data_b['Month'].tolist())))
@@ -1119,24 +1156,32 @@ else:  # Difference mode
     # Calculate difference (B - A)
     difference = np.array(mean_b_common) - np.array(mean_a_common)
     
-    # Plot difference
-    ax.plot(common_months, difference, 'purple', linewidth=2, label='B - A')
+    # Plot difference with Tufte style
+    ax.plot(common_months, difference, color='#7f7f7f', linewidth=2.5, label='B - A')
     ax.fill_between(common_months, 0, difference, 
                    where=(difference >= 0), 
-                   color='green', alpha=0.3, label='B Better')
+                   color='#2ca02c', alpha=0.2, label='B Better')
     ax.fill_between(common_months, 0, difference, 
                    where=(difference < 0), 
-                   color='red', alpha=0.3, label='A Better')
+                   color='#d62728', alpha=0.2, label='A Better')
     
-    # Zero line
-    ax.axhline(y=0, color='black', linestyle='-', alpha=0.5)
+    # Zero line - more prominent as it's a key reference
+    ax.axhline(y=0, color='#333333', linestyle='-', alpha=0.8, linewidth=1)
     
-    ax.set_xlabel('Time (months)')
-    ax.set_ylabel('Vision Difference (ETDRS Letters)')
-    # Title shows in legend
+    # Tufte styling
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_color('#333333')
+    ax.spines['bottom'].set_color('#333333')
+    ax.spines['left'].set_linewidth(0.8)
+    ax.spines['bottom'].set_linewidth(0.8)
+    ax.tick_params(colors='#333333', width=0.8, length=4)
+    
+    ax.set_xlabel('Time (months)', fontsize=10, color='#333333')
+    ax.set_ylabel('Vision Difference (ETDRS Letters)', fontsize=10, color='#333333')
     ax.set_xlim(0, max_month)
-    ax.grid(True, alpha=0.3)
-    ax.legend(title='Difference (B - A)')
+    ax.grid(True, alpha=0.1, linewidth=0.5, color='#cccccc')
+    ax.legend(fontsize=9, frameon=False, title='Difference (B - A)', title_fontsize=10)
     
     st.pyplot(fig)
     plt.close(fig)
