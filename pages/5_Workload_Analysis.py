@@ -21,6 +21,7 @@ from ape.utils.state_helpers import get_active_simulation
 from ape.utils.startup_redirect import handle_page_startup
 from ape.utils.carbon_button_helpers import ape_button
 from visualization.color_system import SEMANTIC_COLORS, ALPHAS
+from ape.components.ui.workflow_indicator import workflow_progress_indicator
 
 st.set_page_config(
     page_title="Workload & Economic Analysis",
@@ -30,6 +31,10 @@ st.set_page_config(
 
 # Check for startup redirect
 handle_page_startup("workload_analysis")
+
+# Show workflow progress with carbon buttons navigation
+has_results = st.session_state.get('current_sim_id') is not None
+workflow_progress_indicator("workload", has_results=has_results)
 
 # Get active simulation
 sim_data = get_active_simulation()

@@ -20,6 +20,7 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
         ('protocol', 'Protocol', 'pages/1_Protocol_Manager.py', None),
         ('simulation', 'Simulation', 'pages/2_Simulations.py', None),  # Removed play icon
         ('analysis', 'Analysis', 'pages/3_Analysis.py', None),
+        ('workload', 'Workload', 'pages/5_Workload_Analysis.py', None),
         ('comparison', 'Compare', 'pages/4_Simulation_Comparison.py', None)
     ]
     
@@ -85,14 +86,14 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                         button_type="secondary"
                     ):
                         st.switch_page(page)
-                # Analysis button is only enabled if we have results
-                elif step_id == "analysis" and has_results:
+                # Analysis and Workload buttons are only enabled if we have results
+                elif step_id in ["analysis", "workload"] and has_results:
                     if navigation_button(
                         display_label,
                         icon_name=None,  # Disable auto-icon since we're using our own
                         key=f"workflow_{step_id}",
                         full_width=True,
-                        help_text="View analysis results",
+                        help_text="View analysis results" if step_id == "analysis" else "View workload and economic analysis",
                         button_type="secondary"
                     ):
                         st.switch_page(page)
