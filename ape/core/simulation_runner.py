@@ -30,22 +30,25 @@ class SimulationRunner:
     - Tracking runtime and audit logs
     """
     
-    def __init__(self, protocol_spec, enable_resource_tracking=False):
+    def __init__(self, protocol_spec, enable_resource_tracking=False, resource_config_path=None):
         """
         Initialize with protocol specification.
         
         Args:
             protocol_spec: Protocol specification to use (standard or time-based)
             enable_resource_tracking: Whether to enable resource tracking
+            resource_config_path: Path to resource configuration file (optional)
         """
         self.protocol_spec = protocol_spec
         self.enable_resource_tracking = enable_resource_tracking
+        self.resource_config_path = resource_config_path
         
         # Create appropriate runner based on protocol type
         if isinstance(protocol_spec, TimeBasedProtocolSpecification):
             if enable_resource_tracking:
-                # Load default resource configuration
-                resource_config_path = Path(__file__).parent.parent.parent / "protocols" / "resources" / "nhs_standard_resources.yaml"
+                # Use provided path or default
+                if not resource_config_path:
+                    resource_config_path = Path(__file__).parent.parent.parent / "protocols" / "resources" / "nhs_standard_resources.yaml"
                 self.v2_runner = TimeBasedSimulationRunnerWithResources(
                     protocol_spec,
                     resource_config_path=str(resource_config_path)

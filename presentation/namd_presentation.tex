@@ -319,14 +319,17 @@ Hip Replacement & £500-700 million & 100,000 \\
 \column{0.5\textwidth}
 \textbf{Our Simulation Includes:}
 \begin{itemize}
-    \item \alert{Vision distribution at baseline}
-    \item \alert{Real discontinuation patterns}
-    \item \alert{Treatment gaps and delays}
+    \item Vision distribution at baseline
+    \item Real discontinuation patterns
+    \item Treatment gaps and delays
     \item Individual patient trajectories
 \end{itemize}
 \end{columns}
 \end{alertblock}
 
+\vspace{0.5cm}
+\begin{center}
+\begin{minipage}{0.7\textwidth}
 \begin{block}{Why This Matters}
 \begin{itemize}
     \item Captures NHS capacity constraints
@@ -335,32 +338,15 @@ Hip Replacement & £500-700 million & 100,000 \\
     \item Enables better resource planning
 \end{itemize}
 \end{block}
-
-\centering
-\textbf{Result: Evidence-based insights, not theoretical averages}
+\end{minipage}
+\end{center}
 \end{frame}
 
-\section{Our Solution}
+\section{The APE}
 
 \begin{frame}{Application Architecture}
 \centering
-\textbf{Four Key Modules:}
-
-\vspace{0.5cm}
-\begin{tikzpicture}[scale=0.8]
-    \node[draw,nhsblue,thick,minimum width=3cm,minimum height=1.5cm] (proto) at (0,3) {Protocol Management};
-    \node[draw,nhsblue,thick,minimum width=3cm,minimum height=1.5cm] (sim) at (5,3) {Simulation Engine};
-    \node[draw,nhsblue,thick,minimum width=3cm,minimum height=1.5cm] (analysis) at (0,0) {Analysis \& Visualization};
-    \node[draw,nhsblue,thick,minimum width=3cm,minimum height=1.5cm] (compare) at (5,0) {Protocol Comparison};
-    
-    \draw[->,thick] (proto) -- (sim);
-    \draw[->,thick] (sim) -- (analysis);
-    \draw[->,thick] (sim) -- (compare);
-    \draw[->,thick] (analysis) -- (compare);
-\end{tikzpicture}
-
-\vspace{0.5cm}
-\alert{Next: Live demonstration of the application}
+\includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{ape_architecture.png}
 \end{frame}
 
 % Placeholder for screen recording section

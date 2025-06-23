@@ -322,7 +322,12 @@ if st.session_state.get('simulation_running', False):
         progress_bar.progress(5)
         status_text.caption("Initializing...")
         enable_resource_tracking = recruitment_params.get('enable_resource_tracking', False)
-        runner = SimulationRunner(spec, enable_resource_tracking=enable_resource_tracking)
+        resource_config_path = recruitment_params.get('financial_config_path', None)
+        runner = SimulationRunner(
+            spec, 
+            enable_resource_tracking=enable_resource_tracking,
+            resource_config_path=resource_config_path
+        )
         
         # Check memory feasibility (optional)
         if st.session_state.get('check_memory_limits', True):
@@ -462,7 +467,9 @@ if st.session_state.get('simulation_running', False):
                 'recruitment_mode': recruitment_params['mode'],
                 'recruitment_rate': recruitment_params.get('recruitment_rate'),
                 'rate_unit': recruitment_params.get('rate_unit'),
-                'expected_total': recruitment_params.get('expected_total')
+                'expected_total': recruitment_params.get('expected_total'),
+                'enable_resource_tracking': recruitment_params.get('enable_resource_tracking', False),
+                'financial_config_path': recruitment_params.get('financial_config_path')
             },
             'runtime': runtime,
             'timestamp': datetime.now().isoformat(),
