@@ -533,23 +533,53 @@ if available_configs:
                             component_total += comp_cost
                             st.write(f"- {comp.replace('_', ' ').title()}: £{comp_cost}")
                         st.write(f"**Component Total: £{component_total}**")
+                        
+                        # Show if override is active
+                        if abs(total_cost - component_total) > 0.01:  # Using small epsilon for float comparison
+                            st.info(f"💡 Override active: £{total_cost:,.0f} (calculated: £{component_total:,.0f})")
                     
-                    # Edit total cost
-                    new_total = st.number_input(
-                        "Total Cost Override", 
-                        value=float(total_cost),
-                        min_value=0.0,
-                        step=1.0,
-                        key=f"visit_total_{visit_name}",
-                        help="Leave as calculated sum or override with custom total"
+                    # Checkbox to use calculated total
+                    use_calculated = st.checkbox(
+                        "Use calculated total from components",
+                        value=abs(total_cost - calculated_total) < 0.01,  # True if they're essentially equal
+                        key=f"use_calc_{visit_name}",
+                        help="When checked, total will automatically update when component costs change"
                     )
+                    
+                    # Edit total cost - only show if not using calculated
+                    if not use_calculated:
+                        new_total = st.number_input(
+                            "Total Cost Override", 
+                            value=float(total_cost),
+                            min_value=0.0,
+                            step=1.0,
+                            key=f"visit_total_{visit_name}",
+                            help="Set a custom total that won't change when components are updated"
+                        )
+                    else:
+                        new_total = calculated_total
+                        st.write(f"**Total: £{new_total:,.0f}** (auto-calculated)")
                     
                     # Update edited config
                     if 'visit_types' not in st.session_state.edited_config:
                         st.session_state.edited_config['visit_types'] = {}
                     if visit_name not in st.session_state.edited_config['visit_types']:
                         st.session_state.edited_config['visit_types'][visit_name] = visit_info.copy()
-                    st.session_state.edited_config['visit_types'][visit_name]['total_cost'] = new_total
+                    
+                    # Store the total - if using calculated, store None or the calculated value
+                    if use_calculated:
+                        # For configs using 'total_override', set it to None to use calculated
+                        if 'total_override' in visit_info:
+                            st.session_state.edited_config['visit_types'][visit_name]['total_override'] = None
+                        # Don't store total_cost if we want it calculated
+                        if 'total_cost' in st.session_state.edited_config['visit_types'][visit_name]:
+                            del st.session_state.edited_config['visit_types'][visit_name]['total_cost']
+                    else:
+                        # Store the override value
+                        if 'total_override' in visit_info:
+                            st.session_state.edited_config['visit_types'][visit_name]['total_override'] = new_total
+                        else:
+                            st.session_state.edited_config['visit_types'][visit_name]['total_cost'] = new_total
                     
                     # Decision maker flag
                     requires_dm = st.checkbox(
