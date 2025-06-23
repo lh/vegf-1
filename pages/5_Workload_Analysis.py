@@ -433,14 +433,18 @@ if cost_difference != 0:
     with col1:
         st.metric("Original Total Cost", f"£{original_costs['total']:,.0f}")
     with col2:
-        st.metric("Adjusted Total Cost", f"£{adjusted_costs['total']:,.0f}", 
-                 delta=f"£{drug_cost_adjustment:,.0f}")
+        st.metric("Adjusted Total Cost", f"£{adjusted_costs['total']:,.0f}")
+        if drug_cost_adjustment != 0:
+            color = "green" if drug_cost_adjustment < 0 else "red"
+            st.markdown(f"<p style='color: {color}; margin-top: -15px;'>£{drug_cost_adjustment:+,.0f}</p>", unsafe_allow_html=True)
     with col3:
         adjusted_cpp = adjusted_costs['total'] / total_patients
         original_cpp = original_costs['total'] / total_patients
         cpp_diff = adjusted_cpp - original_cpp
-        st.metric("Adjusted Cost per Patient", f"£{adjusted_cpp:,.0f}", 
-                 delta=f"£{cpp_diff:,.0f}")
+        st.metric("Adjusted Cost per Patient", f"£{adjusted_cpp:,.0f}")
+        if cpp_diff != 0:
+            color = "green" if cpp_diff < 0 else "red"
+            st.markdown(f"<p style='color: {color}; margin-top: -15px;'>£{cpp_diff:+,.0f}</p>", unsafe_allow_html=True)
 
 # Section 3: Daily Workload Pattern
 st.header("Daily Workload Pattern")
