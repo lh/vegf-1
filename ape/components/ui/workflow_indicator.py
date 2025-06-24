@@ -54,12 +54,17 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                     st.switch_page(page)
             elif idx == current_idx:
                 # Current step - actionable if callback provided
-                # Special case: change "Simulation" to "Run Simulation" when on simulation page
+                # Special case: change "Simulation" to "Run" when on simulation page
                 if step_id == "simulation" and current_step == "simulation":
-                    display_label = "Run Simulation"
+                    display_label = "Run"
                 
-                # Use invisible icon for workload and financial buttons
-                button_icon = 'invisible' if step_id in ["workload", "financial"] else None
+                # Use invisible icon for workload and financial buttons, run icon for simulation
+                if step_id in ["workload", "financial"]:
+                    button_icon = 'invisible'
+                elif step_id == "simulation" and current_step == "simulation":
+                    button_icon = 'run'  # Play icon for Run button
+                else:
+                    button_icon = None
                 
                 if on_current_action:
                     # Make it an action button
@@ -69,7 +74,7 @@ def workflow_progress_indicator(current_step: str, on_current_action: callable =
                         key=f"workflow_action_{step_id}",
                         full_width=True,
                         button_type="primary",
-                        help_text=f"Run {label}" if step_id == "simulation" else f"Perform {label} action"
+                        help_text="Run simulation" if step_id == "simulation" else f"Perform {label} action"
                     ):
                         on_current_action()
                 else:
