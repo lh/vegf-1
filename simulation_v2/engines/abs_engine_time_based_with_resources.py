@@ -11,8 +11,8 @@ from pathlib import Path
 
 from simulation_v2.engines.abs_engine_time_based_with_params import ABSEngineTimeBasedWithParams
 from simulation_v2.economics.resource_tracker import ResourceTracker, load_resource_config
+from simulation_v2.economics.visit_classifier import VisitClassifier
 from simulation_v2.core.patient import Patient
-from tests.test_visit_classification import VisitClassifier
 
 
 class ABSEngineTimeBasedWithResources(ABSEngineTimeBasedWithParams):
