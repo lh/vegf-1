@@ -55,6 +55,15 @@ from ape.components.simulation_ui_v2 import (
     calculate_runtime_estimate_v2
 )
 
+# We'll define the actual run_simulation function later, but need a placeholder for now
+# This will be updated after we have the recruitment parameters
+if 'run_simulation_action' not in st.session_state:
+    st.session_state.run_simulation_action = lambda: st.warning("Please wait for parameters to load...")
+
+# Show workflow progress at the top with the action callback
+has_results = st.session_state.get('current_sim_id') is not None
+workflow_progress_indicator("simulation", on_current_action=st.session_state.get('run_simulation_action'), has_results=has_results)
+
 # Load default protocol if none selected
 if not st.session_state.get('current_protocol'):
     # Load the default Eylea protocol
@@ -80,17 +89,6 @@ protocol_info = st.session_state.current_protocol
 if not protocol_info:
     st.info("Please select a protocol first from the Protocol Manager page.")
     st.stop()
-
-# We'll define the actual run_simulation function later, but need a placeholder for now
-# This will be updated after we have the recruitment parameters
-if 'run_simulation_action' not in st.session_state:
-    st.session_state.run_simulation_action = lambda: st.warning("Please wait for parameters to load...")
-
-# Show workflow progress at the top with the action callback
-has_results = st.session_state.get('current_sim_id') is not None
-workflow_progress_indicator("simulation", on_current_action=st.session_state.get('run_simulation_action'), has_results=has_results)
-
-# Don't display protocol separately - it will be shown in the quick start box
 
 # Show memory usage in sidebar
 monitor = MemoryMonitor()
