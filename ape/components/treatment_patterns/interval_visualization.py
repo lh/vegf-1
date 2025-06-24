@@ -110,24 +110,28 @@ def create_interval_distribution_tufte(intervals: np.ndarray,
             xanchor='left'
         ),
         xaxis=dict(
-            title='Interval (days)',
+            title=dict(
+                text='Interval (days)',
+                font=dict(size=14)
+            ),
             showgrid=False,
             showline=True,
             linewidth=1,
             linecolor='#333333',
             tickfont=dict(size=12),
-            titlefont=dict(size=14),
             # Set range to show only relevant data
             range=[bin_edges[0] - bin_width/2, bin_edges[-1] + bin_width/2]
         ),
         yaxis=dict(
-            title='Count',
+            title=dict(
+                text='Count',
+                font=dict(size=14)
+            ),
             showgrid=False,
             showline=True,
             linewidth=1,
             linecolor='#333333',
             tickfont=dict(size=12),
-            titlefont=dict(size=14),
             rangemode='tozero'
         ),
         plot_bgcolor='white',

@@ -59,7 +59,7 @@ TUFTE_AXIS_CONFIG = {
     'tickwidth': TUFTE_LINE_WEIGHTS['axis'],
     'tickcolor': TUFTE_COLORS['neutral'],
     'tickfont': dict(size=TUFTE_FONT_SIZES['tick']),
-    'titlefont': dict(size=TUFTE_FONT_SIZES['label']),
+    'title': dict(font=dict(size=TUFTE_FONT_SIZES['label'])),
 }
 
 # Grid configuration when needed
