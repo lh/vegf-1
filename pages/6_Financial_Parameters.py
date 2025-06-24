@@ -19,6 +19,7 @@ import pandas as pd
 
 from ape.utils.carbon_button_helpers import ape_button
 from ape.utils.startup_redirect import handle_page_startup
+from ape.components.ui.workflow_indicator import workflow_progress_indicator
 
 st.set_page_config(
     page_title="Financial Parameters",
@@ -28,6 +29,10 @@ st.set_page_config(
 
 # Check for startup redirect
 handle_page_startup("financial_parameters")
+
+# Show workflow progress at the top
+has_results = st.session_state.get('current_sim_id') is not None
+workflow_progress_indicator("financial", has_results=has_results)
 
 st.title("Financial Parameters Manager")
 st.markdown("Create and manage cost configurations for economic analysis")
