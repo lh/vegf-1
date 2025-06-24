@@ -152,21 +152,28 @@ def create_treatment_state_streamgraph(
     if hasattr(results.metadata, 'memorable_name') and results.metadata.memorable_name:
         title += f" - {results.metadata.memorable_name}"
     
-    fig.update_layout(
-        title=title if show_title else None,
-        xaxis_title="Time (months)",
-        yaxis_title="Number of Patients" if not normalize else "Percentage of Patients",
-        hovermode='x unified',
-        height=height,
-        showlegend=True,
-        legend=dict(
+    # Build layout dict
+    layout_dict = {
+        'xaxis_title': "Time (months)",
+        'yaxis_title': "Number of Patients" if not normalize else "Percentage of Patients",
+        'hovermode': 'x unified',
+        'height': height,
+        'showlegend': True,
+        'legend': dict(
             orientation="v",
             yanchor="middle",
             y=0.5,
             xanchor="left",
             x=1.02
         )
-    )
+    }
+    
+    # Only add title if show_title is True
+    if show_title:
+        layout_dict['title'] = title
+    
+    # Apply layout
+    fig.update_layout(**layout_dict)
     
     # Apply clean styling
     fig.update_xaxes(

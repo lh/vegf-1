@@ -10,6 +10,7 @@ from datetime import datetime
 import json
 import yaml
 import matplotlib.pyplot as plt
+from visualization.color_system import COLORS, ALPHAS
 
 # Page configuration
 st.set_page_config(
@@ -1360,45 +1361,18 @@ if cost_config_a and cost_config_b:
                     'original_costs': original_costs,
                     'workload_summary': workload_summary,
                     'total_injections': total_injections,
-                    'resource_tracker': resource_tracker
+                    'resource_tracker': resource_tracker,
+                    'has_resource_tracking': True
                 }
             else:
-                # Fallback: calculate basic costs from visits data
-                visits_df = pd.read_parquet(sim_data['path'] / "visits.parquet")
-                total_injections = int(visits_df['injected'].sum())
-                total_visits = len(visits_df)
-                
-                # Basic cost calculation
-                drug_costs = total_injections * new_drug_cost
-                # Assume injection visits cost more than monitoring
-                injection_visits = int(visits_df['injected'].sum())
-                monitoring_visits = total_visits - injection_visits
-                procedure_costs = (injection_visits * 285) + (monitoring_visits * 150)
-                
-                costs = {
-                    'drug': drug_costs,
-                    'injection_procedure': injection_visits * 285,
-                    'consultation': monitoring_visits * 150,
-                    'total': drug_costs + procedure_costs
-                }
-                
-                # Basic workload summary
-                workload_summary = {
-                    'total_visits': total_visits,
-                    'total_injections': total_injections,
-                    'average_daily_demand': {
-                        'nurse': injection_visits / (sim_data['duration'] * 30.44),
-                        'technician': monitoring_visits / (sim_data['duration'] * 30.44),
-                        'consultant': 0
-                    }
-                }
-                
+                # No resource tracking available
                 return {
-                    'costs': costs,
-                    'original_costs': costs,
-                    'workload_summary': workload_summary,
-                    'total_injections': total_injections,
-                    'resource_tracker': None
+                    'costs': {'total': 0, 'drug': 0},
+                    'original_costs': {'total': 0, 'drug': 0},
+                    'workload_summary': {},
+                    'total_injections': 0,
+                    'resource_tracker': None,
+                    'has_resource_tracking': False
                 }
             
         except Exception as e:
@@ -1409,42 +1383,42 @@ if cost_config_a and cost_config_b:
     costs_a = calculate_costs_with_tracker(sim_a, cost_config_a, new_drug_cost_a, default_drug_cost_a)
     costs_b = calculate_costs_with_tracker(sim_b, cost_config_b, new_drug_cost_b, default_drug_cost_b)
     
+    # Check if both simulations have resource tracking
     if costs_a and costs_b:
-        # Display key financial metrics
-        st.markdown("#### Key Financial Metrics")
+        # Check resource tracking availability
+        has_tracking_a = costs_a.get('has_resource_tracking', False)
+        has_tracking_b = costs_b.get('has_resource_tracking', False)
         
-        col1, col2, col3 = st.columns(3)
+        if not has_tracking_a or not has_tracking_b:
+            # Display warning message
+            warning_msgs = []
+            if not has_tracking_a:
+                warning_msgs.append(f"**{sim_a['memorable_name']}** was run without resource tracking")
+            if not has_tracking_b:
+                warning_msgs.append(f"**{sim_b['memorable_name']}** was run without resource tracking")
+            
+            st.warning("Financial data is not available for the following simulations:")
+            for msg in warning_msgs:
+                st.markdown(f"- {msg}")
+            
+            st.info("""
+            To enable financial analysis:
+            1. Go to the **Simulation** page
+            2. Enable **Resource Tracking** before running the simulation
+            3. Run new simulations with resource tracking enabled
+            
+            Note: Resource tracking is only available for time-based protocols.
+            """)
         
-        with col1:
-            st.metric(
-                "Total Cost A",
-                f"£{costs_a['costs']['total']:,.0f}",
-                delta=None
-            )
-            st.metric(
-                "Total Cost B",
-                f"£{costs_b['costs']['total']:,.0f}",
-                delta=f"£{costs_b['costs']['total'] - costs_a['costs']['total']:+,.0f}"
-            )
-        
-        with col2:
+        elif has_tracking_a and has_tracking_b:
+            # Display key financial metrics
+            st.markdown("#### Key Financial Metrics")
+            
+            # Calculate metrics first
             cost_per_patient_a = costs_a['costs']['total'] / len(histories_a)
             cost_per_patient_b = costs_b['costs']['total'] / len(histories_b)
             
-            st.metric(
-                "Cost per Patient A",
-                f"£{cost_per_patient_a:,.0f}",
-                delta=None
-            )
-            st.metric(
-                "Cost per Patient B",
-                f"£{cost_per_patient_b:,.0f}",
-                delta=f"£{cost_per_patient_b - cost_per_patient_a:+,.0f}"
-            )
-        
-        with col3:
-            # Calculate cost per vision maintained (sight preserved)
-            # Using same logic as workload analysis
+            # Calculate cost per vision maintained
             try:
                 # Load patient data for vision outcomes
                 patients_df_a = pd.read_parquet(sim_a['path'] / "patients.parquet")
@@ -1466,103 +1440,161 @@ if cost_config_a and cost_config_b:
                     cost_per_maintained_b = costs_b['costs']['total'] / vision_maintained_b
                 else:
                     cost_per_maintained_b = float('inf')
-                
+            except Exception:
+                cost_per_maintained_a = float('inf')
+                cost_per_maintained_b = float('inf')
+            
+            # Create three rows of side-by-side metrics
+            # Row 1: Total Cost
+            col1, col2 = st.columns(2)
+            with col1:
                 st.metric(
-                    "Cost per Sight Preserved A",
-                    f"£{cost_per_maintained_a:,.0f}" if cost_per_maintained_a != float('inf') else "N/A",
-                    delta=None
+                    f"Total Cost - {sim_a['memorable_name']}",
+                    f"£{costs_a['costs']['total']:,.0f}"
                 )
+            with col2:
                 st.metric(
-                    "Cost per Sight Preserved B",
+                    f"Total Cost - {sim_b['memorable_name']}",
+                    f"£{costs_b['costs']['total']:,.0f}",
+                    delta=f"£{costs_b['costs']['total'] - costs_a['costs']['total']:+,.0f}"
+                )
+            
+            # Row 2: Cost per Patient
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric(
+                    f"Cost per Patient - {sim_a['memorable_name']}",
+                    f"£{cost_per_patient_a:,.0f}"
+                )
+            with col2:
+                st.metric(
+                    f"Cost per Patient - {sim_b['memorable_name']}",
+                    f"£{cost_per_patient_b:,.0f}",
+                    delta=f"£{cost_per_patient_b - cost_per_patient_a:+,.0f}"
+                )
+            
+            # Row 3: Cost per Sight Preserved
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric(
+                    f"Cost per Sight Preserved - {sim_a['memorable_name']}",
+                    f"£{cost_per_maintained_a:,.0f}" if cost_per_maintained_a != float('inf') else "N/A"
+                )
+            with col2:
+                st.metric(
+                    f"Cost per Sight Preserved - {sim_b['memorable_name']}",
                     f"£{cost_per_maintained_b:,.0f}" if cost_per_maintained_b != float('inf') else "N/A",
                     delta=f"£{cost_per_maintained_b - cost_per_maintained_a:+,.0f}" if cost_per_maintained_a != float('inf') and cost_per_maintained_b != float('inf') else None
                 )
+        
+            # Sessions per week comparison
+            st.markdown("#### Weekly Staffing Requirements")
+        
+            # Create comparison table
+            sessions_data = []
+        
+            # Get sessions data from both simulations
+            for label, costs_data, sim_info in [("Simulation A", costs_a, sim_a), ("Simulation B", costs_b, sim_b)]:
+                workload = costs_data['workload_summary']
+                for role in ['nurse', 'technician', 'consultant']:
+                    if role in workload['average_daily_demand']:
+                        avg_daily = workload['average_daily_demand'][role]
+                        # Assuming 5 working days per week and standard capacity
+                        capacity_per_session = {'nurse': 10, 'technician': 15, 'consultant': 8}.get(role, 10)
+                        weekly_sessions = (avg_daily * 5) / capacity_per_session
+                        
+                        sessions_data.append({
+                            'Simulation': sim_info['memorable_name'],
+                            'Role': role.capitalize(),
+                            'Avg Daily Demand': f"{avg_daily:.1f}",
+                            'Weekly Sessions': f"{weekly_sessions:.1f}"
+                        })
+        
+            if sessions_data:
+                sessions_df = pd.DataFrame(sessions_data)
                 
-            except Exception as e:
-                st.metric("Cost per Sight Preserved A", "N/A")
-                st.metric("Cost per Sight Preserved B", "N/A")
+                # Pivot for better comparison
+                pivot_df = sessions_df.pivot(index='Role', columns='Simulation', values='Weekly Sessions')
+                st.dataframe(pivot_df, use_container_width=True)
         
-        # Sessions per week comparison
-        st.markdown("#### Weekly Staffing Requirements")
-        
-        # Create comparison table
-        sessions_data = []
-        
-        # Get sessions data from both simulations
-        for label, costs_data, sim_info in [("Simulation A", costs_a, sim_a), ("Simulation B", costs_b, sim_b)]:
-            workload = costs_data['workload_summary']
-            for role in ['nurse', 'technician', 'consultant']:
-                if role in workload['average_daily_demand']:
-                    avg_daily = workload['average_daily_demand'][role]
-                    # Assuming 5 working days per week and standard capacity
-                    capacity_per_session = {'nurse': 10, 'technician': 15, 'consultant': 8}.get(role, 10)
-                    weekly_sessions = (avg_daily * 5) / capacity_per_session
-                    
-                    sessions_data.append({
-                        'Simulation': sim_info['memorable_name'],
-                        'Role': role.capitalize(),
-                        'Avg Daily Demand': f"{avg_daily:.1f}",
-                        'Weekly Sessions': f"{weekly_sessions:.1f}"
-                    })
-        
-        if sessions_data:
-            sessions_df = pd.DataFrame(sessions_data)
+            # Cost breakdown comparison
+            st.markdown("#### Cost Breakdown Comparison")
             
-            # Pivot for better comparison
-            pivot_df = sessions_df.pivot(index='Role', columns='Simulation', values='Weekly Sessions')
-            st.dataframe(pivot_df, use_container_width=True)
-        
-        # Cost breakdown comparison
-        st.markdown("#### Cost Breakdown Comparison")
-        
-        # Create side-by-side pie charts
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5), facecolor='white')
-        
-        # Helper function to create pie chart
-        def create_cost_pie(ax, costs, title, color_scheme):
-            categories = []
-            values = []
-            colors = []
+            # Create side-by-side cost breakdown using plotly bar charts
+            import plotly.graph_objects as go
+            from plotly.subplots import make_subplots
             
-            if 'drug' in costs and costs['drug'] > 0:
-                categories.append('Drug')
-                values.append(costs['drug'])
-                colors.append('#FF6B6B')
-            if 'injection_procedure' in costs and costs['injection_procedure'] > 0:
-                categories.append('Injection')
-                values.append(costs['injection_procedure'])
-                colors.append('#4ECDC4')
-            if 'consultation' in costs and costs['consultation'] > 0:
-                categories.append('Consultation')
-                values.append(costs['consultation'])
-                colors.append('#45B7D1')
-            if 'oct_scan' in costs and costs['oct_scan'] > 0:
-                categories.append('OCT Scan')
-                values.append(costs['oct_scan'])
-                colors.append('#96CEB4')
+            # Prepare data for both simulations
+            cost_categories = ['Drug', 'Injection', 'Consultation', 'OCT Scan']
+            cost_keys = ['drug', 'injection_procedure', 'consultation', 'oct_scan']
             
-            if categories:
-                wedges, texts, autotexts = ax.pie(values, labels=categories, colors=colors, 
-                                                  autopct='%1.1f%%', startangle=90)
-                
-                # Style the text
-                for text in texts:
-                    text.set_fontsize(10)
-                    text.set_color('#333333')
-                for autotext in autotexts:
-                    autotext.set_color('white')
-                    autotext.set_fontsize(9)
-                    autotext.set_weight('bold')
-                
-                ax.set_title(title, fontsize=12, color='#333333', pad=20)
-        
-        # Create pies for both simulations
-        create_cost_pie(ax1, costs_a['costs'], sim_a['memorable_name'], 'Blues')
-        create_cost_pie(ax2, costs_b['costs'], sim_b['memorable_name'], 'Oranges')
-        
-        plt.tight_layout()
-        st.pyplot(fig)
-        plt.close(fig)
+            values_a = [costs_a['costs'].get(key, 0) for key in cost_keys]
+            values_b = [costs_b['costs'].get(key, 0) for key in cost_keys]
+            
+            # Create subplots
+            fig = make_subplots(
+                rows=1, cols=2,
+                subplot_titles=(sim_a['memorable_name'], sim_b['memorable_name']),
+                horizontal_spacing=0.15
+            )
+            
+            # Add bar chart for simulation A
+            fig.add_trace(
+                go.Bar(
+                    x=cost_categories,
+                    y=values_a,
+                    text=[f"£{v:,.0f}" for v in values_a],
+                    textposition='auto',
+                    marker_color=COLORS['primary'],
+                    showlegend=False
+                ),
+                row=1, col=1
+            )
+            
+            # Add bar chart for simulation B
+            fig.add_trace(
+                go.Bar(
+                    x=cost_categories,
+                    y=values_b,
+                    text=[f"£{v:,.0f}" for v in values_b],
+                    textposition='auto',
+                    marker_color=COLORS['secondary'],
+                    showlegend=False
+                ),
+                row=1, col=2
+            )
+            
+            # Update layout with Tufte principles
+            fig.update_layout(
+                showlegend=False,
+                plot_bgcolor='white',
+                paper_bgcolor='white',
+                margin=dict(l=40, r=40, t=60, b=40),
+                height=400
+            )
+            
+            # Update axes
+            for i in range(1, 3):
+                fig.update_xaxes(
+                    showgrid=False,
+                    zeroline=False,
+                    showline=True,
+                    linewidth=1,
+                    linecolor='gray',
+                    row=1, col=i
+                )
+                fig.update_yaxes(
+                    showgrid=True,
+                    gridwidth=1,
+                    gridcolor=f'rgba(128,128,128,{ALPHAS["low"]})',
+                    zeroline=True,
+                    zerolinewidth=1,
+                    zerolinecolor='gray',
+                    title="Cost (£)" if i == 1 else "",
+                    row=1, col=i
+                )
+            
+            st.plotly_chart(fig, use_container_width=True)
 
 # ==================================================================
 # TREATMENT FLOW ANALYSIS
@@ -1574,7 +1606,7 @@ st.subheader("Treatment Flow Analysis")
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown(f"**Simulation A: {sim_a['protocol']}**")
+    st.markdown(f"**{sim_a['memorable_name']}: {sim_a['protocol']}**")
     try:
         # Load simulation data using ResultsFactory
         results_a = ResultsFactory.load_results(sim_a['path'])
@@ -1588,12 +1620,12 @@ with col1:
             )
             st.plotly_chart(streamgraph_a, use_container_width=True)
         else:
-            st.error("Could not load simulation A data for streamgraph")
+            st.error(f"Could not load {sim_a['memorable_name']} data for streamgraph")
     except Exception as e:
-        st.error(f"Error creating streamgraph A: {str(e)}")
+        st.error(f"Error creating streamgraph for {sim_a['memorable_name']}: {str(e)}")
 
 with col2:
-    st.markdown(f"**Simulation B: {sim_b['protocol']}**")
+    st.markdown(f"**{sim_b['memorable_name']}: {sim_b['protocol']}**")
     try:
         # Load simulation data using ResultsFactory
         results_b = ResultsFactory.load_results(sim_b['path'])
@@ -1607,9 +1639,9 @@ with col2:
             )
             st.plotly_chart(streamgraph_b, use_container_width=True)
         else:
-            st.error("Could not load simulation B data for streamgraph")
+            st.error(f"Could not load {sim_b['memorable_name']} data for streamgraph")
     except Exception as e:
-        st.error(f"Error creating streamgraph B: {str(e)}")
+        st.error(f"Error creating streamgraph for {sim_b['memorable_name']}: {str(e)}")
 
 # ==================================================================
 # PATIENT JOURNEY FLOW
