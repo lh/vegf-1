@@ -151,25 +151,13 @@ presets = {
     }
 }
 
-# Create engine selector widget function
-def engine_selector():
-    """Engine selector without label"""
-    engine_type = st.selectbox(
-        "Engine",
-        ["abs", "des"],
-        format_func=lambda x: {"abs": "Agent-Based", "des": "Discrete Event"}[x],
-        index=0,
-        label_visibility="collapsed",
-        help="Simulation engine: Agent-Based (ABS) or Discrete Event (DES)"
-    )
-    st.session_state.engine_type = engine_type
-    return engine_type
+# Set engine type to always be agent-based
+st.session_state.engine_type = "abs"
 
-# Show Quick Start box with protocol name as title and engine selector
+# Show Quick Start box with protocol name as title
 model_indicator = " [TIME-BASED]" if protocol_info.get('type') == 'time_based' else ""
 selected_preset = quick_start_box(presets, default_preset='default', 
-                                 title=f"{protocol_info['name']} v{protocol_info['version']}{model_indicator}",
-                                 engine_widget=engine_selector)
+                                 title=f"{protocol_info['name']} v{protocol_info['version']}{model_indicator}")
 
 # Handle preset selection
 if selected_preset:
@@ -241,7 +229,7 @@ with st.container():
         else:
             status_text.caption("")
 
-def estimate_runtime(n_patients: int, duration_years: float, engine_type: str) -> float:
+def estimate_runtime(n_patients: int, duration_years: float) -> float:
     """
     Estimate runtime based on historical data from this session.
     Returns estimated seconds.
@@ -257,10 +245,8 @@ def estimate_runtime(n_patients: int, duration_years: float, engine_type: str) -
         
         for entry in st.session_state.runtime_history:
             entry_complexity = entry['n_patients'] * entry['duration_years']
-            # Give more weight to similar engine types
-            weight = 2.0 if entry['engine_type'] == engine_type else 1.0
-            total_complexity += entry_complexity * weight
-            total_time += entry['runtime'] * weight
+            total_complexity += entry_complexity
+            total_time += entry['runtime']
         
         if total_complexity > 0:
             time_per_complexity = total_time / total_complexity
@@ -305,8 +291,7 @@ if st.session_state.get('simulation_running', False):
     # Get runtime estimate
     estimated_runtime = estimate_runtime(
         recruitment_params.get('n_patients', n_patients),
-        recruitment_params['duration_years'],
-        recruitment_params['engine_type']
+        recruitment_params['duration_years']
     )
     
     # Variables for smooth progress
@@ -352,7 +337,7 @@ if st.session_state.get('simulation_running', False):
                             st.stop()
         
         progress_bar.progress(10)
-        status_text.caption(f"Running {recruitment_params['engine_type'].upper()}...")
+        status_text.caption("Running simulation...")
         
         # Start smooth progress updater in a separate thread
         start_time = time.time()
@@ -407,7 +392,7 @@ if st.session_state.get('simulation_running', False):
         if recruitment_params['mode'] == 'Fixed Total':
             # Fixed Total Mode
             results = runner.run(
-                engine_type=recruitment_params['engine_type'],
+                engine_type='abs',  # Always use agent-based simulation
                 n_patients=recruitment_params['n_patients'],
                 duration_years=recruitment_params['duration_years'],
                 seed=recruitment_params['seed'],
@@ -420,7 +405,7 @@ if st.session_state.get('simulation_running', False):
             # TODO: Update V2 engine to support true constant rate mode
             expected_total = recruitment_params.get('expected_total', 1000)
             results = runner.run(
-                engine_type=recruitment_params['engine_type'],
+                engine_type='abs',  # Always use agent-based simulation
                 n_patients=expected_total,  # Use expected total
                 duration_years=recruitment_params['duration_years'],
                 seed=recruitment_params['seed'],
@@ -444,7 +429,7 @@ if st.session_state.get('simulation_running', False):
         update_runtime_history(
             recruitment_params.get('n_patients', n_patients),
             recruitment_params['duration_years'],
-            recruitment_params['engine_type'],
+            'abs',  # Always agent-based
             runtime
         )
         
@@ -466,7 +451,7 @@ if st.session_state.get('simulation_running', False):
             'results': results,  # This is now a SimulationResults object
             'protocol': protocol_info,
             'parameters': {
-                'engine': recruitment_params['engine_type'],
+                'engine': 'abs',  # Always agent-based
                 'n_patients': recruitment_params.get('n_patients', 0),
                 'duration_years': recruitment_params['duration_years'],
                 'seed': recruitment_params['seed'],
