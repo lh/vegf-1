@@ -78,13 +78,7 @@ protocol_info = st.session_state.current_protocol
 
 # If still no protocol (shouldn't happen but safety check), show error and stop
 if not protocol_info:
-    st.error("No protocol selected. Please select a protocol to run simulations.")
-    
-    # Use Carbon button to navigate to Protocol Manager
-    from ape.utils.carbon_button_helpers import navigation_button
-    if navigation_button("Select Protocol", icon_name="protocol", key="nav_to_protocol_manager"):
-        st.switch_page("pages/1_Protocol_Manager.py")
-    
+    st.info("Please select a protocol first from the Protocol Manager page.")
     st.stop()
 
 # We'll define the actual run_simulation function later, but need a placeholder for now
