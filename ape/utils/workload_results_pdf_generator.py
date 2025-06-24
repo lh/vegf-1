@@ -198,25 +198,26 @@ def generate_workload_results_pdf(
     ]))
     elements.append(cost_table)
     
-    # Resource Utilization
+    # Resource Utilisation
     elements.append(PageBreak())
-    elements.append(Paragraph("Resource Utilization", heading_style))
+    elements.append(Paragraph("Resource Utilisation", heading_style))
     elements.append(HRFlowable(6.5*inch, thickness=0.5, color=colors.grey))
     elements.append(Spacer(1, 0.2*inch))
     
     if utilization_data:
-        util_table_data = [["Role", "Avg Daily", "Peak Daily", "Utilization %", "Total Sessions"]]
+        util_table_data = [["Role", "Avg Daily\nDemand", "Peak Daily\nSessions", "Avg Sessions\n/Day", "Weekly\nSessions", "Utilisation\n%"]]
         
         for util in utilization_data:
             util_table_data.append([
                 util['Role'],
-                util['Average Daily Demand'],
-                str(util['Peak Daily Demand']),
-                util['Utilization %'],
-                str(util['Total Sessions'])
+                util.get('Average Daily Demand', ''),
+                util.get('Peak Daily Sessions', ''),
+                util.get('Average Sessions/Day', ''),
+                util.get('Weekly Sessions Needed', ''),
+                util.get('Utilisation %', '')
             ])
         
-        util_table = Table(util_table_data, colWidths=[1.8*inch, 1*inch, 1*inch, 1.2*inch, 1.2*inch])
+        util_table = Table(util_table_data, colWidths=[1.5*inch, 0.9*inch, 0.9*inch, 0.9*inch, 0.9*inch, 0.9*inch])
         util_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 9),
@@ -233,15 +234,15 @@ def generate_workload_results_pdf(
     elements.append(Spacer(1, 0.2*inch))
     
     if staffing_data:
-        staff_table_data = [["Role", "Avg Sessions/Day", "Peak Sessions", "Staff (Avg)", "Staff (Peak)"]]
+        staff_table_data = [["Role", "Avg Sessions/Day", "Peak Daily Sessions", "Staff (Avg)", "Staff (Peak)"]]
         
         for staff in staffing_data:
             staff_table_data.append([
                 staff['Role'],
-                staff['Average Sessions/Day'],
-                staff['Peak Sessions'],
-                staff['Staff Needed (Average)'],
-                str(staff['Staff Needed (Peak)'])
+                staff.get('Average Sessions/Day', ''),
+                staff.get('Peak Daily Sessions', staff.get('Peak Sessions', '')),  # Handle both old and new key names
+                staff.get('Staff Needed (Average)', ''),
+                str(staff.get('Staff Needed (Peak)', ''))
             ])
         
         staff_table = Table(staff_table_data, colWidths=[1.8*inch, 1.3*inch, 1.2*inch, 1*inch, 1*inch])

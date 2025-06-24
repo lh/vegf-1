@@ -1,0 +1,152 @@
+metadata:
+  name: test
+  currency: GBP
+  effective_date: '2025-01-01'
+  version: '1.0'
+  source: protocols/cost_configs/aflibercept_2mg_nhs_2025.yaml
+  created: '2025-06-23T23:15:57.307784'
+  based_on: 'Cost Config: aflibercept_2mg_nhs_2025'
+drug_costs:
+  aflibercept_2mg:
+    unit_cost: 457.0
+    list_price: 816
+    procurement_discount: 0.44
+    note: Based on current market pricing
+  aflibercept_2mg_biosimilar:
+    unit_cost: 228.0
+    list_price: 400
+    procurement_discount: 0.43
+    note: Projected pricing - ~50% of originator net price
+visit_components:
+  injection: 151.0
+  oct_scan: 76.0
+  visual_acuity_test: 26.0
+  pressure_check: 11.0
+  virtual_review: 51.0
+  face_to_face_review: 121.0
+  nurse_review: 40.0
+  clinical_exam: 30.0
+  fluorescein_angiography: 150.0
+  adverse_event_assessment: 201.0
+  brief_check: 15.0
+  consultation: 61.0
+visit_types:
+  injection_loading:
+    components:
+    - injection
+    - visual_acuity_test
+    - brief_check
+    total_override: null
+    note: Streamlined loading phase visit
+    decision_maker: false
+  injection_virtual:
+    components:
+    - injection
+    - oct_scan
+    - pressure_check
+    - virtual_review
+    total_override: 285.0
+    note: Standard maintenance injection with virtual review
+    total_cost: 285.0
+    decision_maker: false
+  injection_face_to_face:
+    components:
+    - injection
+    - oct_scan
+    - visual_acuity_test
+    - pressure_check
+    - face_to_face_review
+    total_override: 380.0
+    note: Full assessment with injection
+    total_cost: 380.0
+    decision_maker: false
+  monitoring_virtual:
+    components:
+    - oct_scan
+    - visual_acuity_test
+    - virtual_review
+    total_override: 150.0
+    note: Assess and extend visit without injection
+    total_cost: 150.0
+    decision_maker: false
+  monitoring_face_to_face:
+    components:
+    - oct_scan
+    - visual_acuity_test
+    - pressure_check
+    - face_to_face_review
+    total_override: 230.0
+    note: Full monitoring without injection
+    total_cost: 230.0
+    decision_maker: false
+  initial_assessment:
+    components:
+    - oct_scan
+    - visual_acuity_test
+    - fluorescein_angiography
+    - face_to_face_review
+    - consultation
+    total_override: 380.0
+    note: Comprehensive initial assessment
+    total_cost: 380.0
+    decision_maker: false
+  annual_review:
+    components:
+    - oct_scan
+    - visual_acuity_test
+    - clinical_exam
+    - face_to_face_review
+    - consultation
+    total_override: 310.0
+    note: Annual treatment review
+    total_cost: 310.0
+    decision_maker: false
+special_events:
+  initial_assessment: 380.0
+  discontinuation_admin: 50.0
+  retreatment_assessment: 200.0
+  adverse_event_mild: 500.0
+  adverse_event_severe: 2000.0
+  treatment_switch_assessment: 150.0
+  treatment_switch_reload: 100.0
+visit_costs:
+  injection_visit_standard:
+    drug_cost: 457
+    procedure_cost: 285
+    total_cost: 742
+  injection_visit_loading:
+    drug_cost: 457
+    procedure_cost: 190
+    total_cost: 647
+  monitoring_visit_standard:
+    drug_cost: 0
+    procedure_cost: 150
+    total_cost: 150
+annual_costs:
+  aflibercept_2mg_typical:
+    year_1:
+      loading_injections: 3
+      maintenance_injections: 3.9
+      total_injections: 6.9
+      drug_cost: 3153
+      procedure_costs: 1970
+      annual_total: 5123
+    year_2_plus:
+      injections: 5.2
+      drug_cost: 2376
+      procedure_costs: 1480
+      annual_total: 3856
+  aflibercept_2mg_fixed_q8:
+    injections_per_year: 6.5
+    drug_cost: 2971
+    procedure_costs: 1850
+    annual_total: 4821
+cost_effectiveness:
+  nice_threshold_per_qaly: 30000
+  typical_utility_gain: 0.1
+  implied_max_annual_cost: 3000
+cost_notes:
+  major_cost_driver: Drug cost represents ~60-65% of total
+  biosimilar_impact: Could reduce total costs by 30-35%
+  interval_extension: "Each 2-week extension saves ~\xA395 per patient"
+  virtual_clinics: "Save \xA370 per visit vs face-to-face"
