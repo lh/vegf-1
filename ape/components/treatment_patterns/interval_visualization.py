@@ -133,8 +133,7 @@ def create_interval_distribution_tufte(intervals: np.ndarray,
         plot_bgcolor='white',
         paper_bgcolor='white',
         margin=dict(l=60, r=40, t=60, b=60),
-        height=350,  # Compact height for better data density
-        bargap=0.1
+        height=350  # Compact height for better data density
     )
     
     # Add summary annotation
