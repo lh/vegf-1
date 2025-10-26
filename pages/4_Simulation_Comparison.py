@@ -1258,8 +1258,8 @@ try:
         fig_population = create_population_outcome_comparison(
             results_a,
             results_b,
-            label_a=f"{sim_a['protocol'][:20]}",
-            label_b=f"{sim_b['protocol'][:20]}",
+            label_a="Simulation A",
+            label_b="Simulation B",
             max_months=int(max_month)
         )
 
