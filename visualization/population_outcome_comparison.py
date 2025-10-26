@@ -252,40 +252,54 @@ def create_population_outcome_comparison(
     strat_a = calculate_discontinuation_stratified_outcomes(results_a['patient_histories'])
     strat_b = calculate_discontinuation_stratified_outcomes(results_b['patient_histories'])
 
-    # Create figure with three panels
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 5))
+    # Create figure with three panels - use white background for consistency
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 5), facecolor='white')
+
+    # Set all axis backgrounds to white
+    ax1.set_facecolor('white')
+    ax2.set_facecolor('white')
+    ax3.set_facecolor('white')
 
     # Color scheme from central color system
     color_a = COLORS['primary']
     color_b = COLORS['secondary']
-    alpha_ci = ALPHAS['very_low']
 
     # PANEL 1: ITT Vision Trajectory
-    # Plot mean vision for all patients (Intent-to-Treat)
+    # Plot mean vision for all patients (Intent-to-Treat) - Tufte style
     ax1.plot(traj_a['month'], traj_a['mean_vision'],
-             color=color_a, linewidth=2.5, label=label_a, alpha=0.9)
+             color=color_a, linewidth=2.5, label=label_a)
     ax1.fill_between(traj_a['month'], traj_a['ci_lower'], traj_a['ci_upper'],
-                      color=color_a, alpha=alpha_ci)
+                      color=color_a, alpha=0.15)
 
     ax1.plot(traj_b['month'], traj_b['mean_vision'],
-             color=color_b, linewidth=2.5, label=label_b, alpha=0.9)
+             color=color_b, linewidth=2.5, label=label_b)
     ax1.fill_between(traj_b['month'], traj_b['ci_lower'], traj_b['ci_upper'],
-                      color=color_b, alpha=alpha_ci)
+                      color=color_b, alpha=0.15)
 
-    # Add clinical thresholds
-    ax1.axhline(y=70, color='gray', linestyle='--', linewidth=1, alpha=0.4, label='70 letters')
-    ax1.axhline(y=35, color='gray', linestyle=':', linewidth=1, alpha=0.4, label='35 letters')
+    # Add clinical thresholds - subtle like existing comparison page
+    ax1.axhline(y=70, color='#999999', linestyle='-', alpha=0.3, linewidth=0.8)
+    ax1.axhline(y=20, color='#999999', linestyle='-', alpha=0.3, linewidth=0.8)
+    ax1.text(max_months * 0.98, 71, '70', ha='right', va='bottom', fontsize=8, color='#666666')
+    ax1.text(max_months * 0.98, 21, '20', ha='right', va='bottom', fontsize=8, color='#666666')
 
-    ax1.set_xlabel('Month', fontsize=11)
-    ax1.set_ylabel('Mean Visual Acuity (ETDRS Letters)', fontsize=11)
-    ax1.set_title('Intent-to-Treat Vision Trajectory\n(All Baseline Patients)', fontsize=12, fontweight='bold')
-    ax1.set_ylim(0, 85)
-    ax1.legend(loc='best', frameon=False, fontsize=9)
+    # Tufte styling
     ax1.spines['top'].set_visible(False)
     ax1.spines['right'].set_visible(False)
-    ax1.grid(True, alpha=0.2, linestyle='-', linewidth=0.5)
+    ax1.spines['left'].set_color('#333333')
+    ax1.spines['bottom'].set_color('#333333')
+    ax1.spines['left'].set_linewidth(0.8)
+    ax1.spines['bottom'].set_linewidth(0.8)
+    ax1.tick_params(colors='#333333', width=0.8, length=4)
 
-    # PANEL 2: Patient Counts Over Time - Side by Side Comparison
+    ax1.set_xlabel('Time (months)', fontsize=10, color='#333333')
+    ax1.set_ylabel('Vision (ETDRS Letters)', fontsize=10, color='#333333')
+    ax1.set_title('Intent-to-Treat Vision Trajectory\n(All Baseline Patients)', fontsize=11, color='#333333', pad=10)
+    ax1.set_xlim(0, max_months)
+    ax1.set_ylim(0, 85)
+    ax1.legend(loc='best', frameon=False, fontsize=9)
+    ax1.grid(True, alpha=0.1, linewidth=0.5, color='#cccccc')
+
+    # PANEL 2: Patient Counts Over Time - Tufte style
     # Calculate retention rates as percentages
     traj_a['active_pct'] = 100 * traj_a['active_count'] / traj_a['n_patients']
     traj_a['discontinued_pct'] = 100 * traj_a['discontinued_count'] / traj_a['n_patients']
@@ -295,26 +309,34 @@ def create_population_outcome_comparison(
 
     # Plot retention rates (active %) for both protocols
     ax2.plot(traj_a['month'], traj_a['active_pct'],
-             color=color_a, linewidth=2.5, linestyle='-', label=f'{label_a} - Active', alpha=0.9)
+             color=color_a, linewidth=2.5, linestyle='-', label=f'{label_a} - Active')
     ax2.plot(traj_b['month'], traj_b['active_pct'],
-             color=color_b, linewidth=2.5, linestyle='-', label=f'{label_b} - Active', alpha=0.9)
+             color=color_b, linewidth=2.5, linestyle='-', label=f'{label_b} - Active')
 
-    # Add discontinued rates as dashed lines
+    # Add discontinued rates as dashed lines (thinner, more subtle)
     ax2.plot(traj_a['month'], traj_a['discontinued_pct'],
              color=color_a, linewidth=1.5, linestyle='--', label=f'{label_a} - Discontinued', alpha=0.6)
     ax2.plot(traj_b['month'], traj_b['discontinued_pct'],
              color=color_b, linewidth=1.5, linestyle='--', label=f'{label_b} - Discontinued', alpha=0.6)
 
-    ax2.set_xlabel('Month', fontsize=11)
-    ax2.set_ylabel('Percentage of Baseline Cohort (%)', fontsize=11)
-    ax2.set_title('Patient Retention Over Time\n(% of Baseline Cohort)', fontsize=12, fontweight='bold')
-    ax2.set_ylim(0, 105)
-    ax2.legend(loc='best', frameon=False, fontsize=8)
+    # Tufte styling
     ax2.spines['top'].set_visible(False)
     ax2.spines['right'].set_visible(False)
-    ax2.grid(True, alpha=0.2, linestyle='-', linewidth=0.5)
+    ax2.spines['left'].set_color('#333333')
+    ax2.spines['bottom'].set_color('#333333')
+    ax2.spines['left'].set_linewidth(0.8)
+    ax2.spines['bottom'].set_linewidth(0.8)
+    ax2.tick_params(colors='#333333', width=0.8, length=4)
 
-    # PANEL 3: Stratified Outcomes
+    ax2.set_xlabel('Time (months)', fontsize=10, color='#333333')
+    ax2.set_ylabel('% of Baseline Cohort', fontsize=10, color='#333333')
+    ax2.set_title('Patient Retention Over Time\n(% of Baseline Cohort)', fontsize=11, color='#333333', pad=10)
+    ax2.set_xlim(0, max_months)
+    ax2.set_ylim(0, 105)
+    ax2.legend(loc='best', frameon=False, fontsize=8)
+    ax2.grid(True, alpha=0.1, linewidth=0.5, color='#cccccc')
+
+    # PANEL 3: Stratified Outcomes - Tufte style
     # Bar chart comparing final outcomes by status
     categories = ['All Patients\n(ITT)', 'Active\nPatients', 'Discontinued\nPatients']
 
@@ -334,18 +356,18 @@ def create_population_outcome_comparison(
     width = 0.35
 
     bars1 = ax3.bar(x - width/2, values_a, width, label=label_a,
-                     color=color_a, alpha=0.8)
+                     color=color_a, alpha=0.7, edgecolor='none')
     bars2 = ax3.bar(x + width/2, values_b, width, label=label_b,
-                     color=color_b, alpha=0.8)
+                     color=color_b, alpha=0.7, edgecolor='none')
 
-    # Add value labels on bars
+    # Add value labels on bars (subtle)
     for bars in [bars1, bars2]:
         for bar in bars:
             height = bar.get_height()
             if height > 0:
                 ax3.text(bar.get_x() + bar.get_width()/2., height,
                         f'{height:.1f}',
-                        ha='center', va='bottom', fontsize=8)
+                        ha='center', va='bottom', fontsize=8, color='#666666')
 
     # Add patient counts as annotations
     for i, cat in enumerate(categories):
@@ -359,22 +381,29 @@ def create_population_outcome_comparison(
             n_a = strat_a['discontinued_all']['n_patients'] if strat_a['discontinued_all'] else 0
             n_b = strat_b['discontinued_all']['n_patients'] if strat_b['discontinued_all'] else 0
 
-        ax3.text(i, 5, f'n={n_a}/{n_b}', ha='center', va='bottom', fontsize=7, color='gray')
+        ax3.text(i, 5, f'n={n_a}/{n_b}', ha='center', va='bottom', fontsize=7, color='#999999')
 
-    ax3.set_xlabel('Patient Group', fontsize=11)
-    ax3.set_ylabel('Mean Final Visual Acuity (Letters)', fontsize=11)
-    ax3.set_title('Final Vision by Patient Status', fontsize=12, fontweight='bold')
+    # Tufte styling
+    ax3.spines['top'].set_visible(False)
+    ax3.spines['right'].set_visible(False)
+    ax3.spines['left'].set_color('#333333')
+    ax3.spines['bottom'].set_color('#333333')
+    ax3.spines['left'].set_linewidth(0.8)
+    ax3.spines['bottom'].set_linewidth(0.8)
+    ax3.tick_params(colors='#333333', width=0.8, length=4)
+
+    ax3.set_xlabel('Patient Group', fontsize=10, color='#333333')
+    ax3.set_ylabel('Vision (ETDRS Letters)', fontsize=10, color='#333333')
+    ax3.set_title('Final Vision by Patient Status', fontsize=11, color='#333333', pad=10)
     ax3.set_xticks(x)
     ax3.set_xticklabels(categories, fontsize=9)
     ax3.set_ylim(0, 85)
     ax3.legend(loc='best', frameon=False, fontsize=9)
-    ax3.spines['top'].set_visible(False)
-    ax3.spines['right'].set_visible(False)
-    ax3.grid(True, alpha=0.2, linestyle='-', linewidth=0.5, axis='y')
+    ax3.grid(True, alpha=0.1, linewidth=0.5, color='#cccccc', axis='y')
 
-    # Overall title
+    # Overall title - subtle and consistent with Tufte style
     fig.suptitle('Population-Level Outcome Comparison (Addressing Survivorship Bias)',
-                 fontsize=14, fontweight='bold', y=1.02)
+                 fontsize=12, color='#333333', y=0.98)
 
     plt.tight_layout()
 

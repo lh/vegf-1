@@ -938,9 +938,26 @@ st.caption("**Legend:** ↑ Higher/More  ↓ Lower/Less | Green = Favorable | Re
 st.markdown("---")
 st.markdown("### Visualizations")
 
+# Display full protocol information for context
+st.markdown("**Comparing:**")
+col1, col2 = st.columns(2)
+with col1:
+    st.markdown(f"""
+    **Simulation A:** {sim_a['protocol']}
+    - {sim_a['patients']} patients, {sim_a['duration']} months
+    - Model: {sim_a.get('model_type', 'visit_based').replace('_', ' ').title()}
+    - Date: {sim_a['date']}
+    """)
+with col2:
+    st.markdown(f"""
+    **Simulation B:** {sim_b['protocol']}
+    - {sim_b['patients']} patients, {sim_b['duration']} months
+    - Model: {sim_b.get('model_type', 'visit_based').replace('_', ' ').title()}
+    - Date: {sim_b['date']}
+    """)
+
 # Import visualization components
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 # View mode toggle with settings
 col1, col2, col3 = st.columns([3, 2, 2])
@@ -1067,20 +1084,20 @@ if view_mode == "Side-by-Side":
     
     # Create both plots with identical parameters
     create_standardized_vision_plot(
-        ax_a, 
-        vision_data_a, 
+        ax_a,
+        vision_data_a,
         '',  # No title
-        color='blue',
+        color=COLORS['primary'],  # Consistent Simulation A color
         show_ci=show_ci,
         show_thresholds=show_thresholds,
         max_month=max_month
     )
-    
+
     create_standardized_vision_plot(
-        ax_b, 
-        vision_data_b, 
+        ax_b,
+        vision_data_b,
         '',  # No title
-        color='orange',
+        color=COLORS['secondary'],  # Consistent Simulation B color
         show_ci=show_ci,
         show_thresholds=show_thresholds,
         max_month=max_month
@@ -1107,20 +1124,20 @@ elif view_mode == "Overlay":
     fig, ax = plt.subplots(figsize=(10, 6), facecolor='white')
     ax.set_facecolor('white')
     
-    # Plot both simulations
-    ax.plot(vision_data_a['Month'], vision_data_a['mean'], color='#1f77b4', linewidth=2.5, label=f'A: {sim_a["protocol"]}')
-    ax.plot(vision_data_b['Month'], vision_data_b['mean'], color='#ff7f0e', linewidth=2.5, label=f'B: {sim_b["protocol"]}')
-    
+    # Plot both simulations with consistent colors
+    ax.plot(vision_data_a['Month'], vision_data_a['mean'], color=COLORS['primary'], linewidth=2.5, label=f'A: {sim_a["protocol"]}')
+    ax.plot(vision_data_b['Month'], vision_data_b['mean'], color=COLORS['secondary'], linewidth=2.5, label=f'B: {sim_b["protocol"]}')
+
     # Confidence intervals
     if show_ci:
-        ax.fill_between(vision_data_a['Month'], 
-                      vision_data_a['ci_lower'], 
+        ax.fill_between(vision_data_a['Month'],
+                      vision_data_a['ci_lower'],
                       vision_data_a['ci_upper'],
-                      alpha=0.15, color='#1f77b4')
-        ax.fill_between(vision_data_b['Month'], 
-                      vision_data_b['ci_lower'], 
+                      alpha=0.15, color=COLORS['primary'])
+        ax.fill_between(vision_data_b['Month'],
+                      vision_data_b['ci_lower'],
                       vision_data_b['ci_upper'],
-                      alpha=0.15, color='#ff7f0e')
+                      alpha=0.15, color=COLORS['secondary'])
     
     # Clinical thresholds - subtle
     if show_thresholds:
@@ -1201,6 +1218,21 @@ else:  # Difference mode
 
 st.markdown("---")
 st.subheader("Population-Level Outcome Comparison")
+
+# Repeat protocol information for long page context
+st.markdown("**Comparing:**")
+col1, col2 = st.columns(2)
+with col1:
+    st.markdown(f"""
+    **Simulation A:** {sim_a['protocol']}
+    - {sim_a['patients']} patients, {sim_a['duration']} months
+    """)
+with col2:
+    st.markdown(f"""
+    **Simulation B:** {sim_b['protocol']}
+    - {sim_b['patients']} patients, {sim_b['duration']} months
+    """)
+
 st.markdown("""
 This analysis addresses **survivorship bias** by tracking all patients from baseline, regardless of discontinuation status.
 
@@ -1231,8 +1263,8 @@ try:
             max_months=int(max_month)
         )
 
-        # Display the figure
-        st.pyplot(fig_population, use_container_width=True)
+        # Display the figure - no use_container_width to maintain crisp rendering
+        st.pyplot(fig_population)
         plt.close(fig_population)
 
         # Export data option
