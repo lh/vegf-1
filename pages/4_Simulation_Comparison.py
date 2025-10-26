@@ -1196,6 +1196,71 @@ else:  # Difference mode
     plt.close(fig)
 
 # ==================================================================
+# POPULATION-LEVEL OUTCOME COMPARISON (Addressing Survivorship Bias)
+# ==================================================================
+
+st.markdown("---")
+st.subheader("Population-Level Outcome Comparison")
+st.markdown("""
+This analysis addresses **survivorship bias** by tracking all patients from baseline, regardless of discontinuation status.
+
+**Why This Matters:**
+- Standard comparisons may show better outcomes in protocols with higher discontinuation rates (because poor responders are removed)
+- Intent-to-Treat (ITT) analysis tracks ALL patients to give a true population-level view
+- Stratified analysis shows outcomes separately for active vs. discontinued patients
+
+**Three-Panel View:**
+1. **Left**: ITT vision trajectory (all baseline patients, using last-observation-carried-forward)
+2. **Middle**: Patient retention over time (% active vs. discontinued)
+3. **Right**: Final vision outcomes stratified by patient status
+""")
+
+try:
+    from visualization.population_outcome_comparison import (
+        create_population_outcome_comparison,
+        export_population_comparison_data
+    )
+
+    # Create the population outcome comparison
+    with st.spinner("Generating population-level comparison..."):
+        fig_population = create_population_outcome_comparison(
+            results_a,
+            results_b,
+            label_a=f"{sim_a['protocol'][:20]}",
+            label_b=f"{sim_b['protocol'][:20]}",
+            max_months=int(max_month)
+        )
+
+        # Display the figure
+        st.pyplot(fig_population, use_container_width=True)
+        plt.close(fig_population)
+
+        # Export data option
+        with st.expander("📊 Export Population Comparison Data"):
+            export_pop_df = export_population_comparison_data(
+                results_a,
+                results_b,
+                label_a=sim_a['protocol'],
+                label_b=sim_b['protocol'],
+                max_months=int(max_month)
+            )
+
+            st.dataframe(export_pop_df)
+
+            csv_pop = export_pop_df.to_csv(index=False)
+            st.download_button(
+                label="Download Population Comparison CSV",
+                data=csv_pop,
+                file_name=f"population_comparison_{sim_a['name']}_{sim_b['name']}.csv",
+                mime="text/csv"
+            )
+
+except Exception as e:
+    st.error(f"Could not create population-level comparison: {str(e)}")
+    import traceback
+    st.code(traceback.format_exc())
+
+# ==================================================================
 # FINANCIAL COMPARISON
 # ==================================================================
 
