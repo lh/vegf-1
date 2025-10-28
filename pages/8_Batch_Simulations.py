@@ -57,6 +57,16 @@ st.success("✓ Local environment detected - batch simulations available")
 st.markdown("""
 This experimental page allows you to run multiple protocol simulations as a batch job.
 All simulations in a batch will use the same parameters (patients, duration, seed).
+
+**Important - Statistical Design:**
+All protocols use the **same random seed**, implementing a "paired comparison" design.
+This means each protocol is tested on identical patient populations, which:
+- Reduces variance and increases statistical power
+- Isolates the protocol effect from patient variation
+- Enables more sensitive detection of differences
+- Requires smaller sample sizes for significance
+
+This is the standard approach for controlled protocol comparison studies.
 """)
 
 # Initialize session state
@@ -364,15 +374,50 @@ if st.session_state.get('batch_view_summary'):
     summary = status_mgr.read_summary()
     if summary:
         st.markdown("### Batch Information")
-        st.json(summary)
 
-        st.markdown("### Simulation Results")
-        st.info("Detailed statistics and visualizations coming soon!")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown(f"""
+            **Protocols:** {', '.join(summary['protocols'])}
+            **Completed:** {summary['completed_at']}
+            """)
+        with col2:
+            params = summary['parameters']
+            st.markdown(f"""
+            **Parameters:** {params['n_patients']} patients × {params['duration_years']} years
+            **Random Seed:** {params['seed']}
+            """)
 
+        st.markdown("### Visual Comparison")
+
+        try:
+            from visualization.batch_comparison import create_batch_summary_figure
+            import matplotlib.pyplot as plt
+
+            # Create comprehensive summary figure
+            fig = create_batch_summary_figure(batch_id)
+            st.pyplot(fig)
+            plt.close(fig)
+
+        except Exception as e:
+            st.error(f"Error creating visualization: {e}")
+            import traceback
+            st.code(traceback.format_exc())
+
+        st.markdown("### Text Summary")
+
+        try:
+            from ape.batch.statistics import get_batch_summary_text
+            summary_text = get_batch_summary_text(batch_id)
+            st.code(summary_text, language=None)
+        except Exception as e:
+            st.error(f"Error generating text summary: {e}")
+
+        st.markdown("### Simulation Links")
         # Quick links to simulations
         for i, sim_id in enumerate(summary['simulation_ids']):
             protocol_name = summary['protocols'][i]
-            st.markdown(f"- [{protocol_name}] `{sim_id}` - [Open in results](/)")
+            st.markdown(f"- **{protocol_name}**: `{sim_id}`")
 
     if st.button("Back to Batch List"):
         del st.session_state.batch_view_summary

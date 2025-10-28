@@ -4,6 +4,25 @@ Batch simulation runner - subprocess entry point.
 This script runs as a separate process to execute multiple simulations
 in a batch. It updates a status file as it progresses.
 
+IMPORTANT - Random Seed Strategy:
+    All protocols in a batch use the SAME random seed. This implements a
+    "paired comparison" design where each protocol is tested on identical
+    patient populations, reducing variance and increasing statistical power.
+
+    This is the correct approach for protocol comparison because:
+    - Same baseline patient characteristics across protocols
+    - More powerful statistical tests (paired comparisons)
+    - Isolates protocol effect from patient variation
+    - Smaller sample size needed for significance
+
+    When multiple runs per protocol are added in future, each run will use
+    a different seed, but corresponding runs across protocols will share seeds:
+        Protocol A: seeds [42, 43, 44]
+        Protocol B: seeds [42, 43, 44]  # Same sequence
+
+    This gives both paired comparisons within runs AND variance estimates
+    across runs.
+
 Usage:
     python -m ape.batch.runner \\
         --protocol-a path/to/protocol_a.yaml \\
